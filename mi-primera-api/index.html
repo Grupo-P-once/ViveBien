@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <!-- Configuración básica del documento -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mi Primera API – Vive Bien</title>
+
+    <!-- Fuente de Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Open+Sans:wght@400;500;600&display=swap"
+        rel="stylesheet" />
+
+    <!-- Íconos Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+    <style>
+        /* ===== VARIABLES DE COLOR (igual que el sitio principal) ===== */
+        :root {
+            --rojo: #8B1A1A;
+            --rojo-claro: #C0392B;
+            --azul: #3D5A73;
+            --azul-claro: #5B8BA3;
+            --gris: #F4F6F8;
+            --blanco: #FFFFFF;
+            --texto: #222831;
+        }
+
+        /* ===== RESET ===== */
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Open Sans', sans-serif;
+            color: var(--texto);
+            background: var(--gris);
+            min-height: 100vh;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* ===== HEADER ===== */
+        header {
+            background: var(--blanco);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+            padding: 0 2rem;
+            height: 68px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: .7rem;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .brand span.vive,
+        .brand span.bien {
+            color: var(--rojo);
+            font-weight: 800;
+            font-size: 1.3rem;
+        }
+
+        .brand span.grupo {
+            color: var(--azul);
+            font-weight: 600;
+            font-size: .72rem;
+            display: block;
+            letter-spacing: .05em;
+        }
+
+        .btn-back {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            color: var(--azul);
+            font-weight: 600;
+            font-size: .9rem;
+            transition: color .2s;
+        }
+
+        .btn-back:hover {
+            color: var(--rojo);
+        }
+
+        /* ===== HERO MINI ===== */
+        .hero-mini {
+            background: linear-gradient(135deg, var(--rojo) 0%, var(--azul) 100%);
+            color: #fff;
+            text-align: center;
+            padding: 3rem 2rem 2.5rem;
+        }
+
+        .hero-mini h1 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: clamp(1.6rem, 4vw, 2.4rem);
+            font-weight: 800;
+            margin-bottom: .6rem;
+        }
+
+        .hero-mini p {
+            font-size: 1rem;
+            opacity: .88;
+        }
+
+        /* ===== CONTENEDOR PRINCIPAL ===== */
+        .container {
+            max-width: 760px;
+            margin: 2.5rem auto;
+            padding: 0 1.5rem 3rem;
+        }
+
+        /* ===== TARJETA DEL FORMULARIO ===== */
+        .card {
+            background: var(--blanco);
+            border-radius: 20px;
+            box-shadow: 0 6px 30px rgba(0, 0, 0, .1);
+            padding: 2.5rem 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .card h2 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--rojo);
+            margin-bottom: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+        }
+
+        .card h2::after {
+            content: '';
+            flex: 1;
+            height: 2px;
+            background: linear-gradient(90deg, var(--rojo), var(--azul));
+            border-radius: 2px;
+        }
+
+        /* ===== CAMPOS DEL FORMULARIO ===== */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: .35rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .form-group label {
+            font-size: .85rem;
+            font-weight: 600;
+            color: var(--azul);
+        }
+
+        .form-group input,
+        .form-group textarea {
+            padding: .8rem 1rem;
+            border: 1.5px solid #DDE;
+            border-radius: 10px;
+            font-family: 'Open Sans', sans-serif;
+            font-size: .92rem;
+            color: var(--texto);
+            transition: border-color .25s, box-shadow .25s;
+            background: var(--blanco);
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--azul);
+            box-shadow: 0 0 0 3px rgba(61, 90, 115, .12);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 110px;
+        }
+
+        /* ===== BOTÓN ENVIAR ===== */
+        .btn-enviar {
+            width: 100%;
+            padding: .95rem;
+            background: linear-gradient(135deg, var(--rojo), var(--rojo-claro));
+            color: #fff;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: .6rem;
+            transition: opacity .2s, transform .15s;
+        }
+
+        .btn-enviar:hover {
+            opacity: .9;
+            transform: scale(1.01);
+        }
+
+        .btn-enviar:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ===== SPINNER ===== */
+        .spinner {
+            width: 18px;
+            height: 18px;
+            border: 3px solid rgba(255, 255, 255, .4);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin .7s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ===== RESPUESTA DE LA API ===== */
+        .respuesta-box {
+            display: none;
+            background: var(--blanco);
+            border-radius: 20px;
+            box-shadow: 0 6px 30px rgba(0, 0, 0, .1);
+            padding: 2.5rem 2rem;
+        }
+
+        .respuesta-box h2 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--azul);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+        }
+
+        .respuesta-box pre {
+            background: #0d1e2c;
+            color: #a8d8ea;
+            padding: 1.4rem;
+            border-radius: 12px;
+            font-size: .85rem;
+            overflow-x: auto;
+            line-height: 1.6;
+            font-family: 'Courier New', monospace;
+        }
+
+        .badge-ok {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            background: #D1FAE5;
+            color: #065F46;
+            padding: .3rem .8rem;
+            border-radius: 20px;
+            font-size: .8rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            border: 1px solid #6EE7B7;
+        }
+
+        /* ===== BADGE INFO ===== */
+        .info-badge {
+            display: flex;
+            align-items: flex-start;
+            gap: .8rem;
+            background: #EEF5FF;
+            border: 1px solid #BFDBFE;
+            border-radius: 12px;
+            padding: 1rem 1.2rem;
+            margin-bottom: 1.5rem;
+            font-size: .85rem;
+            color: var(--azul);
+        }
+
+        .info-badge i {
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 500px) {
+
+            .card,
+            .respuesta-box {
+                padding: 1.5rem 1.2rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ===== ENCABEZADO ===== -->
+    <header>
+        <!-- Logo de la empresa (enlaza de regreso al sitio principal) -->
+        <a href="../index.html" class="brand">
+            <div>
+                <span class="vive">Vive </span><span class="bien">Bien</span>
+                <span class="grupo">Grupo Inmobiliario</span>
+            </div>
+        </a>
+
+        <!-- Botón para volver al inicio -->
+        <a href="../index.html" class="btn-back">
+            <i class="fa fa-arrow-left"></i> Volver al inicio
+        </a>
+    </header>
+
+    <!-- ===== BANNER SUPERIOR ===== -->
+    <div class="hero-mini">
+        <h1><i class="fa fa-satellite-dish"></i> Mi Primera API</h1>
+        <p>Envía un mensaje y conecta con la API de JSONPlaceholder</p>
+    </div>
+
+    <!-- ===== CONTENIDO PRINCIPAL ===== -->
+    <div class="container">
+
+        <!-- TARJETA DEL FORMULARIO -->
+        <div class="card">
+
+            <!-- Título de la sección del formulario -->
+            <h2><i class="fa fa-paper-plane"></i> Enviar mensaje</h2>
+
+            <!-- Nota informativa sobre la API que se usa -->
+            <div class="info-badge">
+                <i class="fa fa-circle-info"></i>
+                <span>Este formulario envía datos a <strong>JSONPlaceholder</strong> mediante una petición
+                    <code>POST</code>.
+                    Es una API de prueba gratuita que simula el guardado de datos y devuelve una respuesta JSON.</span>
+            </div>
+
+            <!-- FORMULARIO: captura nombre y mensaje del usuario -->
+            <form id="form-api" onsubmit="enviarDatos(event)">
+
+                <!-- Campo: Nombre -->
+                <div class="form-group">
+                    <!-- Etiqueta del campo nombre -->
+                    <label for="campo-nombre">Nombre</label>
+                    <!-- Input de texto para el nombre, obligatorio -->
+                    <input type="text" id="campo-nombre" placeholder="Ej: Juan Pérez" required />
+                </div>
+
+                <!-- Campo: Mensaje -->
+                <div class="form-group">
+                    <!-- Etiqueta del campo mensaje -->
+                    <label for="campo-mensaje">Mensaje</label>
+                    <!-- Área de texto para el mensaje, obligatoria -->
+                    <textarea id="campo-mensaje" placeholder="Escribe tu mensaje aquí..." required></textarea>
+                </div>
+
+                <!-- Botón de envío: contiene spinner que aparece mientras carga -->
+                <button type="submit" class="btn-enviar" id="btn-enviar">
+                    <div class="spinner" id="spinner"></div>
+                    <i class="fa fa-paper-plane" id="icono-btn"></i>
+                    <span id="texto-btn">Enviar a la API</span>
+                </button>
+
+            </form>
+        </div>
+
+        <!-- CAJA DE RESPUESTA: oculta hasta recibir respuesta de la API -->
+        <div class="respuesta-box" id="respuesta-box">
+            <h2><i class="fa fa-code"></i> Respuesta de la API</h2>
+
+            <!-- Badge verde que indica éxito -->
+            <div class="badge-ok">
+                <i class="fa fa-circle-check"></i> 201 Created – Datos recibidos correctamente
+            </div>
+
+            <!-- Bloque de código que mostrará el JSON de respuesta -->
+            <pre id="respuesta-json"></pre>
+        </div>
+
+    </div><!-- /container -->
+
+    <script>
+        /**
+         * Función principal: se ejecuta al enviar el formulario.
+         * Toma los datos del formulario, los envía a JSONPlaceholder
+         * y muestra la respuesta de la API.
+         *
+         * @param {Event} event - El evento submit del formulario
+         */
+        async function enviarDatos(event) {
+            // Evitamos que el formulario recargue la página
+            event.preventDefault();
+
+            // Obtenemos los valores de los campos del formulario
+            const nombre = document.getElementById('campo-nombre').value.trim();
+            const mensaje = document.getElementById('campo-mensaje').value.trim();
+
+            // Mostramos el spinner y deshabilitamos el botón mientras carga
+            const btn = document.getElementById('btn-enviar');
+            const spinner = document.getElementById('spinner');
+            const icono = document.getElementById('icono-btn');
+            const texto = document.getElementById('texto-btn');
+
+            btn.disabled = true;
+            spinner.style.display = 'block';
+            icono.style.display = 'none';
+            texto.textContent = 'Enviando...';
+
+            try {
+                // ── PETICIÓN POST ──────────────────────────────────────────
+                // Enviamos los datos en formato JSON a la API de JSONPlaceholder.
+                // El endpoint /posts simula la creación de una publicación.
+                const respuesta = await fetch('https://jsonplaceholder.typicode.com/posts', {
+                    method: 'POST', // Método HTTP: POST (enviar datos)
+                    headers: {
+                        'Content-Type': 'application/json' // Indicamos que enviamos JSON
+                    },
+                    // body: convertimos el objeto JavaScript a texto JSON
+                    body: JSON.stringify({
+                        title: nombre,   // El título del post será el nombre del usuario
+                        body: mensaje,  // El cuerpo del post será el mensaje
+                        userId: 1        // JSONPlaceholder requiere un userId
+                    })
+                });
+
+                // Convertimos la respuesta a un objeto JavaScript (JSON → objeto)
+                const datos = await respuesta.json();
+
+                // ── MOSTRAR RESPUESTA ──────────────────────────────────────
+                // Formateamos el JSON con sangría de 2 espacios para legibilidad
+                document.getElementById('respuesta-json').textContent =
+                    JSON.stringify(datos, null, 2);
+
+                // Hacemos visible la caja de respuesta con animación suave
+                const caja = document.getElementById('respuesta-box');
+                caja.style.display = 'block';
+                caja.style.opacity = '0';
+                caja.style.transition = 'opacity .4s ease';
+                setTimeout(() => { caja.style.opacity = '1'; }, 10);
+
+                // Hacemos scroll hasta la caja de respuesta
+                caja.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            } catch (error) {
+                // Si ocurre un error de red, lo mostramos de forma amigable
+                alert('⚠️ Ocurrió un error al conectar con la API: ' + error.message);
+            } finally {
+                // Restauramos el botón a su estado original (haya éxito o error)
+                btn.disabled = false;
+                spinner.style.display = 'none';
+                icono.style.display = 'inline';
+                texto.textContent = 'Enviar a la API';
+            }
+        }
+    </script>
+
+</body>
+
+</html>
