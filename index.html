@@ -117,6 +117,14 @@
       letter-spacing: .06em;
     }
 
+    #menu-toggle {
+      display: none;
+      font-size: 1.5rem;
+      color: var(--azul);
+      cursor: pointer;
+      margin-left: 1rem;
+    }
+
     /* Menú de navegación */
     nav a {
       color: var(--texto);
@@ -759,10 +767,38 @@
         padding: 0 1rem;
         flex-direction: row;
         justify-content: space-between;
+        flex-wrap: wrap;
+      }
+
+      .brand-name span.vive,
+      .brand-name span.bien {
+        font-size: 1.15rem;
+      }
+
+      .brand-name span.grupo {
+        font-size: 0.65rem;
+      }
+
+      #menu-toggle {
+        display: block;
+        order: 2;
+        /* Para que quede a la derecha */
       }
 
       nav {
         display: none;
+        width: 100%;
+        flex-direction: column;
+        padding: 1rem 0;
+        order: 3;
+      }
+
+      nav.show {
+        display: flex;
+      }
+
+      nav a {
+        margin: 0.5rem 0;
       }
 
       #clima-widget {
@@ -1835,9 +1871,9 @@
       <a href="index.html" class="activo">Inicio</a>
       <a href="propiedades.html">Propiedades</a>
       <a href="#contacto">Contacto</a>
-      <a href="dashboard.html" style="margin-left: 2rem; color: var(--azul); font-weight: 700;"><i
-          class="fa fa-lock"></i> Ingresar</a>
+      <a href="dashboard.html" style="color: var(--azul); font-weight: 700;"><i class="fa fa-lock"></i> Ingresar</a>
     </nav>
+    <i class="fa fa-bars" id="menu-toggle"></i>
   </header>
 
   <!-- =========================================================
@@ -2541,6 +2577,11 @@
     <i class="fab fa-whatsapp"></i>
   </a>
 
+  <script>
+    document.getElementById('menu-toggle')?.addEventListener('click', function () {
+      document.querySelector('header nav').classList.toggle('show');
+    });
+  </script>
 </body>
 
 </html>
