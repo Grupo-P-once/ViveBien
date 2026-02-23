@@ -124,33 +124,23 @@
     },
     {
       "id": "vb-009",
-      "name": "Enviar por Resend",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
+      "name": "Enviar por Gmail",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
       "position": [
         1700,
         480
       ],
       "parameters": {
-        "method": "POST",
-        "url": "https://api.resend.com/emails",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "Bearer re_3Zpm6W4w_BRVvN37Lyij3VJ5cFv8CFAf6"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "string",
-        "body": "={{ JSON.stringify({ from: 'Vive Bien <onboarding@resend.dev>', to: [$json.email], subject: $json.asunto, html: $json.emailHtml }) }}",
-        "options": {}
+        "sendTo": "={{ $json.email }}",
+        "subject": "={{ $json.asunto }}",
+        "emailType": "html",
+        "message": "={{ $json.emailHtml }}",
+        "options": {
+          "senderName": "Vive Bien Grupo Inmobiliario",
+          "replyTo": "grupo.p.11.ee@gmail.com",
+          "appendAttribution": false
+        }
       }
     },
     {
@@ -273,14 +263,14 @@
       "main": [
         [
           {
-            "node": "Enviar por Resend",
+            "node": "Enviar por Gmail",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Enviar por Resend": {
+    "Enviar por Gmail": {
       "main": [
         [
           {
