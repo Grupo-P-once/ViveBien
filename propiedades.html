@@ -860,7 +860,7 @@
 
     #seccion-buscador-sticky {
       background: var(--azul);
-      padding: 1.5rem 2rem;
+      padding: 0.5rem 1rem;
       position: sticky;
       top: 72px;
       z-index: 999;
@@ -1286,7 +1286,19 @@
       }
 
       .cookie-banner {
-        padding: 1rem;
+        padding: 1.5rem 1rem 3rem 1rem;
+        /* Extra padding-bottom para que no lo tape la barra del celular */
+      }
+
+      .cookie-btns {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .btn-cookie-ok,
+      .btn-cookie-no {
+        flex: 1;
+        padding: 0.8rem 1rem;
       }
     }
 
@@ -1938,7 +1950,7 @@
      ========================================================= -->
   <section id="seccion-buscador-sticky">
     <form class="buscador" id="form-busqueda" onsubmit="buscarPropiedad(event)"
-      style="max-width:700px; margin:0 auto; padding: 1.2rem;">
+      style="max-width:700px; margin:0 auto; padding: 0.6rem;">
       <select id="filtro-op" aria-label="Operación">
         <option value="venta">Comprar</option>
         <option value="renta">Rentar</option>
