@@ -204,6 +204,23 @@
       flex-wrap: wrap;
       gap: .8rem;
       justify-content: center;
+      align-items: center;
+    }
+
+    /* Modificador para intentar forzar en una línea en pantallas grandes */
+    .buscador.buscador-horizontal {
+      flex-wrap: nowrap;
+    }
+
+    .buscador.buscador-horizontal .input-group {
+      flex: 1 1 auto;
+      min-width: 180px;
+    }
+
+    .buscador.buscador-horizontal select,
+    .buscador.buscador-horizontal input {
+      flex: 1 1 auto;
+      min-width: 110px;
     }
 
     .buscador select,
@@ -1917,14 +1934,8 @@
      ========================================================= -->
   <header>
     <!-- Logotipo e identidad de marca -->
-    <div class="brand">
-      <img src="logo.png" alt="Logo Vive Bien Grupo Inmobiliario"
-        onerror="this.src='https://via.placeholder.com/50x50?text=VIVE'" />
-      <div class="brand-name">
-        <span class="vive">Vive </span><span class="bien">Bien</span>
-        <span class="grupo">Grupo Inmobiliario</span>
-      </div>
-    </div>
+    <a href="index.html" class="brand" style="text-decoration: none;"><img src="logo.png"
+        alt="Logo Vive Bien Grupo Inmobiliario" onerror="this.src='https://via.placeholder.com/50x50?text=VIVE'" /></a>
 
     <!-- Widget del clima (Relocalizado y Rediseñado) -->
     <div id="clima-widget">
@@ -1949,8 +1960,8 @@
      BUSCADOR DE PROPIEDADES (sin hero)
      ========================================================= -->
   <section id="seccion-buscador-sticky">
-    <form class="buscador" id="form-busqueda" onsubmit="buscarPropiedad(event)"
-      style="max-width:700px; margin:0 auto; padding: 0.6rem;">
+    <form class="buscador buscador-horizontal" id="form-busqueda" onsubmit="buscarPropiedad(event)"
+      style="max-width: 1200px; margin: 0 auto; padding: 0.6rem;">
       <select id="filtro-op" aria-label="Operación">
         <option value="venta">Comprar</option>
         <option value="renta">Rentar</option>
