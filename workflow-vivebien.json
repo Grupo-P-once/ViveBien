@@ -1,0 +1,299 @@
+{
+  "name": "Recomendaciones Diarias Vive Bien",
+  "nodes": [
+    {
+      "id": "vb-001",
+      "name": "Diario 9am",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        380
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "vb-002",
+      "name": "Leer Contactos",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        280
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://firestore.googleapis.com/v1/projects/vivebien-f4027/databases/(default)/documents/contactos?key=AIzaSyAX8OiWKAdAG5i6YIrYDbcfg6iYJBsf0ok&pageSize=300",
+        "options": {}
+      }
+    },
+    {
+      "id": "vb-003",
+      "name": "Leer Leads",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        480
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://firestore.googleapis.com/v1/projects/vivebien-f4027/databases/(default)/documents/leads?key=AIzaSyAX8OiWKAdAG5i6YIrYDbcfg6iYJBsf0ok&pageSize=300",
+        "options": {}
+      }
+    },
+    {
+      "id": "vb-004",
+      "name": "Leer Envios de Hoy",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        680
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://firestore.googleapis.com/v1/projects/vivebien-f4027/databases/(default)/documents/envios?key=AIzaSyAX8OiWKAdAG5i6YIrYDbcfg6iYJBsf0ok&pageSize=500",
+        "options": {}
+      }
+    },
+    {
+      "id": "vb-005",
+      "name": "Combinar Todo",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        740,
+        480
+      ],
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      }
+    },
+    {
+      "id": "vb-006",
+      "name": "Filtrar y Preparar Contactos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        980,
+        480
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Obtener datos con fallback si algún nodo no ejecutó aún\nlet contactosResp = {}, leadsResp = {}, enviosResp = {};\ntry { contactosResp = $('Leer Contactos').first().json; } catch(e) {}\ntry { leadsResp = $('Leer Leads').first().json; } catch(e) {}\ntry { enviosResp = $('Leer Envios de Hoy').first().json; } catch(e) {}\n\nfunction parseDoc(doc) {\n  const f = doc.fields || {};\n  return {\n    nombre: f.nombre?.stringValue || 'Cliente',\n    email: (f.email?.stringValue || '').toLowerCase().trim(),\n    interes: (f.interes?.stringValue || f.propiedad?.stringValue || 'nave').toLowerCase()\n  };\n}\n\nconst todos = [\n  ...(contactosResp.documents || []),\n  ...(leadsResp.documents || [])\n].map(parseDoc).filter(c => c.email);\n\nconst hoy = new Date().toISOString().slice(0, 10);\nconst enviadosHoy = new Set(\n  (enviosResp.documents || [])\n    .map(d => d.fields || {})\n    .filter(f => (f.fecha?.stringValue || '').startsWith(hoy))\n    .map(f => (f.email?.stringValue || '').toLowerCase())\n    .filter(Boolean)\n);\n\nconst emailsVistos = new Set();\nconst pendientes = todos.filter(c => {\n  if (!c.email || emailsVistos.has(c.email) || enviadosHoy.has(c.email)) return false;\n  emailsVistos.add(c.email);\n  return true;\n});\n\nconsole.log(`Total: ${todos.length} | Enviados hoy: ${enviadosHoy.size} | Pendientes: ${pendientes.length}`);\nreturn pendientes.map(c => ({ json: c }));"
+      }
+    },
+    {
+      "id": "vb-007",
+      "name": "Maximo 99 por dia",
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        1220,
+        480
+      ],
+      "parameters": {
+        "maxItems": 99
+      }
+    },
+    {
+      "id": "vb-008",
+      "name": "Generar Email HTML",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1460,
+        480
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const BASE_URL = 'https://grupo-p-once.github.io/mi-primera-api';\n\nconst propiedades = {\n  nave: {\n    badge: 'NAVE INDUSTRIAL',\n    badgeColor: '#1B365D',\n    titulo: 'Bodega Industrial • 1,244 m²',\n    subtitulo: 'Blvd. San Juan Bosco, Cañada del Refugio',\n    precio: '$118,180 MXN + IVA / mes',\n    precioLabel: 'Renta mensual',\n    features: ['1,244 m² totales', 'Oficinas en 3 niveles', 'Altura para maniobras', 'Acceso a Blvd. Hidalgo'],\n    imagen: BASE_URL + '/3vive_bien_fotos/naves/sanjuanbosco/foto1.jpg',\n    enlace: BASE_URL + '/propiedades.html#naves'\n  },\n  terreno: {\n    badge: 'TERRENO INDUSTRIAL',\n    badgeColor: '#279546',\n    titulo: 'Terreno Industrial Panan II',\n    subtitulo: 'Cluster Industrial Panan II, Silao, Gto.',\n    precio: 'Precio a consultar',\n    precioLabel: 'Disponible',\n    features: ['600 m² por lote', 'Seguridad 24/7', 'Acceso pavimentado', 'Uso industrial'],\n    imagen: BASE_URL + '/3vive_bien_fotos/terrenos/terreno_panam_silao_venta/foto1.jpg',\n    enlace: BASE_URL + '/propiedades.html#terrenos'\n  },\n  casa: {\n    badge: 'RESIDENCIAL',\n    badgeColor: '#8B1A1A',\n    titulo: 'Casas Residenciales en León',\n    subtitulo: 'Zonas exclusivas de León, Guanajuato',\n    precio: 'Desde $1,800,000 MXN',\n    precioLabel: 'Precio de venta',\n    features: ['Acabados de lujo', 'Seguridad privada', 'Jardín y estacionamiento', 'Zonas premium'],\n    imagen: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=600&auto=format',\n    enlace: BASE_URL + '/propiedades.html#casas'\n  },\n  comercial: {\n    badge: 'LOCAL COMERCIAL',\n    badgeColor: '#D97706',\n    titulo: 'Locales Comerciales',\n    subtitulo: 'Zonas de alta afluencia, León, Gto.',\n    precio: 'Precio a consultar',\n    precioLabel: 'Disponible',\n    features: ['Alta afluencia', 'Visibilidad garantizada', 'Ideal para franquicias', 'Excelente ubicación'],\n    imagen: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&auto=format',\n    enlace: BASE_URL + '/propiedades.html#comerciales'\n  }\n};\n\nconst interes = ($json.interes || '').toLowerCase();\nlet prop = propiedades.nave;\nif (interes.includes('terreno')) prop = propiedades.terreno;\nelse if (interes.includes('casa') || interes.includes('residencial') || interes.includes('depto')) prop = propiedades.casa;\nelse if (interes.includes('comercial') || interes.includes('local')) prop = propiedades.comercial;\nelse if (interes.includes('nave') || interes.includes('bodega') || interes.includes('industrial')) prop = propiedades.nave;\n\nconst nombre = $json.nombre || 'Cliente';\nconst asunto = `🏠 Vive Bien – Tu propiedad ideal está aquí: ${prop.titulo}`;\nconst fecha = new Date().toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });\nconst featuresHTML = prop.features.map(f => `\n  <tr><td style=\"padding:5px 0\">\n    <span style=\"display:inline-flex;align-items:center;gap:8px;font-size:14px;color:#444\">\n      <span style=\"width:20px;height:20px;background:${prop.badgeColor};border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0\">\n        <span style=\"color:#fff;font-size:11px;font-weight:bold\">✓</span>\n      </span>\n      ${f}\n    </span>\n  </td></tr>`).join('');\n\nconst html = `<!DOCTYPE html>\n<html lang=\"es\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n<title>${asunto}</title>\n</head>\n<body style=\"margin:0;padding:0;background:#EAEFF4;font-family:Georgia,serif\">\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#EAEFF4\">\n<tr><td align=\"center\" style=\"padding:30px 10px\">\n\n  <table width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"max-width:600px;width:100%\">\n\n    <!-- TOP BAR -->\n    <tr><td style=\"background:#8B1A1A;padding:10px 30px;border-radius:10px 10px 0 0\">\n      <table width=\"100%\"><tr>\n        <td style=\"color:#fff;font-family:Arial,sans-serif;font-size:13px;font-weight:700;letter-spacing:1px\">VIVE BIEN</td>\n        <td align=\"right\" style=\"color:rgba(255,255,255,.7);font-family:Arial,sans-serif;font-size:11px\">${fecha}</td>\n      </tr></table>\n    </td></tr>\n\n    <!-- HERO BANNER -->\n    <tr><td style=\"position:relative;padding:0\">\n      <a href=\"${prop.enlace}\" style=\"display:block;text-decoration:none\">\n        <img src=\"${prop.imagen}\" width=\"600\" style=\"width:100%;max-width:600px;height:260px;object-fit:cover;display:block\" alt=\"${prop.titulo}\">\n        <div style=\"position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(to bottom,rgba(0,0,0,.05) 0%,rgba(0,0,0,.55) 100%)\"></div>\n        <div style=\"position:absolute;bottom:24px;left:28px;right:28px\">\n          <span style=\"background:${prop.badgeColor};color:#fff;font-family:Arial,sans-serif;font-size:10px;font-weight:800;letter-spacing:2px;padding:5px 12px;border-radius:4px\">${prop.badge}</span>\n          <h1 style=\"margin:10px 0 4px;color:#fff;font-size:24px;font-family:Georgia,serif;text-shadow:0 2px 8px rgba(0,0,0,.4)\">${prop.titulo}</h1>\n          <p style=\"margin:0;color:rgba(255,255,255,.9);font-family:Arial,sans-serif;font-size:13px\">📍 ${prop.subtitulo}</p>\n        </div>\n      </a>\n    </td></tr>\n\n    <!-- MAIN CONTENT -->\n    <tr><td style=\"background:#fff;padding:32px 36px\">\n\n      <!-- Saludo -->\n      <p style=\"margin:0 0 6px;font-size:18px;color:#1B365D;font-family:Georgia,serif\">Hola, <strong>${nombre}</strong></p>\n      <p style=\"margin:0 0 24px;font-size:14px;color:#666;font-family:Arial,sans-serif;line-height:1.6\">Encontramos una propiedad que coincide con lo que buscas. No dejes pasar esta oportunidad — el inventario es limitado.</p>\n\n      <!-- Precio box -->\n      <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:linear-gradient(135deg,#8B1A1A,#1B365D);border-radius:10px;margin-bottom:24px\">\n        <tr><td style=\"padding:18px 24px\">\n          <p style=\"margin:0;font-family:Arial,sans-serif;font-size:11px;color:rgba(255,255,255,.75);text-transform:uppercase;letter-spacing:1px\">${prop.precioLabel}</p>\n          <p style=\"margin:6px 0 0;font-family:Arial,sans-serif;font-size:26px;font-weight:800;color:#fff\">${prop.precio}</p>\n        </td></tr>\n      </table>\n\n      <!-- Features -->\n      <p style=\"margin:0 0 12px;font-family:Arial,sans-serif;font-size:13px;font-weight:700;color:#1B365D;text-transform:uppercase;letter-spacing:.5px\">Características</p>\n      <table cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:28px\">\n        ${featuresHTML}\n      </table>\n\n      <!-- CTA -->\n      <table width=\"100%\"><tr><td align=\"center\">\n        <a href=\"${prop.enlace}\"\n           style=\"display:inline-block;background:linear-gradient(135deg,#8B1A1A,#C0392B);color:#fff;font-family:Arial,sans-serif;font-size:16px;font-weight:700;padding:16px 48px;border-radius:50px;text-decoration:none;box-shadow:0 4px 16px rgba(139,26,26,.35);letter-spacing:.5px\">\n          Ver esta propiedad &rarr;\n        </a>\n      </td></tr></table>\n\n    </td></tr>\n\n    <!-- WHATSAPP BAR -->\n    <tr><td style=\"background:#F0F4F8;padding:18px 36px;border-top:1px solid #E2E8F0\">\n      <table width=\"100%\"><tr>\n        <td style=\"font-family:Arial,sans-serif;font-size:13px;color:#555\">¿Quieres más información?</td>\n        <td align=\"right\">\n          <a href=\"https://wa.me/524778116501\" style=\"display:inline-flex;align-items:center;gap:6px;background:#25D366;color:#fff;font-family:Arial,sans-serif;font-size:13px;font-weight:700;padding:8px 16px;border-radius:20px;text-decoration:none\">\n            &#128241; WhatsApp\n          </a>\n        </td>\n      </tr></table>\n    </td></tr>\n\n    <!-- FOOTER -->\n    <tr><td style=\"background:#1B365D;padding:20px 36px;border-radius:0 0 10px 10px;text-align:center\">\n      <p style=\"margin:0;font-family:Arial,sans-serif;font-size:12px;color:rgba(255,255,255,.6)\">Vive Bien Grupo Inmobiliario &bull; León, Guanajuato, México</p>\n      <p style=\"margin:6px 0 0;font-family:Arial,sans-serif;font-size:11px;color:rgba(255,255,255,.4)\">Recibiste este correo porque te registraste en nuestro sitio web.</p>\n    </td></tr>\n\n  </table>\n\n</td></tr>\n</table>\n</body>\n</html>`;\n\nconst firebasePayload = JSON.stringify({\n  fields: {\n    email: { stringValue: $json.email },\n    nombre: { stringValue: nombre },\n    asunto: { stringValue: asunto },\n    fecha: { stringValue: new Date().toISOString().slice(0, 10) },\n    timestamp: { stringValue: new Date().toISOString() }\n  }\n});\n\nreturn [{ json: { email: $json.email, nombre, asunto, emailHtml: html, firebasePayload } }];"
+      }
+    },
+    {
+      "id": "vb-009",
+      "name": "Enviar por Resend",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1700,
+        480
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer re_3Zpm6W4w_BRVvN37Lyij3VJ5cFv8CFAf6"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "string",
+        "body": "={{ JSON.stringify({ from: 'Vive Bien <onboarding@resend.dev>', to: [$json.email], subject: $json.asunto, html: $json.emailHtml }) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "vb-010",
+      "name": "Guardar Registro Envio",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1940,
+        480
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://firestore.googleapis.com/v1/projects/vivebien-f4027/databases/(default)/documents/envios?key=AIzaSyAX8OiWKAdAG5i6YIrYDbcfg6iYJBsf0ok",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "string",
+        "body": "={{ $json.firebasePayload }}",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Diario 9am": {
+      "main": [
+        [
+          {
+            "node": "Leer Contactos",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Leer Leads",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Leer Envios de Hoy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer Contactos": {
+      "main": [
+        [
+          {
+            "node": "Combinar Todo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer Leads": {
+      "main": [
+        [
+          {
+            "node": "Combinar Todo",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Leer Envios de Hoy": {
+      "main": [
+        [
+          {
+            "node": "Combinar Todo",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Combinar Todo": {
+      "main": [
+        [
+          {
+            "node": "Filtrar y Preparar Contactos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filtrar y Preparar Contactos": {
+      "main": [
+        [
+          {
+            "node": "Maximo 99 por dia",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Maximo 99 por dia": {
+      "main": [
+        [
+          {
+            "node": "Generar Email HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generar Email HTML": {
+      "main": [
+        [
+          {
+            "node": "Enviar por Resend",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar por Resend": {
+      "main": [
+        [
+          {
+            "node": "Guardar Registro Envio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
