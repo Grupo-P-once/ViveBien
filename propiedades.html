@@ -2462,7 +2462,7 @@
     }
 
     // Valida los campos, guarda los datos y muestra las opciones de contacto
-    function enviarRegistro() {
+    async function enviarRegistro() {
       const nombre = document.getElementById('reg-nombre').value.trim();
       const tel = document.getElementById('reg-tel').value.trim();
       const email = document.getElementById('reg-email').value.trim();
@@ -2479,16 +2479,26 @@
         telefono: tel,
         email,
         propiedad: _propiedadInteres,
-        fecha: new Date().toLocaleString('es-MX')
+        fecha: new Date().toLocaleString('es-MX'),
+        timestamp: new Date().toISOString()
       };
 
-      // 1) Guardar en localStorage como respaldo
+      try {
+        // 1) Guardar en Firebase (Colección 'leads')
+        if (window._dbFirebase) {
+          await window._addDoc(window._collection(window._dbFirebase, 'leads'), lead);
+          console.log('Lead guardado en Firebase:', lead);
+        }
+      } catch (error) {
+        console.error('Error al guardar en Firebase:', error);
+      }
+
+      // 2) Guardar en localStorage como respaldo local
       const leads = JSON.parse(localStorage.getItem('leadsViveBien') || '[]');
       leads.push(lead);
       localStorage.setItem('leadsViveBien', JSON.stringify(leads));
-      console.log('Lead guardado:', lead);
 
-      // 2) Enviar a tu correo vía FormSubmit.co (mismo que usas en contacto)
+      // 3) Enviar a tu correo vía FormSubmit.co
       fetch('https://formsubmit.co/ajax/jpepeponce200903@gmail.com', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
