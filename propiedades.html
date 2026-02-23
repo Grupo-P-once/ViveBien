@@ -1977,59 +1977,8 @@
       <h2><i class="fa fa-industry"></i> <span style="font-weight: 400;">Naves</span> Industriales</h2>
       <p>Infraestructura de alto nivel para tu operación logística e industrial</p>
     </div>
-    <div class="grid-propiedades">
-      <!-- ==========================================
-           Nave Industrial San Juan Bosco (REAL)
-           ========================================== -->
-      <div class="tarjeta" data-tipo="nave" data-operacion="renta" data-precio="118180" data-zona="San Juan Bosco"
-        data-recamaras="0" data-mantenimiento="false">
-        <div class="badge-status badge-disponible">Disponible</div>
-        <div class="slider-wrap" id="slider-sanjuan">
-          <div class="slider-track">
-            <img src="./3vive_bien_fotos/naves_industriales/nave_industrial_SanJuanBosco_Renta/foto1.jpg"
-              alt="San Juan Bosco 1" />
-            <img src="./3vive_bien_fotos/naves_industriales/nave_industrial_SanJuanBosco_Renta/fot2.jpg"
-              alt="San Juan Bosco 2" />
-            <img src="./3vive_bien_fotos/naves_industriales/nave_industrial_SanJuanBosco_Renta/foto3.jpg"
-              alt="San Juan Bosco 3" />
-            <img src="./3vive_bien_fotos/naves_industriales/nave_industrial_SanJuanBosco_Renta/foto4.jpg"
-              alt="San Juan Bosco 4" />
-          </div>
-          <button class="slider-btn prev" onclick="moverSlider('slider-sanjuan', -1)">&#8249;</button>
-          <button class="slider-btn next" onclick="moverSlider('slider-sanjuan',  1)">&#8250;</button>
-          <div class="slider-dots" id="dots-sanjuan">
-            <span class="activo" onclick="irSlide('slider-sanjuan',0)"></span>
-            <span onclick="irSlide('slider-sanjuan',1)"></span>
-            <span onclick="irSlide('slider-sanjuan',2)"></span>
-            <span onclick="irSlide('slider-sanjuan',3)"></span>
-          </div>
-          <span class="etiqueta comercial">En Renta</span>
-        </div>
-        <div class="tarjeta-body">
-          <h3>Bodega en Renta – 1,244 m²</h3>
-          <div class="tarjeta-meta">
-            <i class="fa fa-location-dot"></i> Blvd. San Juan Bosco, Cañada del Refugio<br>
-            <span style="display:inline-block; margin-left:14px; color:#777;">León, Gto.</span>
-          </div>
-          <div class="tarjeta-feat">
-            <span><i class="fa fa-ruler-combined"></i> 1,244 m²</span>
-            <span><i class="fa fa-industry"></i> Logística</span>
-          </div>
-          <div class="tarjeta-footer">
-            <span class="precio">Favor de Consultar</span>
-            <button class="btn-ver" style="padding: 0.45rem 0.6rem;" onclick="abrirModal('sanjuan')">Ver más</button>
-          </div>
-          <div class="tarjeta-contacto" style="margin-top:8px;">
-            <a href="javascript:void(0)" onclick="pedirRegistro('tel:+524778116501', 'Bodega en Renta – 1,244 m²')"
-              title="Llamar"><i class="fa fa-phone"></i></a>
-            <a href="javascript:void(0)"
-              onclick="pedirRegistro('https://wa.me/524778116501?text=Hola%2C%20quiero%20informes%20sobre%20la%20Bodega%20en%20Renta%20%E2%80%93%201%2C244%20m%C2%B2%20en%20San%20Juan%20Bosco', 'Bodega en Renta – 1,244 m²')"
-              title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
-            <button onclick="pedirRegistro('#contacto', 'Bodega en Renta – 1,244 m²')" title="Contactar"><i
-                class="fa fa-envelope"></i></button>
-          </div>
-        </div>
-      </div>
+    <div class="grid-propiedades" id="grid-naves">
+      <p style="grid-column: 1 / -1; text-align: center; color: #777; padding: 2rem;">Cargando naves disponibles...</p>
     </div>
   </section>
   <section id="casas">
@@ -2039,8 +1988,8 @@
       <p>Espacios familiares pensados para ti en las mejores colonias de León</p>
     </div>
 
-    <div class="grid-propiedades">
-      <p style="grid-column: 1 / -1; text-align: center; color: #777; padding: 2rem;">Próximamente más casas...</p>
+    <div class="grid-propiedades" id="grid-casas">
+      <p style="grid-column: 1 / -1; text-align: center; color: #777; padding: 2rem;">Cargando casas disponibles...</p>
     </div>
   </section>
 
@@ -2054,11 +2003,8 @@
       <p>Vivienda vertical con acabados de primera, ideales para jóvenes y familias</p>
     </div>
 
-    <div class="grid-propiedades">
-      <!-- Próximamente se agregarán departamentos aquí -->
-      <p style="grid-column: 1 / -1; text-align: center; color: #777; padding: 2rem;">Próximamente más
-        departamentos...
-      </p>
+    <div class="grid-propiedades" id="grid-departamentos">
+      <p style="grid-column: 1 / -1; text-align: center; color: #777; padding: 2rem;">Cargando departamentos...</p>
     </div>
   </section>
 
@@ -2073,106 +2019,10 @@
       <p>Lotes residenciales e industriales con ubicación estratégica y alta plusvalía</p>
     </div>
 
-    <div class="grid-propiedades">
-
-      <!-- ==========================================
-           Terreno Panan II – Lote A (REAL)
-           Cluster Industrial Panan II, León, Gto.
-           Superficie: 600 m² | En venta
-           Fotos: plano del desarrollo, entrada y mapa
-           ========================================== -->
-      <div class="tarjeta pausada" data-tipo="terreno" data-operacion="venta" data-precio="500000" data-zona="Silao"
-        data-recamaras="0" data-mantenimiento="false">
-        <div class="badge-status badge-pausada">Pausada</div>
-        <div class="liston-pausado">Publicación Pausada</div>
-        <div class="slider-wrap" id="slider-pananA">
-          <div class="slider-track">
-            <img src="./3vive_bien_fotos/terrenos/terreno_panam_silao_venta/foto1.jpg" alt="Panan Lote A" />
-            <img src="./3vive_bien_fotos/terrenos/terreno_panam_silao_venta/foto2.jpg" alt="Panan Lote A 2" />
-            <img src="./3vive_bien_fotos/terrenos/terreno_panam_silao_venta/foto3.jpg" alt="Panan Lote A 3" />
-          </div>
-          <button class="slider-btn prev" onclick="moverSlider('slider-pananA', -1)">&#8249;</button>
-          <button class="slider-btn next" onclick="moverSlider('slider-pananA',  1)">&#8250;</button>
-          <div class="slider-dots" id="dots-pananA">
-            <span class="activo" onclick="irSlide('slider-pananA',0)"></span>
-            <span onclick="irSlide('slider-pananA',1)"></span>
-            <span onclick="irSlide('slider-pananA',2)"></span>
-          </div>
-          <span class="etiqueta terreno">Terreno</span>
-        </div>
-        <div class="tarjeta-body">
-          <h3>Terreno Industrial Panan II – Lote A</h3>
-          <div class="tarjeta-meta">
-            <i class="fa fa-location-dot"></i> Panan II<br>
-            <span style="display:inline-block; margin-left:14px; color:#777;">Silao, Gto.</span>
-          </div>
-          <div class="tarjeta-feat">
-            <span><i class="fa fa-ruler-combined"></i> 600 m²</span>
-            <span><i class="fa fa-industry"></i> Industrial</span>
-          </div>
-          <div class="tarjeta-footer">
-            <span class="precio">Favor de Consultar</span>
-            <button class="btn-ver" style="padding: 0.45rem 0.6rem;" onclick="abrirModal('pananA')">Ver más</button>
-          </div>
-          <div class="tarjeta-contacto" style="margin-top:8px;">
-            <a href="javascript:void(0)" onclick="pedirRegistro('tel:+524778116501', 'Terreno Panan II – Lote A')"
-              title="Llamar"><i class="fa fa-phone"></i></a>
-            <a href="javascript:void(0)"
-              onclick="pedirRegistro('https://wa.me/524778116501?text=Hola%2C%20quiero%20informes%20sobre%20el%20Terreno%20Industrial%20Panan%20II%20%E2%80%93%20Lote%20A', 'Terreno Panan II – Lote A')"
-              title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
-            <button onclick="pedirRegistro('#contacto', 'Terreno Panan II – Lote A')" title="Contactar"><i
-                class="fa fa-envelope"></i></button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ==========================================
-           Terreno Industrial Panan II – Lote B (REAL)
-           ========================================== -->
-      <div class="tarjeta pausada" data-tipo="terreno" data-operacion="venta" data-precio="500000" data-zona="Silao"
-        data-recamaras="0" data-mantenimiento="false">
-        <div class="badge-status badge-pausada">Pausada</div>
-        <div class="liston-pausado">Publicación Pausada</div>
-        <div class="slider-wrap" id="slider-pananB">
-          <div class="slider-track">
-            <img src="./3vive_bien_fotos/terrenos/terreno_panam_silao_venta/foto2.jpg" alt="Panan Lote B" />
-            <img src="./3vive_bien_fotos/terrenos/terreno_panam_silao_venta/foto1.jpg" alt="Panan Lote B 2" />
-            <img src="./3vive_bien_fotos/terrenos/terreno_panam_silao_venta/foto3.jpg" alt="Panan Lote B 3" />
-          </div>
-          <button class="slider-btn prev" onclick="moverSlider('slider-pananB', -1)">&#8249;</button>
-          <button class="slider-btn next" onclick="moverSlider('slider-pananB',  1)">&#8250;</button>
-          <div class="slider-dots" id="dots-pananB">
-            <span class="activo" onclick="irSlide('slider-pananB',0)"></span>
-            <span onclick="irSlide('slider-pananB',1)"></span>
-            <span onclick="irSlide('slider-pananB',2)"></span>
-          </div>
-          <span class="etiqueta terreno">Terreno</span>
-        </div>
-        <div class="tarjeta-body">
-          <h3>Terreno Industrial Panan II – Lote B</h3>
-          <div class="tarjeta-meta">
-            <i class="fa fa-location-dot"></i> Panan II<br>
-            <span style="display:inline-block; margin-left:14px; color:#777;">Silao, Gto.</span>
-          </div>
-          <div class="tarjeta-feat">
-            <span><i class="fa fa-ruler-combined"></i> 600 m²</span>
-            <span><i class="fa fa-industry"></i> Industrial</span>
-          </div>
-          <div class="tarjeta-footer">
-            <span class="precio">Favor de Consultar</span>
-            <button class="btn-ver" style="padding: 0.45rem 0.6rem;" onclick="abrirModal('pananB')">Ver más</button>
-          </div>
-          <div class="tarjeta-contacto" style="margin-top:8px;">
-            <a href="javascript:void(0)" onclick="pedirRegistro('tel:+524778116501', 'Terreno Panan II – Lote B')"
-              title="Llamar"><i class="fa fa-phone"></i></a>
-            <a href="javascript:void(0)"
-              onclick="pedirRegistro('https://wa.me/524778116501?text=Hola%2C%20quiero%20informes%20sobre%20el%20Terreno%20Industrial%20Panan%20II%20%E2%80%93%20Lote%20B', 'Terreno Panan II – Lote B')"
-              title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
-            <button onclick="pedirRegistro('#contacto', 'Terreno Panan II – Lote B')" title="Contactar"><i
-                class="fa fa-envelope"></i></button>
-          </div>
-        </div>
-      </div>
+    <div class="grid-propiedades" id="grid-terrenos">
+      <p style="grid-column: 1 / -1; text-align: center; color: #777; padding: 2rem;">Cargando terrenos disponibles...
+      </p>
+    </div>
   </section>
 
 
@@ -2185,10 +2035,9 @@
       <p>Espacios estratégicos para que tu negocio crezca en León</p>
     </div>
 
-    <div class="grid-propiedades">
-      <!-- Próximamente se agregarán locales aquí -->
-      <p style="grid-column: 1 / -1; text-align: center; color: #777; padding: 2rem;">Próximamente más locales
-        comerciales y oficinas...</p>
+    <div class="grid-propiedades" id="grid-comerciales">
+      <p style="grid-column: 1 / -1; text-align: center; color: #777; padding: 2rem;">Cargando locales comerciales...
+      </p>
     </div>
   </section>
 
@@ -2749,47 +2598,106 @@
     }
 
     /* -------------------------------------------------------
-       7. LOGICA DEL MODAL (NUEVA)
+       7. LOGICA DEL MODAL Y CARGA DINÁMICA DE FIREBASE (NUEVA)
        ------------------------------------------------------- */
-    const dbPropiedades = {
-      'pananA': {
-        titulo: 'Terreno Industrial Panan II – Lote A',
-        ubicacion: 'Cluster Industrial Panan II, Silao, Gto.',
-        price: 'Favor de Consultar',
-        descripcion: 'Lote industrial de 600 m² en cluster privado con seguridad y pavimentación. Cercano a Carretera Federal 45.',
-        caracteristicas: ['600 m²', 'Seguridad 24/7', 'Acceso Pavimentado', 'Uso Industrial'],
-        fotos: [
-          './3vive_bien_fotos/terrenos/terreno_panam_silao_venta/foto1.jpg',
-          './3vive_bien_fotos/terrenos/terreno_panam_silao_venta/foto2.jpg',
-          './3vive_bien_fotos/terrenos/terreno_panam_silao_venta/foto3.jpg'
-        ]
-      },
-      'pananB': {
-        titulo: 'Terreno Industrial Panan II – Lote B',
-        ubicacion: 'Cluster Industrial Panan II, Silao, Gto.',
-        precio: 'Favor de Consultar',
-        descripcion: 'Segundo lote disponible con excelentes acabados de urbanización y conectividad logística.',
-        caracteristicas: ['600 m²', 'Urbanizado', 'Conectividad Premium', 'Todos los servicios'],
-        fotos: [
-          './3vive_bien_fotos/terrenos/terreno_panam_silao_venta/foto2.jpg',
-          './3vive_bien_fotos/terrenos/terreno_panam_silao_venta/foto1.jpg',
-          './3vive_bien_fotos/terrenos/terreno_panam_silao_venta/foto3.jpg'
-        ]
-      },
-      'sanjuan': {
-        titulo: 'Bodega en Renta – 1,244 m² en Blvd. San Juan Bosco',
-        ubicacion: 'Blvd. San Juan Bosco, Cañada del Refugio, 37358 León de los Aldama, Gto.',
-        precio: '$118,180. MNX + IVA',
-        descripcion: 'Excelente oportunidad para empresas que buscan una bodega amplia, funcional y con una ubicación privilegiada. La propiedad cuenta con 1,244 m² totales, con oficinas modernas distribuidas en 3 niveles (2 baños por nivel), excelente altura para maniobras e iluminación natural que reduce costos. Ubicación estratégica con acceso rápido a Blvd. Hidalgo, Morelos, Las Torres y Libramiento. Ideal para CEDIS, logística, almacenes o manufactura ligera.',
-        caracteristicas: ['1,244 m² Totales', 'Oficinas en 3 Niveles', '2 Baños por Nivel', 'Altura para Maniobras', 'Iluminación Natural', 'Ubicación Estratégica'],
-        fotos: [
-          './3vive_bien_fotos/naves_industriales/nave_industrial_SanJuanBosco_Renta/foto1.jpg',
-          './3vive_bien_fotos/naves_industriales/nave_industrial_SanJuanBosco_Renta/fot2.jpg',
-          './3vive_bien_fotos/naves_industriales/nave_industrial_SanJuanBosco_Renta/foto3.jpg',
-          './3vive_bien_fotos/naves_industriales/nave_industrial_SanJuanBosco_Renta/foto4.jpg',
-          './3vive_bien_fotos/naves_industriales/nave_industrial_SanJuanBosco_Renta/foto5.jpg',
-          './3vive_bien_fotos/naves_industriales/nave_industrial_SanJuanBosco_Renta/foto6.jpg'
-        ]
+    let dbPropiedades = {}; // Se llenará desde Firebase
+
+    // Renderiza las tarjetas dinámicas
+    window.cargarPropiedadesPublicas = async function () {
+      try {
+        const db = window._dbFirebase;
+        // Solo traemos las que no estén ubicadas como "pausada"
+        const propsRef = window._collection(db, 'propiedades');
+        const q = window._query(propsRef, window._where('estado', '!=', 'pausada'));
+        const snap = await window._getDocs(q);
+
+        // Limpiar los contenedores por seguridad
+        document.getElementById('grid-naves').innerHTML = '';
+        document.getElementById('grid-casas').innerHTML = '';
+        document.getElementById('grid-departamentos').innerHTML = '';
+        document.getElementById('grid-terrenos').innerHTML = '';
+        document.getElementById('grid-comerciales').innerHTML = '';
+
+        if (snap.empty) {
+          console.log("No hay propiedades públicas disponibles.");
+          return;
+        }
+
+        snap.forEach(docSnap => {
+          const id = docSnap.id;
+          const d = docSnap.data();
+
+          // Guardar en diccionario para el modal
+          dbPropiedades[id] = {
+            titulo: d.titulo,
+            ubicacion: d.ubicacion,
+            precio: d.precio,
+            descripcion: d.descripcion,
+            caracteristicas: d.features || [],
+            fotos: [d.imagen] // Por ahora solo la de portada
+          };
+
+          // Formadores de texto y etiquetas
+          const isVendida = d.estado === 'vendida';
+          const badgeHtml = isVendida
+            ? `<div class="badge-status" style="background:var(--rojo);">Vendida</div><div class="liston-pausado" style="background:var(--rojo);">Propiedad Vendida</div>`
+            : `<div class="badge-status badge-disponible">Disponible</div>`;
+
+          const urlWa = `https://wa.me/524778116501?text=${encodeURIComponent('Hola, quiero informes sobre: ' + d.titulo)}`;
+          const iconOp = d.operacion === 'renta' ? 'En Renta' : 'En Venta';
+          const iconType = d.tipo === 'nave' ? 'fa-industry' : (d.tipo === 'terreno' ? 'fa-map' : 'fa-house');
+
+          // Plantilla HTML de la tarjeta
+          const html = `
+            <div class="tarjeta ${isVendida ? 'pausada' : ''}" data-tipo="${d.tipo}" data-operacion="${d.operacion}" data-precio="${d.precioNum}" data-zona="${d.zona}"
+              data-recamaras="0" data-mantenimiento="false">
+              ${badgeHtml}
+              <div class="slider-wrap" id="slider-${id}">
+                <div class="slider-track" style="transform: translateX(0%);"><img src="${d.imagen}" alt="${d.titulo}" onerror="this.src='https://via.placeholder.com/400x300?text=Sin+Foto'" /></div>
+                <div class="slider-dots" id="dots-${id}"><span class="activo"></span></div>
+                <span class="etiqueta comercial">${iconOp}</span>
+              </div>
+              <div class="tarjeta-body">
+                <h3>${d.titulo}</h3>
+                <div class="tarjeta-meta">
+                  <i class="fa fa-location-dot"></i> ${d.ubicacion}
+                </div>
+                <div class="tarjeta-feat">
+                  <span><i class="fa ${iconType}"></i> ${d.tipo.toUpperCase()}</span>
+                </div>
+                <div class="tarjeta-footer">
+                  <span class="precio">${d.precio}</span>
+                  <button class="btn-ver" style="padding: 0.45rem 0.6rem;" onclick="abrirModal('${id}')">Ver más</button>
+                </div>
+                <div class="tarjeta-contacto" style="margin-top:8px;">
+                  <a href="javascript:void(0)" onclick="pedirRegistro('tel:+524778116501', '${d.titulo}')" title="Llamar"><i class="fa fa-phone"></i></a>
+                  <a href="javascript:void(0)" onclick="pedirRegistro('${urlWa}', '${d.titulo}')" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+                  <button onclick="pedirRegistro('#contacto', '${d.titulo}')" title="Contactar"><i class="fa fa-envelope"></i></button>
+                </div>
+              </div>
+            </div>
+          `;
+
+          // Inyectar en el grid que corresponda
+          if (d.tipo === 'nave') document.getElementById('grid-naves').innerHTML += html;
+          else if (d.tipo === 'casa') document.getElementById('grid-casas').innerHTML += html;
+          else if (d.tipo === 'departamento') document.getElementById('grid-departamentos').innerHTML += html;
+          else if (d.tipo === 'terreno') document.getElementById('grid-terrenos').innerHTML += html;
+          else if (d.tipo === 'comercial') document.getElementById('grid-comerciales').innerHTML += html;
+        });
+
+        // Reaplicar animación de scroll a las tarjetas cargadas (observador)
+        document.querySelectorAll('.tarjeta').forEach(tarjeta => {
+          tarjeta.style.opacity = '0';
+          tarjeta.style.transform = 'translateY(30px)';
+          observador.observe(tarjeta);
+        });
+
+        // Aplicamos los filtros pendientes si veniamos de la URL
+        setTimeout(() => buscarPropiedad({ preventDefault: () => { } }), 200);
+
+      } catch (err) {
+        console.error("Error al cargar propiedades de Firebase:", err);
       }
     };
 
@@ -2800,7 +2708,7 @@
       document.getElementById('m-title').textContent = data.titulo;
       document.getElementById('m-location').textContent = data.ubicacion;
       document.getElementById('m-description').textContent = data.descripcion;
-      document.getElementById('m-price').textContent = data.price;
+      document.getElementById('m-price').textContent = data.precio;
       document.getElementById('m-wa-link').href = `https://wa.me/524778116501?text=${encodeURIComponent('Hola, quiero informes sobre: ' + data.titulo)}`;
       document.getElementById('m-bg-blur').style.backgroundImage = `url('${data.fotos[0]}')`;
 
@@ -2859,8 +2767,8 @@
     window.onclick = function (event) {
       const modalProp = document.getElementById('modal-propiedad');
       const modalPriv = document.getElementById('modal-privacidad');
-      if (event.target == modalProp) cerrarModal();
-      if (event.target == modalPriv) cerrarPrivacidad();
+      if (modalProp && event.target == modalProp) cerrarModal();
+      if (modalPriv && event.target == modalPriv) cerrarPrivacidad();
     }
 
     // Aplicar filtros de la URL al cargar la página si vienen desde index.html
@@ -2894,10 +2802,7 @@
       }
 
       if (tieneFiltros) {
-        // Esperamos un momento para que el DOM esté completamente listo (fotos, etc.)
-        setTimeout(() => {
-          buscarPropiedad({ preventDefault: () => { } });
-        }, 100);
+        /* El filtro de query params se mueve tras cargarPropiedadesPublicas */
       }
     });
   </script>
@@ -2927,7 +2832,7 @@
   <!-- Firebase CDN -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.3.1/firebase-app.js';
-    import { getFirestore, addDoc, collection } from 'https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js';
+    import { getFirestore, addDoc, collection, getDocs, query, where } from 'https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js';
     const firebaseConfig = {
       apiKey: "AIzaSyAX8OiWKAdAG5i6YIrYDbcfg6iYJBsf0ok",
       authDomain: "vivebien-f4027.firebaseapp.com",
@@ -2941,6 +2846,14 @@
     window._dbFirebase = db;
     window._addDoc = addDoc;
     window._collection = collection;
+    window._getDocs = getDocs;
+    window._query = query;
+    window._where = where;
+
+    // Disparar carga de propiedades
+    if (window.cargarPropiedadesPublicas) {
+      window.cargarPropiedadesPublicas();
+    }
   </script>
 
 </body>
