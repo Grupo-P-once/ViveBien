@@ -1498,18 +1498,22 @@
     }
 
     .sobre-visual .sobre-icono-grande {
-      width: 280px;
-      height: 280px;
+      width: 420px;
+      height: 420px;
       display: flex;
       align-items: center;
       justify-content: center;
+      background: transparent;
+      border: none;
+      box-shadow: none;
     }
 
     .sobre-visual .sobre-icono-grande img {
       width: 100%;
       height: 100%;
       object-fit: contain;
-      filter: drop-shadow(0 10px 30px rgba(139, 26, 26, .25));
+      mix-blend-mode: multiply;
+      filter: drop-shadow(0 8px 24px rgba(139, 26, 26, .20));
     }
 
     /* ===== SECCIÓN BENEFICIOS ===== */
@@ -1687,8 +1691,8 @@
       }
 
       .sobre-visual .sobre-icono-grande {
-        width: 160px;
-        height: 160px;
+        width: 260px;
+        height: 260px;
       }
 
       .sobre-visual .sobre-icono-grande i {
@@ -2298,7 +2302,7 @@
     }
 
     // Valida los campos, guarda los datos y muestra las opciones de contacto
-    function enviarRegistro() {
+    async function enviarRegistro() {
       const nombre = document.getElementById('reg-nombre').value.trim();
       const tel = document.getElementById('reg-tel').value.trim();
       const email = document.getElementById('reg-email').value.trim();
@@ -2315,16 +2319,24 @@
         telefono: tel,
         email,
         propiedad: _propiedadInteres,
-        fecha: new Date().toLocaleString('es-MX')
+        fecha: new Date().toLocaleString('es-MX'),
+        timestamp: new Date().toISOString()
       };
 
       // 1) Guardar en localStorage como respaldo
       const leads = JSON.parse(localStorage.getItem('leadsViveBien') || '[]');
       leads.push(lead);
       localStorage.setItem('leadsViveBien', JSON.stringify(leads));
-      console.log('Lead guardado:', lead);
 
-      // 2) Enviar a tu correo vía FormSubmit.co (mismo que usas en contacto)
+      // 2) Guardar en Firebase Firestore
+      try {
+        if (window._dbFirebase) {
+          await window._addDoc(window._collection(window._dbFirebase, 'leads'), lead);
+          console.log('Lead guardado en Firebase:', lead);
+        }
+      } catch (err) { console.warn('Firebase lead error:', err); }
+
+      // 3) Enviar a correo vía FormSubmit.co como respaldo
       fetch('https://formsubmit.co/ajax/jpepeponce200903@gmail.com', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -2407,9 +2419,6 @@
       // Evitamos el comportamiento por defecto del formulario
       e.preventDefault();
 
-      // Referencia al div de respuesta
-      const respuestaDiv = document.getElementById('form-respuesta');
-
       // Leemos los valores del formulario
       const nombre = document.getElementById('nombre').value.trim();
       const telefono = document.getElementById('telefono').value.trim();
@@ -2423,8 +2432,12 @@
         return;
       }
 
-      // Objeto con los datos que enviaremos a la API
-      const payload = { nombre, telefono, email, interes, mensaje };
+      // Objeto con todos los datos del contacto
+      const payload = {
+        nombre, telefono, email, interes, mensaje,
+        fecha: new Date().toLocaleString('es-MX'),
+        timestamp: new Date().toISOString()
+      };
 
       // Deshabilitamos el botón mientras espera respuesta
       const btnEnviar = document.querySelector('.btn-enviar');
@@ -2432,19 +2445,18 @@
       btnEnviar.textContent = 'Enviando...';
 
       try {
-        // Enviamos los datos reales a tu correo usando FormSubmit.co
-        const respuesta = await fetch('https://formsubmit.co/ajax/jpepeponce200903@gmail.com', {
+        // 1) Guardar en Firebase Firestore
+        if (window._dbFirebase) {
+          await window._addDoc(window._collection(window._dbFirebase, 'contactos'), payload);
+          console.log('Contacto guardado en Firebase');
+        }
+
+        // 2) Enviar a correo vía FormSubmit.co como respaldo
+        fetch('https://formsubmit.co/ajax/jpepeponce200903@gmail.com', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
-        });
-
-        // Verificamos que la solicitud fue exitosa (código 2xx)
-        if (!respuesta.ok) throw new Error('Error HTTP: ' + respuesta.status);
-
-        // Parseamos la respuesta JSON de la API
-        const datos = await respuesta.json();
-        console.log('Respuesta de la API:', datos);
+        }).catch(err => console.log('FormSubmit (no crítico):', err));
 
         // Mostramos mensaje de éxito al usuario
         mostrarRespuesta('✅ ¡Mensaje enviado! Un asesor te contactará pronto.', 'ok');
@@ -2583,6 +2595,31 @@
     onclick="pedirRegistro('https://wa.me/524778116501', 'Consulta general')" title="Contáctanos por WhatsApp">
     <i class="fab fa-whatsapp"></i>
   </a>
+
+  <!-- =========================================================
+     FIREBASE – Inicialización y conexión a Firestore
+     ========================================================= -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.3.1/firebase-app.js';
+    import { getFirestore, addDoc, collection } from 'https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAX8OiWKAdAG5i6YIrYDbcfg6iYJBsf0ok",
+      authDomain: "vivebien-f4027.firebaseapp.com",
+      projectId: "vivebien-f4027",
+      storageBucket: "vivebien-f4027.firebasestorage.app",
+      messagingSenderId: "842723346477",
+      appId: "1:842723346477:web:d32ad4cf96d3333d7cd0a4"
+    };
+
+    // Inicializar Firebase y exponer db globalmente para los otros scripts
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    window._dbFirebase = db;
+    window._addDoc = addDoc;
+    window._collection = collection;
+    console.log('Firebase conectado ✅');
+  </script>
 
   <script>
     document.getElementById('menu-toggle')?.addEventListener('click', function () {
