@@ -895,6 +895,7 @@
       .input-group input,
       #filtro-zona,
       .btn-buscar {
+        flex: unset !important;
         width: 100%;
         border-right: none;
         border-bottom: 1px solid #E0E0E0;
@@ -1202,7 +1203,7 @@
     /* ===== COOKIE BANNER ===== */
     .cookie-banner {
       position: fixed;
-      bottom: -150px;
+      bottom: 0;
       left: 0;
       width: 100%;
       background: rgba(255, 255, 255, 0.95);
@@ -1212,12 +1213,14 @@
       padding: 1.5rem 2rem;
       padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));
       /* Adjusted padding-bottom */
-      transition: bottom 0.5s ease;
+      transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      transform: translateY(110%);
+      /* Oculto seguro hacia abajo */
       border-top: 1px solid rgba(0, 0, 0, 0.05);
     }
 
     .cookie-banner.show {
-      bottom: 0;
+      transform: translateY(0);
     }
 
     .cookie-content {
@@ -1997,8 +2000,7 @@
         </select>
 
         <!-- Zona -->
-        <input type="text" id="filtro-zona" placeholder="📍 Zona o colonia (ej. Campestre)" aria-label="Zona"
-          style="flex:1 1 180px" />
+        <input type="text" id="filtro-zona" placeholder="📍 Zona o colonia (ej. Campestre)" aria-label="Zona" />
 
         <!-- Rango de Precios -->
         <div class="input-group">
