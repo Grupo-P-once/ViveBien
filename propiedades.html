@@ -147,6 +147,59 @@
       color: var(--rojo);
     }
 
+    /* ===== NAV PILL (Reproduces the requested visual exactly) ===== */
+    .nav-pill {
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      border-radius: 50px;
+      padding: 0.35rem 0.9rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1px;
+      font-family: 'Montserrat', sans-serif;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .nav-pill-row {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-weight: 700;
+      font-size: 0.8rem;
+      color: var(--azul);
+      line-height: 1;
+    }
+
+    /* ===== WIDGET DEL CLIMA (Header Pill) ===== */
+    #clima-widget {
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      border-radius: 50px;
+      padding: 0.35rem 0.9rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1px;
+      font-family: 'Montserrat', sans-serif;
+      transition: all 0.3s ease;
+      cursor: default;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .clima-info {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-weight: 700;
+      font-size: 0.8rem;
+      color: var(--azul);
+      line-height: 1;
+    }
+
     /* ===== HERO / PORTADA ===== */
     #hero {
       position: relative;
@@ -1993,24 +2046,30 @@
     <a href="index.html" class="brand" style="text-decoration: none;"><img src="logo.png"
         alt="Logo Vive Bien Grupo Inmobiliario" onerror="this.src='https://via.placeholder.com/50x50?text=VIVE'" /></a>
 
-    <!-- Widget del clima (Relocalizado y Rediseñado) -->
-    <div id="clima-widget">
-      <div class="clima-info">
+    <!-- Nav Pill (Widget + Navigation) -->
+    <div class="nav-pill">
+      <div class="nav-pill-row">
         <span class="clima-ciudad">León</span>
-        <span id="clima-icono">⏳</span>
-        <span id="clima-temp">--°C</span>
-      </div>
-      <div id="clima-desc" class="clima-desc">Cargando...</div>
-    </div>
+        <!-- Widget del clima Real -->
+        <div id="clima-widget">
+          <div class="clima-info">
+            <span class="clima-ciudad">León</span>
+            <span id="clima-icono">⏳</span>
+            <span id="clima-temp">--°C</span>
+          </div>
+          <div id="clima-desc" class="clima-desc">Cargando...</div>
+        </div>
 
-    <nav class="nav-links" id="nav-menu">
-      <a href="index.html">Inicio</a>
-      <a href="propiedades.html" class="activo">Propiedades</a>
-      <a href="valuador.html">Valuador</a>
-      <a href="index.html#contacto" class="btn-contacto">Contactar</a>
-      <a href="dashboard.html" style="color: var(--azul); font-weight: 700;"><i class="fa fa-lock"></i> Ingresar</a>
-    </nav>
-    <i class="fa fa-bars" id="menu-toggle"></i>
+        <nav class="nav-links" id="nav-menu">
+          <a href="index.html">Inicio</a>
+          <a href="propiedades.html" class="activo">Propiedades</a>
+          <a href="valuador.html">Valuador</a>
+          <a href="index.html#contacto" class="btn-contacto">Contactar</a>
+          <a href="dashboard.html" style="color: var(--azul); font-weight: 700;"><i class="fa fa-lock"></i> Ingresar</a>
+        </nav>
+        <i class="fa fa-bars" id="menu-toggle"></i>
+      </div>
+    </div>
   </header>
 
   <!-- =========================================================

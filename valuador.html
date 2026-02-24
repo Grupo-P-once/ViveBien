@@ -52,116 +52,160 @@
             font-family: 'Montserrat', sans-serif;
         }
 
-        /* ===== HEADER CORTADO (Minimalista) ===== */
+        /* ===== HEADER UNIFICADO ===== */
         header {
-            background: var(--blanco);
-            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
             position: sticky;
             top: 0;
             z-index: 1000;
+            background: var(--blanco);
+            box-shadow: 0 2px 12px var(--sombra);
             display: flex;
+            align-items: center;
             justify-content: space-between;
-            align-items: center;
-            padding: 0.8rem 2rem;
+            padding: 0 2rem;
+            height: 72px;
         }
 
-        .logo-container {
+        .brand {
             display: flex;
             align-items: center;
-            gap: 12px;
-            text-decoration: none;
+            gap: 0.8rem;
         }
 
-        .brand-logo {
-            height: 45px;
-            width: auto;
+        .brand img {
+            height: 52px;
+            object-fit: contain;
         }
 
-        .brand-texts {
+        /* ===== NAV PILL (Reproduces the requested visual exactly) ===== */
+        .nav-pill {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            border-radius: 50px;
+            padding: 0.35rem 0.9rem;
             display: flex;
             flex-direction: column;
-            line-height: 1.1;
-        }
-
-        .brand-name {
+            align-items: center;
+            gap: 1px;
             font-family: 'Montserrat', sans-serif;
-            font-weight: 900;
-            font-size: 1.1rem;
-            letter-spacing: -0.5px;
-            color: var(--rojo);
-            text-transform: uppercase;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
 
-        .brand-slogan {
-            font-size: 0.65rem;
-            color: var(--azul);
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-        }
-
-        .nav-links {
+        .nav-pill-row {
             display: flex;
             align-items: center;
-            gap: 30px;
-        }
-
-        .nav-links a {
-            text-decoration: none;
-            color: var(--azul);
-            font-weight: 600;
-            font-size: 0.95rem;
-            transition: color 0.3s;
-        }
-
-        .nav-links a:hover,
-        .nav-links a.activo {
-            color: var(--rojo);
-        }
-
-        .btn-contacto {
-            background: var(--rojo);
-            color: #fff !important;
-            padding: 8px 20px;
-            border-radius: 6px;
+            gap: 5px;
             font-weight: 700;
-            transition: 0.3s;
+            font-size: 0.8rem;
+            color: var(--azul);
+            line-height: 1;
         }
 
-        .btn-contacto:hover {
-            background: var(--rojo-claro);
-            box-shadow: 0 4px 10px rgba(139, 26, 26, 0.3);
+        /* ===== WIDGET DEL CLIMA (Header Pill) ===== */
+        #clima-widget {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            border-radius: 50px;
+            padding: 0.35rem 0.9rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1px;
+            font-family: 'Montserrat', sans-serif;
+            transition: all 0.3s ease;
+            cursor: default;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
 
-        /* Mobile Nav */
+        .clima-info {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            color: var(--azul);
+            line-height: 1;
+        }
+
+        .clima-ciudad {
+            color: var(--rojo);
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 800;
+        }
+
+        .clima-desc {
+            font-size: 0.6rem;
+            color: #666;
+            font-weight: 500;
+            line-height: 1;
+        }
+
         #menu-toggle {
             display: none;
             font-size: 1.5rem;
             color: var(--azul);
             cursor: pointer;
+            margin-left: 1rem;
         }
 
-        @media (max-width: 768px) {
-            .nav-links {
-                display: none;
-                flex-direction: column;
-                position: absolute;
-                top: 100%;
-                left: 0;
-                width: 100%;
-                background: var(--blanco);
-                padding: 1.5rem;
-                box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
-                gap: 15px;
-                text-align: center;
-            }
+        nav a {
+            color: var(--texto);
+            font-weight: 600;
+            margin-left: 1.6rem;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+            text-decoration: none;
+        }
 
-            .nav-links.active {
-                display: flex;
+        nav a:hover {
+            color: var(--rojo);
+        }
+
+        @media (max-width: 640px) {
+            header {
+                padding: 0 1rem;
+                flex-direction: row;
+                justify-content: space-between;
+                flex-wrap: wrap;
             }
 
             #menu-toggle {
                 display: block;
+                order: 2;
+            }
+
+            nav {
+                display: none;
+                width: 100%;
+                flex-direction: column;
+                padding: 1rem 0;
+                background: var(--blanco);
+                box-shadow: 0 4px 10px rgba(0, 0, 0, .1);
+                position: absolute;
+                top: 72px;
+                left: 0;
+                text-align: center;
+            }
+
+            nav.active {
+                display: flex;
+            }
+
+            nav a {
+                margin: 0.6rem 0;
+            }
+
+            .nav-pill {
+                margin-top: 10px;
+                order: 3;
+                width: 100%;
+                justify-content: center;
+                border-radius: 20px;
             }
         }
 
@@ -565,6 +609,31 @@
                 window.open('https://leon.gob.mx/appportal/consultacartografica/', '_blank');
             }, 1500); // 1.5 segundos de 'suspenso' para que el usuario alcance a leer sus números
         }
+    </script>
+
+    <!-- FIREBASE AUTH LISTENER PARA EL HEADER -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.3.1/firebase-app.js';
+        import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.3.1/firebase-auth.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAX8OiWKAdAG5i6YIrYDbcfg6iYJBsf0ok",
+            authDomain: "vivebien-f4027.firebaseapp.com",
+            projectId: "vivebien-f4027",
+            storageBucket: "vivebien-f4027.firebasestorage.app",
+            messagingSenderId: "842723346477",
+            appId: "1:842723346477:web:d32ad4cf96d3333d7cd0a4"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        onAuthStateChanged(auth, (user) => {
+            const btnLogin = document.querySelector('nav a[href="dashboard.html"]');
+            if (user && btnLogin) {
+                btnLogin.innerHTML = '<i class="fa fa-user-circle"></i> Mi Cuenta';
+            }
+        });
     </script>
 </body>
 
