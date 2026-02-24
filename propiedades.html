@@ -2282,49 +2282,69 @@
           La API es gratuita y no requiere llave.
        ------------------------------------------------------- */
     async function obtenerClima() {
-      try {
-        // 1. Obtener ubicación del usuario por IP usando un servicio gratuito
-        const resGeo = await fetch('https://get.geojs.io/v1/ip/geo.json');
-        const dataGeo = await resGeo.json();
+      // Función interna para consultar Open-Meteo dado lat, lon y ciudad
+      async function llamarOpenMeteo(lat, lon, ciudad, tz = "America/Mexico_City") {
+        try {
+          const ciudadEl = document.querySelector('.clima-ciudad');
+          if (ciudadEl) ciudadEl.textContent = ciudad;
 
-        // Valores por defecto (León) por si falla la IP
-        const lat = dataGeo.latitude || 21.1219;
-        const lon = dataGeo.longitude || -101.6830;
-        const ciudad = dataGeo.city || 'León';
-        const tz = dataGeo.timezone || 'America/Mexico_City';
+          const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&timezone=${encodeURIComponent(tz)}`;
+          const respuesta = await fetch(url);
+          const datos = await respuesta.json();
+          const actual = datos.current;
 
-        // Actualizar nombre de la ciudad en la interfaz
-        const ciudadEl = document.querySelector('.clima-ciudad');
-        if (ciudadEl) {
-          ciudadEl.textContent = ciudad;
+          document.getElementById('clima-temp').textContent = Math.round(actual.temperature_2m) + '°C';
+          const { icono, desc } = interpretarClima(actual.weather_code);
+          document.getElementById('clima-icono').textContent = icono;
+          document.getElementById('clima-desc').textContent = desc;
+        } catch (error) {
+          document.getElementById('clima-temp').textContent = 'N/D';
+          document.getElementById('clima-desc').textContent = 'Sin conexión';
+          document.getElementById('clima-icono').textContent = '🌐';
+          console.error('Error al obtener el clima:', error);
         }
+      }
 
-        // 2. Consultar el clima para esas coordenadas a Open-Meteo
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&timezone=${encodeURIComponent(tz)}`;
+      // 1. Intentar obtener ubicación GPS precisa del navegador
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
 
-        // Llamada a la API (fetch devuelve una promesa)
-        const respuesta = await fetch(url);
-        const datos = await respuesta.json();
+            // Usar un servicio geocoding gratuito para sacar el nombre de la ciudad
+            try {
+              const resGeo = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10&addressdetails=1`);
+              const dataGeo = await resGeo.json();
+              const ciudad = dataGeo.address.city || dataGeo.address.town || dataGeo.address.state || 'Local';
+              llamarOpenMeteo(lat, lon, ciudad);
+            } catch (e) {
+              llamarOpenMeteo(lat, lon, 'Local');
+            }
+          },
+          async (error) => {
+            // Usuario denegó el permiso o falló el GPS -> usar fallback local/IP
+            usarFallbackIP();
+          }
+        );
+      } else {
+        usarFallbackIP(); // Navegador no soporta Geolocalización
+      }
 
-        // Extraemos los valores actuales del objeto recibido
-        const actual = datos.current;
-        const temperatura = Math.round(actual.temperature_2m);  // °C redondeado
-        const codigoClima = actual.weather_code;                 // código WMO
-
-        // Actualizamos el DOM con la temperatura obtenida
-        document.getElementById('clima-temp').textContent = temperatura + '°C';
-
-        // Traducimos el código WMO a ícono emoji y descripción legible
-        const { icono, desc } = interpretarClima(codigoClima);
-        document.getElementById('clima-icono').textContent = icono;
-        document.getElementById('clima-desc').textContent = desc;
-
-      } catch (error) {
-        // Si hay error de red o de API mostramos un mensaje amigable
-        document.getElementById('clima-temp').textContent = 'N/D';
-        document.getElementById('clima-desc').textContent = 'Sin conexión';
-        document.getElementById('clima-icono').textContent = '🌐';
-        console.error('Error al obtener el clima:', error);
+      // 2. Fallback: Geolocalización por IP
+      async function usarFallbackIP() {
+        try {
+          const resGeo = await fetch('https://get.geojs.io/v1/ip/geo.json');
+          const dataGeo = await resGeo.json();
+          llamarOpenMeteo(
+            dataGeo.latitude || 21.1219,
+            dataGeo.longitude || -101.6830,
+            dataGeo.city || 'León',
+            dataGeo.timezone || 'America/Mexico_City'
+          );
+        } catch (error) {
+          llamarOpenMeteo(21.1219, -101.6830, 'León'); // Fallback final absoluto (León)
+        }
       }
     }
 
