@@ -782,7 +782,7 @@
     <!-- Firebase CDN -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.3.1/firebase-app.js';
-        import { getFirestore, collection, getDocs, orderBy, query, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js';
+        import { getFirestore, collection, getDocs, orderBy, query, doc, setDoc, getDoc, addDoc, deleteDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js';
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.3.1/firebase-auth.js';
 
         const firebaseConfig = {
@@ -801,53 +801,57 @@
         // Exponer método signout globalmente
         window._firebaseSignOut = () => signOut(auth).then(() => location.reload());
 
-        // Manejo de estado de Autenticación
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                // Usuario logueado, consultar su rol en Firestore
-                try {
-                    const userDoc = await getDoc(doc(db, 'usuarios', user.uid));
-                    if (userDoc.exists()) {
-                        const rol = userDoc.data().rol;
-                        mostrarDashboard(rol);
-                    } else {
-                        // Por defecto cliente si no existe su doc
-                        mostrarDashboard('cliente');
+        try {
+            // Manejo de estado de Autenticación
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    // Usuario logueado, consultar su rol en Firestore
+                    try {
+                        const userDoc = await getDoc(doc(db, 'usuarios', user.uid));
+                        if (userDoc.exists()) {
+                            const rol = userDoc.data().rol;
+                            window.mostrarDashboard(rol);
+                        } else {
+                            // Por defecto cliente si no existe su doc
+                            window.mostrarDashboard('cliente');
+                        }
+                    } catch (error) {
+                        console.error('Error al obtener rol', error);
+                        window.mostrarDashboard('cliente');
                     }
-                } catch (error) {
-                    console.error('Error al obtener rol', error);
-                    mostrarDashboard('cliente');
+                } else {
+                    // No logueado, mostrar overlay
+                    document.getElementById('login-overlay').style.display = 'flex';
+                    document.getElementById('dashboard-content').style.display = 'none';
                 }
-            } else {
-                // No logueado, mostrar overlay
-                document.getElementById('login-overlay').style.display = 'flex';
-                document.getElementById('dashboard-content').style.display = 'none';
-            }
-        });
+            });
 
-        // LOGIN
-        document.getElementById('firebase-login-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = e.target.querySelector('button');
-            const errDiv = document.getElementById('login-error');
-            const email = document.getElementById('login-email').value;
-            const pass = document.getElementById('login-password').value;
+            // LOGIN
+            document.getElementById('firebase-login-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = e.target.querySelector('button');
+                const errDiv = document.getElementById('login-error');
+                const email = document.getElementById('login-email').value;
+                const pass = document.getElementById('login-password').value;
 
-            btn.innerHTML = 'Ingresando...'; btn.disabled = true; errDiv.style.display = 'none';
-            try {
-                // Admin estricto override temporal (Legacy) si no tiene cuenta admin real en firebase auth
-                if (pass === "admin123" && email === "admin@vivebien.com") {
-                    mostrarDashboard('admin');
-                    return;
+                btn.innerHTML = 'Ingresando...'; btn.disabled = true; errDiv.style.display = 'none';
+                try {
+                    // Admin estricto override temporal (Legacy) si no tiene cuenta admin real en firebase auth
+                    if (pass === "admin123" && email === "admin@vivebien.com") {
+                        window.mostrarDashboard('admin');
+                        return;
+                    }
+
+                    await signInWithEmailAndPassword(auth, email, pass);
+                } catch (err) {
+                    errDiv.innerHTML = 'Correo o contraseña incorrectos.';
+                    errDiv.style.display = 'block';
+                    btn.innerHTML = 'Iniciar Sesión'; btn.disabled = false;
                 }
-
-                await signInWithEmailAndPassword(auth, email, pass);
-            } catch (err) {
-                errDiv.innerHTML = 'Correo o contraseña incorrectos.';
-                errDiv.style.display = 'block';
-                btn.innerHTML = 'Iniciar Sesión'; btn.disabled = false;
-            }
-        });
+            });
+        } catch (fatalError) {
+            alert('FATAL SCRIPT ERROR: ' + fatalError.message);
+        }
 
         // REGISTER
         document.getElementById('firebase-register-form').addEventListener('submit', async (e) => {
@@ -963,7 +967,7 @@
         };
 
         // ===== FUNCIONES PARA PROPIEDADES (ESTADO Y EVENTOS GLOBALES) =====
-        import { addDoc, deleteDoc, doc, updateDoc } from 'https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js';
+
 
         // Hacer la coleccion global para los demas eventos
         window._colPropiedades = collection(db, 'propiedades');

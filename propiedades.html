@@ -2669,9 +2669,18 @@
             dbPropiedades[d.id] = { titulo: d.titulo, ubicacion: d.ubicacion, precio: d.precio, descripcion: d.descripcion, caracteristicas: d.features, fotos: d.fotos };
             const badgeHtml = d.estado === 'pausada' ? `<div class="badge-status badge-pausada">Pausada</div><div class="liston-pausado">Publicación Pausada</div>` : `<div class="badge-status badge-disponible">Disponible</div>`;
             const iconType = d.tipo === 'nave' ? 'fa-industry' : 'fa-map';
+
+            // Verificacion si la propiedad le gusta al usuario activo
+            const isFav = window.userFavoritos && window.userFavoritos.includes(d.id);
+            const favIcon = isFav ? '<i class="fa-solid fa-heart"></i>' : '<i class="fa-regular fa-heart"></i>';
+            const favColor = isFav ? 'var(--rojo)' : 'white';
+
             const html = `
               <div class="tarjeta ${d.estado === 'pausada' ? 'pausada' : ''}" data-tipo="${d.tipo}" data-operacion="${d.operacion}" data-precio="${d.precioNum}" data-zona="${d.zona}" data-recamaras="0" data-mantenimiento="false">
                 ${badgeHtml}
+                <button onclick="window.toggleFavorito('${d.id}')" class="btn-fav-${d.id}" style="position:absolute; top:10px; right:10px; z-index:10; background:rgba(0,0,0,0.4); border:none; padding:8px; border-radius:50%; color:${favColor}; cursor:pointer; font-size:1.1rem; transition:0.3s;" title="Favorito">
+                   ${favIcon}
+                </button>
                 <div class="slider-wrap" id="slider-${d.id}">
                   <div class="slider-track" style="transform: translateX(0%);"><img src="${d.imagen}" alt="${d.titulo}"/></div>
                   <div class="slider-dots" id="dots-${d.id}"><span class="activo"></span></div>
@@ -2692,8 +2701,8 @@
                   </div>
                 </div>
               </div>`;
-            if (d.tipo === 'nave') { document.getElementById('grid-naves').innerHTML += html; document.getElementById('grid-naves').querySelector('p').style.display = 'none'; }
-            if (d.tipo === 'terreno') { document.getElementById('grid-terrenos').innerHTML += html; document.getElementById('grid-terrenos').querySelector('p').style.display = 'none'; }
+            if (d.tipo === 'nave') { document.getElementById('grid-naves').innerHTML += html; }
+            if (d.tipo === 'terreno') { document.getElementById('grid-terrenos').innerHTML += html; }
           });
           setTimeout(() => buscarPropiedad({ preventDefault: () => { } }), 200);
           return;
