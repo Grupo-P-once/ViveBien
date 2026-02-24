@@ -1963,6 +1963,7 @@
     <form class="buscador buscador-horizontal" id="form-busqueda" onsubmit="buscarPropiedad(event)"
       style="max-width: 1200px; margin: 0 auto; padding: 0.6rem;">
       <select id="filtro-op" aria-label="Operación">
+        <option value="">Cualquier tipo</option>
         <option value="venta">Comprar</option>
         <option value="renta">Rentar</option>
       </select>
@@ -2447,7 +2448,7 @@
         const tManto = tarjeta.getAttribute('data-mantenimiento') === 'true';
         const tTexto = tarjeta.textContent.toLowerCase(); // para filtrar por zona
 
-        let coincideOp = tOp === op;
+        let coincideOp = !op || tOp === op;
         let coincideTipo = !tipo || tTipo === tipo;
         let coincidePrecio = (tPrecio >= desde) && (tPrecio <= hasta);
         let coincideManto = !incManto || tManto === true;

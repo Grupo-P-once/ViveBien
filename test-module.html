@@ -1,0 +1,159 @@
+﻿
+>     <script type="module">
+          import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.3.1/firebase-app.js';
+          import { getFirestore, collection, getDocs, orderBy, query, doc, setDoc, getDoc } from 
+'https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js';
+          import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } 
+from 'https://www.gstatic.com/firebasejs/11.3.1/firebase-auth.js';
+  
+          const firebaseConfig = {
+              apiKey: "AIzaSyAX8OiWKAdAG5i6YIrYDbcfg6iYJBsf0ok",
+              authDomain: "vivebien-f4027.firebaseapp.com",
+              projectId: "vivebien-f4027",
+              storageBucket: "vivebien-f4027.firebasestorage.app",
+              messagingSenderId: "842723346477",
+              appId: "1:842723346477:web:d32ad4cf96d3333d7cd0a4"
+          };
+  
+          const app = initializeApp(firebaseConfig);
+          const db = getFirestore(app);
+          const auth = getAuth(app);
+  
+          // Exponer mÃ©todo signout globalmente
+          window._firebaseSignOut = () => signOut(auth).then(() => location.reload());
+  
+          // Manejo de estado de AutenticaciÃ³n
+          onAuthStateChanged(auth, async (user) => {
+              if (user) {
+                  // Usuario logueado, consultar su rol en Firestore
+                  try {
+                      const userDoc = await getDoc(doc(db, 'usuarios', user.uid));
+                      if (userDoc.exists()) {
+                          const rol = userDoc.data().rol;
+                          window.mostrarDashboard(rol);
+                      } else {
+                          // Por defecto cliente si no existe su doc
+                          window.mostrarDashboard('cliente');
+                      }
+                  } catch (error) {
+                      console.error('Error al obtener rol', error);
+                      window.mostrarDashboard('cliente');
+                  }
+              } else {
+                  // No logueado, mostrar overlay
+                  document.getElementById('login-overlay').style.display = 'flex';
+                  document.getElementById('dashboard-content').style.display = 'none';
+              }
+          });
+  
+          // LOGIN
+          document.getElementById('firebase-login-form').addEventListener('submit', async (e) => {
+              e.preventDefault();
+              const btn = e.target.querySelector('button');
+              const errDiv = document.getElementById('login-error');
+              const email = document.getElementById('login-email').value;
+              const pass = document.getElementById('login-password').value;
+  
+              btn.innerHTML = 'Ingresando...'; btn.disabled = true; errDiv.style.display = 'none';
+              try {
+                  // Admin estricto override temporal (Legacy) si no tiene cuenta admin real en firebase auth
+                  if (pass === "admin123" && email === "admin@vivebien.com") {
+                      window.mostrarDashboard('admin');
+                      return;
+                  }
+  
+                  await signInWithEmailAndPassword(auth, email, pass);
+              } catch (err) {
+                  errDiv.innerHTML = 'Correo o contraseÃ±a incorrectos.';
+                  errDiv.style.display = 'block';
+                  btn.innerHTML = 'Iniciar SesiÃ³n'; btn.disabled = false;
+              }
+          });
+  
+          // REGISTER
+          document.getElementById('firebase-register-form').addEventListener('submit', async (e) => {
+              e.preventDefault();
+              const btn = e.target.querySelector('button');
+              const errDiv = document.getElementById('reg-error');
+              const name = document.getElementById('reg-name').value;
+              const email = document.getElementById('reg-email').value;
+              const pass = document.getElementById('reg-password').value;
+  
+              btn.innerHTML = 'Registrando...'; btn.disabled = true; errDiv.style.display = 'none';
+              try {
+                  const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+                  const user = userCredential.user;
+  
+                  // Crear documento inicial en Firestore rol=cliente
+                  await setDoc(doc(db, 'usuarios', user.uid), {
+                      nombre: name,
+                      email: email,
+                      rol: 'cliente',
+                      creadoEn: new Date().toISOString()
+                  });
+  
+                  // Se dispararÃ¡ el onAuthStateChanged y lo dejarÃ¡ pasar
+              } catch (err) {
+                  if (err.code === 'auth/email-already-in-use') errDiv.innerHTML = 'El correo ya estÃ¡ en uso.';
+                  else if (err.code === 'auth/weak-password') errDiv.innerHTML = 'La contraseÃ±a es muy dÃ©bil (mÃn. 6 
+letras)';
+                  else errDiv.innerHTML = 'Error al registrarse. Intenta de nuevo.';
+                  errDiv.style.display = 'block';
+                  btn.innerHTML = 'Registrarme'; btn.disabled = false;
+              }
+          });
+  
+          // Exponer funciÃ³n globalmente para que la llame mostrarDashboard()
+          window.cargarDatosFirebase = async function () {
+              try {
+                  // --- Cargar Contactos ---
+                  const contactosSnap = await getDocs(collection(db, 'contactos'));
+                  const tbContactos = document.getElementById('tabla-contactos');
+                  document.getElementById('kpi-contactos').textContent = contactosSnap.size;
+  
+                  if (contactosSnap.empty) {
+                      tbContactos.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#999">Sin contactos 
+aÃºn</td></tr>';
+                  } else {
+                      const rows = [];
+                      contactosSnap.forEach(doc => {
+                          const d = doc.data();
+                          rows.push(`<tr>
+                              <td>${d.fecha || '-'}</td>
+                              <td>${d.nombre || '-'}</td>
+                              <td>${d.telefono || '-'}</td>
+                              <td>${d.email || '-'}</td>
+                              <td>${d.interes || '-'}</td>
+                          </tr>`);
+                      });
+                      tbContactos.innerHTML = rows.join('');
+                  }
+  
+                  // --- Cargar Leads ---
+                  const leadsSnap = await getDocs(collection(db, 'leads'));
+                  const tbLeads = document.getElementById('tabla-leads');
+                  document.getElementById('kpi-leads').textContent = leadsSnap.size;
+  
+                  if (leadsSnap.empty) {
+                      tbLeads.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#999">Sin leads 
+aÃºn</td></tr>';
+                  } else {
+                      const rows = [];
+                      leadsSnap.forEach(doc => {
+                          const d = doc.data();
+                          rows.push(`<tr>
+                              <td>${d.fecha || '-'}</td>
+                              <td>${d.nombre || '-'}</td>
+                              <td>${d.telefono || '-'}</td>
+                              <td>${d.email || '-'}</td>
+                              <td>${d.propiedad || '-'}</td>
+                          </tr>`);
+                      });
+                      tbLeads.innerHTML = rows.join('');
+                  }
+  
+                  // --- Cargar BÃºsquedas por Zona ---
+                  const busquedasSnap = await getDocs(collection(db, 'busquedas'));
+                  const zonaCont = {};
+
+
