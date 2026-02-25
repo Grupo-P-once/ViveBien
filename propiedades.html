@@ -2880,6 +2880,7 @@
                     <span class="precio">${d.precio}</span>
                     <button class="btn-ver" style="padding: 0.45rem 0.8rem;" onclick="abrirModal('${d.id}')">Ver más &rarr;</button>
                   </div>
+                  <div class="tarjeta-contacto" style="margin-top:8px;">
                     <a href="javascript:void(0)" onclick="pedirRegistro('tel:+524778116501', '${d.titulo.replace(/'/g, "\\'")}', '${d.ubicacion.replace(/'/g, "\\'")}')" title="Llamar"><i class="fa fa-phone"></i></a>
                     <a href="javascript:void(0)" onclick="pedirRegistro(null, '${d.titulo.replace(/'/g, "\\'")}', '${d.ubicacion.replace(/'/g, "\\'")}')" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
                     <button onclick="pedirRegistro(null, '${d.titulo.replace(/'/g, "\\'")}', '${d.ubicacion.replace(/'/g, "\\'")}')" title="Contactar"><i class="fa fa-envelope"></i></button>
@@ -2947,6 +2948,7 @@
                   <span class="precio">${d.precio}</span>
                   <button class="btn-ver" style="padding: 0.45rem 0.8rem;" onclick="abrirModal('${id}')">Ver más &rarr;</button>
                 </div>
+                <div class="tarjeta-contacto" style="margin-top:8px;">
                   <a href="javascript:void(0)" onclick="pedirRegistro('tel:+524778116501', '${d.titulo.replace(/'/g, "\\'")}', '${(d.ubicacion || '').replace(/'/g, "\\'")}')" title="Llamar"><i class="fa fa-phone"></i></a>
                   <a href="javascript:void(0)" onclick="pedirRegistro(null, '${d.titulo.replace(/'/g, "\\'")}', '${(d.ubicacion || '').replace(/'/g, "\\'")}')" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
                   <button onclick="pedirRegistro(null, '${d.titulo.replace(/'/g, "\\'")}', '${(d.ubicacion || '').replace(/'/g, "\\'")}')" title="Contactar"><i class="fa fa-envelope"></i></button>
