@@ -1080,6 +1080,14 @@
             }
         };
 
+        window.contactarAsesorRapido = function (tituloPropiedad) {
+            const user = auth.currentUser;
+            const nombre = user ? (user.displayName || "Cliente") : "Cliente";
+            const mensaje = `Hola, soy ${nombre} y me interesa la propiedad: ${tituloPropiedad}. Lo vi en mis favoritos del sitio Vive Bien.`;
+            const wappUrl = `https://wa.me/524778116501?text=${encodeURIComponent(mensaje)}`;
+            window.open(wappUrl, '_blank');
+        };
+
         window.cargarPropiedadesFirebase = async function () {
             try {
                 const grid = document.getElementById('grid-mis-propiedades');
@@ -1088,7 +1096,7 @@
                 // Ocultar formulario si es cliente
                 if (window.userRole !== 'admin') {
                     if (formGroup) formGroup.style.display = 'none';
-                    document.querySelector('#tab-propiedades h3').innerHTML = '<i class="fa fa-heart" style="color:var(--rojo);"></i> Mis Propiedades Favoritas';
+                    document.querySelector('#tab-propiedades h3').innerHTML = '<div style="display:flex; justify-content:space-between; align-items:center;"><span><i class="fa fa-heart" style="color:var(--rojo);"></i> Mis Propiedades Favoritas</span> <a href="propiedades.html" style="font-size:0.9rem; background:var(--azul); color:white; padding:6px 15px; border-radius:5px; text-decoration:none;"><i class="fa fa-search"></i> Buscar más opciones</a></div>';
                     grid.innerHTML = '<p style="color:#999;">Cargando tus propiedades favoritas...</p>';
                 } else {
                     grid.innerHTML = '<p style="color:#999;">Cargando inventario de Firebase...</p>';
@@ -1103,7 +1111,7 @@
                     const favs = userDoc.exists() && userDoc.data().favoritos ? userDoc.data().favoritos : [];
 
                     if (favs.length === 0) {
-                        grid.innerHTML = '<p style="color:#999; grid-column:1/-1;">Aún no tienes propiedades guardadas en favoritos.</p>';
+                        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:3rem 1rem; background:#f8f9fc; border-radius:10px;"><i class="fa fa-heart-broken" style="font-size:3rem; color:#ccc; margin-bottom:1rem;"></i><p style="color:#666; margin-bottom:1.5rem; font-size:1.1rem;">Aún no tienes propiedades guardadas en favoritos.</p><a href="propiedades.html" style="background:var(--rojo); color:white; padding:12px 24px; border-radius:25px; text-decoration:none; display:inline-block; font-weight:bold; box-shadow:0 4px 10px rgba(139,26,26,0.2); transition:transform 0.2s;"><i class="fa fa-search"></i> Explorar Catálogo</a></div>';
                         return;
                     }
 
@@ -1138,12 +1146,13 @@
                                     <h4 style="color:var(--azul); margin-bottom:5px;">${d.titulo}</h4>
                                     <p style="font-size:0.8rem; color:#666; margin-bottom:10px;"><i class="fa fa-map-marker-alt"></i> ${d.ubicacion}</p>
                                     <p style="font-weight:bold; color:var(--texto); font-size:1.1rem; margin-bottom:15px;">${d.precio}</p>
-                                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                                         <span style="font-size:0.75rem; color:#999; text-transform:uppercase;">${d.tipo} | ${d.operacion}</span>
-                                        <button onclick="removerFavorito('${favId}')" style="background:#f4f6f8; color:var(--rojo); border:1px solid #ddd; padding:5px 10px; border-radius:4px; cursor:pointer;" title="Quitar de Favoritos">
+                                        <button onclick="removerFavorito('${favId}')" style="background:#f4f6f8; color:var(--rojo); border:1px solid #ddd; padding:5px 10px; border-radius:4px; cursor:pointer; transition:background 0.2s;" title="Quitar de Favoritos" onmouseover="this.style.background=\'#ffebee\'" onmouseout="this.style.background=\'#f4f6f8\'">
                                             <i class="fa fa-heart-broken"></i>
                                         </button>
                                     </div>
+                                    <button onclick="window.contactarAsesorRapido('${d.titulo.replace(/'/g, "\\'")}')" style="width:100%; display:block; text-align:center; background:#25D366; color:white; border:none; padding:10px; border-radius:5px; font-size:0.95rem; font-weight:bold; cursor:pointer; box-shadow:0 2px 5px rgba(37,211,102,0.3); transition:transform 0.2s;" onmouseover="this.style.transform=\'scale(1.02)\'" onmouseout="this.style.transform=\'scale(1)\'"><i class="fab fa-whatsapp"></i> Contactar Asesor</button>
                                 </div>
                             </div>`;
                         }
