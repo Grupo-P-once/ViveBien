@@ -1729,19 +1729,35 @@
 
     .mision-card:hover {
       transform: translateY(-12px);
-      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+      background: var(--blanco);
+    }
+
+    .mision-card.card-mision:hover {
+      box-shadow: 0 20px 40px rgba(139, 26, 26, 0.12);
+    }
+
+    .mision-card.card-vision:hover {
+      box-shadow: 0 20px 40px rgba(27, 54, 93, 0.12);
+    }
+
+    .mision-card.card-valores:hover {
+      box-shadow: 0 20px 40px rgba(39, 149, 70, 0.12);
     }
 
     .mision-card.card-mision {
       border-left: 5px solid var(--rojo);
+      background: rgba(139, 26, 26, 0.04);
     }
 
     .mision-card.card-vision {
       border-left: 5px solid var(--azul);
+      background: rgba(27, 54, 93, 0.04);
     }
 
     .mision-card.card-valores {
       border-left: 5px solid #279546;
+      background: rgba(39, 149, 70, 0.04);
     }
 
     .mision-card .mv-icono {
