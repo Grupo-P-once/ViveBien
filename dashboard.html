@@ -1080,7 +1080,7 @@
             }
         };
 
-        window.contactarAsesorRapido = function (tituloPropiedad) {
+        window.contactarAsesorRapido = function (tituloPropiedad, ubicacion) {
             const user = auth.currentUser;
             const nombre = user ? (user.displayName || "Cliente") : "Cliente";
             const mensaje = `Hola, soy ${nombre} y me interesa la propiedad: ${tituloPropiedad}. Lo vi en mis favoritos del sitio Vive Bien.`;
@@ -1096,7 +1096,7 @@
                 // Ocultar formulario si es cliente
                 if (window.userRole !== 'admin') {
                     if (formGroup) formGroup.style.display = 'none';
-                    document.querySelector('#tab-propiedades h3').innerHTML = '<div style="display:flex; justify-content:space-between; align-items:center;"><span><i class="fa fa-heart" style="color:var(--rojo);"></i> Mis Propiedades Favoritas</span> <a href="propiedades.html" style="font-size:0.9rem; background:var(--azul); color:white; padding:6px 15px; border-radius:5px; text-decoration:none;"><i class="fa fa-search"></i> Buscar más opciones</a></div>';
+                    document.querySelector('#tab-propiedades h3').innerHTML = '<div style="display:flex; flex-wrap:wrap; gap:10px; justify-content:space-between; align-items:center;"><span><i class="fa fa-heart" style="color:var(--rojo);"></i> Mis Favoritos</span> <a href="propiedades.html" style="font-size:0.85rem; background:var(--azul); color:white; padding:6px 15px; border-radius:5px; text-decoration:none;"><i class="fa fa-search"></i> Buscar más opciones</a></div>';
                     grid.innerHTML = '<p style="color:#999;">Cargando tus propiedades favoritas...</p>';
                 } else {
                     grid.innerHTML = '<p style="color:#999;">Cargando inventario de Firebase...</p>';
@@ -1152,7 +1152,7 @@
                                             <i class="fa fa-heart-broken"></i>
                                         </button>
                                     </div>
-                                    <button onclick="window.contactarAsesorRapido('${d.titulo.replace(/'/g, "\\'")}')" style="width:100%; display:block; text-align:center; background:#25D366; color:white; border:none; padding:10px; border-radius:5px; font-size:0.95rem; font-weight:bold; cursor:pointer; box-shadow:0 2px 5px rgba(37,211,102,0.3); transition:transform 0.2s;" onmouseover="this.style.transform=\'scale(1.02)\'" onmouseout="this.style.transform=\'scale(1)\'"><i class="fab fa-whatsapp"></i> Contactar Asesor</button>
+                                    <button onclick="window.contactarAsesorRapido('${d.titulo.replace(/'/g, "\\'")}', '${(d.ubicacion || '').replace(/'/g, "\\'")}')" style="width:100%; display:block; text-align:center; background:#25D366; color:white; border:none; padding:10px; border-radius:5px; font-size:0.95rem; font-weight:bold; cursor:pointer; box-shadow:0 2px 5px rgba(37,211,102,0.3); transition:transform 0.2s;" onmouseover="this.style.transform=\'scale(1.02)\'" onmouseout="this.style.transform=\'scale(1)\'"><i class="fab fa-whatsapp"></i> Contactar Asesor</button>
                                 </div>
                             </div>`;
                         }

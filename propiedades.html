@@ -2458,11 +2458,33 @@
        ------------------------------------------------------- */
     let _waUrlPendiente = '';
     let _propiedadInteres = '';
+    let _propiedadUbicacion = '';
 
     // Abre el modal de registro guardando la URL de WhatsApp destino
-    function pedirRegistro(urlWA, propiedad) {
+    // Si el usuario ya está logueado, se envía directo a WhatsApp.
+    function pedirRegistro(urlWA, propiedad, ubicacion) {
       _waUrlPendiente = urlWA || 'https://wa.me/524778116501';
       _propiedadInteres = propiedad || 'Consulta general';
+      _propiedadUbicacion = ubicacion || '';
+
+      const user = window._authFirebase ? window._authFirebase.currentUser : null;
+      if (user || (localStorage.getItem('leadsViveBien') && JSON.parse(localStorage.getItem('leadsViveBien')).length > 0)) {
+        // Ya tenemos datos del usuario (Sesión iniciada o registro local previo)
+        let nombreCliente = "Cliente";
+        if (user && user.displayName) nombreCliente = user.displayName;
+        else if (user && user.email) nombreCliente = user.email.split('@')[0];
+        else {
+          const localLeads = JSON.parse(localStorage.getItem('leadsViveBien') || '[]');
+          if (localLeads.length > 0) nombreCliente = localLeads[0].nombre;
+        }
+
+        let mensaje = `Hola, soy ${nombreCliente} y me interesa la propiedad: ${_propiedadInteres}`;
+        if (_propiedadUbicacion) mensaje += ` en ${_propiedadUbicacion}`;
+        mensaje += `. Lo vi en el catálogo de Vive Bien.`;
+
+        window.open(`https://wa.me/524778116501?text=${encodeURIComponent(mensaje)}`, '_blank');
+        return;
+      }
 
       // Resetear el modal al paso 1
       document.getElementById('reg-paso-1').classList.remove('oculto');
@@ -2487,8 +2509,8 @@
     // Abre el registro desde el modal de propiedad (extrae la URL del link)
     function pedirRegistroDesdeModal() {
       const titulo = document.getElementById('m-title').textContent;
-      const urlWA = `https://wa.me/524778116501?text=${encodeURIComponent('Hola, quiero informes sobre: ' + titulo)}`;
-      pedirRegistro(urlWA, titulo);
+      const ubicacion = document.getElementById('m-location').textContent;
+      pedirRegistro(null, titulo, ubicacion);
     }
 
     // Valida los campos, guarda los datos y muestra las opciones de contacto
@@ -2538,9 +2560,16 @@
           Telefono: tel,
           Email: email,
           Propiedad: _propiedadInteres,
+          Ubicacion: _propiedadUbicacion,
           Fecha: lead.fecha
         })
       }).catch(err => console.log('FormSubmit error (no crítico):', err));
+
+      // Actualizar el link de WhatsApp con el mensaje personalizado
+      let mensaje = `Hola, soy ${nombre} y me interesa la propiedad: ${_propiedadInteres}`;
+      if (_propiedadUbicacion) mensaje += ` en ${_propiedadUbicacion}`;
+      mensaje += `. Lo vi en el catálogo de Vive Bien. Mi teléfono es ${tel}.`;
+      document.getElementById('reg-wa-link').href = `https://wa.me/524778116501?text=${encodeURIComponent(mensaje)}`;
 
       // Pasar al paso 2: mostrar opciones de contacto
       document.getElementById('reg-paso-1').classList.add('oculto');
@@ -2851,10 +2880,9 @@
                     <span class="precio">${d.precio}</span>
                     <button class="btn-ver" style="padding: 0.45rem 0.8rem;" onclick="abrirModal('${d.id}')">Ver más &rarr;</button>
                   </div>
-                  <div class="tarjeta-contacto" style="margin-top:8px;">
-                    <a href="javascript:void(0)" onclick="pedirRegistro('tel:+524778116501', '${d.titulo}')" title="Llamar"><i class="fa fa-phone"></i></a>
-                    <a href="javascript:void(0)" onclick="pedirRegistro('https://wa.me/524778116501?text=Hola', '${d.titulo}')" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
-                    <button onclick="pedirRegistro('#contacto', '${d.titulo}')" title="Contactar"><i class="fa fa-envelope"></i></button>
+                    <a href="javascript:void(0)" onclick="pedirRegistro('tel:+524778116501', '${d.titulo.replace(/'/g, "\\'")}', '${d.ubicacion.replace(/'/g, "\\'")}')" title="Llamar"><i class="fa fa-phone"></i></a>
+                    <a href="javascript:void(0)" onclick="pedirRegistro(null, '${d.titulo.replace(/'/g, "\\'")}', '${d.ubicacion.replace(/'/g, "\\'")}')" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+                    <button onclick="pedirRegistro(null, '${d.titulo.replace(/'/g, "\\'")}', '${d.ubicacion.replace(/'/g, "\\'")}')" title="Contactar"><i class="fa fa-envelope"></i></button>
                     <button onclick="window.toggleFavorito('${d.id}')" class="btn-fav-${d.id}" title="Favorito" style="margin-left: auto; color: ${favColor}; background: transparent; border: none; font-size: 1.3rem; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center;">
                        ${favIcon}
                     </button>
@@ -2919,10 +2947,9 @@
                   <span class="precio">${d.precio}</span>
                   <button class="btn-ver" style="padding: 0.45rem 0.8rem;" onclick="abrirModal('${id}')">Ver más &rarr;</button>
                 </div>
-                <div class="tarjeta-contacto" style="margin-top:8px;">
-                  <a href="javascript:void(0)" onclick="pedirRegistro('tel:+524778116501', '${d.titulo}')" title="Llamar"><i class="fa fa-phone"></i></a>
-                  <a href="javascript:void(0)" onclick="pedirRegistro('${urlWa}', '${d.titulo}')" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
-                  <button onclick="pedirRegistro('#contacto', '${d.titulo}')" title="Contactar"><i class="fa fa-envelope"></i></button>
+                  <a href="javascript:void(0)" onclick="pedirRegistro('tel:+524778116501', '${d.titulo.replace(/'/g, "\\'")}', '${(d.ubicacion || '').replace(/'/g, "\\'")}')" title="Llamar"><i class="fa fa-phone"></i></a>
+                  <a href="javascript:void(0)" onclick="pedirRegistro(null, '${d.titulo.replace(/'/g, "\\'")}', '${(d.ubicacion || '').replace(/'/g, "\\'")}')" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+                  <button onclick="pedirRegistro(null, '${d.titulo.replace(/'/g, "\\'")}', '${(d.ubicacion || '').replace(/'/g, "\\'")}')" title="Contactar"><i class="fa fa-envelope"></i></button>
                   <button onclick="window.toggleFavorito('${id}')" class="btn-fav-${id}" title="Favorito" style="margin-left: auto; color: ${favColor}; background: transparent; border: none; font-size: 1.3rem; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center;">
                      ${favIcon}
                   </button>
