@@ -1,4 +1,4 @@
-Ôªøimport json
+import json
 
 file_path = 'workflow-vivebien-firebase.json'
 with open(file_path, 'r', encoding='utf-8') as f:
@@ -70,7 +70,7 @@ return pendientes.map(c => ({ json: c }));"""
         node['parameters']['jsCode'] = new_code
 
     if node['name'] == 'Generar Email HTML' and 'parameters' in node and 'jsCode' in node['parameters']:
-        new_code2 = """const BASE_URL = 'https://grupo-p-once.github.io/mi-primera-api';
+        new_code2 = """const BASE_URL = 'https://grupo-p-once.github.io/ViveBien';
 
 let propsFirebase = [];
 try {
@@ -106,9 +106,9 @@ try {
 const fallbackProps = {
   nave: {
     badge: 'NAVE INDUSTRIAL', badgeColor: '#1B365D',
-    titulo: 'Bodega en Renta ‚Ä¢ 1,244 m¬≤', subtitulo: 'Blvd. San Juan Bosco, Leon',
+    titulo: 'Bodega en Renta ï 1,244 m≤', subtitulo: 'Blvd. San Juan Bosco, Leon',
     precio: '$118,180 MXN + IVA / mes', precioLabel: 'Renta mensual',
-    features: ['1,244 m¬≤ totales', 'Oficinas en 3 niveles', 'Altura para maniobras', 'Acceso a Blvd. Hidalgo'],
+    features: ['1,244 m≤ totales', 'Oficinas en 3 niveles', 'Altura para maniobras', 'Acceso a Blvd. Hidalgo'],
     imagen: BASE_URL + '/3vive_bien_fotos/naves_industriales/nave_industrial_SanJuanBosco_Renta/foto1.jpg',
     enlace: BASE_URL + '/propiedades.html#naves'
   },
@@ -116,7 +116,7 @@ const fallbackProps = {
     badge: 'TERRENO INDUSTRIAL', badgeColor: '#279546',
     titulo: 'Terreno Industrial Panan II', subtitulo: 'Cluster Panan II, Silao, Gto.',
     precio: 'Precio a consultar', precioLabel: 'Disponible',
-    features: ['600 m¬≤ por lote', 'Seguridad 24/7', 'Acceso pavimentado', 'Uso industrial'],
+    features: ['600 m≤ por lote', 'Seguridad 24/7', 'Acceso pavimentado', 'Uso industrial'],
     imagen: BASE_URL + '/3vive_bien_fotos/terrenos/terreno_panam_silao_venta/foto1.jpg',
     enlace: BASE_URL + '/propiedades.html#terrenos'
   },
@@ -176,14 +176,14 @@ let primaryProp = parseToHTMLProp(prop1) || fallbackProps[tipoBusqueda] || fallb
 let secondaryProp = parseToHTMLProp(prop2); // Puede ser null
 
 const nombre = $json.nombre || 'Cliente';
-const asunto = `üè† Vive Bien ‚Äì Propiedades en tu radar: ${primaryProp.titulo}`;
+const asunto = `?? Vive Bien ñ Propiedades en tu radar: ${primaryProp.titulo}`;
 const fecha = new Date().toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
 const featuresHTML1 = primaryProp.features.map(f => `
   <tr><td style="padding:5px 0">
     <span style="display:inline-flex;align-items:center;gap:8px;font-size:14px;color:#444">
       <span style="width:20px;height:20px;background:${primaryProp.badgeColor};border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">
-        <span style="color:#fff;font-size:11px;font-weight:bold">‚úì</span>
+        <span style="color:#fff;font-size:11px;font-weight:bold">?</span>
       </span>
       ${f}
     </span>
@@ -241,7 +241,7 @@ const html = `<!DOCTYPE html>
         <div style="position:absolute;bottom:24px;left:28px;right:28px">
           <span style="background:${primaryProp.badgeColor};color:#fff;font-family:Arial,sans-serif;font-size:10px;font-weight:800;letter-spacing:2px;padding:5px 12px;border-radius:4px">${primaryProp.badge}</span>
           <h1 style="margin:10px 0 4px;color:#fff;font-size:24px;font-family:Georgia,serif;text-shadow:0 2px 8px rgba(0,0,0,.4)">${primaryProp.titulo}</h1>
-          <p style="margin:0;color:rgba(255,255,255,.9);font-family:Arial,sans-serif;font-size:13px">üìç ${primaryProp.subtitulo}</p>
+          <p style="margin:0;color:rgba(255,255,255,.9);font-family:Arial,sans-serif;font-size:13px">?? ${primaryProp.subtitulo}</p>
         </div>
       </a>
     </td></tr>
