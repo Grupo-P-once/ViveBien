@@ -932,6 +932,15 @@
             const pass = document.getElementById('reg-password').value;
 
             btn.innerHTML = 'Registrando...'; btn.disabled = true; errDiv.style.display = 'none';
+
+            // Validacion de formato de email
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                errDiv.innerHTML = 'Por favor ingresa un correo electrónico válido.';
+                errDiv.style.display = 'block';
+                btn.innerHTML = 'Registrarme'; btn.disabled = false;
+                return;
+            }
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
                 const user = userCredential.user;

@@ -2513,6 +2513,15 @@
 
       // Validación básica
       if (!nombre || !tel || !email) {
+        document.getElementById('reg-error').textContent = 'Por favor completa todos los campos.';
+        document.getElementById('reg-error').style.display = 'block';
+        return;
+      }
+
+      // Validacion de formato de email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        document.getElementById('reg-error').textContent = 'Por favor ingresa un correo electrónico válido.';
         document.getElementById('reg-error').style.display = 'block';
         return;
       }
@@ -2645,6 +2654,13 @@
       // Validación básica en el cliente
       if (!nombre || !telefono || !email) {
         mostrarRespuesta('Por favor completa los campos obligatorios (*).', 'err');
+        return;
+      }
+
+      // Validacion de formato de email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        mostrarRespuesta('Por favor ingresa un correo electrónico válido.', 'err');
         return;
       }
 
