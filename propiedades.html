@@ -634,6 +634,63 @@
     }
 
 
+    /* ===== BANNER "¿POR QUÉ ELEGIRNOS?" ===== */
+    #ventajas {
+      background: linear-gradient(135deg, var(--rojo) 0%, var(--azul) 100%);
+      color: var(--blanco);
+      text-align: center;
+    }
+
+    #ventajas h2 {
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(1.4rem, 3vw, 2rem);
+      font-weight: 800;
+      margin-bottom: 2.5rem;
+    }
+
+    .ventajas-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2rem;
+      justify-content: center;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .ventaja {
+      flex: 1 1 180px;
+      background: rgba(255, 255, 255, .12);
+      border-radius: 14px;
+      padding: 1.6rem 1.2rem;
+      backdrop-filter: blur(6px);
+      transition: all 0.3s ease;
+      cursor: pointer;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .ventaja:hover {
+      transform: translateY(-8px) scale(1.02);
+      background: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 12px 25px rgba(0, 0, 0, 0.2);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .ventaja i {
+      font-size: 2rem;
+      margin-bottom: .7rem;
+    }
+
+    .ventaja h3 {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      margin-bottom: .4rem;
+    }
+
+    .ventaja p {
+      font-size: .85rem;
+      opacity: .88;
+    }
+
     /* ===== SECCIONES POR CATEGORÍA (fondo alternado) ===== */
     #casas {
       background: var(--blanco);

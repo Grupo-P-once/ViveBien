@@ -574,62 +574,7 @@
       background: #FFF8EE;
     }
 
-    /* ===== BANNER "¿POR QUÉ ELEGIRNOS?" ===== */
-    #ventajas {
-      background: linear-gradient(135deg, var(--rojo) 0%, var(--azul) 100%);
-      color: var(--blanco);
-      text-align: center;
-    }
 
-    #ventajas h2 {
-      font-family: 'Montserrat', sans-serif;
-      font-size: clamp(1.4rem, 3vw, 2rem);
-      font-weight: 800;
-      margin-bottom: 2.5rem;
-    }
-
-    .ventajas-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 2rem;
-      justify-content: center;
-      max-width: 900px;
-      margin: 0 auto;
-    }
-
-    .ventaja {
-      flex: 1 1 180px;
-      background: rgba(255, 255, 255, .12);
-      border-radius: 14px;
-      padding: 1.6rem 1.2rem;
-      backdrop-filter: blur(6px);
-      transition: all 0.3s ease;
-      cursor: pointer;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .ventaja:hover {
-      transform: translateY(-8px) scale(1.02);
-      background: rgba(255, 255, 255, 0.2);
-      box-shadow: 0 12px 25px rgba(0, 0, 0, 0.2);
-      border-color: rgba(255, 255, 255, 0.3);
-    }
-
-    .ventaja i {
-      font-size: 2rem;
-      margin-bottom: .7rem;
-    }
-
-    .ventaja h3 {
-      font-family: 'Montserrat', sans-serif;
-      font-weight: 700;
-      margin-bottom: .4rem;
-    }
-
-    .ventaja p {
-      font-size: .85rem;
-      opacity: .88;
-    }
 
     /* ===== FORMULARIO DE CONTACTO ===== */
     #contacto {
@@ -1611,79 +1556,142 @@
       filter: drop-shadow(0 8px 24px rgba(139, 26, 26, .20));
     }
 
-    /* ===== SECCIÓN BENEFICIOS ===== */
+    /* ===== SECCIÓN BENEFICIOS NUEVO ESTILO ===== */
     .seccion-beneficios {
-      padding: 5rem 2rem;
-      background: var(--azul);
-      color: #fff;
+      padding: 6rem 2rem;
+      background: var(--gris);
     }
 
-    .beneficios-inner {
-      max-width: 1100px;
+    .beneficios-container {
+      max-width: 1200px;
       margin: 0 auto;
+      display: flex;
+      align-items: center;
+      position: relative;
     }
 
-    .beneficios-inner h2 {
+    .beneficios-imagen {
+      width: 60%;
+      height: 540px;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+      margin-left: auto;
+    }
+
+    .beneficios-imagen img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .beneficios-contenido {
+      width: 52%;
+      background: var(--blanco);
+      padding: 3.5rem;
+      border-radius: 20px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 10;
+    }
+
+    .beneficios-sub {
+      font-size: 0.9rem;
+      font-weight: 800;
+      color: var(--azul);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 0.8rem;
+      display: block;
+    }
+
+    .beneficios-contenido h2 {
       font-family: 'Montserrat', sans-serif;
       font-weight: 900;
-      font-size: 2rem;
-      text-align: center;
-      margin-bottom: .5rem;
+      font-size: 2.2rem;
+      color: var(--rojo);
+      margin-bottom: 2rem;
+      line-height: 1.2;
     }
 
-    .beneficios-inner .beneficios-sub {
-      text-align: center;
-      font-family: 'Open Sans', sans-serif;
-      font-size: .95rem;
-      opacity: .8;
-      margin-bottom: 3rem;
+    .beneficio-lista {
+      display: flex;
+      flex-direction: column;
+      gap: 1.6rem;
     }
 
-    .beneficios-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 2rem;
+    .beneficio-item {
+      display: flex;
+      gap: 1.2rem;
     }
 
-    .beneficio-card {
-      background: rgba(255, 255, 255, .1);
-      backdrop-filter: blur(10px);
-      border-radius: 16px;
-      padding: 2rem 1.5rem;
-      text-align: center;
-      transition: transform .25s, background .25s;
-      border: 1px solid rgba(255, 255, 255, .15);
-    }
-
-    .beneficio-card:hover {
-      transform: translateY(-6px);
-      background: rgba(255, 255, 255, .18);
-    }
-
-    .beneficio-card .beneficio-icono {
-      width: 56px;
-      height: 56px;
+    .beneficio-item .ben-icono {
+      width: 54px;
+      height: 54px;
+      background: rgba(139, 26, 26, 0.08);
+      color: var(--rojo);
       border-radius: 14px;
-      background: rgba(255, 255, 255, .2);
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0 auto 1.2rem;
-      font-size: 1.4rem;
+      font-size: 1.5rem;
+      flex-shrink: 0;
     }
 
-    .beneficio-card h3 {
+    /* Variación de colores para los íconos */
+    .beneficio-item:nth-child(2) .ben-icono {
+      background: rgba(27, 54, 93, 0.08);
+      color: var(--azul);
+    }
+
+    .beneficio-item:nth-child(3) .ben-icono {
+      background: rgba(39, 149, 70, 0.08);
+      color: #279546;
+    }
+
+    .beneficio-item h3 {
       font-family: 'Montserrat', sans-serif;
+      font-size: 1.1rem;
       font-weight: 700;
-      font-size: 1.05rem;
-      margin-bottom: .6rem;
+      color: var(--texto);
+      margin-bottom: 0.4rem;
     }
 
-    .beneficio-card p {
-      font-family: 'Open Sans', sans-serif;
-      font-size: .85rem;
+    .beneficio-item p {
+      font-size: 0.9rem;
+      color: #666;
       line-height: 1.6;
-      opacity: .85;
+    }
+
+    @media (max-width: 900px) {
+      .beneficios-container {
+        flex-direction: column;
+      }
+
+      .beneficios-imagen {
+        width: 100%;
+        height: 380px;
+        margin-left: 0;
+      }
+
+      .beneficios-contenido {
+        width: 92%;
+        position: relative;
+        transform: none;
+        top: 0;
+        margin-top: -80px;
+        padding: 2.5rem 1.8rem;
+        left: 0;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .beneficios-contenido h2 {
+        font-size: 1.8rem;
+      }
     }
 
     /* ===== SECCIÓN MISIÓN Y VISIÓN ===== */
@@ -1851,14 +1859,7 @@
         font-size: 3.5rem;
       }
 
-      .beneficios-grid {
-        grid-template-columns: 1fr;
-        gap: 1.2rem;
-      }
-
-      .seccion-beneficios {
-        padding: 3rem 1.5rem;
-      }
+      /* Media queries de secciones previas se mantienen. La sección beneficios tiene su propio media query ahora arriba. */
 
       .mision-grid {
         grid-template-columns: 1fr;
@@ -2114,50 +2115,56 @@
   </section>
 
   <!-- =========================================================
-     SECCIÓN: BENEFICIOS DE RENTAR O VENDER CON NOSOTROS
+     SECCIÓN: BENEFICIOS DE RENTAR O VENDER (REDESIGN)
      ========================================================= -->
   <section class="seccion-beneficios">
-    <div class="beneficios-inner">
-      <h2>¿Por qué <span style="font-weight: 700;">elegirnos</span>?</h2>
-      <p class="beneficios-sub">Beneficios de rentar o vender con Vive Bien</p>
+    <div class="beneficios-container">
 
-      <div class="beneficios-grid">
-        <div class="beneficio-card">
-          <div class="beneficio-icono"><i class="fa fa-bolt"></i></div>
-          <h3>Rapidez</h3>
-          <p>Publicamos y promocionamos tu propiedad rápidamente para encontrar al inquilino o comprador ideal.</p>
-        </div>
+      <!-- Imagen lado derecho -->
+      <div class="beneficios-imagen">
+        <!-- Imagen de Unsplash sobre reunión/bienes raíces -->
+        <img
+          src="https://images.unsplash.com/photo-1570129477492-45c003edd2be?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
+          alt="Asesoría Inmobiliaria">
+      </div>
 
-        <div class="beneficio-card">
-          <div class="beneficio-icono"><i class="fa fa-shield-halved"></i></div>
-          <h3>Seguridad</h3>
-          <p>Procesos transparentes con contratos claros y revisión legal para proteger tu patrimonio.</p>
-        </div>
+      <!-- Contenido superpuesto lado izquierdo -->
+      <div class="beneficios-contenido">
+        <span class="beneficios-sub">¿Por qué elegirnos?</span>
+        <h2>Permítenos guiarte a casa.</h2>
 
-        <div class="beneficio-card">
-          <div class="beneficio-icono"><i class="fa fa-user-tie"></i></div>
-          <h3>Atención Personal</h3>
-          <p>Sin intermediarios. Hablas directamente con nosotros por WhatsApp o teléfono.</p>
-        </div>
+        <div class="beneficio-lista">
 
-        <div class="beneficio-card">
-          <div class="beneficio-icono"><i class="fa fa-chart-line"></i></div>
-          <h3>Plusvalía</h3>
-          <p>Te asesoramos sobre las zonas de mayor crecimiento y retorno de inversión en León.</p>
-        </div>
+          <div class="beneficio-item">
+            <div class="ben-icono"><i class="fa fa-shield-halved"></i></div>
+            <div class="ben-texto">
+              <h3>Seguridad y Transparencia</h3>
+              <p>Procesos claros con revisión legal y contratos rigurosos para proteger tu patrimonio inmobiliario al
+                máximo.</p>
+            </div>
+          </div>
 
-        <div class="beneficio-card">
-          <div class="beneficio-icono"><i class="fa fa-camera"></i></div>
-          <h3>Presentación Premium</h3>
-          <p>Fotografía profesional y publicación atractiva para destacar tu propiedad.</p>
-        </div>
+          <div class="beneficio-item">
+            <div class="ben-icono"><i class="fa fa-user-tie"></i></div>
+            <div class="ben-texto">
+              <h3>Atención Personalizada</h3>
+              <p>Sin intermediarios innecesarios. Te acompañamos desde la primera búsqueda hasta la firma de las
+                escrituras.</p>
+            </div>
+          </div>
 
-        <div class="beneficio-card">
-          <div class="beneficio-icono"><i class="fa fa-peso-sign"></i></div>
-          <h3>Sin Costos Ocultos</h3>
-          <p>Comisiones claras desde el inicio. Sin sorpresas ni cargos adicionales.</p>
+          <div class="beneficio-item">
+            <div class="ben-icono"><i class="fa fa-chart-line"></i></div>
+            <div class="ben-texto">
+              <h3>Asegura tu Plusvalía</h3>
+              <p>Conocemos el mercado a la perfección y te orientamos sobre las zonas con mayor retorno de
+                inversión.</p>
+            </div>
+          </div>
+
         </div>
       </div>
+
     </div>
   </section>
 
@@ -2200,34 +2207,7 @@
 
 
 
-  <!-- =========================================================
-     BANNER DE VENTAJAS / ¿POR QUÉ ELEGIRNOS?
-     ========================================================= -->
-  <section id="ventajas">
-    <h2>¿Por qué elegir <span style="font-weight: 700;">Vive Bien</span>?</h2>
-    <div class="ventajas-grid">
-      <div class="ventaja">
-        <i class="fa fa-shield-halved"></i>
-        <h3>100% Confiable</h3>
-        <p>15 años de experiencia en el mercado inmobiliario de León.</p>
-      </div>
-      <div class="ventaja">
-        <i class="fa fa-hands-holding-circle"></i>
-        <h3>Asesoría Integral</h3>
-        <p>Te acompañamos desde la búsqueda hasta la firma de escrituras.</p>
-      </div>
-      <div class="ventaja">
-        <i class="fa fa-tag"></i>
-        <h3>Mejores Precios</h3>
-        <p>Propiedades valoradas con transparencia y al precio justo del mercado.</p>
-      </div>
-      <div class="ventaja">
-        <i class="fa fa-headset"></i>
-        <h3>Atención 24/7</h3>
-        <p>Siempre disponibles para resolver tus dudas por WhatsApp o teléfono.</p>
-      </div>
-    </div>
-  </section>
+
 
 
   <!-- =========================================================
