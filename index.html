@@ -2739,7 +2739,7 @@
      ========================================================= -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.3.1/firebase-app.js';
-    import { getFirestore, addDoc, collection } from 'https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js';
+    import { getFirestore, addDoc, collection, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js';
     import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.3.1/firebase-auth.js';
 
     const firebaseConfig = {
@@ -2758,14 +2758,76 @@
     window._addDoc = addDoc;
     window._collection = collection;
 
+    // Autenticación global y Favoritos
+    window.currentUser = null;
+    window.userFavoritos = [];
+
     // Auth global para actualizar el botón de Ingresar
     const auth = getAuth(app);
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, async (user) => {
       const btnLogin = document.querySelector('nav a.btn-ingresar') || document.querySelector('nav a[href="dashboard.html"]');
-      if (user && btnLogin) {
-        btnLogin.innerHTML = '<i class="fa fa-user-circle"></i> Mi Cuenta';
+      if (user) {
+        window.currentUser = user;
+        if (btnLogin) btnLogin.innerHTML = '<i class="fa fa-user-circle"></i> Mi Cuenta';
+
+        // Fetch User Favorites to color the hearts
+        try {
+          const userDoc = await getDoc(doc(db, 'usuarios', user.uid));
+          if (userDoc.exists()) {
+            window.userFavoritos = userDoc.data().favoritos || [];
+
+            // Loop through all rendered property buttons and paint hearts if they match
+            window.userFavoritos.forEach(propId => {
+              const btns = document.querySelectorAll(`.btn-fav-${propId}`);
+              btns.forEach(b => {
+                b.innerHTML = '<i class="fa-solid fa-heart"></i>';
+                b.style.color = 'var(--rojo)';
+              });
+            });
+          }
+        } catch (e) { console.error("Error al obtener favs", e); }
+
+      } else {
+        window.currentUser = null;
+        window.userFavoritos = [];
       }
     });
+
+    // Global Like Function for Featured Properties in Index
+    window.toggleFavorito = async function (propId) {
+      if (!window.currentUser) {
+        alert("¡Inicia Sesión o regístrate en 'Ingresar' para guardar tus propiedades favoritas!");
+        window.location.href = "dashboard.html";
+        return;
+      }
+
+      const userRef = doc(db, 'usuarios', window.currentUser.uid);
+      const isFav = window.userFavoritos.includes(propId);
+
+      try {
+        if (isFav) {
+          window.userFavoritos = window.userFavoritos.filter(id => id !== propId);
+        } else {
+          window.userFavoritos.push(propId);
+        }
+        await setDoc(userRef, { favoritos: window.userFavoritos }, { merge: true });
+
+        // Pintar/Despintar corazones instantáneamente
+        const btns = document.querySelectorAll(`.btn-fav-${propId}`);
+        btns.forEach(b => {
+          if (isFav) { // Was favorite, now turning off
+            b.innerHTML = '<i class="fa-regular fa-heart"></i>';
+            b.style.color = 'var(--azul)';
+          } else { // Was off, now turning on
+            b.innerHTML = '<i class="fa-solid fa-heart"></i>';
+            b.style.color = 'var(--rojo)';
+          }
+        });
+
+      } catch (e) {
+        console.error("Error togglando favorito", e);
+      }
+    };
 
     console.log('Firebase conectado ✅');
   </script>
