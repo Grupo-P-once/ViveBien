@@ -1108,10 +1108,27 @@
                     }
 
                     let html = '';
+
+                    // Demo fallback data matching propiedades.html
+                    const demoFallback = {
+                        'sanjuan': { titulo: 'Bodega en Renta – 1,244 m²', ubicacion: 'Blvd. San Juan Bosco, Cañada del Refugio, León', precio: '$118,180 MXN + IVA/mes', imagen: './3vive_bien_fotos/naves_industriales/nave_industrial_SanJuanBosco_Renta/foto1.jpg', tipo: 'nave', operacion: 'renta' },
+                        'pananA': { titulo: 'Terreno Industrial Panan II – Lote A', ubicacion: 'Cluster Industrial Panan II, Silao, Gto.', precio: 'Favor de Consultar', imagen: './3vive_bien_fotos/terrenos/terreno_panam_silao_venta/foto1.jpg', tipo: 'terreno', operacion: 'venta' },
+                        'pananB': { titulo: 'Terreno Industrial Panan II – Lote B', ubicacion: 'Cluster Industrial Panan II, Silao, Gto.', precio: 'Favor de Consultar', imagen: './3vive_bien_fotos/terrenos/terreno_panam_silao_venta/foto2.jpg', tipo: 'terreno', operacion: 'venta' },
+                        'silos': { titulo: 'Terreno Industrial Panan II – Lote C', ubicacion: 'Cluster Industrial Panan II, Silao, Gto.', precio: 'Favor de Consultar', imagen: 'https://via.placeholder.com/300x200?text=Silos', tipo: 'terreno', operacion: 'venta' },
+                        'bodega': { titulo: 'Nave Industrial Delta', ubicacion: 'Delta, León, Gto.', precio: 'Favor de Consultar', imagen: 'https://via.placeholder.com/300x200?text=Bodega', tipo: 'nave', operacion: 'renta' }
+                    };
+
                     for (let favId of favs) {
                         const propSnap = await getDoc(doc(db, 'propiedades', favId));
+                        let d = null;
+
                         if (propSnap.exists()) {
-                            const d = propSnap.data();
+                            d = propSnap.data();
+                        } else if (demoFallback[favId]) {
+                            d = demoFallback[favId];
+                        }
+
+                        if (d) {
                             html += `
                             <div class="prop-card">
                                 <div style="position:relative;">
@@ -1123,7 +1140,7 @@
                                     <p style="font-weight:bold; color:var(--texto); font-size:1.1rem; margin-bottom:15px;">${d.precio}</p>
                                     <div style="display:flex; justify-content:space-between; align-items:center;">
                                         <span style="font-size:0.75rem; color:#999; text-transform:uppercase;">${d.tipo} | ${d.operacion}</span>
-                                        <button onclick="removerFavorito('${propSnap.id}')" style="background:#f4f6f8; color:var(--rojo); border:1px solid #ddd; padding:5px 10px; border-radius:4px; cursor:pointer;" title="Quitar de Favoritos">
+                                        <button onclick="removerFavorito('${favId}')" style="background:#f4f6f8; color:var(--rojo); border:1px solid #ddd; padding:5px 10px; border-radius:4px; cursor:pointer;" title="Quitar de Favoritos">
                                             <i class="fa fa-heart-broken"></i>
                                         </button>
                                     </div>
@@ -1131,7 +1148,7 @@
                             </div>`;
                         }
                     }
-                    grid.innerHTML = html;
+                    grid.innerHTML = html || '<p style="color:#999; grid-column:1/-1;">No tienes propiedades guardadas en favoritos.</p>';
 
                 } else {
                     // LÓGICA PARA ADMINISTRATIVOS (INVENTARIO GENERAL)
