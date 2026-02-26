@@ -104,21 +104,21 @@
             border-radius: 50px;
         }
 
-        /* ===== GALERÍA PREMIUM ===== */
+        /* ===== GALERÍA DINÁMICA ===== */
         .gallery-container {
             max-width: 1200px;
             margin: 2rem auto;
             display: grid;
             grid-template-columns: 2fr 1fr;
-            grid-template-rows: 400px;
-            gap: 10px;
+            grid-template-rows: 450px;
+            gap: 12px;
             padding: 0 20px;
         }
 
         .main-photo {
             grid-row: 1 / 1;
             grid-column: 1 / 1;
-            border-radius: 12px 0 0 12px;
+            border-radius: 16px;
             overflow: hidden;
             position: relative;
         }
@@ -126,30 +126,50 @@
         .side-photos {
             display: grid;
             grid-template-rows: 1fr 1fr;
-            gap: 10px;
+            gap: 12px;
         }
 
         .side-photo {
             overflow: hidden;
-            border-radius: 0 12px 0 0;
+            border-radius: 16px;
             position: relative;
         }
 
-        .side-photo:last-child {
-            border-radius: 0 0 12px 0;
+        /* Grid inferior para fotos extra */
+        .extra-photos-grid {
+            max-width: 1200px;
+            margin: 12px auto 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+            padding: 0 20px;
         }
 
-        .gallery-container img {
+        .extra-photo {
+            height: 150px;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .gallery-container img,
+        .extra-photo img {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transition: transform 0.5s ease;
+            transition: all 0.5s ease;
             opacity: 0;
-            transition: opacity 0.3s ease;
+            cursor: zoom-in;
         }
 
-        .gallery-container img.loaded {
+        .gallery-container img.loaded,
+        .extra-photo img.loaded {
             opacity: 1;
+        }
+
+        .gallery-container img:hover,
+        .extra-photo img:hover {
+            transform: scale(1.05);
+            filter: brightness(1.1);
         }
 
         /* ===== CUERPO 2 COLUMNAS ===== */
@@ -281,30 +301,73 @@
             color: var(--rojo);
         }
 
-        /* Columna Derecha */
+        /* ===== CONTACT FORM SIDEBAR PREMIUM ===== */
         .sticky-panel {
             position: sticky;
             top: 110px;
             background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 16px;
-            padding: 2rem;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+            /* Sombra más suave y moderna */
+            border: 1px solid rgba(0, 0, 0, 0.05);
         }
 
         .panel-price {
             font-family: 'Montserrat', sans-serif;
-            font-size: 2.2rem;
+            font-size: 2.5rem;
             font-weight: 900;
             color: var(--rojo);
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.2rem;
+            letter-spacing: -1px;
         }
 
         .panel-manto {
-            font-size: 0.9rem;
+            font-size: 1rem;
             color: #666;
-            margin-bottom: 1.5rem;
+            margin-bottom: 2rem;
             font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .panel-manto i {
+            color: #999;
+        }
+
+        .form-lead .form-field {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-lead label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--azul);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-lead input,
+        .form-lead textarea {
+            width: 100%;
+            padding: 1.1rem;
+            border: 1.5px solid #eef0f2;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            background: #fcfdfe;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .form-lead input:focus,
+        .form-lead textarea:focus {
+            outline: none;
+            border-color: var(--rojo);
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(139, 26, 26, 0.1);
         }
 
         .btn-submit {
@@ -312,18 +375,25 @@
             background: var(--rojo);
             color: #fff;
             border: none;
-            padding: 1rem;
-            border-radius: 8px;
+            padding: 1.2rem;
+            border-radius: 14px;
             font-weight: 800;
             font-family: 'Montserrat';
+            font-size: 0.95rem;
             cursor: pointer;
-            transition: all 0.3s;
-            margin-bottom: 10px;
+            transition: all 0.4s;
+            margin-bottom: 12px;
+            box-shadow: 0 8px 16px rgba(139, 26, 26, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
 
         .btn-submit:hover {
             background: var(--rojo-claro);
-            transform: translateY(-2px);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 20px rgba(139, 26, 26, 0.3);
         }
 
         .btn-wa-panel {
@@ -335,15 +405,195 @@
             background: #25d366;
             color: #fff;
             text-decoration: none;
-            padding: 1rem;
-            border-radius: 8px;
+            padding: 1.2rem;
+            border-radius: 14px;
             font-weight: 800;
-            transition: all 0.3s;
+            font-size: 0.95rem;
+            transition: all 0.4s;
+            box-shadow: 0 8px 16px rgba(37, 211, 102, 0.2);
         }
 
         .btn-wa-panel:hover {
             background: #1eb954;
-            transform: translateY(-2px);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 20px rgba(37, 211, 102, 0.3);
+        }
+
+        .btn-tel-panel {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            background: var(--azul);
+            color: #fff;
+            text-decoration: none;
+            padding: 1.2rem;
+            border-radius: 14px;
+            font-weight: 800;
+            font-size: 0.95rem;
+            transition: all 0.4s;
+            margin-top: 10px;
+            box-shadow: 0 8px 16px rgba(26, 38, 52, 0.2);
+        }
+
+        .btn-tel-panel:hover {
+            background: var(--azul-claro);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 20px rgba(26, 38, 52, 0.3);
+        }
+
+        /* ===== LIGHTBOX MODAL ===== */
+        .lightbox-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 5000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .lightbox-img {
+            max-width: 100%;
+            max-height: 90vh;
+            border-radius: 8px;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+            object-fit: contain;
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: 25px;
+            right: 35px;
+            color: #fff;
+            font-size: 2.5rem;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .lightbox-close:hover {
+            color: var(--rojo);
+        }
+
+        /* Mouse effects for gallery */
+        .gallery-container img {
+            cursor: zoom-in;
+        }
+
+        /* Footer Aesthetics (Standardized) */
+        footer {
+            background: var(--azul);
+            color: #fff;
+            padding: 5rem 0 2rem;
+            margin-top: 5rem;
+        }
+
+        .footer-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            padding: 0 20px;
+        }
+
+        .footer-col h4 {
+            font-family: 'Montserrat';
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .footer-col h4::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: -8px;
+            width: 40px;
+            height: 3px;
+            background: var(--rojo);
+        }
+
+        .footer-col p,
+        .footer-col a {
+            color: #ccc;
+            margin-bottom: 1rem;
+            display: block;
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: color 0.3s;
+        }
+
+        .footer-col a:hover {
+            color: #fff;
+        }
+
+        .footer-col i {
+            color: var(--rojo);
+            margin-right: 10px;
+            width: 20px;
+        }
+
+        .redes {
+            display: flex;
+            gap: 15px;
+            margin-top: 2rem;
+        }
+
+        .redes a {
+            width: 42px;
+            height: 42px;
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s;
+            color: #fff;
+        }
+
+        .redes a:hover {
+            background: var(--rojo);
+            transform: translateY(-5px);
+        }
+
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 4rem auto 0;
+            padding: 2rem 20px 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .footer-logo-wrap {
+            background-color: var(--blanco, #fff);
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .footer-logo-wrap img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .footer-copy {
+            flex: 1;
+            text-align: left;
+            font-size: 0.85rem;
+            color: #888;
         }
 
         @media (max-width: 900px) {
@@ -570,6 +820,7 @@
                 <div class="side-photo"><img id="img-side-2" src="" alt="Foto 3"></div>
             </div>
         </div>
+        <div class="extra-photos-grid" id="extra-photos"></div>
 
         <main class="main-content">
             <div class="info-column">
@@ -621,29 +872,35 @@
             <aside>
                 <div class="sticky-panel">
                     <div class="panel-price" id="prop-price">$0</div>
-                    <div class="panel-manto" id="prop-manto">Mantenimiento: N/A</div>
+                    <div class="panel-manto"><i class="fa fa-info-circle"></i> <span id="prop-manto">Mantenimiento:
+                            N/A</span></div>
 
-                    <form id="form-lead" class="contact-form">
+                    <form id="form-lead" class="form-lead">
                         <div class="form-field">
-                            <label>NOMBRE COMPLETO</label>
+                            <label><i class="fa fa-user"></i> NOMBRE COMPLETO</label>
                             <input type="text" id="lead-nombre" placeholder="Ej. Juan Pérez" required>
                         </div>
                         <div class="form-field">
-                            <label>WHATSAPP / TELÉFONO</label>
+                            <label><i class="fa fa-phone"></i> WHATSAPP / TELEFONO</label>
                             <input type="tel" id="lead-tel" placeholder="477 123 4567" required>
                         </div>
                         <div class="form-field">
-                            <label>CORREO ELECTRÓNICO</label>
+                            <label><i class="fa fa-envelope"></i> CORREO ELECTRÓNICO</label>
                             <input type="email" id="lead-email" placeholder="example@mail.com" required>
                         </div>
                         <div class="form-field">
-                            <label>DUDAS O COMENTARIOS</label>
+                            <label><i class="fa fa-comment"></i> DUDAS O COMENTARIOS</label>
                             <textarea id="lead-msg"
                                 rows="3">Estoy interesado en esta propiedad. Por favor, contáctenme.</textarea>
                         </div>
-                        <button type="submit" class="btn-submit">QUIERO MÁS INFORMACIÓN</button>
+                        <button type="submit" class="btn-submit">
+                            <i class="fa fa-paper-plane"></i> ENVIAR SOLICITUD
+                        </button>
                         <a href="javascript:void(0)" onclick="pedirRegistroProp()" class="btn-wa-panel">
                             <i class="fab fa-whatsapp"></i> HABLAR POR WHATSAPP
+                        </a>
+                        <a href="tel:+524778116501" class="btn-tel-panel">
+                            <i class="fa fa-phone"></i> LLAMAR AHORA
                         </a>
                     </form>
                 </div>
@@ -654,16 +911,51 @@
     <footer>
         <div class="footer-grid">
             <div class="footer-col">
-                <h4>Vive Bien</h4>
-                <p>&copy; 2026 Vive Bien Grupo Inmobiliario. Expertos en el Bajío.</p>
+                <h4>Vive Bien Grupo Inmobiliario</h4>
+                <p>Tu aliado de confianza en el mercado inmobiliario de León, Guanajuato. Expertos en naves
+                    residenciales e industriales.</p>
+                <div class="redes">
+                    <a href="https://www.facebook.com/profile.php?id=61582687400323" target="_blank"><i
+                            class="fab fa-facebook-f"></i></a>
+                    <a href="https://www.instagram.com/vive_bien_mx/" target="_blank"><i
+                            class="fab fa-instagram"></i></a>
+                    <a href="https://wa.me/524778116501" target="_blank"><i class="fab fa-whatsapp"></i></a>
+                </div>
             </div>
             <div class="footer-col">
-                <h4>Contacto</h4>
+                <h4>Contacto Directo</h4>
                 <p><i class="fa fa-phone"></i> 477 811 6501</p>
                 <p><i class="fa fa-envelope"></i> jpepeponce200903@gmail.com</p>
+                <p><i class="fa fa-clock"></i> Lun – Sáb: 9:00 – 19:00</p>
+            </div>
+            <div class="footer-col">
+                <h4>Ubicación</h4>
+                <p><i class="fa fa-location-dot"></i> Blvd. Campestre 2910 - LOCAL 10,<br>Cañada del Refugio, León, Gto.
+                </p>
+            </div>
+            <div class="footer-col">
+                <h4>Propiedades</h4>
+                <a href="propiedades.html#casas">Casas en Venta</a>
+                <a href="propiedades.html#naves">Naves Industriales</a>
+                <a href="propiedades.html#terrenos">Terrenos</a>
+                <a href="valuador.html">Valuador Online</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="footer-logo-wrap">
+                <img src="logo-p11-blanco.png" alt="Logo P11">
+            </div>
+            <div class="footer-copy">
+                &copy; 2026 Vive Bien Grupo Inmobiliario, una empresa de Grupo P-ONCE. Todos los derechos reservados.
             </div>
         </div>
     </footer>
+
+    <!-- LIGHTBOX -->
+    <div class="lightbox-modal" id="lightbox" onclick="cerrarLightbox()">
+        <span class="lightbox-close">&times;</span>
+        <img src="" class="lightbox-img" id="lightbox-img">
+    </div>
 
     <!-- MODAL DE REGISTRO -->
     <div class="modal-overlay" id="modal-registro">
@@ -814,6 +1106,28 @@
                     i2.src = fotos[2]; i2.onload = () => i2.classList.add('loaded');
                 } else { document.getElementById('img-side-2').parentElement.style.display = 'none'; }
 
+                // Fotos Extras (de la 4 en adelante)
+                const extraContainer = document.getElementById('extra-photos');
+                if (fotos.length > 3) {
+                    for (let i = 3; i < fotos.length; i++) {
+                        const div = document.createElement('div');
+                        div.className = 'extra-photo';
+                        const img = document.createElement('img');
+                        img.src = fotos[i];
+                        img.onload = () => img.classList.add('loaded');
+                        img.onclick = () => abrirLightbox(img.src);
+                        div.appendChild(img);
+                        extraContainer.appendChild(div);
+                    }
+                }
+
+                // Listener para Lightbox en imágenes principales
+                document.querySelectorAll('.gallery-container img').forEach(img => {
+                    img.addEventListener('click', () => {
+                        abrirLightbox(img.src);
+                    });
+                });
+
                 // Cambio de estado loader -> contenido
                 document.getElementById('skeleton-loader').style.display = 'none';
                 document.getElementById('content-container').style.display = 'block';
@@ -929,6 +1243,20 @@
 
         window.cerrarLegal = () => {
             document.getElementById('modal-legal').style.display = 'none';
+        };
+
+        // --- SISTEMA LIGHTBOX ---
+        window.abrirLightbox = (src) => {
+            if (!src) return;
+            const lb = document.getElementById('lightbox');
+            document.getElementById('lightbox-img').src = src;
+            lb.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        };
+
+        window.cerrarLightbox = () => {
+            document.getElementById('lightbox').style.display = 'none';
+            document.body.style.overflow = 'auto';
         };
 
         // Formulario Lateral
