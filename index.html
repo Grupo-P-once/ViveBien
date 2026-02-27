@@ -2512,9 +2512,8 @@
     let _waUrlPendiente = '';
     let _propiedadInteres = '';
 
-    // Abre el modal de registro guardando la URL de WhatsApp destino
-    function pedirRegistro(urlWA, propiedad) {
-      _waUrlPendiente = urlWA || 'https://wa.me/524778116501';
+    // Abre el modal de registro guardando el tipo de contacto y propiedad
+    function pedirRegistro(tipo, propiedad) {
       _propiedadInteres = propiedad || 'Consulta general';
 
       // SI YA ESTÁ LOGUEADO O YA SE REGISTRÓ ANTES (localStorage)
@@ -2527,10 +2526,20 @@
           nombreCliente = localLeads[0].nombre;
         }
 
-        const msg = encodeURIComponent(`Hola, soy ${nombreCliente} y me interesa la propiedad: ${_propiedadInteres}. Lo vi en el sitio de Vive Bien.`);
-        window.open(`https://wa.me/524778116501?text=${msg}`, '_blank');
+        if (tipo === 'tel') {
+          window.location.href = 'tel:+524778116501';
+        } else if (tipo === 'whatsapp') {
+          const msg = encodeURIComponent(`Hola, soy ${nombreCliente} y me interesa la propiedad: ${_propiedadInteres}. Lo vi en el sitio de Vive Bien.`);
+          window.open(`https://wa.me/524778116501?text=${msg}`, '_blank');
+        } else {
+          // 'email' o 'contacto'
+          document.getElementById('contacto').scrollIntoView({ behavior: 'smooth' });
+        }
         return;
       }
+
+      // Si no hay registro, configuramos el link por defecto de WhatsApp para el paso 2
+      _waUrlPendiente = `https://wa.me/524778116501?text=${encodeURIComponent('Hola, quiero informes sobre: ' + _propiedadInteres)}`;
 
       // Resetear el modal al paso 1
       document.getElementById('reg-paso-1').classList.remove('oculto');
@@ -2548,8 +2557,7 @@
     // Abre el registro desde el modal de propiedad (extrae la URL del link)
     function pedirRegistroDesdeModal() {
       const titulo = document.getElementById('m-title').textContent;
-      const urlWA = `https://wa.me/524778116501?text=${encodeURIComponent('Hola, quiero informes sobre: ' + titulo)}`;
-      pedirRegistro(urlWA, titulo);
+      pedirRegistro('whatsapp', titulo);
     }
 
     // Valida los campos, guarda los datos y muestra las opciones de contacto
@@ -2887,8 +2895,8 @@
   </style>
 
   <!-- Botón flotante de WhatsApp -->
-  <a href="javascript:void(0)" class="btn-whatsapp"
-    onclick="pedirRegistro('https://wa.me/524778116501', 'Consulta general')" title="Contáctanos por WhatsApp">
+  <a href="javascript:void(0)" class="btn-whatsapp" onclick="pedirRegistro('whatsapp', 'Consulta general')"
+    title="Contáctanos por WhatsApp">
     <i class="fab fa-whatsapp"></i>
   </a>
 

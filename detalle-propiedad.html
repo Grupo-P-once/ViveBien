@@ -1021,10 +1021,10 @@
                         <button type="submit" class="btn-submit">
                             <i class="fa fa-paper-plane"></i> ENVIAR SOLICITUD
                         </button>
-                        <a href="javascript:void(0)" onclick="pedirRegistroProp()" class="btn-wa-panel">
+                        <a href="javascript:void(0)" onclick="pedirRegistroProp('whatsapp')" class="btn-wa-panel">
                             <i class="fab fa-whatsapp"></i> HABLAR POR WHATSAPP
                         </a>
-                        <a href="tel:+524778116501" class="btn-tel-panel">
+                        <a href="javascript:void(0)" onclick="pedirRegistroProp('tel')" class="btn-tel-panel">
                             <i class="fa fa-phone"></i> LLAMAR AHORA
                         </a>
                     </form>
@@ -1285,7 +1285,7 @@
         }, 5000);
 
         // --- SISTEMA DE REGISTRO CONDICIONAL ---
-        window.pedirRegistroProp = () => {
+        window.pedirRegistroProp = (tipo) => {
             const localLeads = JSON.parse(localStorage.getItem('leadsViveBien') || '[]');
             const titulo = document.getElementById('prop-title').textContent;
 
@@ -1296,8 +1296,13 @@
                 else if (_currentUser && _currentUser.email) nombreCliente = _currentUser.email.split('@')[0];
                 else if (localLeads.length > 0) nombreCliente = localLeads[0].nombre;
 
-                const msg = encodeURIComponent(`Hola, soy ${nombreCliente} y me interesa la propiedad: ${titulo}. Lo vi en el sitio de Vive Bien.`);
-                window.open(`https://wa.me/524778116501?text=${msg}`, '_blank');
+                if (tipo === 'tel') {
+                    window.location.href = 'tel:+524778116501';
+                } else {
+                    // whatsapp por defecto
+                    const msg = encodeURIComponent(`Hola, soy ${nombreCliente} y me interesa la propiedad: ${titulo}. Lo vi en el sitio de Vive Bien.`);
+                    window.open(`https://wa.me/524778116501?text=${msg}`, '_blank');
+                }
                 return;
             }
 

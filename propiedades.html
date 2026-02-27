@@ -2558,28 +2558,35 @@
     let _propiedadInteres = '';
     let _propiedadUbicacion = '';
 
-    // Abre el modal de registro guardando la URL de WhatsApp destino
-    // Si el usuario ya está logueado, se envía directo a WhatsApp.
-    function pedirRegistro(urlWA, propiedad, ubicacion) {
-      _waUrlPendiente = urlWA || 'https://wa.me/524778116501';
+    // Abre el modal de registro guardando la URL de WhatsApp destino con tipo de contacto
+    function pedirRegistro(tipo, propiedad, ubicacion) {
       _propiedadInteres = propiedad || 'Consulta general';
       _propiedadUbicacion = ubicacion || '';
 
       const localLeads = JSON.parse(localStorage.getItem('leadsViveBien') || '[]');
       if (window.currentUser || localLeads.length > 0) {
-        // Ya tenemos datos del usuario (Sesión iniciada o registro local previo)
+        // Ya tenemos datos del usuario
         let nombreCliente = "Cliente";
         if (window.currentUser && window.currentUser.displayName) nombreCliente = window.currentUser.displayName;
         else if (window.currentUser && window.currentUser.email) nombreCliente = window.currentUser.email.split('@')[0];
         else if (localLeads.length > 0) nombreCliente = localLeads[0].nombre;
 
-        let mensaje = `Hola, soy ${nombreCliente} y me interesa la propiedad: ${_propiedadInteres}`;
-        if (_propiedadUbicacion) mensaje += ` en ${_propiedadUbicacion}`;
-        mensaje += `. Lo vi en el catálogo de Vive Bien.`;
-
-        window.open(`https://wa.me/524778116501?text=${encodeURIComponent(mensaje)}`, '_blank');
+        if (tipo === 'tel') {
+          window.location.href = 'tel:+524778116501';
+        } else if (tipo === 'whatsapp') {
+          let mensaje = `Hola, soy ${nombreCliente} y me interesa la propiedad: ${_propiedadInteres}`;
+          if (_propiedadUbicacion) mensaje += ` en ${_propiedadUbicacion}`;
+          mensaje += `. Lo vi en el catálogo de Vive Bien.`;
+          window.open(`https://wa.me/524778116501?text=${encodeURIComponent(mensaje)}`, '_blank');
+        } else {
+          // 'email' o 'contacto'
+          document.getElementById('contacto').scrollIntoView({ behavior: 'smooth' });
+        }
         return;
       }
+
+      // Si no hay registro, configuramos el link por defecto de WhatsApp para el paso 2
+      _waUrlPendiente = `https://wa.me/524778116501?text=${encodeURIComponent('Hola, quiero informes sobre: ' + _propiedadInteres)}`;
 
       // Resetear el modal al paso 1
       document.getElementById('reg-paso-1').classList.remove('oculto');
@@ -2605,7 +2612,7 @@
     function pedirRegistroDesdeModal() {
       const titulo = document.getElementById('m-title').textContent;
       const ubicacion = document.getElementById('m-location').textContent;
-      pedirRegistro(null, titulo, ubicacion);
+      pedirRegistro('whatsapp', titulo, ubicacion);
     }
 
     // Valida los campos, guarda los datos y muestra las opciones de contacto
@@ -2992,9 +2999,9 @@
                     <a href="detalle-propiedad.html?id=${d.id}" target="_blank" class="btn-ver" style="padding: 0.45rem 0.8rem; text-decoration: none; display: inline-block;">Ver más &rarr;</a>
                   </div>
                   <div class="tarjeta-contacto" style="margin-top:8px;">
-                    <a href="javascript:void(0)" onclick="pedirRegistro('tel:+524778116501', '${d.titulo.replace(/'/g, "\\'")}', '${d.ubicacion.replace(/'/g, "\\'")}')" title="Llamar"><i class="fa fa-phone"></i></a>
-                    <a href="javascript:void(0)" onclick="pedirRegistro(null, '${d.titulo.replace(/'/g, "\\'")}', '${d.ubicacion.replace(/'/g, "\\'")}')" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
-                    <button onclick="pedirRegistro(null, '${d.titulo.replace(/'/g, "\\'")}', '${d.ubicacion.replace(/'/g, "\\'")}')" title="Contactar"><i class="fa fa-envelope"></i></button>
+                    <a href="javascript:void(0)" onclick="pedirRegistro('tel', '${d.titulo.replace(/'/g, "\\'")}', '${d.ubicacion.replace(/'/g, "\\'")}')" title="Llamar"><i class="fa fa-phone"></i></a>
+                    <a href="javascript:void(0)" onclick="pedirRegistro('whatsapp', '${d.titulo.replace(/'/g, "\\'")}', '${d.ubicacion.replace(/'/g, "\\'")}')" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+                    <button onclick="pedirRegistro('contacto', '${d.titulo.replace(/'/g, "\\'")}', '${d.ubicacion.replace(/'/g, "\\'")}')" title="Contactar"><i class="fa fa-envelope"></i></button>
                     <button onclick="window.toggleFavorito('${d.id}')" class="btn-fav-${d.id}" title="Favorito" style="margin-left: auto; color: ${favColor}; background: transparent; border: none; font-size: 1.3rem; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center;">
                        ${favIcon}
                     </button>
@@ -3060,9 +3067,9 @@
                   <a href="detalle-propiedad.html?id=${id}" target="_blank" class="btn-ver" style="padding: 0.45rem 0.8rem; text-decoration: none; display: inline-block;">Ver más &rarr;</a>
                 </div>
                 <div class="tarjeta-contacto" style="margin-top:8px;">
-                  <a href="javascript:void(0)" onclick="pedirRegistro('tel:+524778116501', '${d.titulo.replace(/'/g, "\\'")}', '${(d.ubicacion || '').replace(/'/g, "\\'")}')" title="Llamar"><i class="fa fa-phone"></i></a>
-                  <a href="javascript:void(0)" onclick="pedirRegistro(null, '${d.titulo.replace(/'/g, "\\'")}', '${(d.ubicacion || '').replace(/'/g, "\\'")}')" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
-                  <button onclick="pedirRegistro(null, '${d.titulo.replace(/'/g, "\\'")}', '${(d.ubicacion || '').replace(/'/g, "\\'")}')" title="Contactar"><i class="fa fa-envelope"></i></button>
+                  <a href="javascript:void(0)" onclick="pedirRegistro('tel', '${d.titulo.replace(/'/g, "\\'")}', '${(d.ubicacion || '').replace(/'/g, "\\'")}')" title="Llamar"><i class="fa fa-phone"></i></a>
+                  <a href="javascript:void(0)" onclick="pedirRegistro('whatsapp', '${d.titulo.replace(/'/g, "\\'")}', '${(d.ubicacion || '').replace(/'/g, "\\'")}')" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+                  <button onclick="pedirRegistro('contacto', '${d.titulo.replace(/'/g, "\\'")}', '${(d.ubicacion || '').replace(/'/g, "\\'")}')" title="Contactar"><i class="fa fa-envelope"></i></button>
                   <button onclick="window.toggleFavorito('${id}')" class="btn-fav-${id}" title="Favorito" style="margin-left: auto; color: ${favColor}; background: transparent; border: none; font-size: 1.3rem; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center;">
                      ${favIcon}
                   </button>
@@ -3223,8 +3230,8 @@
   </style>
 
   <!-- Botón flotante de WhatsApp -->
-  <a href="javascript:void(0)" class="btn-whatsapp"
-    onclick="pedirRegistro('https://wa.me/524778116501', 'Consulta general')" title="Contáctanos por WhatsApp">
+  <a href="javascript:void(0)" class="btn-whatsapp" onclick="pedirRegistro('whatsapp', 'Consulta general')"
+    title="Contáctanos por WhatsApp">
     <i class="fab fa-whatsapp"></i>
   </a>
 
