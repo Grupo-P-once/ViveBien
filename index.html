@@ -2517,6 +2517,21 @@
       _waUrlPendiente = urlWA || 'https://wa.me/524778116501';
       _propiedadInteres = propiedad || 'Consulta general';
 
+      // SI YA ESTÁ LOGUEADO O YA SE REGISTRÓ ANTES (localStorage)
+      const localLeads = JSON.parse(localStorage.getItem('leadsViveBien') || '[]');
+      if (window.currentUser || localLeads.length > 0) {
+        let nombreCliente = "Cliente";
+        if (window.currentUser && window.currentUser.displayName) {
+          nombreCliente = window.currentUser.displayName;
+        } else if (localLeads.length > 0) {
+          nombreCliente = localLeads[0].nombre;
+        }
+
+        const msg = encodeURIComponent(`Hola, soy ${nombreCliente} y me interesa la propiedad: ${_propiedadInteres}. Lo vi en el sitio de Vive Bien.`);
+        window.open(`https://wa.me/524778116501?text=${msg}`, '_blank');
+        return;
+      }
+
       // Resetear el modal al paso 1
       document.getElementById('reg-paso-1').classList.remove('oculto');
       document.getElementById('reg-paso-2').classList.remove('activo');

@@ -1293,9 +1293,10 @@
             if (_currentUser || localLeads.length > 0) {
                 let nombreCliente = "Cliente";
                 if (_currentUser && _currentUser.displayName) nombreCliente = _currentUser.displayName;
+                else if (_currentUser && _currentUser.email) nombreCliente = _currentUser.email.split('@')[0];
                 else if (localLeads.length > 0) nombreCliente = localLeads[0].nombre;
 
-                const msg = encodeURIComponent(`Hola, soy ${nombreCliente} y me interesa la propiedad: ${titulo}`);
+                const msg = encodeURIComponent(`Hola, soy ${nombreCliente} y me interesa la propiedad: ${titulo}. Lo vi en el sitio de Vive Bien.`);
                 window.open(`https://wa.me/524778116501?text=${msg}`, '_blank');
                 return;
             }

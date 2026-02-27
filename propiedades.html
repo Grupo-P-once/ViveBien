@@ -2565,16 +2565,13 @@
       _propiedadInteres = propiedad || 'Consulta general';
       _propiedadUbicacion = ubicacion || '';
 
-      const user = window._authFirebase ? window._authFirebase.currentUser : null;
-      if (user || (localStorage.getItem('leadsViveBien') && JSON.parse(localStorage.getItem('leadsViveBien')).length > 0)) {
+      const localLeads = JSON.parse(localStorage.getItem('leadsViveBien') || '[]');
+      if (window.currentUser || localLeads.length > 0) {
         // Ya tenemos datos del usuario (Sesión iniciada o registro local previo)
         let nombreCliente = "Cliente";
-        if (user && user.displayName) nombreCliente = user.displayName;
-        else if (user && user.email) nombreCliente = user.email.split('@')[0];
-        else {
-          const localLeads = JSON.parse(localStorage.getItem('leadsViveBien') || '[]');
-          if (localLeads.length > 0) nombreCliente = localLeads[0].nombre;
-        }
+        if (window.currentUser && window.currentUser.displayName) nombreCliente = window.currentUser.displayName;
+        else if (window.currentUser && window.currentUser.email) nombreCliente = window.currentUser.email.split('@')[0];
+        else if (localLeads.length > 0) nombreCliente = localLeads[0].nombre;
 
         let mensaje = `Hola, soy ${nombreCliente} y me interesa la propiedad: ${_propiedadInteres}`;
         if (_propiedadUbicacion) mensaje += ` en ${_propiedadUbicacion}`;
