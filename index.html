@@ -13,10 +13,12 @@
     gtag('config', 'G-7TQQEQ97S2');
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Vive Bien – Grupo Inmobiliario | León, Guanajuato</title>
+  <title>Vive Bien – Grupo Inmobiliario | Naves Industriales y Casas en León, Gto</title>
   <link rel="icon" href="logo_transparent.png" type="image/png">
   <meta name="description"
-    content="Encuentra tu hogar ideal en León, Guanajuato. Casas, departamentos, terrenos y locales comerciales. Vive Bien Grupo Inmobiliario." />
+    content="Vive Bien Grupo Inmobiliario: Especialistas en naves industriales, terrenos y casas en León, Guanajuato. Más de 15 años de experiencia y asesoría personalizada." />
+  <meta name="keywords"
+    content="naves industriales León, bodegas León, terrenos León, inmobiliaria León Guanajuato, Vive Bien, Grupo P-ONCE" />
 
   <!-- ===== FUENTES DE GOOGLE ===== -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -2049,7 +2051,8 @@
           <a href="tel:+524778116501" class="btn-reg-tel" onclick="cerrarRegistro()">
             <i class="fa fa-phone"></i> Teléfono
           </a>
-          <a href="#" id="reg-wa-link" target="_blank" class="btn-reg-wa" onclick="cerrarRegistro()">
+          <a href="https://wa.me/524778116501" id="reg-wa-link" target="_blank" class="btn-reg-wa"
+            onclick="cerrarRegistro()">
             <i class="fab fa-whatsapp"></i> WhatsApp
           </a>
           <button class="btn-reg-email"
@@ -2258,6 +2261,63 @@
     </div>
   </section>
 
+  <!-- =========================================================
+     SECCIÓN: TESTIMONIOS
+     ========================================================= -->
+  <section id="testimonios" style="background: var(--gris); padding: 5rem 2rem;">
+    <div class="seccion-titulo" style="text-align: center; margin-bottom: 3rem;">
+      <h2 style="color: var(--azul); font-size: 2.2rem;"><i class="fa fa-quote-left"></i> Nuestros <span
+          style="font-weight: 300;">Clientes</span></h2>
+      <p>Lo que dicen quienes han confiado en Vive Bien</p>
+    </div>
+    <div class="testimonios-grid"
+      style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; max-width: 1200px; margin: 0 auto;">
+      <div class="testimonio-card"
+        style="background: #fff; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+        <p style="font-style: italic; color: #555; margin-bottom: 1.5rem;">"Excelente servicio para rentar mi nave
+          industrial. El equipo fue muy profesional y directo. Encontramos el cliente ideal en menos de un mes."</p>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <div
+            style="width: 50px; height: 50px; background: var(--rojo); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700;">
+            RC</div>
+          <div>
+            <h4 style="margin: 0; color: var(--azul);">Ricardo Castillo</h4>
+            <small style="color: #888;">Empresario Textil</small>
+          </div>
+        </div>
+      </div>
+      <div class="testimonio-card"
+        style="background: #fff; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+        <p style="font-style: italic; color: #555; margin-bottom: 1.5rem;">"La transparencia en todo el proceso de
+          compra de mi terreno fue lo que más me gustó. No hubo sorpresas y siempre estuvieron disponibles para mis
+          dudas."</p>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <div
+            style="width: 50px; height: 50px; background: var(--azul); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700;">
+            MG</div>
+          <div>
+            <h4 style="margin: 0; color: var(--azul);">Mariana G.</h4>
+            <small style="color: #888;">Propietaria Residencial</small>
+          </div>
+        </div>
+      </div>
+      <div class="testimonio-card"
+        style="background: #fff; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+        <p style="font-style: italic; color: #555; margin-bottom: 1.5rem;">"Recomiendo ampliamente a Vive Bien para
+          cualquier operación industrial en el Bajío. Conocen la zona a la perfección y te ahorran mucho tiempo."</p>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <div
+            style="width: 50px; height: 50px; background: var(--rojo-claro); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700;">
+            AL</div>
+          <div>
+            <h4 style="margin: 0; color: var(--azul);">Alberto Luna</h4>
+            <small style="color: #888;">Gerente de Logística</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
 
 
 
@@ -2399,7 +2459,7 @@
         </div>
       </a>
       <div style="flex: 1; text-align: left; font-size: 0.9rem;">
-        &copy; 2026 Vive Bien Grupo Inmobiliario, una empresa de Grupo P-ONCE. Todos los derechos reservados.
+        &copy; 2026 Vive Bien Grupo Inmobiliario. Todos los derechos reservados.
         &nbsp;|&nbsp; León, Guanajuato, México.
       </div>
     </div>
@@ -2478,7 +2538,7 @@
             dataGeo.timezone || 'America/Mexico_City'
           );
         } catch (error) {
-          llamarOpenMeteo(21.1219, -101.6830, 'León'); // Fallback final absoluto (León)
+          llamarOpenMeteo(21.1236, -101.6821, 'León'); // Fallback final absoluto (León)
         }
       }
     }
@@ -2748,13 +2808,16 @@
         const waMsg = encodeURIComponent(`Hola, soy ${nombre}. Acabo de enviar mi solicitud en el sitio de Vive Bien. Quedamos en contacto.`);
         const respuestaDiv = document.getElementById('form-respuesta');
         respuestaDiv.innerHTML = `
-          ✅ ¡Mensaje enviado! Un asesor te contactará pronto.
-          <br><br>
-          <a href="https://wa.me/524778116501?text=${waMsg}" target="_blank"
-             style="display:inline-flex;align-items:center;gap:8px;background:#25d366;color:#fff;padding:10px 20px;border-radius:8px;font-weight:700;text-decoration:none;font-size:0.9rem;margin-top:8px">
-            <i class="fab fa-whatsapp"></i> Confirmar por WhatsApp
-          </a>`;
-        respuestaDiv.className = 'ok';
+          <div style="text-align:center; padding: 25px; background: #e8f5e9; border-radius: 12px; border: 1px solid #c8e6c9; margin-top: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+            <i class="fa fa-circle-check" style="font-size: 3.5rem; color: #2e7d32; margin-bottom: 15px; display: block;"></i>
+            <h3 style="color: #2e7d32; margin-bottom: 10px; font-family: 'Montserrat';">¡Mensaje Enviado con Éxito!</h3>
+            <p style="color: #444; margin-bottom: 20px; font-size: 1.1rem;">Gracias por tu interés, <strong>${nombre}</strong>. Uno de nuestros asesores te contactará a la brevedad.</p>
+            <a href="https://wa.me/524778116501?text=${waMsg}" target="_blank"
+               style="display:inline-flex;align-items:center;justify-content:center;gap:10px;background:#25d366;color:#fff;padding:14px 30px;border-radius:10px;font-weight:700;text-decoration:none;font-size:1.1rem;box-shadow: 0 4px 12px rgba(37,211,102,0.3); transition: transform 0.3s ease;"
+               onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+              <i class="fab fa-whatsapp" style="font-size: 1.4rem;"></i> Confirmar vía WhatsApp
+            </a>
+          </div>`;
         respuestaDiv.style.display = 'block';
         e.target.reset();
 

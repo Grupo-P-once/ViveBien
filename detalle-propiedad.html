@@ -4,9 +4,10 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Detalle de Propiedad - Vive Bien Grupo Inmobiliario</title>
+    <title>Detalle de Propiedad | Vive Bien Grupo Inmobiliario</title>
     <meta name="description"
-        content="Detalle detallado de propiedad en Vive Bien Grupo Inmobiliario. Encuentra tu próximo hogar o inversión." />
+        content="Información detallada, fotos y precio de esta propiedad en León, Guanajuato. Vive Bien - Tu éxito patrimonial." />
+    <meta name="keywords" content="detalle propiedad, inmobiliaria León, naves industriales, casas León" />
 
     <!-- Google Fonts: Montserrat para títulos, Open Sans para cuerpo -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1132,7 +1133,8 @@
                 <p style="margin-bottom: 20px;">Elige cómo quieres contactarnos:</p>
                 <div class="reg-contacto-btns">
                     <a href="tel:+524778116501" class="btn-reg-tel">Llamar</a>
-                    <a href="#" id="reg-wa-link" target="_blank" class="btn-reg-wa">WhatsApp</a>
+                    <a href="https://wa.me/524778116501" id="reg-wa-link" target="_blank"
+                        class="btn-reg-wa">WhatsApp</a>
                 </div>
             </div>
         </div>
@@ -1192,20 +1194,17 @@
                 if (!data && id === 'sanjuan') {
                     data = {
                         titulo: 'Bodega en Renta Estratégica – 1,244 m²',
-                        ubicacion: 'Blvd. San Juan Bosco, León, Guanajuato',
-                        precio: '$118,180 MXN + IVA/mes',
+                        ubicacion: 'Blvd. San Juan Bosco, Cañada del Refugio, León, Guanajuato',
+                        precio: '$118,180 MXN + IVA',
                         operacion: 'renta', tipo: 'industrial', zona: 'San Juan Bosco',
                         m2: '1,244', recamaras: 'N/D', banos: '6', estacionamiento: '10',
                         mantenimiento: 'Consultar',
-                        descripcion: 'Excelente bodega ubicada sobre una de las avenidas más importantes de León, con acceso inmediato a Libramiento. Cuenta con oficinas equipadas en 3 niveles, patio de maniobras y altura ideal de 9m.',
-                        features: ['Trifásica', 'Altura 9m', 'Oficinas 3 Niveles', 'Patio Maniobras', 'Cisterna', 'Vigilancia'],
+                        descripcion: 'Excelente bodega ubicada sobre Blvd. San Juan Bosco, con acceso rápido a vialidades principales. Ideal para centros de distribución o manufactura ligera. Cuenta con oficinas en 3 niveles y amplio patio de maniobras.',
+                        features: ['Trifásica', 'Altura 9m', 'Oficinas 3 Niveles', 'Patio Maniobras', 'Cisterna', 'Iluminación Natural'],
                         fotos: [
                             './3vive_bien_fotos/naves_industriales/nave_industrial_SanJuanBosco_Renta/foto1.jpg',
                             './3vive_bien_fotos/naves_industriales/nave_industrial_SanJuanBosco_Renta/fot2.jpg',
-                            './3vive_bien_fotos/naves_industriales/nave_industrial_SanJuanBosco_Renta/foto3.jpg',
-                            './3vive_bien_fotos/naves_industriales/nave_industrial_SanJuanBosco_Renta/foto4.jpg',
-                            './3vive_bien_fotos/naves_industriales/nave_industrial_SanJuanBosco_Renta/foto5.jpg',
-                            './3vive_bien_fotos/naves_industriales/nave_industrial_SanJuanBosco_Renta/foto6.jpg'
+                            './3vive_bien_fotos/naves_industriales/nave_industrial_SanJuanBosco_Renta/foto3.jpg'
                         ]
                     };
                 }
@@ -1405,7 +1404,7 @@
         /* --- WIDGET DEL CLIMA --- */
         async function obtenerClima() {
             try {
-                const url = `https://api.open-meteo.com/v1/forecast?latitude=21.1219&longitude=-101.6830&current=temperature_2m,weather_code&timezone=America/Mexico_City`;
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=21.1236&longitude=-101.6821&current=temperature_2m,weather_code&timezone=America/Mexico_City`;
                 const respuesta = await fetch(url);
                 const datos = await respuesta.json();
                 const actual = datos.current;
