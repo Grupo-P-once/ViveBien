@@ -984,10 +984,45 @@
       }
 
       #seccion-buscador-sticky {
-        position: sticky !important;
-        top: 0;
-        /* En móvil, si el header no es sticky o cambia, lo dejamos arriba */
-        z-index: 1001;
+        position: relative !important;
+        top: auto;
+        z-index: 10;
+        padding: 0.5rem 1rem;
+      }
+
+      /* Toggle button visible on mobile */
+      .buscador-toggle {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        background: var(--rojo-claro);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: 0.7rem 1.2rem;
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 700;
+        font-size: 0.9rem;
+        cursor: pointer;
+        width: 100%;
+        margin-bottom: 0;
+      }
+
+      .buscador-toggle i {
+        font-size: 1rem;
+      }
+
+      /* Hide search form by default on mobile */
+      .buscador.buscador-horizontal {
+        display: none !important;
+        flex-direction: column;
+      }
+
+      .buscador.buscador-horizontal.buscador-abierto {
+        display: flex !important;
+        flex-direction: column;
+        margin-top: 0.5rem;
       }
 
       nav a {
@@ -1073,6 +1108,11 @@
       top: 119px;
       /* Casi pegadito al header de 120px para evitar gap visual */
       z-index: 998;
+    }
+
+    /* Toggle button hidden on desktop */
+    .buscador-toggle {
+      display: none;
     }
 
     /* ===== BOTÓN FLOTANTE WHATSAPP ===== */
@@ -2178,6 +2218,11 @@
      BUSCADOR DE PROPIEDADES (sin hero)
      ========================================================= -->
   <section id="seccion-buscador-sticky">
+    <!-- Toggle button for mobile -->
+    <button class="buscador-toggle"
+      onclick="document.getElementById('form-busqueda').classList.toggle('buscador-abierto'); this.querySelector('.toggle-icon').classList.toggle('fa-chevron-down'); this.querySelector('.toggle-icon').classList.toggle('fa-chevron-up');">
+      <i class="fa fa-search"></i> Buscar propiedad <i class="fa fa-chevron-down toggle-icon"></i>
+    </button>
     <form class="buscador buscador-horizontal" id="form-busqueda" onsubmit="buscarPropiedad(event)"
       style="max-width: 1200px; margin: 0 auto; padding: 0.6rem;">
       <select id="filtro-op" aria-label="Operación">
