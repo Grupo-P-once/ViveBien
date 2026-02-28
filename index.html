@@ -3192,6 +3192,26 @@
       } else {
         window.currentUser = null;
         window.userFavoritos = [];
+
+        // Auto-mostrar modal de registro si no hay sesión ni leads locales
+        const localLeads = JSON.parse(localStorage.getItem('leadsViveBien') || '[]');
+        if (localLeads.length === 0) {
+          setTimeout(() => {
+            if (!window.currentUser) {
+              const modal = document.getElementById('modal-registro');
+              if (modal && modal.style.display !== 'flex') {
+                const paso1 = document.getElementById('reg-paso-1');
+                const paso2 = document.getElementById('reg-paso-2');
+                const regError = document.getElementById('reg-error');
+                if (paso1) paso1.classList.remove('oculto');
+                if (paso2) paso2.classList.remove('activo');
+                if (regError) regError.style.display = 'none';
+                modal.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+              }
+            }
+          }, 1500);
+        }
       }
     });
 
