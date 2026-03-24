@@ -119,7 +119,65 @@
       ],
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "const BASE_URL = 'https://grupo-p-once.github.io/ViveBien';\n\nconst propiedades = {\n  nave: {\n    badge: 'NAVE INDUSTRIAL',\n    badgeColor: '#1B365D',\n    titulo: 'Bodega Industrial • 1,244 m²',\n    subtitulo: 'Blvd. San Juan Bosco, Cañada del Refugio',\n    precio: '$118,180 MXN + IVA / mes',\n    precioLabel: 'Renta mensual',\n    features: ['1,244 m² totales', 'Oficinas en 3 niveles', 'Altura para maniobras', 'Acceso a Blvd. Hidalgo'],\n    imagen: BASE_URL + '/3vive_bien_fotos/naves/sanjuanbosco/foto1.jpg',\n    enlace: BASE_URL + '/propiedades.html#naves'\n  },\n  terreno: {\n    badge: 'TERRENO INDUSTRIAL',\n    badgeColor: '#279546',\n    titulo: 'Terreno Industrial Panan II',\n    subtitulo: 'Cluster Industrial Panan II, Silao, Gto.',\n    precio: 'Precio a consultar', \n    precioLabel: 'Disponible',\n    features: ['600 m² por lote', 'Seguridad 24/7', 'Acceso pavimentado', 'Uso industrial'],\n    imagen: BASE_URL + '/3vive_bien_fotos/terrenos/terreno_panam_silao_venta/foto1.jpg',\n    enlace: BASE_URL + '/propiedades.html#terrenos'\n  },\n  casa: {\n    badge: 'RESIDENCIAL',\n    badgeColor: '#8B1A1A',\n    titulo: 'Casas Residenciales en León',\n    subtitulo: 'Zonas exclusivas de León, Guanajuato',\n    precio: 'Desde $1,800,000 MXN',\n    precioLabel: 'Precio de venta',\n    features: ['Acabados de lujo', 'Seguridad privada', 'Jardín y estacionamiento', 'Zonas premium'],\n    imagen: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=600&auto=format',\n    enlace: BASE_URL + '/propiedades.html#casas'\n  },\n  comercial: {\n    badge: 'LOCAL COMERCIAL',\n    badgeColor: '#D97706',\n    titulo: 'Locales Comerciales',\n    subtitulo: 'Zonas de alta afluencia, León, Gto.',\n    precio: 'Precio a consultar',\n    precioLabel: 'Disponible',\n    features: ['Alta afluencia', 'Visibilidad garantizada', 'Ideal para franquicias', 'Excelente ubicación'],\n    imagen: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&auto=format',\n    enlace: BASE_URL + '/propiedades.html#comerciales'\n  }\n};\n\nconst interes = ($json.interes || '').toLowerCase();\nlet prop = propiedades.nave;\nif (interes.includes('terreno')) prop = propiedades.terreno;\nelse if (interes.includes('casa') || interes.includes('residencial') || interes.includes('depto')) prop = propiedades.casa;\nelse if (interes.includes('comercial') || interes.includes('local')) prop = propiedades.comercial;\nelse if (interes.includes('nave') || interes.includes('bodega') || interes.includes('industrial')) prop = propiedades.nave;\n\nconst nombre = $json.nombre || 'Cliente';\nconst asunto = `🏠 Vive Bien – Tu propiedad ideal está aquí: ${prop.titulo}`;\nconst fecha = new Date().toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });\n\nconst featuresHTML = prop.features.map(f => `\n  <tr><td style=\"padding:5px 0\">\n    <table cellpadding=\"0\" cellspacing=\"0\" style=\"font-family:Arial,sans-serif;font-size:14px;color:#333333\">\n      <tr>\n        <td style=\"padding-right:10px\">\n          <div style=\"width:20px;height:20px;background:${prop.badgeColor};border-radius:50%;text-align:center;line-height:20px\">\n            <span style=\"color:#ffffff;font-size:11px;font-weight:bold;line-height:20px;display:block\">✓</span>\n          </div>\n        </td>\n        <td style=\"vertical-align:middle\">${f}</td>\n      </tr>\n    </table>\n  </td></tr>`).join('');\n\nconst html = `<!DOCTYPE html>\\n<html lang=\"es\">\\n<head>\\n<meta charset=\"UTF-8\">\\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\\n<title>${asunto}</title>\\n</head>\\n<body style=\"margin:0;padding:0;background:#EAEFF4;font-family:Georgia,serif\">\\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#EAEFF4\">\\n<tr><td align=\"center\" style=\"padding:30px 10px\">\\n  <table width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"max-width:600px;width:100%;background:#ffffff;border-radius:10px;overflow:hidden\">\\n    <!-- TOP BAR -->\\n    <tr><td style=\"background:#8B1A1A;padding:12px 30px\">\\n      <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr>\\n        <td style=\"color:#ffffff;font-family:Arial,sans-serif;font-size:14px;font-weight:700;letter-spacing:1px\">VIVE BIEN</td>\\n        <td align=\"right\" style=\"color:#ffffff;font-family:Arial,sans-serif;font-size:11px;opacity:0.8\">${fecha}</td>\\n      </tr></table>\\n    </td></tr>\\n    <!-- HERO BANNER -->\\n    <tr><td style=\"padding:0\">\\n      <a href=\"${prop.enlace}\" style=\"display:block;text-decoration:none\">\\n        <img src=\"${prop.imagen}\" width=\"600\" style=\"width:100%;max-width:600px;height:auto;display:block;border:none\" alt=\"${prop.titulo}\">\\n      </a>\\n    </td></tr>\\n    <!-- MAIN CONTENT -->\\n    <tr><td style=\"background:#ffffff;padding:32px 36px\">\\n      <p style=\"margin:0 0 10px;font-size:18px;color:#1B365D;font-family:Georgia,serif\">Hola, <strong>${nombre}</strong></p>\\n      <p style=\"margin:0 0 24px;font-size:14px;color:#333333;font-family:Arial,sans-serif;line-height:1.6\">Encontramos una propiedad que coincide con lo que buscas. No dejes pasar esta oportunidad — el inventario es limitado.</p>\\n      \\n      <div style=\"margin-bottom:20px\">\\n        <span style=\"background:${prop.badgeColor};color:#ffffff;font-family:Arial,sans-serif;font-size:10px;font-weight:800;letter-spacing:1px;padding:4px 10px;border-radius:4px;text-transform:uppercase\">${prop.badge}</span>\\n        <h1 style=\"margin:12px 0 4px;color:#1B365D;font-size:24px;font-family:Georgia,serif\">${prop.titulo}</h1>\\n        <p style=\"margin:0;color:#666666;font-family:Arial,sans-serif;font-size:13px\">📍 ${prop.subtitulo}</p>\\n      </div>\\n\\n      <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#8B1A1A;border-radius:8px;margin-bottom:24px\">\\n        <tr><td style=\"padding:15px 24px\">\\n          <p style=\"margin:0;font-family:Arial,sans-serif;font-size:11px;color:#ffffff;opacity:0.8;text-transform:uppercase;letter-spacing:1px\">${prop.precioLabel}</p>\\n          <p style=\"margin:4px 0 0;font-family:Arial,sans-serif;font-size:26px;font-weight:800;color:#ffffff\">${prop.precio}</p>\\n        </td></tr>\\n      </table>\\n\\n      <p style=\"margin:0 0 12px;font-family:Arial,sans-serif;font-size:13px;font-weight:700;color:#1B365D;text-transform:uppercase;letter-spacing:.5px\">Características</p>\\n      <table cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:28px\">\\n        ${featuresHTML}\\n      </table>\\n\\n      <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr><td align=\"center\">\\n        <a href=\"${prop.enlace}\"\\n           style=\"display:inline-block;background:#8B1A1A;color:#ffffff;font-family:Arial,sans-serif;font-size:16px;font-weight:700;padding:16px 48px;border-radius:50px;text-decoration:none;border:1px solid #8B1A1A\">\\n          Ver esta propiedad &rarr;\\n        </a>\\n      </td></tr></table>\\n    </td></tr>\\n\\n    <!-- WHATSAPP BAR -->\\n    <tr><td style=\"background:#F0F4F8;padding:18px 36px;border-top:1px solid #E2E8F0\">\\n      <table width=\"100%\"><tr>\\n        <td style=\"font-family:Arial,sans-serif;font-size:13px;color:#333333\">¿Quieres más información?</td>\\n        <td align=\"right\">\\n          <a href=\"https://wa.me/524778116501\" style=\"display:inline-block;background:#25D366;color:#ffffff;font-family:Arial,sans-serif;font-size:13px;font-weight:700;padding:8px 16px;border-radius:20px;text-decoration:none\">\\n            WhatsApp\\n          </a>\\n        </td>\\n      </tr></table>\\n    </td></tr>\\n    <!-- FOOTER CON LOGO GRUPO PONCE -->\\n    <tr><td style=\"background:#1B365D;padding:30px 36px;border-radius:0 0 10px 10px;text-align:center\">\\n      <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\\n        <tr><td align=\"center\" style=\"padding-bottom:15px\">\\n          <table align=\"center\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#ffffff;border-radius:50%;width:64px;height:64px;border-collapse:separate\">\\n            <tr><td align=\"center\" valign=\"middle\" style=\"padding:12px;width:64px;height:64px\">\n              <img src=\"${BASE_URL}/logo-p11-blanco.png\" width=\"40\" style=\"display:block;width:40px;height:auto;max-width:40px;object-fit:contain\" alt=\"Grupo Ponce\">\n            </td></tr>\\n          </table>\\n        </td></tr>\\n        <tr><td align=\"center\">\\n          <p style=\"margin:0;font-family:Arial,sans-serif;font-size:12px;color:#ffffff;font-weight:700;letter-spacing:0.5px\">VIVE BIEN GRUPO INMOBILIARIO</p>\\n          <p style=\"margin:4px 0 0;font-family:Arial,sans-serif;font-size:11px;color:#cccccc\">Una empresa de Grupo P-ONCE</p>\\n          <p style=\"margin:15px 0 0;font-family:Arial,sans-serif;font-size:10px;color:#999999\">León, Guanajuato, México. &copy; 2026</p>\\n        </td></tr>\\n      </table>\\n    </td></tr>\\n  </table>\\n</td></tr>\\n</table>\\n</body>\\n</html>`;\n\nconst firebasePayload = JSON.stringify({\n  fields: {\n    email: { stringValue: $json.email },\n    nombre: { stringValue: nombre },\n    asunto: { stringValue: asunto },\n    fecha: { stringValue: new Date().toISOString().slice(0, 10) },\n    timestamp: { stringValue: new Date().toISOString() }\n  }\n});\n\nreturn [{ json: { email: $json.email, nombre, asunto, emailHtml: html, firebasePayload } }];"
+        "jsCode": "const BASE_URL = 'https://grupo-p-once.github.io/ViveBien';\n\nconst propiedades = {\n  nave: {\n    badge: 'NAVE INDUSTRIAL',\n    badgeColor: '#1B365D',\n    titulo: 'Bodega Industrial • 1,244 m²',\n    subtitulo: 'Blvd. San Juan Bosco, Cañada del Refugio',\n    precio: '$118,180 MXN + IVA / mes',\n    precioLabel: 'Renta mensual',\n    features: ['1,244 m² totales', 'Oficinas en 3 niveles', 'Altura para maniobras', 'Acceso a Blvd. Hidalgo'],\n    imagen: BASE_URL + '/3vive_bien_fotos/naves_industriales/nave_industrial_SanJuanBosco_Renta/foto1.jpg',\n    enlace: BASE_URL + '/propiedades.html#naves'\n  },\n  terreno: {\n    badge: 'TERRENO INDUSTRIAL',\n    badgeColor: '#279546',\n    titulo: 'Terreno Industrial Panan II',\n    subtitulo: 'Cluster Industrial Panan II, Silao, Gto.',\n    precio: 'Precio a consultar', \n    precioLabel: 'Disponible',\n    features: ['600 m² por lote', 'Seguridad 24/7', 'Acceso pavimentado', 'Uso industrial'],\n    imagen: BASE_URL + '/3vive_bien_fotos/terrenos/terreno_panam_silao_venta/foto1.jpg',\n    enlace: BASE_URL + '/propiedades.html#terrenos'\n  },\n  casa: {\n    badge: 'RESIDENCIAL',\n    badgeColor: '#8B1A1A',\n    titulo: 'Casas Residenciales en León',\n    subtitulo: 'Zonas exclusivas de León, Guanajuato',\n    precio: 'Desde $1,800,000 MXN',\n    precioLabel: 'Precio de venta',\n    features: ['Acabados de lujo', 'Seguridad privada', 'Jardín y estacionamiento', 'Zonas premium'],\n    imagen: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=600&auto=format',\n    enlace: BASE_URL + '/propiedades.html#casas'\n  },\n  comercial: {\n    badge: 'LOCAL COMERCIAL',\n    badgeColor: '#D97706',\n    titulo: 'Locales Comerciales',\n    subtitulo: 'Zonas de alta afluencia, León, Gto.',\n    precio: 'Precio a consultar',\n    precioLabel: 'Disponible',\n    features: ['Alta afluencia', 'Visibilidad garantizada', 'Ideal para franquicias', 'Excelente ubicación'],\n    imagen: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&auto=format',\n    enlace: BASE_URL + '/propiedades.html#comerciales'\n  }\n};\n\nconst interes = ($json.interes || '').toLowerCase();\nlet prop = propiedades.nave;\nif (interes.includes('terreno')) prop = propiedades.terreno;\nelse if (interes.includes('casa') || interes.includes('residencial') || interes.includes('depto')) prop = propiedades.casa;\nelse if (interes.includes('comercial') || interes.includes('local')) prop = propiedades.comercial;\nelse if (interes.includes('nave') || interes.includes('bodega') || interes.includes('industrial')) prop = propiedades.nave;\n\nconst nombre = $json.nombre || 'Cliente';\nconst asunto = `🏠 Vive Bien – Tu propiedad ideal está aquí: ${prop.titulo}`;\nconst fecha = new Date().toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });\n\nconst featuresHTML = prop.features.map(f => `\n  <tr><td style=\"padding:5px 0\">\n    <table cellpadding=\"0\" cellspacing=\"0\" style=\"font-family:Arial,sans-serif;font-size:14px;color:#333333\">\n      <tr>\n        <td style=\"padding-right:10px\">\n          <div style=\"width:20px;height:20px;background:${prop.badgeColor};border-radius:50%;text-align:center;line-height:20px\">\n            <span style=\"color:#ffffff;font-size:11px;font-weight:bold;line-height:20px;display:block\">✓</span>\n          </div>\n        </td>\n        <td style=\"vertical-align:middle\">${f}</td>\n      </tr>\n    </table>\n  </td></tr>`).join('');\n\nconst html = `<!DOCTYPE html>\\n<html lang=\"es\">\\n<head>\\n<meta charset=\"UTF-8\">\\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\\n<title>${asunto}</title>\\n</head>\\n<body style=\"margin:0;padding:0;background:#EAEFF4;font-family:Georgia,serif\">\\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#EAEFF4\">\\n<tr><td align=\"center\" style=\"padding:30px 10px\">\\n  <table width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"max-width:600px;width:100%;background:#ffffff;border-radius:10px;overflow:hidden\">\\n    <!-- TOP BAR -->\\n    <tr><td style=\"background:#8B1A1A;padding:12px 30px\">\\n      <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr>\\n        <td style=\"color:#ffffff;font-family:Arial,sans-serif;font-size:14px;font-weight:700;letter-spacing:1px\">VIVE BIEN</td>\\n        <td align=\"right\" style=\"color:#ffffff;font-family:Arial,sans-serif;font-size:11px;opacity:0.8\">${fecha}</td>\\n      </tr></table>\\n    </td></tr>\\n    <!-- HERO BANNER -->\\n    <tr><td style=\"padding:0\">\\n      <a href=\"${prop.enlace}\" style=\"display:block;text-decoration:none\">\\n        <img src=\"${prop.imagen}\" width=\"600\" style=\"width:100%;max-width:600px;height:auto;display:block;border:none\" alt=\"${prop.titulo}\">\\n      </a>\\n    </td></tr>\\n    <!-- MAIN CONTENT -->\\n    <tr><td style=\"background:#ffffff;padding:32px 36px\">\\n      <p style=\"margin:0 0 10px;font-size:18px;color:#1B365D;font-family:Georgia,serif\">Hola, <strong>${nombre}</strong></p>\\n      <p style=\"margin:0 0 24px;font-size:14px;color:#333333;font-family:Arial,sans-serif;line-height:1.6\">Encontramos una propiedad que coincide con lo que buscas. No dejes pasar esta oportunidad — el inventario es limitado.</p>\\n      \\n      <div style=\"margin-bottom:20px\">\\n        <span style=\"background:${prop.badgeColor};color:#ffffff;font-family:Arial,sans-serif;font-size:10px;font-weight:800;letter-spacing:1px;padding:4px 10px;border-radius:4px;text-transform:uppercase\">${prop.badge}</span>\\n        <h1 style=\"margin:12px 0 4px;color:#1B365D;font-size:24px;font-family:Georgia,serif\">${prop.titulo}</h1>\\n        <p style=\"margin:0;color:#666666;font-family:Arial,sans-serif;font-size:13px\">📍 ${prop.subtitulo}</p>\\n      </div>\\n\\n      <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#8B1A1A;border-radius:8px;margin-bottom:24px\">\\n        <tr><td style=\"padding:15px 24px\">\\n          <p style=\"margin:0;font-family:Arial,sans-serif;font-size:11px;color:#ffffff;opacity:0.8;text-transform:uppercase;letter-spacing:1px\">${prop.precioLabel}</p>\\n          <p style=\"margin:4px 0 0;font-family:Arial,sans-serif;font-size:26px;font-weight:800;color:#ffffff\">${prop.precio}</p>\\n        </td></tr>\\n      </table>\\n\\n      <p style=\"margin:0 0 12px;font-family:Arial,sans-serif;font-size:13px;font-weight:700;color:#1B365D;text-transform:uppercase;letter-spacing:.5px\">Características</p>\\n      <table cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:28px\">\\n        ${featuresHTML}\\n      </table>\\n\n      <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr><td align=\"center\">\\n        <a href=\"${prop.enlace}\"\\n           style=\"display:inline-block;background:#8B1A1A;color:#ffffff;font-family:Arial,sans-serif;font-size:16px;font-weight:700;padding:16px 48px;border-radius:50px;text-decoration:none;border:1px solid #8B1A1A\">\\n          Ver esta propiedad &rarr;\\n        </a>\\n      </td></tr></table>\\n    </td></tr>\\n\\n    <!-- WHATSAPP BAR -->\\n    <tr><td style=\"background:#F0F4F8;padding:18px 36px;border-top:1px solid #E2E8F0\">\\n      <table width=\"100%\"><tr>\\n        <td style=\"font-family:Arial,sans-serif;font-size:13px;color:#333333\">¿Quieres más información?</td>\\n        <td align=\"right\">\\n          <a href=\"https://wa.me/524778116501\" style=\"display:inline-block;background:#25D366;color:#ffffff;font-family:Arial,sans-serif;font-size:13px;font-weight:700;padding:8px 16px;border-radius:20px;text-decoration:none\">\\n            WhatsApp\\n          </a>\\n        </td>\\n      </tr></table>\\n    </td></tr>\\n    <!-- FOOTER CON LOGO GRUPO PONCE -->\\n    <tr><td style=\"background:#1B365D;padding:30px 36px;border-radius:0 0 10px 10px;text-align:center\">\\n      <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\\n        <tr><td align=\"center\" style=\"padding-bottom:15px\">\\n          <table align=\"center\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#ffffff;border-radius:50%;width:64px;height:64px;border-collapse:separate\">\\n            <tr><td align=\"center\" valign=\"middle\" style=\"padding:12px;width:64px;height:64px\">\n              <img src=\"${BASE_URL}/logo-p11-blanco.png\" width=\"40\" style=\"display:block;width:40px;height:auto;max-width:40px;object-fit:contain\" alt=\"Grupo Ponce\">\n            </td></tr>\\n          </table>\\n        </td></tr>\\n        <tr><td align=\"center\">\\n          <p style=\"margin:0;font-family:Arial,sans-serif;font-size:12px;color:#ffffff;font-weight:700;letter-spacing:0.5px\">VIVE BIEN GRUPO INMOBILIARIO</p>\\n          <p style=\"margin:4px 0 0;font-family:Arial,sans-serif;font-size:11px;color:#cccccc\">Una empresa de Grupo P-ONCE</p>\\n          <p style=\"margin:15px 0 0;font-family:Arial,sans-serif;font-size:10px;color:#999999\">León, Guanajuato, México. &copy; 2026</p>\\n        </td></tr>\\n      </table>\\n    </td></tr>\\n  </table>\\n</td></tr>\\n</table>\\n</body>\\n</html>`;\n\nconst firebasePayload = JSON.stringify({\n  fields: {\n    email: { stringValue: $json.email },\n    nombre: { stringValue: nombre },\n    asunto: { stringValue: asunto },\n    fecha: { stringValue: new Date().toISOString().slice(0, 10) },\n    timestamp: { stringValue: new Date().toISOString() }\n  }\n});\n\nreturn [{ json: { email: $json.email, nombre, asunto, emailHtml: html, firebasePayload } }];"
+      }
+    },
+    {
+      "id": "vb-012",
+      "name": "Validar Imagen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1580,
+        480
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.emailHtml.match(/<img[^>]+src=\"([^\"]+)\"/)[1] }}",
+        "options": {
+          "redirect": {
+            "redirect": {
+              "followRedirects": true
+            }
+          },
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "vb-013",
+      "name": "Filtro Imagen OK",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [
+        1820,
+        480
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-1",
+              "leftValue": "={{ $json.statusCode }}",
+              "rightValue": 200,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
       }
     },
     {
@@ -128,14 +186,14 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,
       "position": [
-        1700,
+        2060,
         480
       ],
       "parameters": {
-        "sendTo": "={{ $json.email }}",
-        "subject": "={{ $json.asunto }}",
+        "sendTo": "={{ $('Generar Email HTML').item.json.email }}",
+        "subject": "={{ $('Generar Email HTML').item.json.asunto }}",
         "emailType": "html",
-        "message": "={{ $json.emailHtml }}",
+        "message": "={{ $('Generar Email HTML').item.json.emailHtml }}",
         "options": {
           "senderName": "Vive Bien Grupo Inmobiliario",
           "replyTo": "grupo.p.11.ee@gmail.com",
@@ -149,7 +207,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1940,
+        2300,
         480
       ],
       "parameters": {
@@ -166,7 +224,7 @@
         },
         "sendBody": true,
         "specifyBody": "string",
-        "body": "={{ $json.firebasePayload }}",
+        "body": "={{ $('Generar Email HTML').item.json.firebasePayload }}",
         "options": {}
       }
     }
@@ -260,6 +318,28 @@
       ]
     },
     "Generar Email HTML": {
+      "main": [
+        [
+          {
+            "node": "Validar Imagen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar Imagen": {
+      "main": [
+        [
+          {
+            "node": "Filtro Imagen OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filtro Imagen OK": {
       "main": [
         [
           {
