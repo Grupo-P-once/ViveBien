@@ -1,26 +1,59 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --rojo: #8B1A1A;
+  --rojo-claro: #C0392B;
+  --naranja-accion: #FF6B00;
+  --azul: #1B365D;
+  --azul-claro: #3D5A73;
+  --gris: #F4F6F8;
+  --blanco: #FFFFFF;
+  --texto: #222831;
+  --sombra: rgba(0, 0, 0, .08);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-rojo: var(--rojo);
+  --color-rojo-claro: var(--rojo-claro);
+  --color-naranja: var(--naranja-accion);
+  --color-azul: var(--azul);
+  --color-azul-claro: var(--azul-claro);
+  --color-gris: var(--gris);
+  --color-texto: var(--texto);
+  --font-sans: var(--font-open-sans);
+  --font-heading: var(--font-montserrat);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-open-sans, 'Open Sans', sans-serif);
+  color: var(--texto);
+  background: var(--blanco);
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-montserrat, 'Montserrat', sans-serif);
 }
