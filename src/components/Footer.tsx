@@ -106,17 +106,27 @@ export default function Footer() {
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         flexWrap: 'wrap', gap: '1rem',
       }}>
-        {/* Logo Grupo P-ONCE */}
+        {/* Logo Grupo P-ONCE — círculo */}
         <a
           href="https://grupo-p-once.vercel.app"
           target="_blank"
           rel="noopener noreferrer"
-          style={{ flexShrink: 0, opacity: 0.85, transition: 'opacity .2s' }}
-          onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
-          onMouseLeave={e => (e.currentTarget.style.opacity = '0.85')}
+          style={{
+            flexShrink: 0,
+            width: '64px', height: '64px', borderRadius: '50%',
+            background: '#ffffff',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '10px',
+            opacity: 0.92,
+            transition: 'opacity .2s, transform .2s',
+            border: '1px solid rgba(255,255,255,.15)',
+            textDecoration: 'none',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'scale(1.05)'; }}
+          onMouseLeave={e => { e.currentTarget.style.opacity = '0.92'; e.currentTarget.style.transform = 'scale(1)'; }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-p11-blanco.png" alt="Grupo P-ONCE" style={{ height: '48px', width: 'auto', objectFit: 'contain', display: 'block' }} />
+          <img src="/logo-p11-full.png" alt="Grupo P-ONCE" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
         </a>
 
         <p style={{ fontSize: '.8rem', color: 'rgba(255,255,255,.45)', textAlign: 'center', flex: 1 }}>
