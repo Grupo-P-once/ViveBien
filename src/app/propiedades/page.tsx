@@ -123,6 +123,8 @@ function PropiedadesContent() {
       {/* Sticky filter bar */}
       <div style={{ background: '#1B365D', padding: '.65rem 1rem', position: 'sticky', top: '80px', zIndex: 998, boxShadow: '0 4px 12px rgba(0,0,0,.3)' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', gap: '.6rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          {/* Logo */}
+          <img src="/logo_transparent.png" alt="Vive Bien" style={{ height: '38px', width: 'auto', objectFit: 'contain', filter: 'brightness(0) invert(1)', marginRight: '.3rem', flexShrink: 0 }} />
           <select value={filtros.op} onChange={e => setFiltros(f => ({ ...f, op: e.target.value }))}
             style={{ padding: '.5rem .9rem', borderRadius: '8px', border: 'none', fontSize: '.85rem', minWidth: '120px', fontFamily: 'inherit' }}>
             <option value="">Comprar o Rentar</option>
