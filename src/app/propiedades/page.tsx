@@ -18,10 +18,17 @@ interface Propiedad {
   ubicacion: string
   descripcion?: string
   fotos: string[]
-  estatus: string
+  estatus?: string
+  estado?: string
   metros?: number
+  m2?: number | string
   recamaras?: number
   banos?: number
+  alturaLibre?: number
+  andenes?: number
+  mantenimiento?: number | string
+  amenidades?: string[]
+  features?: string[]
   whatsapp?: string
 }
 
@@ -63,12 +70,23 @@ function PropiedadesContent() {
     setLoading(false)
   }
 
+  function getStatus(p: Propiedad) {
+    return p.estatus || p.estado || 'disponible'
+  }
+
+  function getNormTipo(p: Propiedad) {
+    // normalize 'depto' → 'departamento'
+    return p.tipo === 'depto' ? 'departamento' : p.tipo
+  }
+
   function filtrar(lista: Propiedad[], tipo?: string) {
     return lista.filter(p => {
-      if (p.estatus === 'pausada' || p.estatus === 'vendida') return false
-      if (tipo && p.tipo !== tipo) return false
+      const st = getStatus(p)
+      if (st === 'pausada' || st === 'vendida') return false
+      const t = getNormTipo(p)
+      if (tipo && t !== tipo) return false
       if (filtros.op && p.operacion !== filtros.op) return false
-      if (filtros.tipo && filtros.tipo !== '' && p.tipo !== filtros.tipo) return false
+      if (filtros.tipo && filtros.tipo !== '' && t !== filtros.tipo) return false
       if (filtros.zona && !p.ubicacion?.toLowerCase().includes(filtros.zona.toLowerCase())) return false
       if (filtros.precioMin && p.precio < parseFloat(filtros.precioMin)) return false
       if (filtros.precioMax && p.precio > parseFloat(filtros.precioMax)) return false
@@ -97,7 +115,7 @@ function PropiedadesContent() {
             Naves, Casas, Terrenos y más<br />en León, Guanajuato
           </h1>
           <p style={{ fontSize: '1.05rem', opacity: .9 }}>
-            {loading ? 'Cargando propiedades...' : `${propiedades.filter(p => p.estatus === 'disponible').length}+ propiedades disponibles`}
+            {loading ? 'Cargando propiedades...' : `${propiedades.filter(p => (p.estatus || p.estado) === 'disponible').length}+ propiedades disponibles`}
           </p>
         </div>
       </section>
@@ -136,17 +154,48 @@ function PropiedadesContent() {
             </button>
           )}
           <span style={{ color: 'rgba(255,255,255,.75)', fontSize: '.82rem', marginLeft: 'auto', fontWeight: 600 }}>
-            {hayFiltroActivo ? `${totalFiltradas} resultado${totalFiltradas !== 1 ? 's' : ''}` : `${propiedades.filter(p => p.estatus === 'disponible').length} disponibles`}
+            {hayFiltroActivo ? `${totalFiltradas} resultado${totalFiltradas !== 1 ? 's' : ''}` : `${propiedades.filter(p => (p.estatus || p.estado) === 'disponible').length} disponibles`}
           </span>
         </div>
       </div>
 
       <main style={{ background: '#F4F6F8' }}>
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '6rem 2rem', color: '#888' }}>
-            <i className="fa fa-spinner fa-spin" style={{ fontSize: '2.5rem', marginBottom: '1rem', display: 'block', color: '#1B365D' }} />
-            <p style={{ fontSize: '1.1rem' }}>Cargando propiedades...</p>
-          </div>
+          // ── Skeleton loading ──
+          <section style={{ padding: '4rem 2rem' }}>
+            <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+              {/* Section header skeleton */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '.8rem', marginBottom: '2.5rem' }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'linear-gradient(90deg,#e8ecf0 25%,#d8dde3 50%,#e8ecf0 75%)', backgroundSize: '200% 100%', animation: 'skeletonShimmer 1.5s infinite' }} />
+                <div style={{ width: '200px', height: '28px', borderRadius: '8px', background: 'linear-gradient(90deg,#e8ecf0 25%,#d8dde3 50%,#e8ecf0 75%)', backgroundSize: '200% 100%', animation: 'skeletonShimmer 1.5s infinite' }} />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(290px,1fr))', gap: '1.8rem' }}>
+                {[1, 2, 3].map(n => (
+                  <div key={n} style={{ background: '#fff', borderRadius: '20px', overflow: 'hidden', boxShadow: '0 8px 30px rgba(0,0,0,.06)' }}>
+                    <div style={{ height: '220px', background: 'linear-gradient(90deg,#e8ecf0 25%,#d8dde3 50%,#e8ecf0 75%)', backgroundSize: '200% 100%', animation: 'skeletonShimmer 1.5s infinite' }} />
+                    <div style={{ padding: '1.1rem 1.2rem 1.4rem' }}>
+                      <div style={{ height: '18px', width: '80%', borderRadius: '6px', background: 'linear-gradient(90deg,#e8ecf0 25%,#d8dde3 50%,#e8ecf0 75%)', backgroundSize: '200% 100%', animation: 'skeletonShimmer 1.5s infinite', marginBottom: '.5rem' }} />
+                      <div style={{ height: '14px', width: '60%', borderRadius: '6px', background: 'linear-gradient(90deg,#e8ecf0 25%,#d8dde3 50%,#e8ecf0 75%)', backgroundSize: '200% 100%', animation: 'skeletonShimmer 1.5s infinite', marginBottom: '.9rem' }} />
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.5rem', marginBottom: '.9rem' }}>
+                        {[1,2].map(x => <div key={x} style={{ height: '16px', borderRadius: '6px', background: 'linear-gradient(90deg,#e8ecf0 25%,#d8dde3 50%,#e8ecf0 75%)', backgroundSize: '200% 100%', animation: 'skeletonShimmer 1.5s infinite' }} />)}
+                      </div>
+                      <div style={{ borderTop: '1px solid #eee', paddingTop: '.85rem', display: 'flex', gap: '8px' }}>
+                        <div style={{ height: '34px', flex: 1, borderRadius: '8px', background: 'linear-gradient(90deg,#e8ecf0 25%,#d8dde3 50%,#e8ecf0 75%)', backgroundSize: '200% 100%', animation: 'skeletonShimmer 1.5s infinite' }} />
+                        <div style={{ height: '34px', width: '34px', borderRadius: '8px', background: 'linear-gradient(90deg,#e8ecf0 25%,#d8dde3 50%,#e8ecf0 75%)', backgroundSize: '200% 100%', animation: 'skeletonShimmer 1.5s infinite' }} />
+                        <div style={{ height: '34px', width: '34px', borderRadius: '8px', background: 'linear-gradient(90deg,#e8ecf0 25%,#d8dde3 50%,#e8ecf0 75%)', backgroundSize: '200% 100%', animation: 'skeletonShimmer 1.5s infinite' }} />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <style>{`
+              @keyframes skeletonShimmer {
+                0% { background-position: 200% 0; }
+                100% { background-position: -200% 0; }
+              }
+            `}</style>
+          </section>
         ) : hayFiltroActivo ? (
           // Filtered view — flat grid
           <section style={{ padding: '3rem 2rem' }}>
@@ -207,7 +256,7 @@ function PropiedadesContent() {
                 </section>
               )
             })}
-            {propiedades.filter(p => p.estatus === 'disponible').length === 0 && !loading && (
+            {propiedades.filter(p => (p.estatus || p.estado) === 'disponible').length === 0 && !loading && (
               <div style={{ textAlign: 'center', padding: '6rem 2rem', color: '#888' }}>
                 <i className="fa fa-home" style={{ fontSize: '3rem', opacity: .3, display: 'block', marginBottom: '1rem' }} />
                 <p>No hay propiedades disponibles por el momento.</p>
