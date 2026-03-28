@@ -121,41 +121,39 @@ function PropiedadesContent() {
       </section>
 
       {/* Sticky filter bar */}
-      <div style={{ background: '#1B365D', padding: '.65rem 1rem', position: 'sticky', top: '80px', zIndex: 998, boxShadow: '0 4px 12px rgba(0,0,0,.3)' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', gap: '.6rem', flexWrap: 'wrap', alignItems: 'center' }}>
-          {/* Logo */}
-          <img src="/logo_transparent.png" alt="Vive Bien" style={{ height: '38px', width: 'auto', objectFit: 'contain', filter: 'brightness(0) invert(1)', marginRight: '.3rem', flexShrink: 0 }} />
+      <div style={{ background: '#1B365D', padding: '.75rem 1.5rem', position: 'sticky', top: '80px', zIndex: 998, boxShadow: '0 4px 12px rgba(0,0,0,.3)' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', gap: '.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
           <select value={filtros.op} onChange={e => setFiltros(f => ({ ...f, op: e.target.value }))}
-            style={{ padding: '.5rem .9rem', borderRadius: '8px', border: 'none', fontSize: '.85rem', minWidth: '120px', fontFamily: 'inherit' }}>
-            <option value="">Comprar o Rentar</option>
-            <option value="venta">Comprar</option>
-            <option value="renta">Rentar</option>
+            style={{ padding: '.55rem 1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,.2)', background: 'rgba(255,255,255,.12)', color: '#fff', fontSize: '.88rem', minWidth: '140px', fontFamily: 'inherit', cursor: 'pointer' }}>
+            <option value="" style={{ color: '#000' }}>Comprar o Rentar</option>
+            <option value="venta" style={{ color: '#000' }}>Comprar</option>
+            <option value="renta" style={{ color: '#000' }}>Rentar</option>
           </select>
           <select value={filtros.tipo} onChange={e => setFiltros(f => ({ ...f, tipo: e.target.value }))}
-            style={{ padding: '.5rem .9rem', borderRadius: '8px', border: 'none', fontSize: '.85rem', minWidth: '130px', fontFamily: 'inherit' }}>
-            <option value="">Todos los tipos</option>
-            <option value="nave">Nave/Bodega</option>
-            <option value="casa">Casa</option>
-            <option value="departamento">Departamento</option>
-            <option value="terreno">Terreno</option>
-            <option value="comercial">Local</option>
+            style={{ padding: '.55rem 1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,.2)', background: 'rgba(255,255,255,.12)', color: '#fff', fontSize: '.88rem', minWidth: '145px', fontFamily: 'inherit', cursor: 'pointer' }}>
+            <option value="" style={{ color: '#000' }}>Todos los tipos</option>
+            <option value="nave" style={{ color: '#000' }}>Nave/Bodega</option>
+            <option value="casa" style={{ color: '#000' }}>Casa</option>
+            <option value="departamento" style={{ color: '#000' }}>Departamento</option>
+            <option value="terreno" style={{ color: '#000' }}>Terreno</option>
+            <option value="comercial" style={{ color: '#000' }}>Local</option>
           </select>
           <input type="text" placeholder="📍 Zona o colonia" value={filtros.zona}
             onChange={e => setFiltros(f => ({ ...f, zona: e.target.value }))}
-            style={{ padding: '.5rem .9rem', borderRadius: '8px', border: 'none', fontSize: '.85rem', minWidth: '160px', fontFamily: 'inherit' }} />
-          <input type="number" placeholder="Precio mín." value={filtros.precioMin}
+            style={{ padding: '.55rem 1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,.2)', background: 'rgba(255,255,255,.12)', color: '#fff', fontSize: '.88rem', minWidth: '170px', fontFamily: 'inherit' }} />
+          <input type="number" placeholder="$ Mín." value={filtros.precioMin}
             onChange={e => setFiltros(f => ({ ...f, precioMin: e.target.value }))}
-            style={{ padding: '.5rem .9rem', borderRadius: '8px', border: 'none', fontSize: '.85rem', width: '110px', fontFamily: 'inherit' }} />
-          <input type="number" placeholder="Precio máx." value={filtros.precioMax}
+            style={{ padding: '.55rem 1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,.2)', background: 'rgba(255,255,255,.12)', color: '#fff', fontSize: '.88rem', width: '100px', fontFamily: 'inherit' }} />
+          <input type="number" placeholder="$ Máx." value={filtros.precioMax}
             onChange={e => setFiltros(f => ({ ...f, precioMax: e.target.value }))}
-            style={{ padding: '.5rem .9rem', borderRadius: '8px', border: 'none', fontSize: '.85rem', width: '110px', fontFamily: 'inherit' }} />
+            style={{ padding: '.55rem 1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,.2)', background: 'rgba(255,255,255,.12)', color: '#fff', fontSize: '.88rem', width: '100px', fontFamily: 'inherit' }} />
           {hayFiltroActivo && (
             <button onClick={() => setFiltros({ op: '', tipo: '', zona: '', precioMin: '', precioMax: '' })}
-              style={{ padding: '.5rem .9rem', background: 'rgba(255,255,255,.15)', color: '#fff', border: '1px solid rgba(255,255,255,.3)', borderRadius: '8px', cursor: 'pointer', fontSize: '.82rem', fontWeight: 600 }}>
-              <i className="fa fa-times" style={{ marginRight: '.3rem' }} />Limpiar
+              style={{ padding: '.55rem 1rem', background: '#C0392B', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '.85rem', fontWeight: 700 }}>
+              <i className="fa fa-times" style={{ marginRight: '.4rem' }} />Limpiar
             </button>
           )}
-          <span style={{ color: 'rgba(255,255,255,.75)', fontSize: '.82rem', marginLeft: 'auto', fontWeight: 600 }}>
+          <span style={{ color: 'rgba(255,255,255,.9)', fontSize: '.85rem', marginLeft: 'auto', fontWeight: 700 }}>
             {hayFiltroActivo ? `${totalFiltradas} resultado${totalFiltradas !== 1 ? 's' : ''}` : `${propiedades.filter(p => (p.estatus || p.estado) === 'disponible').length} disponibles`}
           </span>
         </div>
