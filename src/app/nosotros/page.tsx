@@ -7,7 +7,7 @@ const STATS = [
   { value: '15+', label: 'Años de experiencia', icon: 'fa-calendar-alt', color: '#1B365D' },
   { value: '100+', label: 'Propiedades gestionadas', icon: 'fa-home', color: '#8B1A1A' },
   { value: '500+', label: 'Clientes satisfechos', icon: 'fa-users', color: '#279546' },
-  { value: '3', label: 'Ciudades atendidas', icon: 'fa-map-marker-alt', color: '#D97706' },
+  { value: '2', label: 'Ciudades atendidas', icon: 'fa-map-marker-alt', color: '#D97706' },
 ]
 
 const VALORES = [
@@ -218,57 +218,6 @@ export default function NosotrosPage() {
         </div>
       </section>
 
-      {/* Equipo */}
-      <section style={{ background: '#fff', padding: '5rem 2rem' }}>
-        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: '3.5rem' }}>
-            <span style={{ color: '#8B1A1A', fontWeight: 800, fontSize: '.8rem', letterSpacing: '.12em', textTransform: 'uppercase', display: 'block', marginBottom: '.8rem' }}>
-              Nuestro Equipo
-            </span>
-            <h2 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: 'clamp(1.6rem,3vw,2.4rem)', color: '#1B365D', margin: '0 0 1rem' }}>
-              Personas reales, resultados reales
-            </h2>
-            <p style={{ color: '#666', fontSize: '1rem', maxWidth: '550px', margin: '0 auto', lineHeight: 1.7 }}>
-              Detrás de cada propiedad hay un asesor comprometido que conoce el mercado de León como la palma de su mano.
-            </p>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(300px,1fr))', gap: '2rem' }}>
-            {EQUIPO.map(m => (
-              <div key={m.nombre} style={{
-                background: '#F4F6F8', borderRadius: '20px', overflow: 'hidden',
-                transition: 'transform .25s, box-shadow .25s',
-                boxShadow: '0 4px 15px rgba(0,0,0,.06)',
-              }}
-                onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-6px)'; (e.currentTarget as HTMLDivElement).style.boxShadow = '0 16px 40px rgba(0,0,0,.12)' }}
-                onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = ''; (e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 15px rgba(0,0,0,.06)' }}
-              >
-                <div style={{ background: 'linear-gradient(135deg,#1B365D,#8B1A1A)', height: '120px', position: 'relative', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-                  <div style={{
-                    width: '90px', height: '90px', borderRadius: '50%',
-                    background: '#fff', border: '4px solid #fff',
-                    position: 'absolute', bottom: '-45px',
-                    overflow: 'hidden', boxShadow: '0 4px 16px rgba(0,0,0,.15)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>
-                    <i className="fa fa-user" style={{ fontSize: '2.5rem', color: '#1B365D' }} />
-                  </div>
-                </div>
-                <div style={{ padding: '3.5rem 1.8rem 2rem', textAlign: 'center' }}>
-                  <h3 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '1.2rem', color: '#1B365D', marginBottom: '.3rem' }}>{m.nombre}</h3>
-                  <div style={{ color: '#8B1A1A', fontWeight: 700, fontSize: '.82rem', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: '1rem' }}>{m.rol}</div>
-                  <p style={{ color: '#666', fontSize: '.9rem', lineHeight: 1.7 }}>{m.desc}</p>
-                  <a href={`https://wa.me/524778116501?text=${encodeURIComponent(`Hola ${m.nombre}, me gustaría recibir asesoría inmobiliaria.`)}`} target="_blank" rel="noopener noreferrer"
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: '.4rem', marginTop: '1.2rem', background: '#25D366', color: '#fff', padding: '.55rem 1.2rem', borderRadius: '8px', textDecoration: 'none', fontWeight: 700, fontSize: '.85rem' }}>
-                    <i className="fab fa-whatsapp" /> Contactar
-                  </a>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Valores */}
       <section style={{ background: '#F4F6F8', padding: '5rem 2rem' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
@@ -349,7 +298,6 @@ export default function NosotrosPage() {
             {[
               { ciudad: 'León, Guanajuato', focus: 'Residencial, Industrial, Comercial', color: '#1B365D' },
               { ciudad: 'Silao, Guanajuato', focus: 'Parques Industriales, Logística', color: '#8B1A1A' },
-              { ciudad: 'Irapuato, Guanajuato', focus: 'Comercial, Residencial', color: '#279546' },
             ].map(c => (
               <div key={c.ciudad} style={{
                 background: '#fff', borderRadius: '12px', padding: '1.2rem 1.5rem',
