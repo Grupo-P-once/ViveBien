@@ -218,7 +218,7 @@ function PropiedadesContent() {
               ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(290px,1fr))', gap: '1.8rem' }}>
                   {filtrar(propiedades).map(p => (
-                    <PropertyCard key={p.id} propiedad={p} onClick={() => setSelected(p)} />
+                    <PropertyCard key={p.id} propiedad={p} />
                   ))}
                 </div>
               )}
@@ -251,7 +251,7 @@ function PropiedadesContent() {
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(290px,1fr))', gap: '1.8rem' }}>
                       {lista.map(p => (
-                        <PropertyCard key={p.id} propiedad={p} onClick={() => setSelected(p)} />
+                        <PropertyCard key={p.id} propiedad={p} />
                       ))}
                     </div>
                   </div>
