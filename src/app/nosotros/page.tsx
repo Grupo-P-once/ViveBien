@@ -445,7 +445,7 @@ export default function NosotrosPage() {
               onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = '#C09C28'; (e.currentTarget as HTMLAnchorElement).style.boxShadow = '0 0 30px rgba(192,156,40,.6)' }}
               onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = 'rgba(192,156,40,.6)'; (e.currentTarget as HTMLAnchorElement).style.boxShadow = '0 0 20px rgba(192,156,40,.3)' }}
             >
-              <img src="/logo-grupo-ponce.png" alt="Grupo P-Once" style={{ width: '78px', height: '78px', objectFit: 'contain' }} />
+              <img src="/logo-p11-real.png" alt="Grupo P-Once" style={{ width: '78px', height: '78px', objectFit: 'contain' }} />
             </a>
             <div style={{ height: '1px', width: '80px', background: 'rgba(192,156,40,.3)' }} />
           </div>
