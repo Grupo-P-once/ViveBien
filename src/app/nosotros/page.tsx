@@ -435,18 +435,16 @@ export default function NosotrosPage() {
             <div style={{ height: '1px', width: '80px', background: 'rgba(192,156,40,.3)' }} />
             <a href="https://grupo-p-once.github.io" target="_blank" rel="noopener noreferrer"
               style={{
-                width: '72px', height: '72px', borderRadius: '50%',
-                background: 'rgba(192,156,40,.12)', border: '2px solid rgba(192,156,40,.4)',
+                width: '88px', height: '88px', borderRadius: '50%',
+                background: 'rgba(255,255,255,.08)', border: '2px solid rgba(192,156,40,.4)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontFamily: 'Montserrat, sans-serif', fontWeight: 900,
-                fontSize: '.75rem', color: '#C09C28', letterSpacing: '.04em',
-                textAlign: 'center', lineHeight: 1.2, textDecoration: 'none',
+                textDecoration: 'none', overflow: 'hidden',
                 transition: 'border-color .2s, background .2s',
               }}
-              onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = '#C09C28'; (e.currentTarget as HTMLAnchorElement).style.background = 'rgba(192,156,40,.2)' }}
-              onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = 'rgba(192,156,40,.4)'; (e.currentTarget as HTMLAnchorElement).style.background = 'rgba(192,156,40,.12)' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = '#C09C28'; (e.currentTarget as HTMLAnchorElement).style.background = 'rgba(192,156,40,.15)' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = 'rgba(192,156,40,.4)'; (e.currentTarget as HTMLAnchorElement).style.background = 'rgba(255,255,255,.08)' }}
             >
-              GRUPO<br />P·ONCE
+              <img src="/logo-grupo-ponce.png" alt="Grupo P-Once" style={{ width: '72px', height: '72px', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
             </a>
             <div style={{ height: '1px', width: '80px', background: 'rgba(192,156,40,.3)' }} />
           </div>
