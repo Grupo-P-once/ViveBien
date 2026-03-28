@@ -5,10 +5,6 @@ export const metadata: Metadata = {
   title: 'Vive Bien – Grupo Inmobiliario | Naves Industriales y Casas en León, Gto',
   description: 'Vive Bien Grupo Inmobiliario: Especialistas en naves industriales, terrenos y casas en León, Guanajuato. Más de 15 años de experiencia y asesoría personalizada.',
   keywords: 'naves industriales León, bodegas León, terrenos León, inmobiliaria León Guanajuato, Vive Bien, Grupo P-ONCE',
-  icons: {
-    icon: '/logo_transparent.png',
-    apple: '/logo_transparent.png',
-  },
   openGraph: {
     title: 'Vive Bien – Grupo Inmobiliario',
     description: 'Especialistas en naves industriales, terrenos y casas en León, Guanajuato.',
@@ -25,6 +21,9 @@ export default function RootLayout({
   return (
     <html lang="es">
       <head>
+        <link rel="icon" type="image/png" href="/logo_transparent.png" />
+        <link rel="apple-touch-icon" href="/logo_transparent.png" />
+        <link rel="shortcut icon" type="image/png" href="/logo_transparent.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
