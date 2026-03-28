@@ -224,15 +224,6 @@ export default function HomePage() {
                 display: 'block',
               }}
             />
-            <div style={{
-              position: 'absolute', bottom: '-16px', left: '24px',
-              background: '#8B1A1A', color: '#fff',
-              padding: '.65rem 1.4rem', borderRadius: '10px',
-              fontFamily: 'var(--font-montserrat)', fontWeight: 800, fontSize: '.85rem',
-              boxShadow: '0 8px 24px rgba(139,26,26,.35)',
-            }}>
-              🏭 Naves Industriales · León, Gto.
-            </div>
           </div>
         </div>
       </section>
