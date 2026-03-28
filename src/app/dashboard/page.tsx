@@ -159,6 +159,25 @@ export default function DashboardPage() {
     await cargarPropiedades()
   }
 
+  async function arreglarFotosSanjuan() {
+    try {
+      await updateDoc(doc(db, 'propiedades', 'sanjuan'), {
+        fotos: [
+          '/propiedades/sanjuan/foto1.jpg',
+          '/propiedades/sanjuan/foto2.jpg',
+          '/propiedades/sanjuan/foto3.jpg',
+          '/propiedades/sanjuan/foto4.jpg',
+          '/propiedades/sanjuan/foto5.jpg',
+          '/propiedades/sanjuan/foto6.jpg',
+        ]
+      })
+      alert('✅ Fotos de San Juan Bosco actualizadas con las fotos reales.')
+      await cargarPropiedades()
+    } catch (e) {
+      alert('Error: ' + e)
+    }
+  }
+
   /* ── Auth Loading ── */
   if (authLoading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1B365D' }}>
@@ -558,12 +577,20 @@ export default function DashboardPage() {
                 <i className="fa fa-home" style={{ color: '#8B1A1A', marginRight: '.5rem' }} />
                 Propiedades ({propiedades.length})
               </h2>
-              <button onClick={() => setEditando({ ...EMPTY })} style={{
-                background: '#8B1A1A', color: '#fff', border: 'none',
-                padding: '.75rem 1.5rem', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '.9rem',
-              }}>
-                <i className="fa fa-plus" style={{ marginRight: '.5rem' }} />Nueva propiedad
-              </button>
+              <div style={{ display: 'flex', gap: '.8rem' }}>
+                <button onClick={arreglarFotosSanjuan} style={{
+                  background: '#1B365D', color: '#fff', border: 'none',
+                  padding: '.75rem 1.2rem', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '.85rem',
+                }}>
+                  <i className="fa fa-images" style={{ marginRight: '.5rem' }} />Fotos San Juan
+                </button>
+                <button onClick={() => setEditando({ ...EMPTY })} style={{
+                  background: '#8B1A1A', color: '#fff', border: 'none',
+                  padding: '.75rem 1.5rem', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '.9rem',
+                }}>
+                  <i className="fa fa-plus" style={{ marginRight: '.5rem' }} />Nueva propiedad
+                </button>
+              </div>
             </div>
 
             <div style={{ background: '#fff', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,.06)', overflowX: 'auto' }}>
