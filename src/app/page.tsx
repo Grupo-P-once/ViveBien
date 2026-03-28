@@ -212,12 +212,26 @@ export default function HomePage() {
               Nos distingue la atención directa, la transparencia en cada operación y nuestro profundo conocimiento del mercado inmobiliario en la zona del Bajío.
             </p>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <div style={{ position: 'relative' }}>
+            <img
+              src="/hero-industrial.jpg"
+              onError={e => { (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1622547748225-3fc4abd2cca0?w=800&auto=format&fit=crop' }}
+              alt="Nave Industrial Vive Bien"
+              style={{
+                width: '100%', maxWidth: '480px', height: '340px',
+                objectFit: 'cover', borderRadius: '20px',
+                boxShadow: '0 24px 60px rgba(27,54,93,.18)',
+                display: 'block',
+              }}
+            />
             <div style={{
-              width: '280px', height: '280px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: 'rgba(139,26,26,.04)', borderRadius: '50%',
+              position: 'absolute', bottom: '-16px', left: '24px',
+              background: '#8B1A1A', color: '#fff',
+              padding: '.65rem 1.4rem', borderRadius: '10px',
+              fontFamily: 'var(--font-montserrat)', fontWeight: 800, fontSize: '.85rem',
+              boxShadow: '0 8px 24px rgba(139,26,26,.35)',
             }}>
-              <i className="fas fa-building" style={{ fontSize: '8rem', color: '#8B1A1A', opacity: .15 }} />
+              🏭 Naves Industriales · León, Gto.
             </div>
           </div>
         </div>
