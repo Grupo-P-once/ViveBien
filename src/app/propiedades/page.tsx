@@ -1,8 +1,7 @@
 'use client'
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { collection, getDocs } from 'firebase/firestore'
-import { db } from '@/lib/firebase'
+import { supabase } from '@/lib/supabase'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import PropertyCard from '@/components/PropertyCard'
@@ -63,9 +62,15 @@ function PropiedadesContent() {
   async function cargarPropiedades() {
     setLoading(true)
     try {
-      const snap = await getDocs(collection(db, 'propiedades'))
-      const data = snap.docs.map(d => ({ id: d.id, ...d.data() } as Propiedad))
-      setPropiedades(data)
+      const { data, error } = await supabase.from('propiedades').select('*')
+      if (error) throw error
+      // Map snake_case → camelCase for backwards compat
+      const mapped = (data || []).map((p: any) => ({
+        ...p,
+        alturaLibre: p.altura_libre,
+        m2: p.metros,
+      }))
+      setPropiedades(mapped)
     } catch (err) { console.error(err) }
     setLoading(false)
   }

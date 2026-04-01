@@ -1,7 +1,6 @@
 'use client'
 import { useState, useEffect, use } from 'react'
-import { doc, getDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore'
-import { db } from '@/lib/firebase'
+import { supabase } from '@/lib/supabase'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import Link from 'next/link'
@@ -20,6 +19,7 @@ interface Propiedad {
   recamaras?: number
   banos?: number
   alturaLibre?: number
+  altura_libre?: number
   andenes?: number
   amenidades?: string[]
   whatsapp?: string
@@ -51,9 +51,15 @@ export default function DetallePropiedad({ params }: { params: Promise<{ id: str
   useEffect(() => {
     async function load() {
       try {
-        const snap = await getDoc(doc(db, 'propiedades', id))
-        if (snap.exists()) {
-          setProp({ id: snap.id, ...snap.data() } as Propiedad)
+        const { data, error } = await supabase
+          .from('propiedades')
+          .select('*')
+          .eq('id', id)
+          .single()
+        if (error) throw error
+        if (data) {
+          // Map snake_case → camelCase
+          setProp({ ...data, alturaLibre: data.altura_libre } as Propiedad)
         }
       } catch (e) { console.error(e) }
       setLoading(false)
@@ -66,13 +72,14 @@ export default function DetallePropiedad({ params }: { params: Promise<{ id: str
     if (!form.nombre || !form.telefono) return
     setSending(true)
     try {
-      await addDoc(collection(db, 'leads'), {
-        ...form,
-        interes: prop?.titulo,
-        origen: 'Detalle propiedad',
-        propiedadId: id,
-        createdAt: serverTimestamp(),
+      const { error } = await supabase.from('leads').insert({
+        nombre: form.nombre,
+        telefono: form.telefono,
+        email: form.email,
+        mensaje: form.mensaje,
+        propiedad_id: id,
       })
+      if (error) throw error
       setSent(true)
     } catch (err) { console.error(err) }
     setSending(false)
@@ -191,7 +198,7 @@ export default function DetallePropiedad({ params }: { params: Promise<{ id: str
                 prop.metros ? { icon: 'fa-ruler-combined', val: `${prop.metros} m²`, label: 'Superficie' } : null,
                 prop.recamaras ? { icon: 'fa-bed', val: prop.recamaras, label: 'Recámaras' } : null,
                 prop.banos ? { icon: 'fa-bath', val: prop.banos, label: 'Baños' } : null,
-                prop.alturaLibre ? { icon: 'fa-arrows-up-down', val: `${prop.alturaLibre} m`, label: 'Altura libre' } : null,
+                (prop.alturaLibre || prop.altura_libre) ? { icon: 'fa-arrows-up-down', val: `${prop.alturaLibre || prop.altura_libre} m`, label: 'Altura libre' } : null,
                 prop.andenes ? { icon: 'fa-truck-loading', val: prop.andenes, label: 'Andenes' } : null,
               ].filter(Boolean).map((s: any) => (
                 <div key={s.label} style={{ background: '#fff', borderRadius: '12px', padding: '1.2rem', textAlign: 'center', boxShadow: '0 2px 8px rgba(0,0,0,.06)', border: '1px solid #EEE' }}>

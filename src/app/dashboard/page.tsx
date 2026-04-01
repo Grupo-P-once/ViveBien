@@ -8,11 +8,8 @@ import {
   onAuthStateChanged,
   User,
 } from 'firebase/auth'
-import {
-  collection, getDocs, addDoc, updateDoc,
-  deleteDoc, doc, serverTimestamp,
-} from 'firebase/firestore'
-import { auth, db, googleProvider } from '@/lib/firebase'
+import { auth, googleProvider } from '@/lib/firebase'
+import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 
 interface Propiedad {
@@ -111,29 +108,28 @@ export default function DashboardPage() {
   }
 
   async function cargarPropiedades() {
-    const snap = await getDocs(collection(db, 'propiedades'))
-    setPropiedades(snap.docs.map(d => ({ id: d.id, ...d.data() } as Propiedad)))
+    const { data } = await supabase.from('propiedades').select('*').order('created_at', { ascending: false })
+    setPropiedades((data || []) as Propiedad[])
   }
 
   async function cargarLeads() {
     try {
-      const snap = await getDocs(collection(db, 'leads'))
-      setLeads(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+      const { data } = await supabase.from('leads').select('*').order('created_at', { ascending: false })
+      setLeads(data || [])
     } catch { }
   }
 
   async function cargarLeadsCliente(correo: string) {
     try {
-      const snap = await getDocs(collection(db, 'leads'))
-      const todos = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-      setLeads(todos.filter((l: any) => l.email === correo))
+      const { data } = await supabase.from('leads').select('*').eq('email', correo).order('created_at', { ascending: false })
+      setLeads(data || [])
     } catch { }
   }
 
   async function cargarContactos() {
     try {
-      const snap = await getDocs(collection(db, 'contactos'))
-      setContactos(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+      const { data } = await supabase.from('contactos').select('*').order('created_at', { ascending: false })
+      setContactos(data || [])
     } catch { }
   }
 
@@ -143,9 +139,11 @@ export default function DashboardPage() {
     try {
       if (editando.id) {
         const { id, ...rest } = editando
-        await updateDoc(doc(db, 'propiedades', id!), { ...rest, updatedAt: serverTimestamp() })
+        await supabase.from('propiedades').update(rest).eq('id', id!)
       } else {
-        await addDoc(collection(db, 'propiedades'), { ...editando, createdAt: serverTimestamp() })
+        // Generate a slug id from the title
+        const newId = editando.titulo?.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') || Date.now().toString()
+        await supabase.from('propiedades').insert({ ...editando, id: newId })
       }
       await cargarPropiedades()
       setEditando(null)
@@ -155,27 +153,8 @@ export default function DashboardPage() {
 
   async function eliminar(id: string) {
     if (!confirm('¿Eliminar esta propiedad? Esta acción no se puede deshacer.')) return
-    await deleteDoc(doc(db, 'propiedades', id))
+    await supabase.from('propiedades').delete().eq('id', id)
     await cargarPropiedades()
-  }
-
-  async function arreglarFotosSanjuan() {
-    try {
-      await updateDoc(doc(db, 'propiedades', 'sanjuan'), {
-        fotos: [
-          '/propiedades/sanjuan/foto1.jpg',
-          '/propiedades/sanjuan/foto2.jpg',
-          '/propiedades/sanjuan/foto3.jpg',
-          '/propiedades/sanjuan/foto4.jpg',
-          '/propiedades/sanjuan/foto5.jpg',
-          '/propiedades/sanjuan/foto6.jpg',
-        ]
-      })
-      alert('✅ Fotos de San Juan Bosco actualizadas con las fotos reales.')
-      await cargarPropiedades()
-    } catch (e) {
-      alert('Error: ' + e)
-    }
   }
 
   /* ── Auth Loading ── */
