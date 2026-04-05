@@ -26,7 +26,7 @@ interface Propiedad {
   mantenimiento?: number
 }
 
-const WA_NUMBER = '524778116501'
+const WA_NUMBER = process.env.NEXT_PUBLIC_WA_NUMBER || '524778116501'
 const PLACEHOLDER = 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=1200&auto=format&fit=crop'
 
 const tipoLabel: Record<string, string> = {
@@ -42,11 +42,13 @@ export default function DetallePropiedad({ params }: { params: Promise<{ id: str
   const { id } = use(params)
   const [prop, setProp] = useState<Propiedad | null>(null)
   const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState(false)
   const [mainFoto, setMainFoto] = useState(0)
   const [lightbox, setLightbox] = useState<number | null>(null)
   const [form, setForm] = useState({ nombre: '', telefono: '', email: '', mensaje: 'Estoy interesado en esta propiedad. Por favor, contáctenme.' })
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
+  const [sendError, setSendError] = useState('')
 
   useEffect(() => {
     async function load() {
@@ -61,7 +63,10 @@ export default function DetallePropiedad({ params }: { params: Promise<{ id: str
           // Map snake_case → camelCase
           setProp({ ...data, alturaLibre: data.altura_libre } as Propiedad)
         }
-      } catch (e) { console.error(e) }
+      } catch (e) {
+        console.error('Error cargando propiedad:', e)
+        setFetchError(true)
+      }
       setLoading(false)
     }
     load()
@@ -71,6 +76,7 @@ export default function DetallePropiedad({ params }: { params: Promise<{ id: str
     e.preventDefault()
     if (!form.nombre || !form.telefono) return
     setSending(true)
+    setSendError('')
     try {
       const { error } = await supabase.from('leads').insert({
         nombre: form.nombre,
@@ -81,7 +87,10 @@ export default function DetallePropiedad({ params }: { params: Promise<{ id: str
       })
       if (error) throw error
       setSent(true)
-    } catch (err) { console.error(err) }
+    } catch (err) {
+      console.error('Error enviando solicitud:', err)
+      setSendError('No se pudo enviar. Por favor contáctanos por WhatsApp.')
+    }
     setSending(false)
   }
 
@@ -98,12 +107,33 @@ export default function DetallePropiedad({ params }: { params: Promise<{ id: str
     </>
   )
 
+  if (fetchError) return (
+    <>
+      <Header />
+      <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '1rem', padding: '2rem', textAlign: 'center' }}>
+        <i className="fa fa-wifi" style={{ fontSize: '3rem', color: '#ddd' }} />
+        <h2 style={{ color: '#555', fontFamily: 'Montserrat, sans-serif' }}>Error al cargar la propiedad</h2>
+        <p style={{ color: '#888', maxWidth: '380px' }}>No pudimos conectar con el servidor. Revisa tu conexión e intenta de nuevo.</p>
+        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+          <button onClick={() => window.location.reload()} style={{ background: '#1B365D', color: '#fff', padding: '.7rem 1.5rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 700 }}>
+            <i className="fa fa-redo" style={{ marginRight: '.5rem' }} />Reintentar
+          </button>
+          <Link href="/propiedades" style={{ background: '#8B1A1A', color: '#fff', padding: '.7rem 1.5rem', borderRadius: '8px', textDecoration: 'none', fontWeight: 700 }}>
+            Ver todas las propiedades
+          </Link>
+        </div>
+      </div>
+      <Footer />
+    </>
+  )
+
   if (!prop) return (
     <>
       <Header />
       <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '1rem' }}>
         <i className="fa fa-home" style={{ fontSize: '4rem', color: '#ddd' }} />
-        <h2 style={{ color: '#888' }}>Propiedad no encontrada</h2>
+        <h2 style={{ color: '#888', fontFamily: 'Montserrat, sans-serif' }}>Propiedad no encontrada</h2>
+        <p style={{ color: '#aaa' }}>Es posible que haya sido removida o el enlace sea incorrecto.</p>
         <Link href="/propiedades" style={{ background: '#8B1A1A', color: '#fff', padding: '.7rem 1.5rem', borderRadius: '8px', textDecoration: 'none', fontWeight: 700 }}>
           Ver todas las propiedades
         </Link>
@@ -283,6 +313,11 @@ export default function DetallePropiedad({ params }: { params: Promise<{ id: str
                     <textarea rows={3} value={form.mensaje} onChange={e => setForm(v => ({ ...v, mensaje: e.target.value }))}
                       style={{ width: '100%', padding: '.65rem .85rem', border: '1.5px solid #E0E4EA', borderRadius: '8px', fontSize: '.9rem', fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box' }} />
                   </div>
+                  {sendError && (
+                    <p style={{ color: '#991b1b', background: '#fef2f2', padding: '.6rem .8rem', borderRadius: '8px', fontSize: '.82rem', fontWeight: 600 }}>
+                      <i className="fa fa-exclamation-circle" style={{ marginRight: '.4rem' }} />{sendError}
+                    </p>
+                  )}
                   <button type="submit" disabled={sending} style={{ background: color, color: '#fff', border: 'none', padding: '.9rem', borderRadius: '10px', fontWeight: 800, cursor: 'pointer', fontSize: '.95rem', fontFamily: 'Montserrat, sans-serif', opacity: sending ? .7 : 1 }}>
                     <i className="fa fa-paper-plane" style={{ marginRight: '.5rem' }} />{sending ? 'Enviando...' : 'ENVIAR SOLICITUD'}
                   </button>
@@ -290,7 +325,7 @@ export default function DetallePropiedad({ params }: { params: Promise<{ id: str
                     style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.5rem', background: '#25D366', color: '#fff', padding: '.8rem', borderRadius: '10px', textDecoration: 'none', fontWeight: 700, fontFamily: 'Montserrat, sans-serif', fontSize: '.9rem' }}>
                     <i className="fab fa-whatsapp" /> HABLAR POR WHATSAPP
                   </a>
-                  <a href="tel:+524778116501" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.5rem', background: 'transparent', color: '#1B365D', padding: '.8rem', borderRadius: '10px', textDecoration: 'none', fontWeight: 700, fontFamily: 'Montserrat, sans-serif', fontSize: '.9rem', border: '1.5px solid #1B365D' }}>
+                  <a href={`tel:+${wa}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.5rem', background: 'transparent', color: '#1B365D', padding: '.8rem', borderRadius: '10px', textDecoration: 'none', fontWeight: 700, fontFamily: 'Montserrat, sans-serif', fontSize: '.9rem', border: '1.5px solid #1B365D' }}>
                     <i className="fa fa-phone" /> LLAMAR AHORA
                   </a>
                 </form>

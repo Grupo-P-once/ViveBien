@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { saveLead } from '@/lib/firestore'
+import { supabase } from '@/lib/supabase'
 
 interface RegisterModalProps {
   isOpen: boolean
@@ -8,7 +8,7 @@ interface RegisterModalProps {
   propertyTitle?: string
 }
 
-const WA_NUMBER = '524778116501'
+const WA_NUMBER = process.env.NEXT_PUBLIC_WA_NUMBER || '524778116501'
 
 export default function RegisterModal({ isOpen, onClose, propertyTitle }: RegisterModalProps) {
   const [paso, setPaso] = useState<1 | 2>(1)
@@ -28,15 +28,16 @@ export default function RegisterModal({ isOpen, onClose, propertyTitle }: Regist
     setError('')
     setLoading(true)
     try {
-      await saveLead({
-        nombre,
-        telefono,
-        email,
-        interes: propertyTitle || 'General',
-        origen: 'modal-registro',
+      const { error: sbError } = await supabase.from('leads').insert({
+        nombre: nombre.trim(),
+        telefono: telefono.trim(),
+        email: email.trim(),
+        mensaje: propertyTitle ? `Interés en: ${propertyTitle}` : 'Registro general',
       })
+      if (sbError) throw sbError
     } catch (e) {
-      console.error(e)
+      console.error('Error guardando lead:', e)
+      // No bloqueamos el flujo — el usuario ya mostró intención
     }
     setLoading(false)
     setPaso(2)
@@ -162,7 +163,7 @@ export default function RegisterModal({ isOpen, onClose, propertyTitle }: Regist
               Elige cómo quieres contactarnos:
             </p>
             <div style={{ display: 'flex', gap: '.8rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-              <a href="tel:+524778116501"
+              <a href={`tel:+${WA_NUMBER}`}
                 style={{
                   display: 'flex', alignItems: 'center', gap: '8px',
                   padding: '.75rem 1.4rem', borderRadius: '10px',

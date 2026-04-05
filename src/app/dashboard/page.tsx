@@ -557,12 +557,13 @@ export default function DashboardPage() {
                 Propiedades ({propiedades.length})
               </h2>
               <div style={{ display: 'flex', gap: '.8rem' }}>
-                <button onClick={arreglarFotosSanjuan} style={{
+                <a href="/admin/seed" style={{
                   background: '#1B365D', color: '#fff', border: 'none',
                   padding: '.75rem 1.2rem', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '.85rem',
+                  textDecoration: 'none', display: 'inline-flex', alignItems: 'center',
                 }}>
-                  <i className="fa fa-images" style={{ marginRight: '.5rem' }} />Fotos San Juan
-                </button>
+                  <i className="fa fa-database" style={{ marginRight: '.5rem' }} />Seed Supabase
+                </a>
                 <button onClick={() => setEditando({ ...EMPTY })} style={{
                   background: '#8B1A1A', color: '#fff', border: 'none',
                   padding: '.75rem 1.5rem', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '.9rem',

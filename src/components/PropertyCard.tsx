@@ -1,6 +1,14 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+
+function getFavs(): string[] {
+  if (typeof window === 'undefined') return []
+  try { return JSON.parse(localStorage.getItem('vb_favorites') || '[]') } catch { return [] }
+}
+function setFavs(favs: string[]) {
+  localStorage.setItem('vb_favorites', JSON.stringify(favs))
+}
 
 interface Propiedad {
   id: string
@@ -40,6 +48,10 @@ const PLACEHOLDER = 'https://images.unsplash.com/photo-1564013799919-ab600027ffc
 export default function PropertyCard({ propiedad: p }: PropertyCardProps) {
   const [fotoIdx, setFotoIdx] = useState(0)
   const [liked, setLiked] = useState(false)
+
+  useEffect(() => {
+    setLiked(getFavs().includes(p.id))
+  }, [p.id])
   const fotos = p.fotos?.length ? p.fotos : [PLACEHOLDER]
   const label = tipoLabel[p.tipo] || p.tipo?.toUpperCase() || 'PROPIEDAD'
   const superficie = p.metros || (typeof p.m2 === 'number' ? p.m2 : undefined)
@@ -51,7 +63,7 @@ export default function PropertyCard({ propiedad: p }: PropertyCardProps) {
   const opBadge = p.operacion === 'venta' ? 'En Venta' : 'En Renta'
   const opColor = p.operacion === 'venta' ? '#8B1A1A' : '#E07B00'
 
-  const wa = p.whatsapp || '524778116501'
+  const wa = p.whatsapp || process.env.NEXT_PUBLIC_WA_NUMBER || '524778116501'
   const waMsg = encodeURIComponent(`Hola, me interesa la propiedad: ${p.titulo}`)
 
   function prev(e: React.MouseEvent) {
@@ -207,7 +219,7 @@ export default function PropertyCard({ propiedad: p }: PropertyCardProps) {
         }}>
           <div style={{ display: 'flex', gap: '8px' }}>
             {/* Phone */}
-            <a href="tel:+524778116501" onClick={e => e.stopPropagation()}
+            <a href={`tel:+${p.whatsapp || process.env.NEXT_PUBLIC_WA_NUMBER || '524778116501'}`} onClick={e => e.stopPropagation()}
               title="Llamar"
               style={{
                 width: '40px', height: '40px', borderRadius: '12px',
@@ -242,7 +254,13 @@ export default function PropertyCard({ propiedad: p }: PropertyCardProps) {
 
           {/* Heart / favorite */}
           <button
-            onClick={e => { e.stopPropagation(); setLiked(l => !l) }}
+            onClick={e => {
+              e.stopPropagation()
+              const favs = getFavs()
+              const next = favs.includes(p.id) ? favs.filter(f => f !== p.id) : [...favs, p.id]
+              setFavs(next)
+              setLiked(next.includes(p.id))
+            }}
             title={liked ? 'Quitar de favoritos' : 'Guardar'}
             style={{
               width: '40px', height: '40px', borderRadius: '12px',
