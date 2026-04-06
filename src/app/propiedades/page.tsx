@@ -6,6 +6,7 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import PropertyCard from '@/components/PropertyCard'
 import RegisterModal from '@/components/RegisterModal'
+import { useAuth } from '@/lib/useAuth'
 import Link from 'next/link'
 
 interface Propiedad {
@@ -55,6 +56,7 @@ function PropiedadesContent() {
   })
   const [selected, setSelected] = useState<Propiedad | null>(null)
   const [regOpen, setRegOpen] = useState(false)
+  const { isLoggedIn } = useAuth()
 
   // Sincronizar filtros con la URL
   const syncUrl = useCallback((f: typeof filtros) => {
@@ -320,7 +322,7 @@ function PropiedadesContent() {
 
       {/* Modal detalle */}
       {selected && (
-        <PropModal p={selected} onClose={() => setSelected(null)} onContact={() => setRegOpen(true)} />
+        <PropModal p={selected} onClose={() => setSelected(null)} onContact={() => setRegOpen(true)} isLoggedIn={isLoggedIn} />
       )}
 
       <Footer />
@@ -328,7 +330,7 @@ function PropiedadesContent() {
   )
 }
 
-function PropModal({ p, onClose, onContact }: { p: Propiedad; onClose: () => void; onContact: () => void }) {
+function PropModal({ p, onClose, onContact, isLoggedIn }: { p: Propiedad; onClose: () => void; onContact: () => void; isLoggedIn: boolean }) {
   const [foto, setFoto] = useState(0)
   const fotos = p.fotos?.length ? p.fotos : ['https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=1200']
   const wa = p.whatsapp || WA_NUMBER
@@ -383,11 +385,24 @@ function PropModal({ p, onClose, onContact }: { p: Propiedad; onClose: () => voi
             <div style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '1.8rem', color: '#8B1A1A', marginBottom: '1rem' }}>
               {p.precio ? `$${p.precio.toLocaleString('es-MX')}` : 'Consultar precio'}
             </div>
+            {!isLoggedIn && (
+              <div style={{ marginBottom: '.8rem', padding: '.5rem .8rem', background: '#FFF7ED', border: '1px solid #FED7AA', borderRadius: '8px', fontSize: '.8rem', color: '#92400e', display: 'flex', alignItems: 'center', gap: '.4rem' }}>
+                <i className="fa fa-lock" style={{ fontSize: '.75rem' }} />
+                <span><strong>Inicia sesión</strong> para contactar al asesor</span>
+              </div>
+            )}
             <div style={{ display: 'flex', gap: '.8rem', flexWrap: 'wrap' }}>
-              <a href={`https://wa.me/${wa}?text=${encodeURIComponent('Hola, me interesa la propiedad: ' + p.titulo)}`} target="_blank" rel="noopener noreferrer"
-                style={{ flex: 1, minWidth: '120px', background: '#25D366', color: '#fff', textAlign: 'center', padding: '.85rem', borderRadius: '10px', fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.5rem', fontFamily: 'Montserrat, sans-serif' }}>
-                <i className="fab fa-whatsapp" /> WhatsApp
-              </a>
+              {isLoggedIn ? (
+                <a href={`https://wa.me/${wa}?text=${encodeURIComponent('Hola, me interesa la propiedad: ' + p.titulo)}`} target="_blank" rel="noopener noreferrer"
+                  style={{ flex: 1, minWidth: '120px', background: '#25D366', color: '#fff', textAlign: 'center', padding: '.85rem', borderRadius: '10px', fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.5rem', fontFamily: 'Montserrat, sans-serif' }}>
+                  <i className="fab fa-whatsapp" /> WhatsApp
+                </a>
+              ) : (
+                <button onClick={onContact}
+                  style={{ flex: 1, minWidth: '120px', background: '#25D366', color: '#fff', border: 'none', padding: '.85rem', borderRadius: '10px', fontWeight: 700, cursor: 'pointer', fontFamily: 'Montserrat, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.5rem' }}>
+                  <i className="fab fa-whatsapp" /> WhatsApp
+                </button>
+              )}
               <button onClick={onContact} style={{ flex: 1, minWidth: '120px', background: '#8B1A1A', color: '#fff', border: 'none', padding: '.85rem', borderRadius: '10px', fontWeight: 700, cursor: 'pointer', fontFamily: 'Montserrat, sans-serif' }}>
                 <i className="fa fa-envelope" style={{ marginRight: '.4rem' }} />Contactar
               </button>

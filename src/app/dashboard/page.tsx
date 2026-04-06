@@ -26,12 +26,17 @@ interface Propiedad {
   recamaras?: number
   banos?: number
   whatsapp?: string
+  altura_libre?: number
+  andenes?: number
+  amenidades?: string[]
+  mantenimiento?: number
 }
 
 const EMPTY: Omit<Propiedad, 'id'> = {
   titulo: '', tipo: 'nave', operacion: 'renta', precio: 0,
   ubicacion: '', descripcion: '', fotos: [], estatus: 'disponible',
   metros: undefined, recamaras: undefined, banos: undefined, whatsapp: '',
+  altura_libre: undefined, andenes: undefined, amenidades: [], mantenimiento: undefined,
 }
 
 const ADMIN_EMAILS = ['jpepeponce200903@gmail.com']
@@ -58,6 +63,7 @@ export default function DashboardPage() {
   const [contactos, setContactos] = useState<any[]>([])
   const [editando, setEditando] = useState<Partial<Propiedad> | null>(null)
   const [saving, setSaving] = useState(false)
+  const [fotoInput, setFotoInput] = useState('')
 
   const isAdmin = user ? ADMIN_EMAILS.includes(user.email || '') : false
 
@@ -529,7 +535,7 @@ export default function DashboardPage() {
                       <td style={{ padding: '12px 15px', fontSize: '.9rem' }}>{l.interes || '—'}</td>
                       <td style={{ padding: '12px 15px', fontSize: '.85rem', color: '#888' }}>{l.origen || '—'}</td>
                       <td style={{ padding: '12px 15px', fontSize: '.85rem', color: '#888' }}>
-                        {l.createdAt?.toDate?.()?.toLocaleDateString('es-MX') || '—'}
+                        {l.created_at ? new Date(l.created_at).toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}
                       </td>
                     </tr>
                   ))}
@@ -539,9 +545,30 @@ export default function DashboardPage() {
 
             {/* Tabla de Contactos */}
             <div style={{ background: '#fff', borderRadius: '12px', padding: '1.5rem', boxShadow: '0 4px 15px rgba(0,0,0,.08)', overflowX: 'auto' }}>
-              <h3 style={{ color: '#1B365D', marginBottom: '1rem', fontSize: '1.1rem' }}>
-                <i className="fa fa-envelope" style={{ color: '#8B1A1A', marginRight: '.5rem' }} />Contactos del Formulario
-              </h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '.8rem' }}>
+                <h3 style={{ color: '#1B365D', fontSize: '1.1rem', margin: 0 }}>
+                  <i className="fa fa-envelope" style={{ color: '#8B1A1A', marginRight: '.5rem' }} />Contactos del Formulario ({contactos.length})
+                </h3>
+                {contactos.length > 0 && (
+                  <button
+                    onClick={() => {
+                      const headers = ['Nombre', 'Teléfono', 'Email', 'Mensaje', 'Fecha']
+                      const rows = contactos.map((c: any) => [
+                        c.nombre || '', c.telefono || '', c.email || '',
+                        (c.mensaje || '').replace(/,/g, ';'),
+                        c.created_at ? new Date(c.created_at).toLocaleDateString('es-MX') : '',
+                      ])
+                      const csv = [headers, ...rows].map(r => r.join(',')).join('\n')
+                      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+                      const a = document.createElement('a'); a.href = URL.createObjectURL(blob)
+                      a.download = `contactos-vivebien-${new Date().toISOString().split('T')[0]}.csv`
+                      a.click()
+                    }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '.4rem', background: '#279546', color: '#fff', border: 'none', padding: '.55rem 1.1rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 700, fontSize: '.82rem' }}>
+                    <i className="fa fa-download" /> Exportar CSV
+                  </button>
+                )}
+              </div>
               <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
                 <thead>
                   <tr style={{ background: '#F4F6F8' }}>
@@ -558,9 +585,9 @@ export default function DashboardPage() {
                       <td style={{ padding: '12px 15px', fontSize: '.9rem' }}>{c.nombre}</td>
                       <td style={{ padding: '12px 15px', fontSize: '.9rem' }}>{c.telefono}</td>
                       <td style={{ padding: '12px 15px', fontSize: '.9rem' }}>{c.email || '—'}</td>
-                      <td style={{ padding: '12px 15px', fontSize: '.9rem' }}>{c.interes || '—'}</td>
+                      <td style={{ padding: '12px 15px', fontSize: '.9rem', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.mensaje || '—'}</td>
                       <td style={{ padding: '12px 15px', fontSize: '.85rem', color: '#888' }}>
-                        {c.createdAt?.toDate?.()?.toLocaleDateString('es-MX') || '—'}
+                        {c.created_at ? new Date(c.created_at).toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}
                       </td>
                     </tr>
                   ))}
@@ -689,6 +716,30 @@ export default function DashboardPage() {
                 </div>
               ))}
 
+              {/* Extra fields for naves */}
+              {(editando.tipo === 'nave' || !editando.tipo) && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', padding: '1rem', background: '#EFF6FF', borderRadius: '10px', border: '1px solid #BFDBFE' }}>
+                  <div>
+                    <label style={{ fontSize: '.8rem', fontWeight: 600, color: '#1B365D', display: 'block', marginBottom: '.3rem' }}>Altura libre (m)</label>
+                    <input type="number" value={editando.altura_libre ?? ''} placeholder="0"
+                      onChange={e => setEditando(d => ({ ...d, altura_libre: parseFloat(e.target.value) || undefined }))}
+                      style={{ width: '100%', padding: '.65rem .8rem', borderRadius: '8px', border: '1.5px solid #DDE', fontSize: '.88rem', boxSizing: 'border-box' }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '.8rem', fontWeight: 600, color: '#1B365D', display: 'block', marginBottom: '.3rem' }}>Andenes</label>
+                    <input type="number" value={editando.andenes ?? ''} placeholder="0"
+                      onChange={e => setEditando(d => ({ ...d, andenes: parseFloat(e.target.value) || undefined }))}
+                      style={{ width: '100%', padding: '.65rem .8rem', borderRadius: '8px', border: '1.5px solid #DDE', fontSize: '.88rem', boxSizing: 'border-box' }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '.8rem', fontWeight: 600, color: '#1B365D', display: 'block', marginBottom: '.3rem' }}>Mantenimiento $</label>
+                    <input type="number" value={editando.mantenimiento ?? ''} placeholder="0"
+                      onChange={e => setEditando(d => ({ ...d, mantenimiento: parseFloat(e.target.value) || undefined }))}
+                      style={{ width: '100%', padding: '.65rem .8rem', borderRadius: '8px', border: '1.5px solid #DDE', fontSize: '.88rem', boxSizing: 'border-box' }} />
+                  </div>
+                </div>
+              )}
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div>
                   <label style={{ fontSize: '.85rem', fontWeight: 600, color: '#1B365D', display: 'block', marginBottom: '.3rem' }}>Tipo</label>
@@ -722,6 +773,15 @@ export default function DashboardPage() {
               </div>
 
               <div>
+                <label style={{ fontSize: '.85rem', fontWeight: 600, color: '#1B365D', display: 'block', marginBottom: '.3rem' }}>
+                  Amenidades <span style={{ fontWeight: 400, color: '#888' }}>(separadas por coma)</span>
+                </label>
+                <input type="text" value={(editando.amenidades || []).join(', ')} placeholder="Acceso tráiler, Oficinas, Vigilancia 24/7"
+                  onChange={e => setEditando(d => ({ ...d, amenidades: e.target.value.split(',').map(s => s.trim()).filter(Boolean) }))}
+                  style={{ width: '100%', padding: '.75rem 1rem', borderRadius: '8px', border: '1.5px solid #DDE', fontSize: '.92rem', boxSizing: 'border-box' }} />
+              </div>
+
+              <div>
                 <label style={{ fontSize: '.85rem', fontWeight: 600, color: '#1B365D', display: 'block', marginBottom: '.3rem' }}>Descripción</label>
                 <textarea rows={3} value={editando.descripcion || ''}
                   onChange={e => setEditando(d => ({ ...d, descripcion: e.target.value }))}
@@ -729,14 +789,51 @@ export default function DashboardPage() {
                   style={{ width: '100%', padding: '.75rem 1rem', borderRadius: '8px', border: '1.5px solid #DDE', fontSize: '.92rem', resize: 'vertical', boxSizing: 'border-box' }} />
               </div>
 
+              {/* ── Fotos con preview ── */}
               <div>
-                <label style={{ fontSize: '.85rem', fontWeight: 600, color: '#1B365D', display: 'block', marginBottom: '.3rem' }}>
-                  URLs de fotos <span style={{ fontWeight: 400, color: '#888' }}>(una por línea)</span>
+                <label style={{ fontSize: '.85rem', fontWeight: 600, color: '#1B365D', display: 'block', marginBottom: '.6rem' }}>
+                  Fotos <span style={{ fontWeight: 400, color: '#888' }}>({(editando.fotos || []).length} imagen{(editando.fotos || []).length !== 1 ? 'es' : ''})</span>
                 </label>
-                <textarea rows={4} value={editando.fotos?.join('\n') || ''}
-                  onChange={e => setEditando(d => ({ ...d, fotos: e.target.value.split('\n').filter(Boolean) }))}
-                  placeholder="https://ejemplo.com/foto1.jpg&#10;https://ejemplo.com/foto2.jpg"
-                  style={{ width: '100%', padding: '.75rem 1rem', borderRadius: '8px', border: '1.5px solid #DDE', fontSize: '.92rem', resize: 'vertical', boxSizing: 'border-box' }} />
+                {(editando.fotos || []).length > 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '.5rem', marginBottom: '.8rem' }}>
+                    {(editando.fotos || []).map((url, i) => (
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '.6rem', background: '#F4F6F8', borderRadius: '8px', padding: '.4rem .6rem' }}>
+                        <img src={url} alt="" style={{ width: '56px', height: '42px', objectFit: 'cover', borderRadius: '5px', flexShrink: 0 }}
+                          onError={e => { (e.target as HTMLImageElement).style.opacity = '0.3' }} />
+                        <span style={{ flex: 1, fontSize: '.75rem', color: '#555', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{url}</span>
+                        <button onClick={() => setEditando(d => ({ ...d, fotos: (d?.fotos || []).filter((_, j) => j !== i) }))}
+                          style={{ background: '#fee2e2', color: '#991b1b', border: 'none', borderRadius: '6px', width: '26px', height: '26px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <i className="fa fa-times" style={{ fontSize: '.7rem' }} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div style={{ display: 'flex', gap: '.5rem' }}>
+                  <input
+                    type="url"
+                    value={fotoInput}
+                    onChange={e => setFotoInput(e.target.value)}
+                    placeholder="https://res.cloudinary.com/..."
+                    style={{ flex: 1, padding: '.65rem .9rem', borderRadius: '8px', border: '1.5px solid #DDE', fontSize: '.88rem', boxSizing: 'border-box' }}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        if (fotoInput.trim()) { setEditando(d => ({ ...d, fotos: [...(d?.fotos || []), fotoInput.trim()] })); setFotoInput('') }
+                      }
+                    }}
+                  />
+                  <button
+                    onClick={() => { if (fotoInput.trim()) { setEditando(d => ({ ...d, fotos: [...(d?.fotos || []), fotoInput.trim()] })); setFotoInput('') } }}
+                    style={{ background: '#1B365D', color: '#fff', border: 'none', borderRadius: '8px', padding: '.65rem 1rem', cursor: 'pointer', fontWeight: 700, fontSize: '.85rem', whiteSpace: 'nowrap' }}>
+                    + Agregar
+                  </button>
+                </div>
+                {fotoInput && (
+                  <img src={fotoInput} alt="Preview" style={{ width: '100%', maxHeight: '110px', objectFit: 'cover', borderRadius: '8px', marginTop: '.5rem', border: '1.5px solid #E0E4EA' }}
+                    onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+                    onLoad={e => { (e.target as HTMLImageElement).style.display = 'block' }} />
+                )}
               </div>
             </div>
 
