@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://vive-bien-grupo-p-once.vercel.app'),
   title: 'Vive Bien – Grupo Inmobiliario | Naves Industriales y Casas en León, Gto',
   description: 'Vive Bien Grupo Inmobiliario: Especialistas en naves industriales, terrenos y casas en León, Guanajuato. Más de 15 años de experiencia y asesoría personalizada.',
   keywords: 'naves industriales León, bodegas León, terrenos León, inmobiliaria León Guanajuato, Vive Bien, Grupo P-ONCE',
