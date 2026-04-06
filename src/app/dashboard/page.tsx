@@ -473,7 +473,7 @@ export default function DashboardPage() {
                   </div>
                   <div style={{ fontSize: '2rem', fontWeight: 800, color: '#222831' }}>{k.value}</div>
                   <div style={{ fontSize: '.8rem', color: '#279546', marginTop: '.5rem', fontWeight: 700 }}>
-                    <i className="fa fa-database" style={{ marginRight: '.3rem' }} />Datos reales de Firebase
+                    <i className="fa fa-database" style={{ marginRight: '.3rem' }} />Datos reales de Supabase
                   </div>
                 </div>
               ))}
@@ -481,9 +481,31 @@ export default function DashboardPage() {
 
             {/* Tabla de Leads */}
             <div style={{ background: '#fff', borderRadius: '12px', padding: '1.5rem', boxShadow: '0 4px 15px rgba(0,0,0,.08)', marginBottom: '2rem', overflowX: 'auto' }}>
-              <h3 style={{ color: '#1B365D', marginBottom: '1rem', fontSize: '1.1rem' }}>
-                <i className="fa fa-users" style={{ color: '#8B1A1A', marginRight: '.5rem' }} />Leads / Prospectos
-              </h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '.8rem' }}>
+                <h3 style={{ color: '#1B365D', fontSize: '1.1rem', margin: 0 }}>
+                  <i className="fa fa-users" style={{ color: '#8B1A1A', marginRight: '.5rem' }} />Leads / Prospectos ({leads.length})
+                </h3>
+                {leads.length > 0 && (
+                  <button
+                    onClick={() => {
+                      const headers = ['Nombre', 'Teléfono', 'Email', 'Mensaje', 'Propiedad', 'Fecha']
+                      const rows = leads.map((l: any) => [
+                        l.nombre || '', l.telefono || '', l.email || '',
+                        (l.mensaje || l.interes || '').replace(/,/g, ';'),
+                        l.propiedad_id || l.origen || '',
+                        l.created_at ? new Date(l.created_at).toLocaleDateString('es-MX') : '',
+                      ])
+                      const csv = [headers, ...rows].map(r => r.join(',')).join('\n')
+                      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+                      const a = document.createElement('a'); a.href = URL.createObjectURL(blob)
+                      a.download = `leads-vivebien-${new Date().toISOString().split('T')[0]}.csv`
+                      a.click()
+                    }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '.4rem', background: '#1B365D', color: '#fff', border: 'none', padding: '.55rem 1.1rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 700, fontSize: '.82rem' }}>
+                    <i className="fa fa-download" /> Exportar CSV
+                  </button>
+                )}
+              </div>
               <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
                 <thead>
                   <tr style={{ background: '#F4F6F8' }}>

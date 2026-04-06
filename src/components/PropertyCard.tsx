@@ -1,6 +1,8 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useAuth } from '@/lib/useAuth'
+import RegisterModal from './RegisterModal'
 
 function getFavs(): string[] {
   if (typeof window === 'undefined') return []
@@ -48,10 +50,16 @@ const PLACEHOLDER = 'https://images.unsplash.com/photo-1564013799919-ab600027ffc
 export default function PropertyCard({ propiedad: p }: PropertyCardProps) {
   const [fotoIdx, setFotoIdx] = useState(0)
   const [liked, setLiked] = useState(false)
+  const [regOpen, setRegOpen] = useState(false)
+  const { isLoggedIn } = useAuth()
 
   useEffect(() => {
     setLiked(getFavs().includes(p.id))
   }, [p.id])
+
+  function requireAuth(action: () => void) {
+    if (isLoggedIn) { action() } else { setRegOpen(true) }
+  }
   const fotos = p.fotos?.length ? p.fotos : [PLACEHOLDER]
   const label = tipoLabel[p.tipo] || p.tipo?.toUpperCase() || 'PROPIEDAD'
   const superficie = p.metros || (typeof p.m2 === 'number' ? p.m2 : undefined)
@@ -76,6 +84,7 @@ export default function PropertyCard({ propiedad: p }: PropertyCardProps) {
   }
 
   return (
+    <>
     <div style={{
       background: '#fff', borderRadius: '20px', overflow: 'hidden',
       boxShadow: '0 4px 20px rgba(0,0,0,.09)', display: 'flex',
@@ -218,38 +227,39 @@ export default function PropertyCard({ propiedad: p }: PropertyCardProps) {
           paddingTop: '.7rem', borderTop: '1px solid #EEF0F3', marginTop: '.2rem',
         }}>
           <div style={{ display: 'flex', gap: '8px' }}>
-            {/* Phone */}
-            <a href={`tel:+${p.whatsapp || process.env.NEXT_PUBLIC_WA_NUMBER || '524778116501'}`} onClick={e => e.stopPropagation()}
-              title="Llamar"
+            {/* Phone — requiere sesión */}
+            <button
+              onClick={e => { e.stopPropagation(); requireAuth(() => { window.location.href = `tel:+${p.whatsapp || process.env.NEXT_PUBLIC_WA_NUMBER || '524778116501'}` }) }}
+              title={isLoggedIn ? 'Llamar' : 'Inicia sesión para contactar'}
               style={{
                 width: '40px', height: '40px', borderRadius: '12px',
                 background: '#1B365D', color: '#fff', display: 'flex',
-                alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontSize: '.95rem',
+                alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer', fontSize: '.95rem',
               }}>
               <i className="fa fa-phone" />
-            </a>
-            {/* WhatsApp */}
-            <a href={`https://wa.me/${wa}?text=${waMsg}`} target="_blank" rel="noopener noreferrer"
-              onClick={e => e.stopPropagation()}
-              title="WhatsApp"
+            </button>
+            {/* WhatsApp — requiere sesión */}
+            <button
+              onClick={e => { e.stopPropagation(); requireAuth(() => { window.open(`https://wa.me/${wa}?text=${waMsg}`, '_blank') }) }}
+              title={isLoggedIn ? 'WhatsApp' : 'Inicia sesión para contactar'}
               style={{
                 width: '40px', height: '40px', borderRadius: '12px',
                 background: '#25D366', color: '#fff', display: 'flex',
-                alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontSize: '1.05rem',
+                alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer', fontSize: '1.05rem',
               }}>
               <i className="fab fa-whatsapp" />
-            </a>
-            {/* Email */}
-            <a href={`mailto:contacto@vivebieninmobiliaria.com?subject=Interesado en: ${encodeURIComponent(p.titulo)}`}
-              onClick={e => e.stopPropagation()}
-              title="Email"
+            </button>
+            {/* Email — requiere sesión */}
+            <button
+              onClick={e => { e.stopPropagation(); requireAuth(() => { window.location.href = `mailto:contacto@vivebieninmobiliaria.com?subject=Interesado en: ${encodeURIComponent(p.titulo)}` }) }}
+              title={isLoggedIn ? 'Email' : 'Inicia sesión para contactar'}
               style={{
                 width: '40px', height: '40px', borderRadius: '12px',
                 background: '#8B1A1A', color: '#fff', display: 'flex',
-                alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontSize: '.9rem',
+                alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer', fontSize: '.9rem',
               }}>
               <i className="fa fa-envelope" />
-            </a>
+            </button>
           </div>
 
           {/* Heart / favorite */}
@@ -273,7 +283,19 @@ export default function PropertyCard({ propiedad: p }: PropertyCardProps) {
             <i className={liked ? 'fas fa-heart' : 'far fa-heart'} />
           </button>
         </div>
+
+        {/* Badge de sesión requerida (solo si no está logueado) */}
+        {!isLoggedIn && (
+          <div style={{ marginTop: '.6rem', padding: '.45rem .8rem', background: '#FFF7ED', border: '1px solid #FED7AA', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '.4rem', fontSize: '.78rem', color: '#92400e' }}>
+            <i className="fa fa-lock" style={{ fontSize: '.75rem' }} />
+            <span><strong>Inicia sesión</strong> para contactar al asesor</span>
+          </div>
+        )}
       </div>
     </div>
+
+    {/* Modal de registro si no hay sesión */}
+    <RegisterModal isOpen={regOpen} onClose={() => setRegOpen(false)} propertyTitle={p.titulo} />
+    </>
   )
 }

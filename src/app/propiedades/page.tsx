@@ -1,6 +1,6 @@
 'use client'
-import { useState, useEffect, Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useState, useEffect, Suspense, useCallback } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
@@ -31,7 +31,7 @@ interface Propiedad {
   whatsapp?: string
 }
 
-const WA_NUMBER = '524778116501'
+const WA_NUMBER = process.env.NEXT_PUBLIC_WA_NUMBER || '524778116501'
 
 const SECCIONES = [
   { tipo: 'nave', titulo: 'Naves Industriales', icon: 'fa-industry', desc: 'Infraestructura de alto nivel para tu operación logística e industrial', color: '#1B365D' },
@@ -43,17 +43,42 @@ const SECCIONES = [
 
 function PropiedadesContent() {
   const searchParams = useSearchParams()
+  const router = useRouter()
   const [propiedades, setPropiedades] = useState<Propiedad[]>([])
   const [loading, setLoading] = useState(true)
   const [filtros, setFiltros] = useState({
     op: searchParams.get('op') || '',
     tipo: searchParams.get('tipo') || '',
-    zona: '',
-    precioMin: '',
-    precioMax: '',
+    zona: searchParams.get('zona') || '',
+    precioMin: searchParams.get('pmin') || '',
+    precioMax: searchParams.get('pmax') || '',
   })
   const [selected, setSelected] = useState<Propiedad | null>(null)
   const [regOpen, setRegOpen] = useState(false)
+
+  // Sincronizar filtros con la URL
+  const syncUrl = useCallback((f: typeof filtros) => {
+    const params = new URLSearchParams()
+    if (f.op) params.set('op', f.op)
+    if (f.tipo) params.set('tipo', f.tipo)
+    if (f.zona) params.set('zona', f.zona)
+    if (f.precioMin) params.set('pmin', f.precioMin)
+    if (f.precioMax) params.set('pmax', f.precioMax)
+    const qs = params.toString()
+    router.replace(qs ? `/propiedades?${qs}` : '/propiedades', { scroll: false })
+  }, [router])
+
+  function updateFiltros(partial: Partial<typeof filtros>) {
+    const next = { ...filtros, ...partial }
+    setFiltros(next)
+    syncUrl(next)
+  }
+
+  function limpiarFiltros() {
+    const empty = { op: '', tipo: '', zona: '', precioMin: '', precioMax: '' }
+    setFiltros(empty)
+    router.replace('/propiedades', { scroll: false })
+  }
 
   useEffect(() => {
     cargarPropiedades()
@@ -128,13 +153,13 @@ function PropiedadesContent() {
       {/* Sticky filter bar */}
       <div style={{ background: '#1B365D', padding: '.8rem 1.5rem', position: 'sticky', top: '80px', zIndex: 998, boxShadow: '0 4px 16px rgba(0,0,0,.35)' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', gap: '.6rem', flexWrap: 'wrap', alignItems: 'center' }}>
-          <select value={filtros.op} onChange={e => setFiltros(f => ({ ...f, op: e.target.value }))}
+          <select value={filtros.op} onChange={e => updateFiltros({ op: e.target.value })}
             style={{ padding: '.6rem 1rem', borderRadius: '8px', border: 'none', background: '#fff', color: '#222', fontSize: '.88rem', minWidth: '145px', fontFamily: 'inherit', cursor: 'pointer', fontWeight: 500 }}>
             <option value="">Comprar o Rentar</option>
             <option value="venta">Comprar</option>
             <option value="renta">Rentar</option>
           </select>
-          <select value={filtros.tipo} onChange={e => setFiltros(f => ({ ...f, tipo: e.target.value }))}
+          <select value={filtros.tipo} onChange={e => updateFiltros({ tipo: e.target.value })}
             style={{ padding: '.6rem 1rem', borderRadius: '8px', border: 'none', background: '#fff', color: '#222', fontSize: '.88rem', minWidth: '150px', fontFamily: 'inherit', cursor: 'pointer', fontWeight: 500 }}>
             <option value="">Todos los tipos</option>
             <option value="nave">Nave/Bodega</option>
@@ -144,16 +169,16 @@ function PropiedadesContent() {
             <option value="comercial">Local Comercial</option>
           </select>
           <input type="text" placeholder="📍 Zona o colonia" value={filtros.zona}
-            onChange={e => setFiltros(f => ({ ...f, zona: e.target.value }))}
+            onChange={e => updateFiltros({ zona: e.target.value })}
             style={{ padding: '.6rem 1rem', borderRadius: '8px', border: 'none', background: '#fff', color: '#222', fontSize: '.88rem', minWidth: '175px', fontFamily: 'inherit' }} />
           <input type="number" placeholder="$ Precio mín." value={filtros.precioMin}
-            onChange={e => setFiltros(f => ({ ...f, precioMin: e.target.value }))}
+            onChange={e => updateFiltros({ precioMin: e.target.value })}
             style={{ padding: '.6rem 1rem', borderRadius: '8px', border: 'none', background: '#fff', color: '#222', fontSize: '.88rem', width: '120px', fontFamily: 'inherit' }} />
           <input type="number" placeholder="$ Precio máx." value={filtros.precioMax}
-            onChange={e => setFiltros(f => ({ ...f, precioMax: e.target.value }))}
+            onChange={e => updateFiltros({ precioMax: e.target.value })}
             style={{ padding: '.6rem 1rem', borderRadius: '8px', border: 'none', background: '#fff', color: '#222', fontSize: '.88rem', width: '120px', fontFamily: 'inherit' }} />
           {hayFiltroActivo && (
-            <button onClick={() => setFiltros({ op: '', tipo: '', zona: '', precioMin: '', precioMax: '' })}
+            <button onClick={limpiarFiltros}
               style={{ padding: '.6rem 1.1rem', background: '#C0392B', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '.85rem', fontWeight: 700 }}>
               ✕ Limpiar
             </button>
@@ -213,7 +238,7 @@ function PropiedadesContent() {
                 <div style={{ textAlign: 'center', padding: '4rem', color: '#888', background: '#fff', borderRadius: '16px' }}>
                   <i className="fa fa-search" style={{ fontSize: '3rem', marginBottom: '1rem', display: 'block', opacity: .3 }} />
                   <p style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>No se encontraron propiedades.</p>
-                  <button onClick={() => setFiltros({ op: '', tipo: '', zona: '', precioMin: '', precioMax: '' })}
+                  <button onClick={limpiarFiltros}
                     style={{ padding: '.7rem 1.5rem', background: '#8B1A1A', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 700 }}>
                     Ver todas las propiedades
                   </button>
