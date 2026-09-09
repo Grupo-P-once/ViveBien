@@ -9,7 +9,6 @@ import {
   User,
 } from 'firebase/auth'
 import { auth, googleProvider } from '@/lib/firebase'
-import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 
 interface Propiedad {
@@ -146,25 +145,27 @@ export default function DashboardPage() {
     } catch { setPropiedades([]) }
   }
 
+  // El servidor decide qué devuelve según el token: todo si eres admin, sólo
+  // lo tuyo si no. La tabla ya no se lee desde el navegador.
   async function cargarLeads() {
     try {
-      const { data } = await supabase.from('leads').select('*').order('created_at', { ascending: false })
-      setLeads(data || [])
-    } catch { }
+      const res = await fetch('/api/leads', { headers: await authHeaders() })
+      const data = await res.json()
+      setLeads(Array.isArray(data) ? data : [])
+    } catch { setLeads([]) }
   }
 
-  async function cargarLeadsCliente(correo: string) {
-    try {
-      const { data } = await supabase.from('leads').select('*').eq('email', correo).order('created_at', { ascending: false })
-      setLeads(data || [])
-    } catch { }
+  // El correo sale del token verificado en el servidor, no de aquí.
+  async function cargarLeadsCliente(_correo: string) {
+    await cargarLeads()
   }
 
   async function cargarContactos() {
     try {
-      const { data } = await supabase.from('contactos').select('*').order('created_at', { ascending: false })
-      setContactos(data || [])
-    } catch { }
+      const res = await fetch('/api/admin/contactos', { headers: await authHeaders() })
+      const data = await res.json()
+      setContactos(Array.isArray(data) ? data : [])
+    } catch { setContactos([]) }
   }
 
   async function guardar() {

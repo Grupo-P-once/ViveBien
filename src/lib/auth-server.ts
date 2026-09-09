@@ -1,3 +1,4 @@
+import { createClient } from '@supabase/supabase-js'
 import { createRemoteJWKSet, jwtVerify } from 'jose'
 import { NextResponse } from 'next/server'
 
@@ -97,4 +98,18 @@ export async function requireAdmin(req: Request): Promise<AdminCheck> {
   }
 
   return { user }
+}
+
+/** True si el email pertenece a la lista de administradores. */
+export function isAdminEmail(email: string | null | undefined): boolean {
+  if (!email) return false
+  return adminEmails().includes(email.toLowerCase())
+}
+
+/** Cliente de Supabase con service role. IGNORA RLS: sólo tras validar sesión. */
+export function supabaseAdmin() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  )
 }

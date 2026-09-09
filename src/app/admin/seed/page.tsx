@@ -3,7 +3,6 @@ export const dynamic = 'force-dynamic'
 import { useState } from 'react'
 import { auth, googleProvider } from '@/lib/firebase'
 import { signInWithPopup } from 'firebase/auth'
-import { supabase } from '@/lib/supabase'
 
 const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || ''
 
@@ -54,11 +53,21 @@ export default function SeedPage() {
 
       setStatus('✅ Autenticado. Escribiendo en Supabase...')
 
-      const { error: sbError } = await supabase
-        .from('propiedades')
-        .upsert(SANJUAN, { onConflict: 'id' })
-
-      if (sbError) throw sbError
+      // Va por el servidor: la escritura directa con la anon key deja de
+      // funcionar en cuanto RLS bloquea INSERT/UPDATE para el rol público.
+      const token = await auth.currentUser?.getIdToken()
+      const res = await fetch('/api/admin/propiedades', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(SANJUAN),
+      })
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}))
+        throw new Error(j.error || 'No se pudo guardar la propiedad.')
+      }
 
       setStatus('✅ ¡Listo! "Nave Industrial San Juan Bosco" publicada en Supabase con las 6 fotos reales.')
       setDone(true)
