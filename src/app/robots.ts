@@ -6,7 +6,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/dashboard', '/admin'],
+        disallow: ['/dashboard', '/admin', '/publicador', '/mi-cuenta', '/api'],
       },
     ],
     sitemap: 'https://vive-bien.vercel.app/sitemap.xml',

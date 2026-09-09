@@ -64,6 +64,7 @@ type AuthTab = 'login' | 'register'
 
 export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null)
+  const [rol, setRol] = useState<'cliente' | 'publicador' | 'admin' | null>(null)
   const [authLoading, setAuthLoading] = useState(true)
 
   // Auth form
@@ -71,6 +72,7 @@ export default function DashboardPage() {
   const [email, setEmail] = useState('')
   const [pass, setPass] = useState('')
   const [regName, setRegName] = useState('')
+  const [regRol, setRegRol] = useState<'cliente' | 'publicador'>('cliente')
   const [loginErr, setLoginErr] = useState('')
   const [googleLoading, setGoogleLoading] = useState(false)
 
@@ -88,12 +90,24 @@ export default function DashboardPage() {
   const [uploadingFotos, setUploadingFotos] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
 
-  const isAdmin = user ? ADMIN_EMAILS.includes((user.email || '').toLowerCase()) : false
+  // El rol lo dice el servidor. La lista local sólo evita un parpadeo mientras
+  // llega la respuesta; no decide nada: cada ruta lo vuelve a comprobar.
+  const isAdmin = rol ? rol === 'admin' : (user ? ADMIN_EMAILS.includes((user.email || '').toLowerCase()) : false)
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, u => {
       setUser(u)
       setAuthLoading(false)
+      if (!u) { setRol(null); return }
+
+      // Preguntar al servidor qué rol tiene. También da de alta la fila la
+      // primera vez que alguien entra.
+      authHeaders()
+        .then(h => fetch('/api/usuarios/me', { headers: h }))
+        .then(r => r.ok ? r.json() : null)
+        .then(p => { if (p?.rol) setRol(p.rol) })
+        .catch(() => { })
+
       if (u && ADMIN_EMAILS.includes((u.email || '').toLowerCase())) {
         cargarPropiedades()
         cargarLeads()
@@ -120,6 +134,13 @@ export default function DashboardPage() {
     setLoginErr('')
     try {
       await createUserWithEmailAndPassword(auth, email, pass)
+      // El nombre y el rol se guardan en el servidor. El rol que llega de aquí
+      // es una preferencia: el servidor lo valida y nunca acepta 'admin'.
+      await fetch('/api/usuarios/me', {
+        method: 'PATCH',
+        headers: await authHeaders(),
+        body: JSON.stringify({ nombre: regName, rol: regRol }),
+      }).catch(() => { })
     } catch (err: any) {
       setLoginErr(err.message || 'Error al crear la cuenta')
     }
@@ -329,6 +350,22 @@ export default function DashboardPage() {
             <input type="password" value={pass} onChange={e => setPass(e.target.value)}
               placeholder="Contraseña (mín. 6 caracteres)" minLength={6} required
               style={{ padding: '12px', border: '1px solid #ccc', borderRadius: '6px', fontSize: '1rem' }} />
+            <p style={{ fontSize: '.85rem', color: '#555', margin: '6px 0 2px' }}>¿Qué quieres hacer?</p>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {([['cliente', 'Buscar propiedades'], ['publicador', 'Publicar una propiedad']] as const).map(([valor, texto]) => (
+                <button key={valor} type="button" onClick={() => setRegRol(valor)}
+                  aria-pressed={regRol === valor}
+                  style={{
+                    flex: 1, padding: '10px', fontSize: '.85rem', cursor: 'pointer', borderRadius: '6px',
+                    fontWeight: regRol === valor ? 700 : 400,
+                    border: regRol === valor ? '2px solid #8B1A1A' : '1px solid #ccc',
+                    background: regRol === valor ? '#fdf4f4' : '#fff',
+                    color: regRol === valor ? '#8B1A1A' : '#444',
+                  }}>
+                  {texto}
+                </button>
+              ))}
+            </div>
             {loginErr && <p style={{ color: '#8B1A1A', fontSize: '.85rem' }}>{loginErr}</p>}
             <button type="submit" style={{ padding: '12px', background: '#8B1A1A', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 700, cursor: 'pointer', fontSize: '1rem' }}>
               Registrarme
