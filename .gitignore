@@ -44,3 +44,6 @@ next-env.d.ts
 
 # script con IDs de Vercel y claves en duro - no versionar
 scripts/set-vercel-env.mjs
+
+# la plantilla sin valores si debe versionarse
+!.env.example
