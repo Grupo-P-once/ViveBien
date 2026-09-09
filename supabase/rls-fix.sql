@@ -1,3 +1,20 @@
+
+-- ═══════════════════════════════════════════════════════════════
+-- ⚠️  NO BASTA CON ESTE ARCHIVO
+--
+-- Al aplicarlo el 2026-09-09 salió que las tablas YA tenían políticas
+-- que nunca se habían aplicado, porque RLS estaba desactivado. Activarlo
+-- las despertó, y varias eran permisivas:
+--
+--     contactos_read   SELECT  {public}  using (true)
+--     envios_all       ALL     {public}  using (true) with check (true)
+--
+-- En Postgres las políticas son PERMISIVAS: basta que UNA permita la
+-- operación para que pase. Las viejas anulaban a las nuevas.
+--
+-- Hay que ejecutar TAMBIÉN supabase/rls-limpiar-politicas.sql, que
+-- elimina todo lo que no esté en la lista blanca.
+-- ═══════════════════════════════════════════════════════════════
 -- ═══════════════════════════════════════════════════════════════
 -- Vive Bien · CERRAR LA FUGA DE DATOS
 -- Ejecutar en: Supabase → SQL Editor → Run
