@@ -18,6 +18,7 @@ interface Propiedad {
   tipo: string
   operacion: string
   precio: number
+  precio_incluye_iva?: boolean
   ubicacion: string
   descripcion: string
   fotos: string[]
@@ -36,13 +37,14 @@ interface Propiedad {
 
 const EMPTY: Omit<Propiedad, 'id'> = {
   titulo: '', tipo: 'nave', operacion: 'renta', precio: 0,
+  precio_incluye_iva: false,
   ubicacion: '', descripcion: '', fotos: [], estatus: 'disponible',
   metros: undefined, recamaras: undefined, banos: undefined, whatsapp: '',
   altura_libre: undefined, andenes: undefined, amenidades: [], mantenimiento: undefined,
   video_url: '', destacada: false,
 }
 
-const ADMIN_EMAILS = ['jpepeponce200903@gmail.com']
+const ADMIN_EMAILS = ['grupo.p.11.ee@gmail.com']
 
 type Tab = 'metricas' | 'props' | 'leads'
 type AuthTab = 'login' | 'register'
@@ -66,7 +68,12 @@ export default function DashboardPage() {
   const [contactos, setContactos] = useState<any[]>([])
   const [editando, setEditando] = useState<Partial<Propiedad> | null>(null)
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
+  const [saveSuccess, setSaveSuccess] = useState('')
+  const [statusFilter, setStatusFilter] = useState<'todas' | 'disponible' | 'pausada' | 'eliminada'>('todas')
   const [fotoInput, setFotoInput] = useState('')
+  const [uploadingFotos, setUploadingFotos] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
 
   const isAdmin = user ? ADMIN_EMAILS.includes(user.email || '') : false
 
@@ -111,14 +118,18 @@ export default function DashboardPage() {
     try {
       await signInWithPopup(auth, googleProvider)
     } catch (err: any) {
-      setLoginErr('No se pudo iniciar sesión con Google. Intenta de nuevo.')
+      console.error('Google auth error:', err)
+      setLoginErr(`${err?.code || ''} ${err?.message || 'error desconocido'}`)
     }
     setGoogleLoading(false)
   }
 
   async function cargarPropiedades() {
-    const { data } = await supabase.from('propiedades').select('*').order('created_at', { ascending: false })
-    setPropiedades((data || []) as Propiedad[])
+    try {
+      const res = await fetch('/api/admin/propiedades')
+      const data = await res.json()
+      setPropiedades(Array.isArray(data) ? data as Propiedad[] : [])
+    } catch { setPropiedades([]) }
   }
 
   async function cargarLeads() {
@@ -145,25 +156,90 @@ export default function DashboardPage() {
   async function guardar() {
     if (!editando) return
     setSaving(true)
+    setSaveError('')
     try {
+      let res: Response
       if (editando.id) {
         const { id, ...rest } = editando
-        await supabase.from('propiedades').update(rest).eq('id', id!)
+        res = await fetch(`/api/admin/propiedades/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(rest),
+        })
       } else {
-        // Generate a slug id from the title
         const newId = editando.titulo?.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') || Date.now().toString()
-        await supabase.from('propiedades').insert({ ...editando, id: newId })
+        res = await fetch('/api/admin/propiedades', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...editando, id: newId }),
+        })
+      }
+      const json = await res.json()
+      if (!res.ok) {
+        setSaveError(json.error || 'Error al guardar')
+        setSaving(false)
+        return
       }
       await cargarPropiedades()
       setEditando(null)
-    } catch (err) { console.error(err) }
+      setSaveSuccess('✓ Propiedad guardada correctamente')
+      setTimeout(() => setSaveSuccess(''), 4000)
+    } catch (err: any) {
+      setSaveError(err.message || 'Error de red')
+    }
     setSaving(false)
   }
 
-  async function eliminar(id: string) {
-    if (!confirm('¿Eliminar esta propiedad? Esta acción no se puede deshacer.')) return
-    await supabase.from('propiedades').delete().eq('id', id)
+  async function cambiarEstatus(id: string, nuevoEstatus: string) {
+    await fetch(`/api/admin/propiedades/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ estatus: nuevoEstatus }),
+    })
     await cargarPropiedades()
+    setSaveSuccess(`✓ Estatus cambiado a "${nuevoEstatus}"`)
+    setTimeout(() => setSaveSuccess(''), 3000)
+  }
+
+  async function subirFotos(files: FileList) {
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
+    const preset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET
+    if (!cloudName || !preset) {
+      alert('Configura NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME y NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET en .env.local')
+      return
+    }
+    setUploadingFotos(true)
+    const arr = Array.from(files)
+    const urls: string[] = []
+    for (let i = 0; i < arr.length; i++) {
+      setUploadProgress(Math.round((i / arr.length) * 100))
+      const fd = new FormData()
+      fd.append('file', arr[i])
+      fd.append('upload_preset', preset)
+      fd.append('folder', 'vivebien')
+      try {
+        const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, { method: 'POST', body: fd })
+        const data = await res.json()
+        if (data.secure_url) urls.push(data.secure_url)
+      } catch { /* skip failed */ }
+    }
+    setEditando(d => ({ ...d, fotos: [...(d?.fotos || []), ...urls] }))
+    setUploadingFotos(false)
+    setUploadProgress(0)
+  }
+
+  async function eliminar(id: string) {
+    // Soft delete: cambia estatus a 'eliminada' en vez de borrar
+    if (!confirm('¿Archivar esta propiedad? Podrás restaurarla desde la pestaña "Eliminadas".')) return
+    await cambiarEstatus(id, 'eliminada')
+  }
+
+  async function eliminarDefinitivo(id: string) {
+    if (!confirm('¿Eliminar DEFINITIVAMENTE? Esta acción no se puede deshacer.')) return
+    await fetch(`/api/admin/propiedades/${id}`, { method: 'DELETE' })
+    await cargarPropiedades()
+    setSaveSuccess('✓ Propiedad eliminada definitivamente')
+    setTimeout(() => setSaveSuccess(''), 3000)
   }
 
   /* ── Auth Loading ── */
@@ -413,6 +489,20 @@ export default function DashboardPage() {
   /* ── ADMIN DASHBOARD ── */
   return (
     <div style={{ minHeight: '100vh', background: '#F4F6F8', fontFamily: 'var(--font-montserrat)' }}>
+      {/* Toast de éxito */}
+      {saveSuccess && (
+        <div style={{
+          position: 'fixed', bottom: '2rem', right: '2rem', zIndex: 99999,
+          background: '#059669', color: '#fff', padding: '.9rem 1.5rem',
+          borderRadius: '12px', fontWeight: 700, fontSize: '.9rem',
+          boxShadow: '0 8px 30px rgba(5,150,105,.4)',
+          display: 'flex', alignItems: 'center', gap: '.6rem',
+          animation: 'slideIn .3s ease',
+        }}>
+          <i className="fa fa-check-circle" style={{ fontSize: '1.1rem' }} />
+          {saveSuccess}
+        </div>
+      )}
       {/* Header */}
       <header style={{
         background: 'rgba(255,255,255,.6)', backdropFilter: 'blur(10px)',
@@ -603,82 +693,145 @@ export default function DashboardPage() {
         {/* ── TAB: Propiedades ── */}
         {tab === 'props' && (
           <>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h2 style={{ fontWeight: 800, color: '#222831', fontSize: '1.3rem' }}>
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+              <h2 style={{ fontWeight: 800, color: '#222831', fontSize: '1.3rem', margin: 0 }}>
                 <i className="fa fa-home" style={{ color: '#8B1A1A', marginRight: '.5rem' }} />
-                Propiedades ({propiedades.length})
+                Propiedades
               </h2>
-              <div style={{ display: 'flex', gap: '.8rem' }}>
+              <div style={{ display: 'flex', gap: '.8rem', flexWrap: 'wrap' }}>
                 <a href="/admin/seed" style={{
                   background: '#1B365D', color: '#fff', border: 'none',
-                  padding: '.75rem 1.2rem', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '.85rem',
+                  padding: '.65rem 1.1rem', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '.82rem',
                   textDecoration: 'none', display: 'inline-flex', alignItems: 'center',
                 }}>
                   <i className="fa fa-database" style={{ marginRight: '.5rem' }} />Seed Supabase
                 </a>
                 <button onClick={() => setEditando({ ...EMPTY })} style={{
                   background: '#8B1A1A', color: '#fff', border: 'none',
-                  padding: '.75rem 1.5rem', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '.9rem',
+                  padding: '.65rem 1.3rem', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '.88rem',
                 }}>
                   <i className="fa fa-plus" style={{ marginRight: '.5rem' }} />Nueva propiedad
                 </button>
               </div>
             </div>
 
+            {/* Tabs por estatus */}
+            {(() => {
+              const counts = {
+                todas: propiedades.length,
+                disponible: propiedades.filter(p => p.estatus === 'disponible').length,
+                pausada: propiedades.filter(p => p.estatus === 'pausada').length,
+                eliminada: propiedades.filter(p => p.estatus === 'eliminada' || p.estatus === 'vendida').length,
+              }
+              const tabs: { key: typeof statusFilter; label: string; color: string; bg: string }[] = [
+                { key: 'todas',      label: `Todas (${counts.todas})`,              color: '#1B365D', bg: '#EFF6FF' },
+                { key: 'disponible', label: `Disponibles (${counts.disponible})`,   color: '#059669', bg: '#ecfdf5' },
+                { key: 'pausada',    label: `Pausadas (${counts.pausada})`,          color: '#D97706', bg: '#FEF9C3' },
+                { key: 'eliminada',  label: `Archivadas (${counts.eliminada})`,      color: '#8B1A1A', bg: '#fee2e2' },
+              ]
+              return (
+                <div style={{ display: 'flex', gap: '.5rem', marginBottom: '1.2rem', flexWrap: 'wrap' }}>
+                  {tabs.map(t => (
+                    <button key={t.key} onClick={() => setStatusFilter(t.key)} style={{
+                      padding: '.45rem 1rem', borderRadius: '8px', border: `2px solid ${statusFilter === t.key ? t.color : '#dde'}`,
+                      background: statusFilter === t.key ? t.bg : '#fff',
+                      color: statusFilter === t.key ? t.color : '#888',
+                      fontWeight: 700, fontSize: '.8rem', cursor: 'pointer', transition: 'all .2s',
+                      fontFamily: 'Montserrat, sans-serif',
+                    }}>
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+              )
+            })()}
+
+            {/* Tabla */}
             <div style={{ background: '#fff', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,.06)', overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '700px' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '750px' }}>
                 <thead>
                   <tr style={{ background: '#F4F6F8' }}>
-                    {['Título', 'Tipo', 'Operación', 'Precio', 'Estatus', 'Acciones'].map(h => (
-                      <th key={h} style={{ padding: '1rem', textAlign: 'left', fontSize: '.85rem', fontWeight: 700, color: '#1B365D' }}>{h}</th>
+                    {['Título / Ubicación', 'Tipo', 'Precio', 'Estatus', 'Cambiar estatus', 'Acciones'].map(h => (
+                      <th key={h} style={{ padding: '1rem', textAlign: 'left', fontSize: '.82rem', fontWeight: 700, color: '#1B365D', whiteSpace: 'nowrap' }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {propiedades.map(p => (
-                    <tr key={p.id} style={{ borderTop: '1px solid #eee' }}>
-                      <td style={{ padding: '.85rem 1rem', fontSize: '.9rem', fontWeight: 600 }}>
-                        {p.destacada && <i className="fa fa-star" style={{ color: '#D97706', marginRight: '.4rem', fontSize: '.85rem' }} />}
-                        {p.titulo}
-                      </td>
-                      <td style={{ padding: '.85rem 1rem', fontSize: '.9rem' }}>
-                        <span style={{
-                          background: '#1B365D', color: '#fff', padding: '3px 10px',
-                          borderRadius: '20px', fontSize: '.75rem', fontWeight: 700,
-                        }}>{p.tipo}</span>
-                      </td>
-                      <td style={{ padding: '.85rem 1rem', fontSize: '.9rem', textTransform: 'capitalize' }}>{p.operacion}</td>
-                      <td style={{ padding: '.85rem 1rem', fontSize: '.9rem', fontWeight: 800, color: '#8B1A1A' }}>
-                        {p.precio ? `$${p.precio.toLocaleString('es-MX')}` : '—'}
-                      </td>
-                      <td style={{ padding: '.85rem 1rem' }}>
-                        <span style={{
-                          padding: '3px 10px', borderRadius: '4px', fontSize: '.75rem', fontWeight: 700,
-                          background: p.estatus === 'disponible' ? '#e6f4ea' : '#f5f5f5',
-                          color: p.estatus === 'disponible' ? '#279546' : '#888',
-                        }}>
-                          {p.estatus}
-                        </span>
-                      </td>
-                      <td style={{ padding: '.85rem 1rem' }}>
-                        <div style={{ display: 'flex', gap: '.5rem' }}>
-                          <button onClick={() => setEditando(p)} style={{
-                            background: '#1B365D', color: '#fff', border: 'none',
-                            padding: '.4rem .8rem', borderRadius: '6px', cursor: 'pointer', fontSize: '.8rem',
-                          }}>Editar</button>
-                          <button onClick={() => p.id && eliminar(p.id)} style={{
-                            background: '#8B1A1A', color: '#fff', border: 'none',
-                            padding: '.4rem .8rem', borderRadius: '6px', cursor: 'pointer', fontSize: '.8rem',
-                          }}>Eliminar</button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                  {propiedades
+                    .filter(p => statusFilter === 'todas' ? true : (statusFilter === 'eliminada' ? (p.estatus === 'eliminada' || p.estatus === 'vendida') : p.estatus === statusFilter))
+                    .map(p => {
+                      const estatusColor = p.estatus === 'disponible' ? { bg: '#dcfce7', color: '#15803d' }
+                        : p.estatus === 'pausada' ? { bg: '#fef9c3', color: '#b45309' }
+                        : { bg: '#fee2e2', color: '#991b1b' }
+                      return (
+                        <tr key={p.id} style={{ borderTop: '1px solid #eee' }}>
+                          <td style={{ padding: '.85rem 1rem', fontSize: '.88rem', fontWeight: 600, maxWidth: '220px' }}>
+                            {p.destacada && <i className="fa fa-star" style={{ color: '#D97706', marginRight: '.4rem', fontSize: '.8rem' }} />}
+                            <div style={{ fontWeight: 700, color: '#1a1a2e', marginBottom: '.15rem' }}>{p.titulo}</div>
+                            <div style={{ fontSize: '.75rem', color: '#888', fontWeight: 400 }}>{p.ubicacion}</div>
+                          </td>
+                          <td style={{ padding: '.85rem 1rem', fontSize: '.88rem', whiteSpace: 'nowrap' }}>
+                            <span style={{ background: '#1B365D', color: '#fff', padding: '3px 10px', borderRadius: '20px', fontSize: '.72rem', fontWeight: 700 }}>
+                              {p.tipo}
+                            </span>
+                            <div style={{ fontSize: '.72rem', color: '#aaa', marginTop: '.2rem', textTransform: 'capitalize' }}>{p.operacion}</div>
+                          </td>
+                          <td style={{ padding: '.85rem 1rem', fontSize: '.9rem', fontWeight: 800, color: '#8B1A1A', whiteSpace: 'nowrap' }}>
+                            {p.precio ? `$${p.precio.toLocaleString('es-MX')}` : '—'}
+                            {p.metros ? <div style={{ fontSize: '.72rem', color: '#aaa', fontWeight: 400 }}>{p.metros} m²</div> : null}
+                          </td>
+                          <td style={{ padding: '.85rem 1rem' }}>
+                            <span style={{ padding: '4px 10px', borderRadius: '6px', fontSize: '.75rem', fontWeight: 700, background: estatusColor.bg, color: estatusColor.color, whiteSpace: 'nowrap' }}>
+                              {p.estatus}
+                            </span>
+                          </td>
+                          {/* Quick status change */}
+                          <td style={{ padding: '.85rem 1rem' }}>
+                            <select
+                              value={p.estatus || 'disponible'}
+                              onChange={e => p.id && cambiarEstatus(p.id, e.target.value)}
+                              style={{ padding: '.4rem .6rem', borderRadius: '6px', border: '1.5px solid #dde', fontSize: '.78rem', fontWeight: 600, cursor: 'pointer', background: '#fafafa' }}
+                            >
+                              <option value="disponible">✅ Disponible</option>
+                              <option value="pausada">⏸ Pausada</option>
+                              <option value="eliminada">🗃 Archivar</option>
+                            </select>
+                          </td>
+                          <td style={{ padding: '.85rem 1rem' }}>
+                            <div style={{ display: 'flex', gap: '.4rem', flexWrap: 'wrap' }}>
+                              <button onClick={() => setEditando(p)} style={{
+                                background: '#1B365D', color: '#fff', border: 'none',
+                                padding: '.4rem .75rem', borderRadius: '6px', cursor: 'pointer', fontSize: '.78rem', fontWeight: 700,
+                              }}>
+                                <i className="fa fa-pen" style={{ marginRight: '.3rem' }} />Editar
+                              </button>
+                              {(p.estatus === 'eliminada' || p.estatus === 'vendida') && (
+                                <button onClick={() => p.id && eliminarDefinitivo(p.id)} style={{
+                                  background: '#7f1d1d', color: '#fff', border: 'none',
+                                  padding: '.4rem .75rem', borderRadius: '6px', cursor: 'pointer', fontSize: '.78rem', fontWeight: 700,
+                                }}>
+                                  <i className="fa fa-trash" style={{ marginRight: '.3rem' }} />Borrar
+                                </button>
+                              )}
+                              {p.estatus !== 'eliminada' && p.estatus !== 'vendida' && (
+                                <button onClick={() => p.id && eliminar(p.id)} style={{
+                                  background: '#f3f4f6', color: '#555', border: '1px solid #dde',
+                                  padding: '.4rem .75rem', borderRadius: '6px', cursor: 'pointer', fontSize: '.78rem', fontWeight: 700,
+                                }}>
+                                  <i className="fa fa-archive" style={{ marginRight: '.3rem' }} />Archivar
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
                 </tbody>
               </table>
-              {propiedades.length === 0 && (
+              {propiedades.filter(p => statusFilter === 'todas' ? true : (statusFilter === 'eliminada' ? (p.estatus === 'eliminada' || p.estatus === 'vendida') : p.estatus === statusFilter)).length === 0 && (
                 <div style={{ textAlign: 'center', padding: '3rem', color: '#888' }}>
-                  No hay propiedades aún. ¡Agrega la primera!
+                  {statusFilter === 'todas' ? 'No hay propiedades aún. ¡Agrega la primera!' : `No hay propiedades con estatus "${statusFilter}".`}
                 </div>
               )}
             </div>
@@ -704,7 +857,7 @@ export default function DashboardPage() {
               {([
                 { key: 'titulo', label: 'Título', type: 'text', placeholder: 'Ej. Nave industrial en Silao' },
                 { key: 'ubicacion', label: 'Ubicación', type: 'text', placeholder: 'Ej. Parque Industrial, León' },
-                { key: 'precio', label: 'Precio (MXN)', type: 'number', placeholder: '0' },
+                { key: 'precio', label: 'Precio total (MXN)', type: 'number', placeholder: '0' },
                 { key: 'metros', label: 'Metros cuadrados', type: 'number', placeholder: '0' },
                 { key: 'recamaras', label: 'Recámaras', type: 'number', placeholder: '0' },
                 { key: 'banos', label: 'Baños', type: 'number', placeholder: '0' },
@@ -721,6 +874,26 @@ export default function DashboardPage() {
                   />
                 </div>
               ))}
+
+              {/* IVA */}
+              <label style={{
+                display: 'flex', alignItems: 'center', gap: '.7rem', cursor: 'pointer',
+                padding: '.75rem 1rem', borderRadius: '8px', border: `2px solid ${editando.precio_incluye_iva ? '#059669' : '#DDE'}`,
+                background: editando.precio_incluye_iva ? '#ecfdf5' : '#FAFAFA', transition: 'all .2s',
+              }}>
+                <input type="checkbox" checked={!!editando.precio_incluye_iva}
+                  onChange={e => setEditando(d => ({ ...d, precio_incluye_iva: e.target.checked }))}
+                  style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#059669' }} />
+                <div>
+                  <span style={{ fontWeight: 700, color: editando.precio_incluye_iva ? '#065f46' : '#1B365D', fontSize: '.9rem', fontFamily: 'Montserrat, sans-serif' }}>
+                    <i className="fa fa-receipt" style={{ color: editando.precio_incluye_iva ? '#059669' : '#888', marginRight: '.4rem' }} />
+                    El precio ya incluye IVA
+                  </span>
+                  <div style={{ fontSize: '.75rem', color: '#888', marginTop: '.1rem' }}>
+                    {editando.precio_incluye_iva ? 'Se mostrará "IVA incluido" al visitante' : 'Se mostrará "+ IVA" al visitante'}
+                  </div>
+                </div>
+              </label>
 
               {/* Extra fields for naves */}
               {(editando.tipo === 'nave' || !editando.tipo) && (
@@ -815,33 +988,88 @@ export default function DashboardPage() {
                   style={{ width: '100%', padding: '.75rem 1rem', borderRadius: '8px', border: '1.5px solid #DDE', fontSize: '.92rem', resize: 'vertical', boxSizing: 'border-box' }} />
               </div>
 
-              {/* ── Fotos con preview ── */}
+              {/* ── Fotos: upload directo + URL ── */}
               <div>
                 <label style={{ fontSize: '.85rem', fontWeight: 600, color: '#1B365D', display: 'block', marginBottom: '.6rem' }}>
                   Fotos <span style={{ fontWeight: 400, color: '#888' }}>({(editando.fotos || []).length} imagen{(editando.fotos || []).length !== 1 ? 'es' : ''})</span>
                 </label>
+
+                {/* Zona de upload */}
+                <input
+                  id="foto-upload-input"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  style={{ display: 'none' }}
+                  disabled={uploadingFotos}
+                  onChange={e => e.target.files && subirFotos(e.target.files)}
+                />
+
+                {uploadingFotos ? (
+                  <div style={{ border: '2px dashed #1B365D', borderRadius: '10px', padding: '1.5rem', textAlign: 'center', background: '#EFF6FF', marginBottom: '.8rem' }}>
+                    <i className="fa fa-spinner fa-spin" style={{ fontSize: '1.6rem', color: '#1B365D', marginBottom: '.5rem', display: 'block' }} />
+                    <span style={{ fontSize: '.88rem', color: '#1B365D', fontWeight: 700 }}>Subiendo fotos… {uploadProgress}%</span>
+                    <div style={{ width: '100%', height: '6px', background: '#DDE', borderRadius: '3px', overflow: 'hidden', marginTop: '.6rem' }}>
+                      <div style={{ height: '6px', background: '#1B365D', width: `${uploadProgress}%`, transition: 'width .3s', borderRadius: '3px' }} />
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ marginBottom: '.8rem' }}>
+                    {/* Botón principal de selección */}
+                    <button
+                      type="button"
+                      onClick={() => document.getElementById('foto-upload-input')?.click()}
+                      style={{
+                        width: '100%', padding: '.85rem', borderRadius: '10px',
+                        border: '2px dashed #8B1A1A', background: '#fdf4f4',
+                        color: '#8B1A1A', fontWeight: 700, fontSize: '.92rem',
+                        cursor: 'pointer', display: 'flex', alignItems: 'center',
+                        justifyContent: 'center', gap: '.6rem', marginBottom: '.5rem',
+                        fontFamily: 'Montserrat, sans-serif', transition: 'all .2s',
+                      }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#fce8e8' }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = '#fdf4f4' }}
+                    >
+                      <i className="fa fa-folder-open" style={{ fontSize: '1.1rem' }} />
+                      Seleccionar fotos de mi computadora
+                    </button>
+                    <p style={{ textAlign: 'center', fontSize: '.72rem', color: '#aaa', margin: 0 }}>
+                      JPG, PNG, WEBP · Puedes seleccionar varias a la vez
+                    </p>
+                  </div>
+                )}
+
+                {/* Grid de previews */}
                 {(editando.fotos || []).length > 0 && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '.5rem', marginBottom: '.8rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '.5rem', marginBottom: '.8rem' }}>
                     {(editando.fotos || []).map((url, i) => (
-                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '.6rem', background: '#F4F6F8', borderRadius: '8px', padding: '.4rem .6rem' }}>
-                        <img src={url} alt="" style={{ width: '56px', height: '42px', objectFit: 'cover', borderRadius: '5px', flexShrink: 0 }}
+                      <div key={i} style={{ position: 'relative', aspectRatio: '4/3', borderRadius: '8px', overflow: 'hidden', background: '#eee' }}>
+                        <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                           onError={e => { (e.target as HTMLImageElement).style.opacity = '0.3' }} />
-                        <span style={{ flex: 1, fontSize: '.75rem', color: '#555', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{url}</span>
-                        <button onClick={() => setEditando(d => ({ ...d, fotos: (d?.fotos || []).filter((_, j) => j !== i) }))}
-                          style={{ background: '#fee2e2', color: '#991b1b', border: 'none', borderRadius: '6px', width: '26px', height: '26px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          <i className="fa fa-times" style={{ fontSize: '.7rem' }} />
+                        <button
+                          onClick={() => setEditando(d => ({ ...d, fotos: (d?.fotos || []).filter((_, j) => j !== i) }))}
+                          style={{ position: 'absolute', top: '4px', right: '4px', background: 'rgba(0,0,0,.65)', color: '#fff', border: 'none', borderRadius: '50%', width: '22px', height: '22px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.65rem' }}>
+                          <i className="fa fa-times" />
                         </button>
+                        {i === 0 && (
+                          <span style={{ position: 'absolute', bottom: '4px', left: '4px', background: '#8B1A1A', color: '#fff', fontSize: '.6rem', fontWeight: 800, padding: '2px 6px', borderRadius: '4px', letterSpacing: '.5px' }}>
+                            PRINCIPAL
+                          </span>
+                        )}
                       </div>
                     ))}
                   </div>
                 )}
-                <div style={{ display: 'flex', gap: '.5rem' }}>
+
+                {/* URL manual (respaldo) */}
+                <div style={{ display: 'flex', gap: '.5rem', alignItems: 'center' }}>
+                  <span style={{ fontSize: '.72rem', color: '#aaa', whiteSpace: 'nowrap', flexShrink: 0 }}>o URL:</span>
                   <input
                     type="url"
                     value={fotoInput}
                     onChange={e => setFotoInput(e.target.value)}
                     placeholder="https://res.cloudinary.com/..."
-                    style={{ flex: 1, padding: '.65rem .9rem', borderRadius: '8px', border: '1.5px solid #DDE', fontSize: '.88rem', boxSizing: 'border-box' }}
+                    style={{ flex: 1, padding: '.55rem .8rem', borderRadius: '8px', border: '1.5px solid #DDE', fontSize: '.82rem', boxSizing: 'border-box' }}
                     onKeyDown={e => {
                       if (e.key === 'Enter') {
                         e.preventDefault()
@@ -851,20 +1079,22 @@ export default function DashboardPage() {
                   />
                   <button
                     onClick={() => { if (fotoInput.trim()) { setEditando(d => ({ ...d, fotos: [...(d?.fotos || []), fotoInput.trim()] })); setFotoInput('') } }}
-                    style={{ background: '#1B365D', color: '#fff', border: 'none', borderRadius: '8px', padding: '.65rem 1rem', cursor: 'pointer', fontWeight: 700, fontSize: '.85rem', whiteSpace: 'nowrap' }}>
-                    + Agregar
+                    style={{ background: '#1B365D', color: '#fff', border: 'none', borderRadius: '8px', padding: '.55rem .9rem', cursor: 'pointer', fontWeight: 700, fontSize: '.82rem', whiteSpace: 'nowrap' }}>
+                    + URL
                   </button>
                 </div>
-                {fotoInput && (
-                  <img src={fotoInput} alt="Preview" style={{ width: '100%', maxHeight: '110px', objectFit: 'cover', borderRadius: '8px', marginTop: '.5rem', border: '1.5px solid #E0E4EA' }}
-                    onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
-                    onLoad={e => { (e.target as HTMLImageElement).style.display = 'block' }} />
-                )}
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
-              <button onClick={() => setEditando(null)} style={{
+            {saveError && (
+              <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '8px', padding: '.75rem 1rem', color: '#991b1b', fontSize: '.88rem', fontWeight: 600, marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '.5rem' }}>
+                <i className="fa fa-exclamation-circle" />
+                {saveError}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+              <button onClick={() => { setEditando(null); setSaveError('') }} style={{
                 flex: 1, padding: '1rem', background: '#fff', color: '#1B365D',
                 border: '2px solid #1B365D', borderRadius: '10px', fontWeight: 700, cursor: 'pointer',
               }}>Cancelar</button>
@@ -873,7 +1103,7 @@ export default function DashboardPage() {
                 border: 'none', borderRadius: '10px', fontWeight: 700, cursor: 'pointer',
                 opacity: saving ? .7 : 1,
               }}>
-                {saving ? 'Guardando...' : 'Guardar propiedad'}
+                {saving ? <><i className="fa fa-spinner fa-spin" style={{ marginRight: '.5rem' }} />Guardando...</> : 'Guardar propiedad'}
               </button>
             </div>
           </div>

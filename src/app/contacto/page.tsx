@@ -40,27 +40,52 @@ export default function ContactoPage() {
       <Header />
 
       {/* Hero */}
-      <section style={{ background: 'linear-gradient(135deg,#1B365D 0%,#0d1e2c 100%)', padding: '4rem 2rem', textAlign: 'center', color: '#fff' }}>
-        <h1 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: 'clamp(1.8rem,4vw,2.8rem)', marginBottom: '.8rem' }}>
-          Contáctanos
-        </h1>
-        <p style={{ opacity: .8, fontSize: '1.05rem', maxWidth: '520px', margin: '0 auto' }}>
-          Estamos para ayudarte a encontrar la propiedad perfecta en León, Guanajuato.
-        </p>
+      <section style={{ position: 'relative', height: '40vh', minHeight: '320px', overflow: 'hidden', display: 'flex', alignItems: 'flex-end' }}>
+        <div style={{ position: 'absolute', inset: 0 }}>
+          <img
+            src="https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80"
+            alt=""
+            style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 30%' }}
+          />
+        </div>
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(8,8,8,.92) 0%, rgba(8,8,8,.65) 60%, rgba(8,8,8,.2) 100%)' }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,.5) 0%, transparent 55%)' }} />
+        <div className="hero-top-line" />
+        <div style={{ position: 'relative', zIndex: 2, padding: '0 max(4vw, 2rem) 3.5rem', maxWidth: '720px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '.8rem', marginBottom: '1rem' }}>
+            <div style={{ width: '28px', height: '2px', background: '#C9A96E', flexShrink: 0 }} />
+            <span style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '.68rem', letterSpacing: '3.5px', textTransform: 'uppercase', color: '#C9A96E' }}>
+              Hablemos · León, Gto.
+            </span>
+          </div>
+          <h1 style={{ margin: '0 0 .8rem', lineHeight: 1.08 }}>
+            <span style={{ display: 'block', fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: 'clamp(1.8rem,4vw,3rem)', color: '#fff', letterSpacing: '-.02em' }}>
+              Contáctanos
+            </span>
+            <span style={{ display: 'block', fontFamily: '"Playfair Display", Georgia, serif', fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(1.4rem,3vw,2.2rem)', color: '#C9A96E' }}>
+              tu asesor te espera
+            </span>
+          </h1>
+          <p style={{ color: 'rgba(255,255,255,.72)', fontSize: '.9rem', lineHeight: 1.7, maxWidth: '400px', margin: 0 }}>
+            Estamos para ayudarte a encontrar la propiedad perfecta en León, Guanajuato.
+          </p>
+        </div>
       </section>
 
-      <main style={{ background: '#F4F6F8', padding: '4rem 2rem' }}>
+      <main style={{ background: '#EDEAE5', padding: '4rem 2rem' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3rem', alignItems: 'start' }} className="contact-grid">
 
           {/* Info */}
           <div>
-            <h2 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, color: '#1B365D', fontSize: '1.5rem', marginBottom: '2rem' }}>
-              Información de contacto
+            <div className="editorial-label" style={{ marginBottom: '1.2rem' }}>Información de contacto</div>
+            <h2 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, color: '#1B365D', fontSize: 'clamp(1.3rem,2.5vw,1.7rem)', marginBottom: '2rem', lineHeight: 1.15 }}>
+              Hablemos de<br />
+              <span style={{ fontFamily: '"Playfair Display", Georgia, serif', fontStyle: 'italic', color: '#8B1A1A' }}>tu próxima inversión</span>
             </h2>
             {[
               { icon: 'fa-phone', color: '#1B365D', title: 'Teléfono', val: `+52 477 811 6501`, href: `tel:+${WA_NUMBER}` },
               { icon: 'fab fa-whatsapp', color: '#25D366', title: 'WhatsApp', val: `+52 477 811 6501`, href: `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent('Hola, quiero más información sobre una propiedad.')}` },
-              { icon: 'fa-envelope', color: '#8B1A1A', title: 'Correo', val: 'contacto@vivebieninmobiliaria.com', href: 'mailto:contacto@vivebieninmobiliaria.com' },
+              { icon: 'fa-envelope', color: '#8B1A1A', title: 'Correo', val: 'grupo.p.11.ee@gmail.com', href: 'mailto:grupo.p.11.ee@gmail.com' },
               { icon: 'fa-map-marker-alt', color: '#D97706', title: 'Ubicación', val: 'León, Guanajuato, México', href: 'https://maps.google.com/?q=León,Guanajuato' },
               { icon: 'fa-clock', color: '#5B4FCF', title: 'Horario', val: 'Lun–Vie 9:00–18:00 | Sáb 9:00–14:00', href: null },
             ].map(c => (
@@ -91,7 +116,7 @@ export default function ContactoPage() {
           </div>
 
           {/* Form */}
-          <div style={{ background: '#fff', borderRadius: '20px', padding: '2.5rem', boxShadow: '0 8px 30px rgba(0,0,0,.08)' }}>
+          <div style={{ background: '#fff', borderRadius: '0', padding: '2.5rem', boxShadow: '0 8px 30px rgba(0,0,0,.08)', borderTop: '3px solid #8B1A1A' }}>
             {sent ? (
               <div style={{ textAlign: 'center', padding: '2rem 0' }}>
                 <i className="fa fa-check-circle" style={{ fontSize: '3.5rem', color: '#279546', display: 'block', marginBottom: '1rem' }} />
@@ -104,8 +129,10 @@ export default function ContactoPage() {
               </div>
             ) : (
               <>
-                <h2 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, color: '#1B365D', fontSize: '1.3rem', marginBottom: '1.5rem' }}>
-                  Envíanos un mensaje
+                <div className="editorial-label">Envíanos un mensaje</div>
+                <h2 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, color: '#1B365D', fontSize: '1.3rem', marginBottom: '1.5rem', lineHeight: 1.2 }}>
+                  Respuesta en menos de{' '}
+                  <span style={{ fontFamily: '"Playfair Display", Georgia, serif', fontStyle: 'italic', color: '#8B1A1A' }}>2 horas</span>
                 </h2>
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   <div>
@@ -135,7 +162,7 @@ export default function ContactoPage() {
                     </p>
                   )}
                   <button type="submit" disabled={sending}
-                    style={{ background: 'linear-gradient(135deg,#8B1A1A,#C0392B)', color: '#fff', padding: '1rem', borderRadius: '12px', fontWeight: 800, border: 'none', cursor: 'pointer', fontFamily: 'Montserrat, sans-serif', fontSize: '1rem', opacity: sending ? .7 : 1 }}>
+                    style={{ background: '#8B1A1A', color: '#fff', padding: '1rem', borderRadius: '0', fontWeight: 800, border: 'none', cursor: 'pointer', fontFamily: 'Montserrat, sans-serif', fontSize: '.95rem', opacity: sending ? .7 : 1, letterSpacing: '.06em' }}>
                     <i className="fa fa-paper-plane" style={{ marginRight: '.5rem' }} />
                     {sending ? 'Enviando...' : 'Enviar mensaje'}
                   </button>

@@ -6,7 +6,7 @@
   --naranja-accion: #FF6B00;
   --azul: #1B365D;
   --azul-claro: #3D5A73;
-  --gris: #F4F6F8;
+  --gris: #EDEAE5;
   --blanco: #FFFFFF;
   --texto: #222831;
   --sombra: rgba(0, 0, 0, .08);
@@ -56,4 +56,120 @@ img {
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-montserrat, 'Montserrat', sans-serif);
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* ── GlareHover ─────────────────────────────────────────────────────────── */
+.glare-hover {
+  width: var(--gh-width, 100%);
+  height: var(--gh-height, 100%);
+  background: var(--gh-bg, transparent);
+  border-radius: var(--gh-br, 16px);
+  border: 1px solid var(--gh-border, transparent);
+  overflow: hidden;
+  position: relative;
+}
+.glare-hover::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    var(--gh-angle, -45deg),
+    hsla(0,0%,0%,0) 60%,
+    var(--gh-rgba, rgba(255,255,255,.18)) 70%,
+    hsla(0,0%,0%,0),
+    hsla(0,0%,0%,0) 100%
+  );
+  transition: var(--gh-duration, 600ms) ease;
+  background-size: var(--gh-size, 250%) var(--gh-size, 250%), 100% 100%;
+  background-repeat: no-repeat;
+  background-position: -100% -100%, 0 0;
+  pointer-events: none;
+  z-index: 10;
+}
+.glare-hover:hover::before {
+  background-position: 100% 100%, 0 0;
+}
+.glare-hover--play-once::before { transition: none; }
+.glare-hover--play-once:hover::before { transition: var(--gh-duration, 600ms) ease; background-position: 100% 100%, 0 0; }
+
+/* ── Cursor blink ────────────────────────────────────────────────────────── */
+@keyframes cursorBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* ── Hero utilities ──────────────────────────────────────────────────────── */
+.hero-top-line {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #8B1A1A 0%, #C9A96E 45%, transparent 100%);
+}
+
+/* ── Editorial label ─────────────────────────────────────────────────────── */
+.editorial-label {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+  font-size: .68rem;
+  letter-spacing: 3.5px;
+  text-transform: uppercase;
+  color: var(--rojo);
+  margin-bottom: 1rem;
+}
+.editorial-label::before {
+  content: '';
+  display: block;
+  width: 26px;
+  height: 2px;
+  background: var(--rojo);
+  flex-shrink: 0;
+}
+.editorial-label--gold {
+  color: #C9A96E;
+}
+.editorial-label--gold::before {
+  background: #C9A96E;
+}
+
+/* ── Dot pattern background ──────────────────────────────────────────────── */
+.dot-pattern {
+  background-image: radial-gradient(circle, rgba(27,54,93,.1) 1px, transparent 1px);
+  background-size: 26px 26px;
+}
+
+/* ── Section divider line ────────────────────────────────────────────────── */
+.section-line {
+  width: 40px;
+  height: 3px;
+  background: var(--rojo);
+  margin: 0 0 1.2rem;
+}
+
+/* ── Input placeholder ───────────────────────────────────────────────────── */
+input::placeholder,
+textarea::placeholder {
+  color: #aaa;
+  opacity: 1;
+}
+
+/* ── Hero grid / stats responsive ───────────────────────────────────────── */
+@media (max-width: 860px) {
+  .hero-grid { grid-template-columns: 1fr !important; }
+  .hero-stats { display: none !important; }
+}
+
+/* ── Two column responsive ───────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .two-col { grid-template-columns: 1fr !important; }
+  .contact-grid { grid-template-columns: 1fr !important; }
+  .nosotros-two-col { grid-template-columns: 1fr !important; gap: 2rem !important; }
+  .calc-grid { grid-template-columns: 1fr !important; }
 }

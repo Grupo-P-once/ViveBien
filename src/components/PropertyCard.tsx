@@ -18,6 +18,7 @@ interface Propiedad {
   tipo: string
   operacion: string
   precio: number
+  precio_incluye_iva?: boolean
   ubicacion: string
   descripcion?: string
   fotos: string[]
@@ -64,7 +65,7 @@ export default function PropertyCard({ propiedad: p }: PropertyCardProps) {
   const label = tipoLabel[p.tipo] || p.tipo?.toUpperCase() || 'PROPIEDAD'
   const superficie = p.metros || (typeof p.m2 === 'number' ? p.m2 : undefined)
 
-  const precio = p.precio
+  const precioFmt = p.precio
     ? `$${Number(p.precio).toLocaleString('es-MX')} MXN`
     : 'Consultar precio'
 
@@ -118,6 +119,21 @@ export default function PropertyCard({ propiedad: p }: PropertyCardProps) {
         }}>
           {opBadge}
         </span>
+
+        {/* Foto count badge */}
+        {fotos.length > 1 && (
+          <span style={{
+            position: 'absolute', bottom: '12px', left: '12px',
+            background: 'rgba(0,0,0,.58)', color: '#fff',
+            padding: '3px 9px', borderRadius: '20px',
+            fontSize: '.72rem', fontWeight: 700,
+            display: 'flex', alignItems: 'center', gap: '.3rem',
+            backdropFilter: 'blur(4px)',
+          }}>
+            <i className="fa fa-camera" style={{ fontSize: '.65rem' }} />
+            {fotos.length} fotos
+          </span>
+        )}
 
         {/* Slider nav */}
         {fotos.length > 1 && (
@@ -185,14 +201,32 @@ export default function PropertyCard({ propiedad: p }: PropertyCardProps) {
             fontFamily: 'Montserrat, sans-serif', fontWeight: 900,
             fontSize: '1.25rem', color: '#8B1A1A',
           }}>
-            {precio}
+            {precioFmt}
           </span>
+          {p.precio > 0 && (
+            <span style={{
+              fontSize: '.68rem', fontWeight: 800, padding: '2px 7px', borderRadius: '4px',
+              background: p.precio_incluye_iva ? '#ecfdf5' : '#fff7ed',
+              color: p.precio_incluye_iva ? '#065f46' : '#92400e',
+              border: `1px solid ${p.precio_incluye_iva ? '#6ee7b7' : '#fcd34d'}`,
+              letterSpacing: '.04em',
+            }}>
+              {p.precio_incluye_iva ? 'IVA inc.' : '+ IVA'}
+            </span>
+          )}
           {p.mantenimiento && (
             <span style={{ fontSize: '.72rem', color: '#999', fontWeight: 600 }}>
               + ${Number(p.mantenimiento).toLocaleString('es-MX')} manto.
             </span>
           )}
         </div>
+        {/* Precio por m² */}
+        {superficie && p.precio > 0 && (
+          <div style={{ fontSize: '.75rem', color: '#777', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '.3rem', marginTop: '-.2rem' }}>
+            <i className="fa fa-ruler-combined" style={{ fontSize: '.68rem', color: '#999' }} />
+            ${Math.round(p.precio / superficie).toLocaleString('es-MX')} / m²
+          </div>
+        )}
 
         {/* Ver más button */}
         <Link
@@ -251,7 +285,7 @@ export default function PropertyCard({ propiedad: p }: PropertyCardProps) {
             </button>
             {/* Email — requiere sesión */}
             <button
-              onClick={e => { e.stopPropagation(); requireAuth(() => { window.location.href = `mailto:contacto@vivebieninmobiliaria.com?subject=Interesado en: ${encodeURIComponent(p.titulo)}` }) }}
+              onClick={e => { e.stopPropagation(); requireAuth(() => { window.location.href = `mailto:grupo.p.11.ee@gmail.com?subject=Interesado en: ${encodeURIComponent(p.titulo)}` }) }}
               title={isLoggedIn ? 'Email' : 'Inicia sesión para contactar'}
               style={{
                 width: '40px', height: '40px', borderRadius: '12px',

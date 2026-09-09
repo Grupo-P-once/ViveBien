@@ -73,52 +73,61 @@ export default function NosotrosPage() {
       <Header />
 
       {/* Hero */}
-      <section style={{
-        background: 'linear-gradient(135deg, #1B365D 0%, #0d1e2c 60%, #8B1A1A 100%)',
-        padding: '6rem 2rem 5rem',
-        textAlign: 'center',
-        color: '#fff',
-        position: 'relative',
-        overflow: 'hidden',
-      }}>
-        {/* Decorative circles */}
-        <div style={{ position: 'absolute', top: '-80px', right: '-80px', width: '350px', height: '350px', borderRadius: '50%', background: 'rgba(192,57,43,.12)', pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', bottom: '-60px', left: '-60px', width: '280px', height: '280px', borderRadius: '50%', background: 'rgba(255,255,255,.04)', pointerEvents: 'none' }} />
+      <section style={{ position: 'relative', height: '54vh', minHeight: '430px', overflow: 'hidden', display: 'flex', alignItems: 'flex-end' }}>
+        {/* Background image */}
+        <div style={{ position: 'absolute', inset: 0 }}>
+          <img
+            src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80"
+            alt=""
+            style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 40%' }}
+          />
+        </div>
+        {/* Overlays */}
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(8,8,8,.93) 0%, rgba(8,8,8,.72) 55%, rgba(8,8,8,.22) 100%)' }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,.55) 0%, transparent 50%)' }} />
+        {/* Gold top accent */}
+        <div className="hero-top-line" />
+        {/* Breadcrumb */}
+        <div style={{ position: 'absolute', top: '1.5rem', left: 'max(4vw, 2rem)', display: 'flex', alignItems: 'center', gap: '.5rem', zIndex: 3 }}>
+          <Link href="/" style={{ color: 'rgba(255,255,255,.45)', fontFamily: 'Montserrat, sans-serif', fontSize: '.72rem', fontWeight: 600, letterSpacing: '1.5px', textTransform: 'uppercase', textDecoration: 'none' }}>Inicio</Link>
+          <span style={{ color: 'rgba(255,255,255,.25)', fontSize: '.65rem' }}>›</span>
+          <span style={{ color: '#C9A96E', fontFamily: 'Montserrat, sans-serif', fontSize: '.72rem', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase' }}>Nosotros</span>
+        </div>
 
-        <div style={{ maxWidth: '800px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
-          <span style={{
-            display: 'inline-block', background: 'rgba(192,57,43,.3)', backdropFilter: 'blur(8px)',
-            border: '1px solid rgba(192,57,43,.5)', padding: '.4rem 1.4rem',
-            borderRadius: '30px', fontSize: '.8rem', fontWeight: 700, letterSpacing: '.12em',
-            color: '#ffb3a7', marginBottom: '1.5rem', textTransform: 'uppercase',
-          }}>
-            Quiénes somos
-          </span>
-          <h1 style={{
-            fontFamily: 'Montserrat, sans-serif', fontWeight: 900,
-            fontSize: 'clamp(2rem,5vw,3.5rem)', lineHeight: 1.1,
-            margin: '0 0 1.5rem', textShadow: '0 2px 12px rgba(0,0,0,.4)',
-          }}>
-            Más de 15 años<br />construyendo confianza
+        {/* Content */}
+        <div style={{ position: 'relative', zIndex: 2, padding: '0 max(4vw, 2rem) 4rem', maxWidth: '860px' }}>
+          {/* Editorial label */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '.8rem', marginBottom: '1.2rem' }}>
+            <div style={{ width: '30px', height: '2px', background: '#C9A96E', flexShrink: 0 }} />
+            <span style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '.68rem', letterSpacing: '3.5px', textTransform: 'uppercase', color: '#C9A96E' }}>
+              Quiénes Somos · León, Gto.
+            </span>
+          </div>
+          <h1 style={{ margin: '0 0 1.2rem', lineHeight: 1.08 }}>
+            <span style={{ display: 'block', fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: 'clamp(2rem,4.5vw,3.4rem)', color: '#fff', letterSpacing: '-.02em' }}>
+              Más de 15 años
+            </span>
+            <span style={{ display: 'block', fontFamily: '"Playfair Display", Georgia, serif', fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(2rem,4.5vw,3.4rem)', color: '#C9A96E' }}>
+              construyendo confianza
+            </span>
           </h1>
-          <p style={{ fontSize: 'clamp(1rem,2vw,1.2rem)', opacity: .85, lineHeight: 1.7, maxWidth: '600px', margin: '0 auto 2.5rem' }}>
-            Somos el grupo inmobiliario de referencia en León, Guanajuato. Conectamos personas con propiedades que transforman su vida y sus negocios.
+          <p style={{ color: 'rgba(255,255,255,.72)', fontSize: '1rem', lineHeight: 1.75, maxWidth: '480px', margin: '0 0 2rem' }}>
+            El grupo inmobiliario de referencia en León, Guanajuato. Especialistas en naves industriales, terrenos y residencial.
           </p>
-          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '.8rem', flexWrap: 'wrap' }}>
             <Link href="/propiedades" style={{
-              background: '#8B1A1A', color: '#fff', padding: '.9rem 2rem',
-              borderRadius: '10px', textDecoration: 'none', fontWeight: 800,
-              fontFamily: 'Montserrat, sans-serif', fontSize: '.95rem',
-              display: 'inline-flex', alignItems: 'center', gap: '.5rem',
+              background: '#FF6B00', color: '#fff', padding: '.85rem 1.8rem',
+              fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '.88rem',
+              textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '.5rem',
+              letterSpacing: '.03em',
             }}>
               <i className="fa fa-search" /> Ver propiedades
             </Link>
             <a href="https://wa.me/524778116501" target="_blank" rel="noopener noreferrer" style={{
-              background: 'rgba(255,255,255,.12)', backdropFilter: 'blur(8px)',
-              color: '#fff', padding: '.9rem 2rem', borderRadius: '10px',
-              textDecoration: 'none', fontWeight: 700, border: '1px solid rgba(255,255,255,.25)',
-              fontFamily: 'Montserrat, sans-serif', fontSize: '.95rem',
-              display: 'inline-flex', alignItems: 'center', gap: '.5rem',
+              background: 'transparent', color: '#fff', padding: '.85rem 1.8rem',
+              fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: '.88rem',
+              textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '.5rem',
+              border: '1px solid rgba(255,255,255,.4)',
             }}>
               <i className="fab fa-whatsapp" /> Contáctanos
             </a>
@@ -147,14 +156,13 @@ export default function NosotrosPage() {
       </section>
 
       {/* Nuestra Historia */}
-      <section style={{ background: '#F4F6F8', padding: '5rem 2rem' }}>
+      <section style={{ background: '#EDEAE5', padding: '5rem 2rem' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5rem', alignItems: 'center' }}>
           <div>
-            <span style={{ color: '#8B1A1A', fontWeight: 800, fontSize: '.8rem', letterSpacing: '.12em', textTransform: 'uppercase', display: 'block', marginBottom: '.8rem' }}>
-              Nuestra Historia
-            </span>
-            <h2 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: 'clamp(1.6rem,3vw,2.4rem)', color: '#1B365D', lineHeight: 1.2, marginBottom: '1.5rem' }}>
-              Nacimos para hacer<br />el proceso más humano
+            <div className="editorial-label">Nuestra Historia</div>
+            <h2 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: 'clamp(1.6rem,3vw,2.4rem)', color: '#1B365D', lineHeight: 1.15, marginBottom: '1.5rem' }}>
+              Nacimos para hacer<br />
+              <span style={{ fontFamily: '"Playfair Display", Georgia, serif', fontStyle: 'italic', fontWeight: 700, color: '#8B1A1A' }}>el proceso más humano</span>
             </h2>
             <p style={{ lineHeight: 1.85, color: '#555', fontSize: '1rem', marginBottom: '1.2rem' }}>
               Vive Bien Grupo Inmobiliario nació en 2009 de la mano de José Ponce, con una convicción simple pero poderosa: en el mercado inmobiliario, lo más importante no son los metros cuadrados, sino las personas que los van a habitar.
@@ -219,14 +227,12 @@ export default function NosotrosPage() {
       </section>
 
       {/* Valores */}
-      <section style={{ background: '#F4F6F8', padding: '5rem 2rem' }}>
+      <section style={{ background: '#fff', padding: '5rem 2rem' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '3.5rem' }}>
-            <span style={{ color: '#8B1A1A', fontWeight: 800, fontSize: '.8rem', letterSpacing: '.12em', textTransform: 'uppercase', display: 'block', marginBottom: '.8rem' }}>
-              Lo que nos define
-            </span>
-            <h2 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: 'clamp(1.6rem,3vw,2.4rem)', color: '#1B365D', margin: '0 0 1rem' }}>
-              Nuestros Valores
+            <div className="editorial-label" style={{ justifyContent: 'center' }}>Lo que nos define</div>
+            <h2 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: 'clamp(1.6rem,3vw,2.4rem)', color: '#1B365D', margin: '0 0 .5rem', lineHeight: 1.15 }}>
+              Nuestros <span style={{ fontFamily: '"Playfair Display", Georgia, serif', fontStyle: 'italic', color: '#8B1A1A' }}>Valores</span>
             </h2>
             <p style={{ color: '#666', fontSize: '1rem', maxWidth: '500px', margin: '0 auto', lineHeight: 1.7 }}>
               Cinco pilares que guían cada decisión, cada asesoría y cada relación con nuestros clientes.
@@ -260,14 +266,13 @@ export default function NosotrosPage() {
       </section>
 
       {/* Por qué elegirnos */}
-      <section style={{ background: '#fff', padding: '5rem 2rem' }}>
+      <section style={{ background: '#EDEAE5', padding: '5rem 2rem' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4rem', alignItems: 'center' }}>
           <div>
-            <span style={{ color: '#8B1A1A', fontWeight: 800, fontSize: '.8rem', letterSpacing: '.12em', textTransform: 'uppercase', display: 'block', marginBottom: '.8rem' }}>
-              ¿Por qué nosotros?
-            </span>
-            <h2 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: 'clamp(1.6rem,3vw,2.2rem)', color: '#1B365D', lineHeight: 1.2, marginBottom: '2rem' }}>
-              La diferencia está en los detalles
+            <div className="editorial-label">¿Por qué nosotros?</div>
+            <h2 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: 'clamp(1.6rem,3vw,2.2rem)', color: '#1B365D', lineHeight: 1.15, marginBottom: '2rem' }}>
+              La diferencia está<br />
+              <span style={{ fontFamily: '"Playfair Display", Georgia, serif', fontStyle: 'italic', color: '#8B1A1A' }}>en los detalles</span>
             </h2>
             {[
               { icon: 'fa-map-marked-alt', title: 'Conocimiento local profundo', desc: 'Conocemos cada colonia, cada parque industrial y cada tendencia de precio en León y Guanajuato.' },
@@ -460,20 +465,26 @@ export default function NosotrosPage() {
       }}>
         <div style={{ position: 'absolute', top: '-100px', left: '50%', transform: 'translateX(-50%)', width: '600px', height: '300px', background: 'rgba(255,255,255,.03)', borderRadius: '50%', pointerEvents: 'none' }} />
         <div style={{ maxWidth: '700px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
-          <i className="fa fa-home" style={{ fontSize: '3rem', color: 'rgba(255,255,255,.25)', display: 'block', marginBottom: '1.5rem' }} />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.8rem', marginBottom: '1.5rem' }}>
+            <div style={{ width: '30px', height: '2px', background: 'rgba(201,169,110,.5)' }} />
+            <span style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '.68rem', letterSpacing: '3.5px', textTransform: 'uppercase', color: 'rgba(201,169,110,.8)' }}>Tu próxima propiedad</span>
+            <div style={{ width: '30px', height: '2px', background: 'rgba(201,169,110,.5)' }} />
+          </div>
           <h2 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: 'clamp(1.8rem,4vw,2.8rem)', marginBottom: '1rem', lineHeight: 1.15 }}>
-            ¿Listo para encontrar tu propiedad ideal?
+            ¿Listo para encontrar<br />
+            <span style={{ fontFamily: '"Playfair Display", Georgia, serif', fontStyle: 'italic', fontWeight: 700, color: 'rgba(201,169,110,.9)' }}>tu propiedad ideal?</span>
           </h2>
           <p style={{ opacity: .8, fontSize: '1.05rem', lineHeight: 1.7, marginBottom: '2.5rem' }}>
             Nuestro equipo está listo para asesorarte sin compromiso. Cuéntanos qué buscas y te ayudamos a encontrarlo.
           </p>
           <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
             <Link href="/propiedades" style={{
-              background: '#C0392B', color: '#fff', padding: '1rem 2.5rem',
-              borderRadius: '12px', textDecoration: 'none', fontWeight: 800,
+              background: '#FF6B00', color: '#fff', padding: '1rem 2.5rem',
+              borderRadius: '0', textDecoration: 'none', fontWeight: 800,
               fontFamily: 'Montserrat, sans-serif', fontSize: '1rem',
               display: 'inline-flex', alignItems: 'center', gap: '.6rem',
-              boxShadow: '0 6px 20px rgba(192,57,43,.4)',
+              boxShadow: '0 6px 20px rgba(255,107,0,.35)',
+              letterSpacing: '.04em',
             }}>
               <i className="fa fa-search" /> Ver catálogo
             </Link>
@@ -501,11 +512,6 @@ export default function NosotrosPage() {
 
       <Footer />
 
-      <style>{`
-        @media (max-width: 768px) {
-          .nosotros-two-col { grid-template-columns: 1fr !important; gap: 2rem !important; }
-        }
-      `}</style>
     </>
   )
 }

@@ -58,7 +58,7 @@ export default function Footer() {
           </h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '.5rem', fontSize: '.875rem', color: 'rgba(255,255,255,.75)' }}>
             <span><i className="fa fa-phone" style={{ marginRight: '.5rem', color: '#C0392B' }} />477 811 6501</span>
-            <span><i className="fa fa-envelope" style={{ marginRight: '.5rem', color: '#C0392B' }} />jpepeponce200903@gmail.com</span>
+            <span><i className="fa fa-envelope" style={{ marginRight: '.5rem', color: '#C0392B' }} />grupo.p.11.ee@gmail.com</span>
             <span><i className="fa fa-clock" style={{ marginRight: '.5rem', color: '#C0392B' }} />Lun – Vie: 9:00 – 18:00</span>
             <span><i className="fa fa-clock" style={{ marginRight: '.5rem', color: '#C0392B' }} />Sáb – Dom: 11:00 – 14:00</span>
           </div>

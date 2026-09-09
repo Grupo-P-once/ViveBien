@@ -71,25 +71,46 @@ export default function ValuadorPage() {
       <Header />
 
       {/* Hero */}
-      <div style={{
-        background: 'linear-gradient(rgba(24,37,66,.9),rgba(24,37,66,.9)), url("https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80") center/cover',
-        padding: '4rem 1rem', textAlign: 'center', color: '#fff',
-      }}>
-        <h1 style={{ fontFamily: 'var(--font-montserrat)', fontWeight: 900, fontSize: 'clamp(1.8rem,4vw,2.8rem)', marginBottom: '.5rem' }}>
-          Valuador Vive Bien
-        </h1>
-        <p style={{ fontSize: '1.1rem', opacity: .9, maxWidth: '600px', margin: '0 auto' }}>
-          Conoce un estimado del valor comercial de tu propiedad en León, Guanajuato basado en tu zona.
-        </p>
-      </div>
+      <section style={{ position: 'relative', height: '42vh', minHeight: '340px', overflow: 'hidden', display: 'flex', alignItems: 'flex-end' }}>
+        <div style={{ position: 'absolute', inset: 0 }}>
+          <img
+            src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80"
+            alt=""
+            style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }}
+          />
+        </div>
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(8,8,8,.92) 0%, rgba(8,8,8,.65) 60%, rgba(8,8,8,.2) 100%)' }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,.5) 0%, transparent 60%)' }} />
+        <div className="hero-top-line" />
+        <div style={{ position: 'relative', zIndex: 2, padding: '0 max(4vw, 2rem) 3.5rem', maxWidth: '740px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '.8rem', marginBottom: '1rem' }}>
+            <div style={{ width: '28px', height: '2px', background: '#C9A96E', flexShrink: 0 }} />
+            <span style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '.68rem', letterSpacing: '3.5px', textTransform: 'uppercase', color: '#C9A96E' }}>
+              Herramienta gratuita · León, Gto.
+            </span>
+          </div>
+          <h1 style={{ margin: '0 0 .8rem', lineHeight: 1.08 }}>
+            <span style={{ display: 'block', fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: 'clamp(1.8rem,4vw,3rem)', color: '#fff', letterSpacing: '-.02em' }}>
+              Valuador
+            </span>
+            <span style={{ display: 'block', fontFamily: '"Playfair Display", Georgia, serif', fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(1.8rem,4vw,3rem)', color: '#C9A96E' }}>
+              de Propiedades
+            </span>
+          </h1>
+          <p style={{ color: 'rgba(255,255,255,.72)', fontSize: '.95rem', lineHeight: 1.7, maxWidth: '440px', margin: 0 }}>
+            Estima el valor comercial de tu propiedad en León, Guanajuato según zona y metros cuadrados.
+          </p>
+        </div>
+      </section>
 
       {/* Calculator */}
-      <main style={{ background: '#F5F7FA', padding: '2rem 1rem 4rem', minHeight: '60vh' }}>
+      <main style={{ background: '#EDEAE5', padding: '2rem 1rem 4rem', minHeight: '60vh' }}>
         <div style={{
           maxWidth: '800px', margin: '-2rem auto 0',
           background: '#fff', padding: '3rem',
-          borderRadius: '12px', boxShadow: '0 10px 40px rgba(0,0,0,.08)',
+          borderRadius: '0', boxShadow: '0 10px 40px rgba(0,0,0,.08)',
           position: 'relative', zIndex: 10,
+          borderTop: '3px solid #8B1A1A',
         }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
             {/* Zona */}
@@ -149,15 +170,15 @@ export default function ValuadorPage() {
           </div>
 
           <button onClick={calcular} style={{
-            width: '100%', background: '#1B365D', color: '#fff',
+            width: '100%', background: '#8B1A1A', color: '#fff',
             border: 'none', padding: '15px', fontFamily: 'var(--font-montserrat)',
-            fontSize: '1.1rem', fontWeight: 700, borderRadius: '8px',
+            fontSize: '1.05rem', fontWeight: 800, borderRadius: '0',
             cursor: 'pointer', marginTop: '1rem', display: 'flex',
             justifyContent: 'center', alignItems: 'center', gap: '10px',
-            transition: 'background .3s',
+            transition: 'background .3s', letterSpacing: '.06em',
           }}
-            onMouseEnter={e => (e.currentTarget.style.background = '#3D5A73')}
-            onMouseLeave={e => (e.currentTarget.style.background = '#1B365D')}
+            onMouseEnter={e => (e.currentTarget.style.background = '#C0392B')}
+            onMouseLeave={e => (e.currentTarget.style.background = '#8B1A1A')}
           >
             <i className="fa fa-calculator" /> Calcular Estimado
           </button>
@@ -166,12 +187,13 @@ export default function ValuadorPage() {
           {resultado && (
             <div style={{
               marginTop: '2.5rem', padding: '2rem',
-              background: '#F5F7FA', borderRadius: '12px',
-              borderLeft: '5px solid #8B1A1A',
+              background: '#EDEAE5', borderRadius: '0',
+              borderLeft: '4px solid #8B1A1A',
               animation: 'fadeInResult .5s ease forwards',
             }}>
-              <h2 style={{ fontSize: '1.2rem', color: '#1B365D', fontWeight: 900, marginBottom: '1.5rem', textAlign: 'center', fontFamily: 'var(--font-montserrat)' }}>
-                Estimación de Valor de Mercado
+              <div className="editorial-label" style={{ justifyContent: 'center' }}>Estimación de Valor de Mercado</div>
+              <h2 style={{ fontSize: '1.15rem', color: '#1B365D', fontWeight: 900, marginBottom: '1.5rem', textAlign: 'center', fontFamily: 'var(--font-montserrat)', letterSpacing: '-.01em' }}>
+                <span style={{ fontFamily: '"Playfair Display", Georgia, serif', fontStyle: 'italic', color: '#8B1A1A' }}>Resultado</span> de tu propiedad
               </h2>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
@@ -268,9 +290,6 @@ export default function ValuadorPage() {
         @keyframes fadeInResult {
           from { opacity: 0; transform: translateY(10px); }
           to   { opacity: 1; transform: translateY(0); }
-        }
-        @media (max-width: 600px) {
-          .calc-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
 

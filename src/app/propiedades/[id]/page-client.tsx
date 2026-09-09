@@ -6,6 +6,7 @@ import Footer from '@/components/Footer'
 import Link from 'next/link'
 import { useAuth } from '@/lib/useAuth'
 import RegisterModal from '@/components/RegisterModal'
+import PropertyCard from '@/components/PropertyCard'
 
 interface Propiedad {
   id: string
@@ -13,6 +14,7 @@ interface Propiedad {
   tipo: string
   operacion: string
   precio: number
+  precio_incluye_iva?: boolean
   ubicacion: string
   descripcion?: string
   fotos: string[]
@@ -53,6 +55,7 @@ export default function DetallePropiedad({ params }: { params: Promise<{ id: str
   const [sent, setSent] = useState(false)
   const [sendError, setSendError] = useState('')
   const [regOpen, setRegOpen] = useState(false)
+  const [similares, setSimilares] = useState<Propiedad[]>([])
   const { isLoggedIn } = useAuth()
 
   useEffect(() => {
@@ -65,13 +68,25 @@ export default function DetallePropiedad({ params }: { params: Promise<{ id: str
           .single()
         if (error) throw error
         if (data) {
-          setProp({ ...data, alturaLibre: data.altura_libre } as Propiedad)
+          const mapped = { ...data, alturaLibre: data.altura_libre } as Propiedad
+          setProp(mapped)
           // Save to viewed history
           try {
             const key = 'vb_historial'
             const prev: string[] = JSON.parse(localStorage.getItem(key) || '[]')
             const next = [data.id, ...prev.filter((x: string) => x !== data.id)].slice(0, 12)
             localStorage.setItem(key, JSON.stringify(next))
+          } catch {}
+          // Load similar properties
+          try {
+            const { data: simData } = await supabase
+              .from('propiedades')
+              .select('*')
+              .eq('tipo', data.tipo)
+              .eq('estatus', 'disponible')
+              .neq('id', data.id)
+              .limit(4)
+            setSimilares((simData || []).map((p: any) => ({ ...p, alturaLibre: p.altura_libre })))
           } catch {}
         }
       } catch (e) {
@@ -286,7 +301,7 @@ export default function DetallePropiedad({ params }: { params: Promise<{ id: str
             )}
 
             {prop.amenidades && prop.amenidades.length > 0 && (
-              <div style={{ background: '#fff', borderRadius: '16px', padding: '1.8rem', boxShadow: '0 2px 8px rgba(0,0,0,.06)' }}>
+              <div style={{ background: '#fff', borderRadius: '16px', padding: '1.8rem', marginBottom: '1.5rem', boxShadow: '0 2px 8px rgba(0,0,0,.06)' }}>
                 <h3 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, color: '#1B365D', marginBottom: '1.2rem', fontSize: '1.1rem' }}>
                   <i className="fa fa-star" style={{ marginRight: '.5rem', color: '#8B1A1A' }} />Amenidades y Características
                 </h3>
@@ -300,6 +315,28 @@ export default function DetallePropiedad({ params }: { params: Promise<{ id: str
                 </div>
               </div>
             )}
+
+            {/* Map */}
+            <div style={{ background: '#fff', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,.06)' }}>
+              <div style={{ padding: '1.2rem 1.8rem .8rem', borderBottom: '1px solid #f0f0f0', display: 'flex', alignItems: 'center', gap: '.5rem' }}>
+                <i className="fa fa-map-location-dot" style={{ color: '#8B1A1A', fontSize: '1.1rem' }} />
+                <h3 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, color: '#1B365D', margin: 0, fontSize: '1.1rem' }}>
+                  Ubicación
+                </h3>
+              </div>
+              <iframe
+                src={`https://maps.google.com/maps?q=${encodeURIComponent(prop.ubicacion + ', León, Guanajuato, México')}&output=embed`}
+                width="100%"
+                height="300"
+                style={{ border: 'none', display: 'block' }}
+                loading="lazy"
+                title={`Ubicación: ${prop.ubicacion}`}
+              />
+              <div style={{ padding: '.75rem 1.8rem', fontSize: '.83rem', color: '#888', display: 'flex', alignItems: 'center', gap: '.4rem' }}>
+                <i className="fa fa-map-marker-alt" style={{ color: '#8B1A1A' }} />
+                {prop.ubicacion}, León, Guanajuato
+              </div>
+            </div>
           </div>
 
           {/* Right: Sticky contact panel */}
@@ -309,6 +346,17 @@ export default function DetallePropiedad({ params }: { params: Promise<{ id: str
                 <div style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: '1.8rem' }}>
                   {prop.precio ? `$${prop.precio.toLocaleString('es-MX')}` : 'Consultar precio'}
                 </div>
+                {prop.precio > 0 && (
+                  <div style={{
+                    display: 'inline-block', marginTop: '.4rem',
+                    fontSize: '.72rem', fontWeight: 800, padding: '3px 10px', borderRadius: '20px',
+                    background: prop.precio_incluye_iva ? 'rgba(16,185,129,.25)' : 'rgba(255,255,255,.2)',
+                    color: '#fff', letterSpacing: '.06em', textTransform: 'uppercase',
+                    border: `1px solid ${prop.precio_incluye_iva ? 'rgba(16,185,129,.5)' : 'rgba(255,255,255,.3)'}`,
+                  }}>
+                    {prop.precio_incluye_iva ? '✓ IVA incluido' : '+ IVA no incluido'}
+                  </div>
+                )}
                 {prop.mantenimiento && <div style={{ fontSize: '.8rem', opacity: .85, marginTop: '.3rem' }}>+ ${prop.mantenimiento.toLocaleString('es-MX')} mantenimiento</div>}
                 <div style={{ fontSize: '.78rem', opacity: .75, textTransform: 'uppercase', letterSpacing: '.08em' }}>
                   {prop.operacion === 'venta' ? 'Precio de venta' : 'Renta mensual'}
@@ -378,6 +426,32 @@ export default function DetallePropiedad({ params }: { params: Promise<{ id: str
           </div>
         </div>
       </div>
+
+      {/* Propiedades similares */}
+      {similares.length > 0 && (
+        <section style={{ background: '#F4F6F8', padding: '3rem 2rem 4rem', borderTop: '1px solid #e8ecf0' }}>
+          <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '.8rem', marginBottom: '2rem' }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <i className="fa fa-th-large" style={{ color: '#fff', fontSize: '1rem' }} />
+              </div>
+              <div>
+                <h2 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: '1.4rem', color: '#1B365D', margin: 0 }}>
+                  Propiedades similares
+                </h2>
+                <p style={{ color: '#888', fontSize: '.85rem', margin: 0 }}>
+                  {tipoLabel[prop.tipo] || prop.tipo}s disponibles en León
+                </p>
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: '1.8rem' }}>
+              {similares.map(s => (
+                <PropertyCard key={s.id} propiedad={s} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Lightbox */}
       {lightbox !== null && (

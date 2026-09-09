@@ -39,3 +39,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+.vercel
+
+# script con IDs de Vercel y claves en duro - no versionar
+scripts/set-vercel-env.mjs
