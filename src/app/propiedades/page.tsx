@@ -35,11 +35,11 @@ interface Propiedad {
 const WA_NUMBER = process.env.NEXT_PUBLIC_WA_NUMBER || '524778116501'
 
 const SECCIONES = [
-  { tipo: 'nave', titulo: 'Naves Industriales', icon: 'fa-industry', desc: 'Infraestructura de alto nivel para tu operación logística e industrial', color: '#1B365D' },
-  { tipo: 'casa', titulo: 'Casas en Venta', icon: 'fa-house', desc: 'Espacios familiares pensados para ti en las mejores colonias de León', color: '#8B1A1A' },
-  { tipo: 'departamento', titulo: 'Departamentos', icon: 'fa-building', desc: 'Vivienda vertical con acabados de primera, ideales para jóvenes y familias', color: '#5B4FCF' },
-  { tipo: 'terreno', titulo: 'Terrenos', icon: 'fa-map', desc: 'Lotes residenciales e industriales con ubicación estratégica y alta plusvalía', color: '#279546' },
-  { tipo: 'comercial', titulo: 'Locales Comerciales', icon: 'fa-store', desc: 'Espacios estratégicos para que tu negocio crezca en León', color: '#D97706' },
+  { tipo: 'nave', titulo: 'Naves Industriales', icon: 'fa-industry', desc: 'Infraestructura de alto nivel para tu operación logística e industrial', color: 'var(--azul)' },
+  { tipo: 'casa', titulo: 'Casas en Venta', icon: 'fa-house', desc: 'Espacios familiares pensados para ti en las mejores colonias de León', color: 'var(--rojo)' },
+  { tipo: 'departamento', titulo: 'Departamentos', icon: 'fa-building', desc: 'Vivienda vertical con acabados de primera, ideales para jóvenes y familias', color: 'var(--morado)' },
+  { tipo: 'terreno', titulo: 'Terrenos', icon: 'fa-map', desc: 'Lotes residenciales e industriales con ubicación estratégica y alta plusvalía', color: 'var(--exito)' },
+  { tipo: 'comercial', titulo: 'Locales Comerciales', icon: 'fa-store', desc: 'Espacios estratégicos para que tu negocio crezca en León', color: 'var(--aviso)' },
 ]
 
 function PropiedadesContent() {
@@ -175,24 +175,24 @@ function PropiedadesContent() {
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(8,16,30,.3) 0%, rgba(8,16,30,.75) 60%, rgba(8,16,30,.97) 100%)' }} />
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(100deg, rgba(139,26,26,.35) 0%, transparent 60%)' }} />
         {/* Animated top line */}
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'linear-gradient(90deg,#8B1A1A,#C9A96E,#1B365D)', zIndex: 5 }} />
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'linear-gradient(90deg,var(--rojo),var(--dorado),var(--azul))', zIndex: 5 }} />
 
         <div style={{ position: 'relative', zIndex: 3, width: '100%', maxWidth: '1240px', margin: '0 auto', padding: '0 2.5rem 3.5rem' }}>
           {/* Breadcrumb */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem', marginBottom: '1.5rem', color: 'rgba(255,255,255,.45)', fontSize: '.75rem', fontFamily: 'Montserrat,sans-serif', letterSpacing: '1px' }}>
             <Link href="/" style={{ color: 'rgba(255,255,255,.45)', textDecoration: 'none' }}>Inicio</Link>
             <i className="fa fa-chevron-right" style={{ fontSize: '.6rem' }} />
-            <span style={{ color: '#C9A96E' }}>Propiedades</span>
+            <span style={{ color: 'var(--dorado)' }}>Propiedades</span>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1.5rem' }}>
             <div>
-              <span style={{ display: 'inline-block', background: 'rgba(201,169,110,.18)', border: '1px solid rgba(201,169,110,.35)', color: '#C9A96E', padding: '.3rem .9rem', borderRadius: '50px', fontSize: '.68rem', fontFamily: 'Montserrat,sans-serif', fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', marginBottom: '1rem' }}>
+              <span style={{ display: 'inline-block', background: 'rgba(201,169,110,.18)', border: '1px solid rgba(201,169,110,.35)', color: 'var(--dorado)', padding: '.3rem .9rem', borderRadius: '50px', fontSize: '.68rem', fontFamily: 'Montserrat,sans-serif', fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', marginBottom: '1rem' }}>
                 Catálogo completo
               </span>
               <h1 style={{ fontFamily: '"Playfair Display",Georgia,serif', fontWeight: 700, fontSize: 'clamp(2rem,4.5vw,3.8rem)', color: '#fff', lineHeight: 1.1, margin: 0, letterSpacing: '-1px' }}>
                 Propiedades en<br />
-                <span style={{ fontStyle: 'italic', color: '#C9A96E' }}>León, Guanajuato</span>
+                <span style={{ fontStyle: 'italic', color: 'var(--dorado)' }}>León, Guanajuato</span>
               </h1>
             </div>
             {/* Stats pill */}
@@ -203,7 +203,7 @@ function PropiedadesContent() {
               ].map(s => (
                 <div key={s.label} style={{ background: 'rgba(255,255,255,.07)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,.1)', borderRadius: '14px', padding: '.8rem 1.2rem', textAlign: 'center', minWidth: '100px' }}>
                   <div style={{ fontFamily: 'Montserrat,sans-serif', fontWeight: 900, fontSize: '1.6rem', color: '#fff', lineHeight: 1 }}>{loading ? '—' : s.n}{s.label !== 'años exp.' ? '+' : ''}</div>
-                  <div style={{ fontSize: '.68rem', color: '#C9A96E', textTransform: 'uppercase', letterSpacing: '2px', fontWeight: 700, marginTop: '.2rem' }}>{s.label}</div>
+                  <div style={{ fontSize: '.68rem', color: 'var(--dorado)', textTransform: 'uppercase', letterSpacing: '2px', fontWeight: 700, marginTop: '.2rem' }}>{s.label}</div>
                 </div>
               ))}
             </div>
@@ -212,7 +212,7 @@ function PropiedadesContent() {
           {/* Category quick-nav chips */}
           <div style={{ display: 'flex', gap: '.6rem', flexWrap: 'wrap', marginTop: '2rem' }}>
             <button onClick={() => updateFiltros({ tipo: '' })}
-              style={{ padding: '.45rem 1.1rem', borderRadius: '50px', border: '1px solid rgba(255,255,255,.2)', background: !filtros.tipo ? 'rgba(201,169,110,.25)' : 'rgba(255,255,255,.07)', color: !filtros.tipo ? '#C9A96E' : 'rgba(255,255,255,.6)', fontFamily: 'Montserrat,sans-serif', fontWeight: 700, fontSize: '.72rem', letterSpacing: '1.5px', textTransform: 'uppercase', cursor: 'pointer', transition: 'all .2s' }}>
+              style={{ padding: '.45rem 1.1rem', borderRadius: '50px', border: '1px solid rgba(255,255,255,.2)', background: !filtros.tipo ? 'rgba(201,169,110,.25)' : 'rgba(255,255,255,.07)', color: !filtros.tipo ? 'var(--dorado)' : 'rgba(255,255,255,.6)', fontFamily: 'Montserrat,sans-serif', fontWeight: 700, fontSize: '.72rem', letterSpacing: '1.5px', textTransform: 'uppercase', cursor: 'pointer', transition: 'all .2s' }}>
               Todos
             </button>
             {SECCIONES.map(sec => (
@@ -227,13 +227,13 @@ function PropiedadesContent() {
       </section>
 
       {/* ── STICKY FILTER BAR ── */}
-      <div style={{ background: '#fff', borderBottom: '1px solid #e8e4de', position: 'sticky', top: '72px', zIndex: 998, boxShadow: '0 4px 24px rgba(0,0,0,.08)' }}>
+      <div style={{ background: '#fff', borderBottom: '1px solid var(--gris-calido-claro)', position: 'sticky', top: '72px', zIndex: 998, boxShadow: '0 4px 24px rgba(0,0,0,.08)' }}>
         <div style={{ maxWidth: '1240px', margin: '0 auto', padding: '.75rem 2.5rem', display: 'flex', gap: '.6rem', flexWrap: 'wrap', alignItems: 'center' }}>
           {/* Op toggle */}
-          <div style={{ display: 'flex', background: '#f4f1ec', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e0dbd3', flexShrink: 0 }}>
+          <div style={{ display: 'flex', background: '#f4f1ec', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--gris-calido)', flexShrink: 0 }}>
             {[{ label: 'Todo', val: '' }, { label: 'Comprar', val: 'venta' }, { label: 'Rentar', val: 'renta' }].map(t => (
               <button key={t.val} onClick={() => updateFiltros({ op: t.val })}
-                style={{ padding: '.5rem .9rem', border: 'none', cursor: 'pointer', fontFamily: 'Montserrat,sans-serif', fontWeight: 700, fontSize: '.75rem', letterSpacing: '1px', textTransform: 'uppercase', transition: 'all .18s', background: filtros.op === t.val ? '#8B1A1A' : 'transparent', color: filtros.op === t.val ? '#fff' : '#666', borderRadius: '6px' }}>
+                style={{ padding: '.5rem .9rem', border: 'none', cursor: 'pointer', fontFamily: 'Montserrat,sans-serif', fontWeight: 700, fontSize: '.75rem', letterSpacing: '1px', textTransform: 'uppercase', transition: 'all .18s', background: filtros.op === t.val ? 'var(--rojo)' : 'transparent', color: filtros.op === t.val ? '#fff' : '#666', borderRadius: '6px' }}>
                 {t.label}
               </button>
             ))}
@@ -241,7 +241,7 @@ function PropiedadesContent() {
 
           {/* Tipo */}
           <select value={filtros.tipo} onChange={e => updateFiltros({ tipo: e.target.value })}
-            style={{ padding: '.52rem .9rem', borderRadius: '8px', border: '1.5px solid #e0dbd3', background: '#fff', color: '#333', fontSize: '.83rem', fontFamily: 'Montserrat,sans-serif', fontWeight: 600, cursor: 'pointer', minWidth: '150px' }}>
+            style={{ padding: '.52rem .9rem', borderRadius: '8px', border: '1.5px solid var(--gris-calido)', background: '#fff', color: '#333', fontSize: '.83rem', fontFamily: 'Montserrat,sans-serif', fontWeight: 600, cursor: 'pointer', minWidth: '150px' }}>
             <option value="">Todos los tipos</option>
             <option value="nave">Nave / Bodega</option>
             <option value="casa">Casa</option>
@@ -252,10 +252,10 @@ function PropiedadesContent() {
 
           {/* Zona */}
           <div style={{ position: 'relative', flex: '1 1 160px' }}>
-            <i className="fa fa-location-dot" style={{ position: 'absolute', left: '.75rem', top: '50%', transform: 'translateY(-50%)', color: '#8B1A1A', fontSize: '.8rem', pointerEvents: 'none' }} />
+            <i className="fa fa-location-dot" style={{ position: 'absolute', left: '.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--rojo)', fontSize: '.8rem', pointerEvents: 'none' }} />
             <input type="text" placeholder="Zona o colonia" value={filtros.zona}
               onChange={e => updateFiltros({ zona: e.target.value })}
-              style={{ width: '100%', padding: '.52rem .9rem .52rem 2.1rem', borderRadius: '8px', border: '1.5px solid #e0dbd3', background: '#fff', color: '#333', fontSize: '.83rem', fontFamily: 'inherit', boxSizing: 'border-box' }} />
+              style={{ width: '100%', padding: '.52rem .9rem .52rem 2.1rem', borderRadius: '8px', border: '1.5px solid var(--gris-calido)', background: '#fff', color: '#333', fontSize: '.83rem', fontFamily: 'inherit', boxSizing: 'border-box' }} />
           </div>
 
           {/* Precios */}
@@ -263,18 +263,18 @@ function PropiedadesContent() {
             <span style={{ position: 'absolute', left: '.7rem', top: '50%', transform: 'translateY(-50%)', color: '#999', fontSize: '.8rem', pointerEvents: 'none' }}>$</span>
             <input type="number" placeholder="Mín." value={filtros.precioMin}
               onChange={e => updateFiltros({ precioMin: e.target.value })}
-              style={{ width: '100%', padding: '.52rem .7rem .52rem 1.5rem', borderRadius: '8px', border: '1.5px solid #e0dbd3', background: '#fff', color: '#333', fontSize: '.83rem', boxSizing: 'border-box' }} />
+              style={{ width: '100%', padding: '.52rem .7rem .52rem 1.5rem', borderRadius: '8px', border: '1.5px solid var(--gris-calido)', background: '#fff', color: '#333', fontSize: '.83rem', boxSizing: 'border-box' }} />
           </div>
           <div style={{ position: 'relative', width: '115px' }}>
             <span style={{ position: 'absolute', left: '.7rem', top: '50%', transform: 'translateY(-50%)', color: '#999', fontSize: '.8rem', pointerEvents: 'none' }}>$</span>
             <input type="number" placeholder="Máx." value={filtros.precioMax}
               onChange={e => updateFiltros({ precioMax: e.target.value })}
-              style={{ width: '100%', padding: '.52rem .7rem .52rem 1.5rem', borderRadius: '8px', border: '1.5px solid #e0dbd3', background: '#fff', color: '#333', fontSize: '.83rem', boxSizing: 'border-box' }} />
+              style={{ width: '100%', padding: '.52rem .7rem .52rem 1.5rem', borderRadius: '8px', border: '1.5px solid var(--gris-calido)', background: '#fff', color: '#333', fontSize: '.83rem', boxSizing: 'border-box' }} />
           </div>
 
           {/* Ordenar */}
           <select value={ordenar} onChange={e => setOrdenar(e.target.value)}
-            style={{ padding: '.52rem .9rem', borderRadius: '8px', border: '1.5px solid #e0dbd3', background: '#fff', color: '#333', fontSize: '.83rem', fontFamily: 'Montserrat,sans-serif', fontWeight: 600, cursor: 'pointer', minWidth: '160px' }}>
+            style={{ padding: '.52rem .9rem', borderRadius: '8px', border: '1.5px solid var(--gris-calido)', background: '#fff', color: '#333', fontSize: '.83rem', fontFamily: 'Montserrat,sans-serif', fontWeight: 600, cursor: 'pointer', minWidth: '160px' }}>
             <option value="">Ordenar por...</option>
             <option value="precio_asc">Precio: menor a mayor</option>
             <option value="precio_desc">Precio: mayor a menor</option>
@@ -284,14 +284,14 @@ function PropiedadesContent() {
 
           {hayFiltroActivo && (
             <button onClick={limpiarFiltros}
-              style={{ padding: '.52rem 1rem', background: 'rgba(139,26,26,.08)', color: '#8B1A1A', border: '1.5px solid rgba(139,26,26,.2)', borderRadius: '8px', cursor: 'pointer', fontSize: '.78rem', fontWeight: 700, fontFamily: 'Montserrat,sans-serif', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '.35rem', whiteSpace: 'nowrap' }}>
+              style={{ padding: '.52rem 1rem', background: 'rgba(139,26,26,.08)', color: 'var(--rojo)', border: '1.5px solid rgba(139,26,26,.2)', borderRadius: '8px', cursor: 'pointer', fontSize: '.78rem', fontWeight: 700, fontFamily: 'Montserrat,sans-serif', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '.35rem', whiteSpace: 'nowrap' }}>
               <i className="fa fa-xmark" style={{ fontSize: '.75rem' }} /> Limpiar
             </button>
           )}
 
           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '.5rem', flexShrink: 0 }}>
             <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#22c55e', display: 'inline-block', flexShrink: 0 }} />
-            <span style={{ fontFamily: 'Montserrat,sans-serif', fontWeight: 800, fontSize: '.85rem', color: '#1B365D', whiteSpace: 'nowrap' }}>
+            <span style={{ fontFamily: 'Montserrat,sans-serif', fontWeight: 800, fontSize: '.85rem', color: 'var(--azul)', whiteSpace: 'nowrap' }}>
               {hayFiltroActivo ? `${totalFiltradas} resultado${totalFiltradas !== 1 ? 's' : ''}` : `${disponibles} disponibles`}
             </span>
           </div>
@@ -299,16 +299,16 @@ function PropiedadesContent() {
       </div>
 
       {/* ── MAIN CONTENT ── */}
-      <main style={{ background: '#EDEAE5', minHeight: '50vh' }}>
+      <main style={{ background: 'var(--gris)', minHeight: '50vh' }}>
         {loading ? (
           <section style={{ padding: '4rem 2.5rem' }}>
             <div style={{ maxWidth: '1240px', margin: '0 auto' }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: '1.8rem' }}>
                 {[1,2,3,4,5,6].map(n => (
                   <div key={n} style={{ background: '#fff', borderRadius: '20px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,.06)' }}>
-                    <div style={{ height: '220px', background: 'linear-gradient(90deg,#e8e4de 25%,#d8d4ce 50%,#e8e4de 75%)', backgroundSize: '200% 100%', animation: 'skeletonShimmer 1.5s infinite' }} />
+                    <div style={{ height: '220px', background: 'linear-gradient(90deg,var(--gris-calido-claro) 25%,#d8d4ce 50%,var(--gris-calido-claro) 75%)', backgroundSize: '200% 100%', animation: 'skeletonShimmer 1.5s infinite' }} />
                     <div style={{ padding: '1.2rem' }}>
-                      {[80,60,40].map((w,i) => <div key={i} style={{ height: '14px', width: `${w}%`, borderRadius: '6px', background: 'linear-gradient(90deg,#e8e4de 25%,#d8d4ce 50%,#e8e4de 75%)', backgroundSize: '200% 100%', animation: 'skeletonShimmer 1.5s infinite', marginBottom: '.6rem' }} />)}
+                      {[80,60,40].map((w,i) => <div key={i} style={{ height: '14px', width: `${w}%`, borderRadius: '6px', background: 'linear-gradient(90deg,var(--gris-calido-claro) 25%,#d8d4ce 50%,var(--gris-calido-claro) 75%)', backgroundSize: '200% 100%', animation: 'skeletonShimmer 1.5s infinite', marginBottom: '.6rem' }} />)}
                     </div>
                   </div>
                 ))}
@@ -323,13 +323,13 @@ function PropiedadesContent() {
               {/* Results header */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
                 <div>
-                  <span style={{ display: 'block', fontSize: '.68rem', letterSpacing: '3px', textTransform: 'uppercase', fontFamily: 'Montserrat,sans-serif', fontWeight: 700, color: '#8B1A1A', borderBottom: '2px solid #8B1A1A', paddingBottom: '.25rem', marginBottom: '.5rem', width: 'fit-content' }}>Resultados</span>
-                  <h2 style={{ fontFamily: '"Playfair Display",Georgia,serif', fontWeight: 700, fontSize: 'clamp(1.4rem,2.5vw,2rem)', color: '#1B365D', margin: 0 }}>
+                  <span style={{ display: 'block', fontSize: '.68rem', letterSpacing: '3px', textTransform: 'uppercase', fontFamily: 'Montserrat,sans-serif', fontWeight: 700, color: 'var(--rojo)', borderBottom: '2px solid var(--rojo)', paddingBottom: '.25rem', marginBottom: '.5rem', width: 'fit-content' }}>Resultados</span>
+                  <h2 style={{ fontFamily: '"Playfair Display",Georgia,serif', fontWeight: 700, fontSize: 'clamp(1.4rem,2.5vw,2rem)', color: 'var(--azul)', margin: 0 }}>
                     {totalFiltradas} propiedad{totalFiltradas !== 1 ? 'es' : ''} encontrada{totalFiltradas !== 1 ? 's' : ''}
                   </h2>
                 </div>
                 <button onClick={limpiarFiltros}
-                  style={{ padding: '.6rem 1.2rem', background: 'transparent', color: '#8B1A1A', border: '1.5px solid #8B1A1A', borderRadius: '8px', cursor: 'pointer', fontFamily: 'Montserrat,sans-serif', fontWeight: 700, fontSize: '.78rem', letterSpacing: '1px' }}>
+                  style={{ padding: '.6rem 1.2rem', background: 'transparent', color: 'var(--rojo)', border: '1.5px solid var(--rojo)', borderRadius: '8px', cursor: 'pointer', fontFamily: 'Montserrat,sans-serif', fontWeight: 700, fontSize: '.78rem', letterSpacing: '1px' }}>
                   Ver todas
                 </button>
               </div>
@@ -337,12 +337,12 @@ function PropiedadesContent() {
               {totalFiltradas === 0 ? (
                 <div style={{ textAlign: 'center', padding: '5rem 2rem', background: '#fff', borderRadius: '20px', boxShadow: '0 4px 20px rgba(0,0,0,.05)' }}>
                   <div style={{ width: '64px', height: '64px', background: 'rgba(139,26,26,.08)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.2rem' }}>
-                    <i className="fa fa-search" style={{ fontSize: '1.5rem', color: '#8B1A1A', opacity: .5 }} />
+                    <i className="fa fa-search" style={{ fontSize: '1.5rem', color: 'var(--rojo)', opacity: .5 }} />
                   </div>
-                  <h3 style={{ fontFamily: 'Montserrat,sans-serif', fontWeight: 800, color: '#1B365D', marginBottom: '.5rem' }}>Sin resultados</h3>
+                  <h3 style={{ fontFamily: 'Montserrat,sans-serif', fontWeight: 800, color: 'var(--azul)', marginBottom: '.5rem' }}>Sin resultados</h3>
                   <p style={{ color: '#888', marginBottom: '1.5rem', fontSize: '.95rem' }}>Intenta con otros filtros o explora todo el catálogo.</p>
                   <button onClick={limpiarFiltros}
-                    style={{ padding: '.8rem 2rem', background: '#8B1A1A', color: '#fff', border: 'none', borderRadius: '10px', cursor: 'pointer', fontWeight: 700, fontFamily: 'Montserrat,sans-serif', fontSize: '.9rem' }}>
+                    style={{ padding: '.8rem 2rem', background: 'var(--rojo)', color: '#fff', border: 'none', borderRadius: '10px', cursor: 'pointer', fontWeight: 700, fontFamily: 'Montserrat,sans-serif', fontSize: '.9rem' }}>
                     Ver todas las propiedades
                   </button>
                 </div>
@@ -361,7 +361,7 @@ function PropiedadesContent() {
               if (lista.length === 0) return null
               const isEven = secIdx % 2 === 0
               return (
-                <section key={sec.tipo} id={sec.tipo} style={{ padding: '5rem 2.5rem', background: isEven ? '#EDEAE5' : '#fff', borderBottom: '1px solid rgba(0,0,0,.06)' }}>
+                <section key={sec.tipo} id={sec.tipo} style={{ padding: '5rem 2.5rem', background: isEven ? 'var(--gris)' : '#fff', borderBottom: '1px solid rgba(0,0,0,.06)' }}>
                   <div style={{ maxWidth: '1240px', margin: '0 auto' }}>
                     {/* Section header */}
                     <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '3rem', flexWrap: 'wrap', gap: '1rem' }}>
@@ -369,7 +369,7 @@ function PropiedadesContent() {
                         <span style={{ display: 'block', fontSize: '.68rem', letterSpacing: '3.5px', textTransform: 'uppercase', fontFamily: 'Montserrat,sans-serif', fontWeight: 800, color: sec.color, borderBottom: `2px solid ${sec.color}`, paddingBottom: '.25rem', marginBottom: '.8rem', width: 'fit-content' }}>
                           <i className={`fa ${sec.icon}`} style={{ marginRight: '.4rem' }} />{sec.tipo}
                         </span>
-                        <h2 style={{ fontFamily: '"Playfair Display",Georgia,serif', fontWeight: 700, fontSize: 'clamp(1.6rem,3vw,2.4rem)', color: '#1B365D', margin: '0 0 .4rem', letterSpacing: '-.5px' }}>
+                        <h2 style={{ fontFamily: '"Playfair Display",Georgia,serif', fontWeight: 700, fontSize: 'clamp(1.6rem,3vw,2.4rem)', color: 'var(--azul)', margin: '0 0 .4rem', letterSpacing: '-.5px' }}>
                           {sec.titulo}
                         </h2>
                         <p style={{ color: '#888', fontSize: '.9rem', margin: 0, maxWidth: '480px' }}>{sec.desc}</p>
@@ -396,7 +396,7 @@ function PropiedadesContent() {
             {disponibles === 0 && !loading && (
               <div style={{ textAlign: 'center', padding: '8rem 2rem', color: '#888' }}>
                 <i className="fa fa-building" style={{ fontSize: '3.5rem', opacity: .2, display: 'block', marginBottom: '1.2rem' }} />
-                <h3 style={{ fontFamily: 'Montserrat,sans-serif', fontWeight: 800, color: '#1B365D', marginBottom: '.5rem' }}>Sin propiedades activas</h3>
+                <h3 style={{ fontFamily: 'Montserrat,sans-serif', fontWeight: 800, color: 'var(--azul)', marginBottom: '.5rem' }}>Sin propiedades activas</h3>
                 <p>Pronto tendremos nuevas propiedades disponibles.</p>
               </div>
             )}
@@ -404,10 +404,10 @@ function PropiedadesContent() {
         )}
 
         {/* ── Ventajas ── */}
-        <section style={{ padding: '5rem 2.5rem', background: 'linear-gradient(135deg,#08101e 0%,#1B365D 100%)', color: '#fff' }}>
+        <section style={{ padding: '5rem 2.5rem', background: 'linear-gradient(135deg,#08101e 0%,var(--azul) 100%)', color: '#fff' }}>
           <div style={{ maxWidth: '1240px', margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: '3.5rem' }}>
-              <span style={{ display: 'inline-block', color: '#C9A96E', fontWeight: 800, fontSize: '.68rem', textTransform: 'uppercase', letterSpacing: '3.5px', fontFamily: 'Montserrat,sans-serif', borderBottom: '2px solid #C9A96E', paddingBottom: '.25rem', marginBottom: '.9rem' }}>Por qué elegirnos</span>
+              <span style={{ display: 'inline-block', color: 'var(--dorado)', fontWeight: 800, fontSize: '.68rem', textTransform: 'uppercase', letterSpacing: '3.5px', fontFamily: 'Montserrat,sans-serif', borderBottom: '2px solid var(--dorado)', paddingBottom: '.25rem', marginBottom: '.9rem' }}>Por qué elegirnos</span>
               <h2 style={{ fontFamily: '"Playfair Display",Georgia,serif', fontWeight: 700, fontSize: 'clamp(1.6rem,3vw,2.4rem)', margin: 0 }}>Tu aliado en León, Guanajuato</h2>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: '1.5rem' }}>
@@ -420,7 +420,7 @@ function PropiedadesContent() {
                 <div key={v.title} style={{ background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.08)', backdropFilter: 'blur(8px)', borderRadius: '18px', padding: '2rem', transition: 'border-color .3s, background .3s' }}
                   onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(201,169,110,.35)'; (e.currentTarget as HTMLDivElement).style.background = 'rgba(201,169,110,.07)' }}
                   onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(255,255,255,.08)'; (e.currentTarget as HTMLDivElement).style.background = 'rgba(255,255,255,.06)' }}>
-                  <div style={{ width: '48px', height: '48px', background: 'linear-gradient(135deg,rgba(201,169,110,.2),rgba(201,169,110,.04))', border: '1px solid rgba(201,169,110,.25)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#C9A96E', fontSize: '1.2rem', marginBottom: '1.2rem' }}>
+                  <div style={{ width: '48px', height: '48px', background: 'linear-gradient(135deg,rgba(201,169,110,.2),rgba(201,169,110,.04))', border: '1px solid rgba(201,169,110,.25)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--dorado)', fontSize: '1.2rem', marginBottom: '1.2rem' }}>
                     <i className={`fa ${v.icon}`} />
                   </div>
                   <h3 style={{ fontFamily: 'Montserrat,sans-serif', fontWeight: 800, fontSize: '1rem', marginBottom: '.5rem' }}>{v.title}</h3>
@@ -477,15 +477,15 @@ function PropModal({ p, onClose, onContact, isLoggedIn }: { p: Propiedad; onClos
         {/* Info */}
         <div style={{ flex: 1, padding: '2.5rem 2rem', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', gap: '.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
-            <span style={{ background: '#1B365D', color: '#fff', padding: '3px 12px', borderRadius: '20px', fontSize: '.72rem', fontWeight: 700, textTransform: 'uppercase' }}>{p.tipo}</span>
-            <span style={{ background: p.operacion === 'venta' ? '#8B1A1A' : '#279546', color: '#fff', padding: '3px 12px', borderRadius: '20px', fontSize: '.72rem', fontWeight: 700, textTransform: 'uppercase' }}>{p.operacion === 'venta' ? 'VENTA' : 'RENTA'}</span>
+            <span style={{ background: 'var(--azul)', color: '#fff', padding: '3px 12px', borderRadius: '20px', fontSize: '.72rem', fontWeight: 700, textTransform: 'uppercase' }}>{p.tipo}</span>
+            <span style={{ background: p.operacion === 'venta' ? 'var(--rojo)' : 'var(--exito)', color: '#fff', padding: '3px 12px', borderRadius: '20px', fontSize: '.72rem', fontWeight: 700, textTransform: 'uppercase' }}>{p.operacion === 'venta' ? 'VENTA' : 'RENTA'}</span>
           </div>
-          <h2 style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '1.5rem', color: '#1B365D', marginBottom: '.4rem', fontWeight: 800 }}>{p.titulo}</h2>
+          <h2 style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '1.5rem', color: 'var(--azul)', marginBottom: '.4rem', fontWeight: 800 }}>{p.titulo}</h2>
           <p style={{ color: '#666', fontSize: '.85rem', marginBottom: '1.5rem' }}>
-            <i className="fa fa-map-marker-alt" style={{ color: '#8B1A1A', marginRight: '.4rem' }} />{p.ubicacion}
+            <i className="fa fa-map-marker-alt" style={{ color: 'var(--rojo)', marginRight: '.4rem' }} />{p.ubicacion}
           </p>
           {(p.metros || p.recamaras || p.banos) && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.8rem', marginBottom: '1.5rem', padding: '1rem', background: '#F4F6F8', borderRadius: '12px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.8rem', marginBottom: '1.5rem', padding: '1rem', background: 'var(--superficie)', borderRadius: '12px' }}>
               {p.metros && <div style={{ textAlign: 'center' }}><div style={{ fontSize: '.72rem', color: '#888' }}>Superficie</div><strong style={{ fontSize: '1rem' }}>{p.metros} m²</strong></div>}
               {p.recamaras && <div style={{ textAlign: 'center' }}><div style={{ fontSize: '.72rem', color: '#888' }}>Recámaras</div><strong>{p.recamaras}</strong></div>}
               {p.banos && <div style={{ textAlign: 'center' }}><div style={{ fontSize: '.72rem', color: '#888' }}>Baños</div><strong>{p.banos}</strong></div>}
@@ -494,11 +494,11 @@ function PropModal({ p, onClose, onContact, isLoggedIn }: { p: Propiedad; onClos
           )}
           {p.descripcion && <p style={{ lineHeight: 1.7, color: '#555', fontSize: '.9rem', marginBottom: '1.5rem' }}>{p.descripcion}</p>}
           <div style={{ marginTop: 'auto' }}>
-            <div style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '1.8rem', color: '#8B1A1A', marginBottom: '1rem' }}>
+            <div style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '1.8rem', color: 'var(--rojo)', marginBottom: '1rem' }}>
               {p.precio ? `$${p.precio.toLocaleString('es-MX')}` : 'Consultar precio'}
             </div>
             {!isLoggedIn && (
-              <div style={{ marginBottom: '.8rem', padding: '.5rem .8rem', background: '#FFF7ED', border: '1px solid #FED7AA', borderRadius: '8px', fontSize: '.8rem', color: '#92400e', display: 'flex', alignItems: 'center', gap: '.4rem' }}>
+              <div style={{ marginBottom: '.8rem', padding: '.5rem .8rem', background: 'var(--aviso-fondo-calido)', border: '1px solid #FED7AA', borderRadius: '8px', fontSize: '.8rem', color: 'var(--aviso-fuerte)', display: 'flex', alignItems: 'center', gap: '.4rem' }}>
                 <i className="fa fa-lock" style={{ fontSize: '.75rem' }} />
                 <span><strong>Inicia sesión</strong> para contactar al asesor</span>
               </div>
@@ -506,20 +506,20 @@ function PropModal({ p, onClose, onContact, isLoggedIn }: { p: Propiedad; onClos
             <div style={{ display: 'flex', gap: '.8rem', flexWrap: 'wrap' }}>
               {isLoggedIn ? (
                 <a href={`https://wa.me/${wa}?text=${encodeURIComponent('Hola, me interesa la propiedad: ' + p.titulo)}`} target="_blank" rel="noopener noreferrer"
-                  style={{ flex: 1, minWidth: '120px', background: '#25D366', color: '#fff', textAlign: 'center', padding: '.85rem', borderRadius: '10px', fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.5rem', fontFamily: 'Montserrat, sans-serif' }}>
+                  style={{ flex: 1, minWidth: '120px', background: 'var(--whatsapp)', color: '#fff', textAlign: 'center', padding: '.85rem', borderRadius: '10px', fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.5rem', fontFamily: 'Montserrat, sans-serif' }}>
                   <i className="fab fa-whatsapp" /> WhatsApp
                 </a>
               ) : (
                 <button onClick={onContact}
-                  style={{ flex: 1, minWidth: '120px', background: '#25D366', color: '#fff', border: 'none', padding: '.85rem', borderRadius: '10px', fontWeight: 700, cursor: 'pointer', fontFamily: 'Montserrat, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.5rem' }}>
+                  style={{ flex: 1, minWidth: '120px', background: 'var(--whatsapp)', color: '#fff', border: 'none', padding: '.85rem', borderRadius: '10px', fontWeight: 700, cursor: 'pointer', fontFamily: 'Montserrat, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.5rem' }}>
                   <i className="fab fa-whatsapp" /> WhatsApp
                 </button>
               )}
-              <button onClick={onContact} style={{ flex: 1, minWidth: '120px', background: '#8B1A1A', color: '#fff', border: 'none', padding: '.85rem', borderRadius: '10px', fontWeight: 700, cursor: 'pointer', fontFamily: 'Montserrat, sans-serif' }}>
+              <button onClick={onContact} style={{ flex: 1, minWidth: '120px', background: 'var(--rojo)', color: '#fff', border: 'none', padding: '.85rem', borderRadius: '10px', fontWeight: 700, cursor: 'pointer', fontFamily: 'Montserrat, sans-serif' }}>
                 <i className="fa fa-envelope" style={{ marginRight: '.4rem' }} />Contactar
               </button>
             </div>
-            <Link href={`/propiedades/${p.id}`} style={{ display: 'block', textAlign: 'center', marginTop: '.8rem', color: '#1B365D', fontWeight: 600, fontSize: '.85rem', textDecoration: 'underline' }}>
+            <Link href={`/propiedades/${p.id}`} style={{ display: 'block', textAlign: 'center', marginTop: '.8rem', color: 'var(--azul)', fontWeight: 600, fontSize: '.85rem', textDecoration: 'underline' }}>
               Ver página completa →
             </Link>
           </div>
@@ -531,7 +531,7 @@ function PropModal({ p, onClose, onContact, isLoggedIn }: { p: Propiedad; onClos
 
 export default function PropiedadesPage() {
   return (
-    <Suspense fallback={<div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><i className="fa fa-spinner fa-spin" style={{ fontSize: '2rem', color: '#8B1A1A' }} /></div>}>
+    <Suspense fallback={<div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><i className="fa fa-spinner fa-spin" style={{ fontSize: '2rem', color: 'var(--rojo)' }} /></div>}>
       <PropiedadesContent />
     </Suspense>
   )

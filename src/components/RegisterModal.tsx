@@ -59,7 +59,7 @@ export default function RegisterModal({ isOpen, onClose, propertyTitle }: Regist
     borderRadius: '8px',
     fontFamily: 'inherit',
     fontSize: '.92rem',
-    color: '#222831',
+    color: 'var(--texto)',
     transition: 'border-color .2s',
     boxSizing: 'border-box',
   }
@@ -99,7 +99,7 @@ export default function RegisterModal({ isOpen, onClose, propertyTitle }: Regist
           <>
             <h2 style={{
               fontFamily: 'var(--font-montserrat)', fontSize: '1.3rem',
-              fontWeight: 800, color: '#8B1A1A', textAlign: 'center', marginBottom: '.3rem',
+              fontWeight: 800, color: 'var(--rojo)', textAlign: 'center', marginBottom: '.3rem',
             }}>
               <i className="fa fa-user-plus" style={{ marginRight: '.5rem' }} />Regístrate
             </h2>
@@ -109,21 +109,21 @@ export default function RegisterModal({ isOpen, onClose, propertyTitle }: Regist
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1rem' }}>
               <div>
-                <label style={{ fontSize: '.82rem', fontWeight: 600, color: '#1B365D', display: 'block', marginBottom: '.3rem' }}>
+                <label style={{ fontSize: '.82rem', fontWeight: 600, color: 'var(--azul)', display: 'block', marginBottom: '.3rem' }}>
                   <i className="fa fa-user" style={{ marginRight: '.4rem' }} />Nombre completo *
                 </label>
                 <input type="text" value={nombre} onChange={e => setNombre(e.target.value)}
                   placeholder="Ej. Juan Pérez" style={inputStyle} />
               </div>
               <div>
-                <label style={{ fontSize: '.82rem', fontWeight: 600, color: '#1B365D', display: 'block', marginBottom: '.3rem' }}>
+                <label style={{ fontSize: '.82rem', fontWeight: 600, color: 'var(--azul)', display: 'block', marginBottom: '.3rem' }}>
                   <i className="fa fa-phone" style={{ marginRight: '.4rem' }} />Teléfono *
                 </label>
                 <input type="tel" value={telefono} onChange={e => setTelefono(e.target.value)}
                   placeholder="Ej. 477 123 4567" style={inputStyle} />
               </div>
               <div>
-                <label style={{ fontSize: '.82rem', fontWeight: 600, color: '#1B365D', display: 'block', marginBottom: '.3rem' }}>
+                <label style={{ fontSize: '.82rem', fontWeight: 600, color: 'var(--azul)', display: 'block', marginBottom: '.3rem' }}>
                   <i className="fa fa-envelope" style={{ marginRight: '.4rem' }} />Correo electrónico *
                 </label>
                 <input type="email" value={email} onChange={e => setEmail(e.target.value)}
@@ -132,14 +132,14 @@ export default function RegisterModal({ isOpen, onClose, propertyTitle }: Regist
             </div>
 
             {error && (
-              <p style={{ color: '#8B1A1A', fontSize: '.8rem', fontWeight: 600, textAlign: 'center', marginBottom: '.5rem' }}>
+              <p style={{ color: 'var(--rojo)', fontSize: '.8rem', fontWeight: 600, textAlign: 'center', marginBottom: '.5rem' }}>
                 {error}
               </p>
             )}
 
             <button onClick={enviar} disabled={loading} style={{
               width: '100%', padding: '.85rem',
-              background: 'linear-gradient(135deg,#8B1A1A,#C0392B)',
+              background: 'linear-gradient(135deg,var(--rojo),var(--rojo-claro))',
               color: '#fff', fontFamily: 'var(--font-montserrat)',
               fontWeight: 700, fontSize: '1rem',
               border: 'none', borderRadius: '10px',
@@ -155,8 +155,8 @@ export default function RegisterModal({ isOpen, onClose, propertyTitle }: Regist
           </>
         ) : (
           <div style={{ textAlign: 'center' }}>
-            <i className="fa fa-check-circle" style={{ color: '#25D366', fontSize: '2.5rem', display: 'block', marginBottom: '1rem' }} />
-            <p style={{ fontFamily: 'var(--font-montserrat)', fontWeight: 800, color: '#8B1A1A', fontSize: '1.2rem', marginBottom: '.3rem' }}>
+            <i className="fa fa-check-circle" style={{ color: 'var(--whatsapp)', fontSize: '2.5rem', display: 'block', marginBottom: '1rem' }} />
+            <p style={{ fontFamily: 'var(--font-montserrat)', fontWeight: 800, color: 'var(--rojo)', fontSize: '1.2rem', marginBottom: '.3rem' }}>
               ¡Gracias!
             </p>
             <p style={{ fontSize: '.85rem', color: '#666', marginBottom: '1.5rem' }}>
@@ -182,7 +182,7 @@ export default function RegisterModal({ isOpen, onClose, propertyTitle }: Regist
                   display: 'flex', alignItems: 'center', gap: '8px',
                   padding: '.75rem 1.4rem', borderRadius: '10px',
                   fontFamily: 'var(--font-montserrat)', fontWeight: 700, fontSize: '.9rem',
-                  background: '#25D366', color: '#fff',
+                  background: 'var(--whatsapp)', color: '#fff',
                   textDecoration: 'none',
                 }}
                 onClick={handleClose}

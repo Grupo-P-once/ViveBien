@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 export default function TerminosPage() {
   const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
     <div style={{ marginBottom: '2.5rem' }}>
-      <h2 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, color: '#1B365D', fontSize: '1.15rem', marginBottom: '1rem', borderBottom: '2px solid #F4F6F8', paddingBottom: '.5rem' }}>
+      <h2 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, color: 'var(--azul)', fontSize: '1.15rem', marginBottom: '1rem', borderBottom: '2px solid var(--superficie)', paddingBottom: '.5rem' }}>
         {title}
       </h2>
       <div style={{ color: '#555', lineHeight: 1.8, fontSize: '.95rem' }}>{children}</div>
@@ -21,7 +21,7 @@ export default function TerminosPage() {
     <>
       <Header />
 
-      <section style={{ background: 'linear-gradient(135deg,#1B365D 0%,#0d1e2c 100%)', padding: '3rem 2rem', textAlign: 'center', color: '#fff' }}>
+      <section style={{ background: 'linear-gradient(135deg,var(--azul) 0%,#0d1e2c 100%)', padding: '3rem 2rem', textAlign: 'center', color: '#fff' }}>
         <h1 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: 'clamp(1.6rem,3vw,2.4rem)', marginBottom: '.6rem' }}>
           Términos y Condiciones
         </h1>

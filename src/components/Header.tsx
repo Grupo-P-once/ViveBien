@@ -68,7 +68,7 @@ export default function Header() {
             alignItems: 'center', gap: '1px', fontFamily: 'Montserrat, sans-serif',
             boxShadow: '0 2px 8px rgba(0,0,0,.05)',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontWeight: 700, fontSize: '0.8rem', color: '#1B365D' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontWeight: 700, fontSize: '0.8rem', color: 'var(--azul)' }}>
               <span style={{ fontSize: '0.65rem', fontWeight: 600, letterSpacing: '.05em' }}>LEÓN</span>
               <span>{clima.icon}</span>
               <span>{clima.temp}°C</span>
@@ -79,9 +79,9 @@ export default function Header() {
 
         {NAV_LINKS.map(l => (
           <Link key={l.href} href={l.href}
-            style={{ color: '#222831', fontWeight: 600, fontSize: '.9rem', textDecoration: 'none', transition: 'color .2s' }}
-            onMouseEnter={e => (e.currentTarget.style.color = '#8B1A1A')}
-            onMouseLeave={e => (e.currentTarget.style.color = '#222831')}>
+            style={{ color: 'var(--texto)', fontWeight: 600, fontSize: '.9rem', textDecoration: 'none', transition: 'color .2s' }}
+            onMouseEnter={e => (e.currentTarget.style.color = 'var(--rojo)')}
+            onMouseLeave={e => (e.currentTarget.style.color = 'var(--texto)')}>
             {l.label}
           </Link>
         ))}
@@ -93,13 +93,13 @@ export default function Header() {
               onClick={() => setUserMenu(v => !v)}
               style={{
                 display: 'flex', alignItems: 'center', gap: '.5rem',
-                background: 'linear-gradient(135deg,#1B365D,#2a4f84)',
+                background: 'linear-gradient(135deg,var(--azul),#2a4f84)',
                 color: '#fff', border: 'none', borderRadius: '30px',
                 padding: '.4rem .9rem .4rem .4rem', cursor: 'pointer',
                 fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: '.85rem',
               }}
             >
-              <span style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#8B1A1A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.85rem', fontWeight: 800, overflow: 'hidden', flexShrink: 0 }}>
+              <span style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'var(--rojo)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.85rem', fontWeight: 800, overflow: 'hidden', flexShrink: 0 }}>
                 {user.photoURL
                   ? <img src={user.photoURL} alt="" style={{ width: '28px', height: '28px', objectFit: 'cover' }} />
                   : userInitial}
@@ -120,18 +120,18 @@ export default function Header() {
                   zIndex: 1001,
                 }}>
                   <div style={{ padding: '.7rem 1rem .6rem', borderBottom: '1px solid #eee', marginBottom: '.3rem' }}>
-                    <div style={{ fontWeight: 700, fontSize: '.88rem', color: '#1B365D' }}>{userName}</div>
+                    <div style={{ fontWeight: 700, fontSize: '.88rem', color: 'var(--azul)' }}>{userName}</div>
                     <div style={{ fontSize: '.75rem', color: '#888', marginTop: '.1rem' }}>{user.email}</div>
                   </div>
                   <Link href="/dashboard" onClick={() => setUserMenu(false)}
-                    style={{ display: 'flex', alignItems: 'center', gap: '.6rem', padding: '.7rem 1rem', borderRadius: '8px', color: '#1B365D', fontWeight: 600, fontSize: '.88rem', textDecoration: 'none' }}
-                    onMouseEnter={e => (e.currentTarget.style.background = '#F4F6F8')}
+                    style={{ display: 'flex', alignItems: 'center', gap: '.6rem', padding: '.7rem 1rem', borderRadius: '8px', color: 'var(--azul)', fontWeight: 600, fontSize: '.88rem', textDecoration: 'none' }}
+                    onMouseEnter={e => (e.currentTarget.style.background = 'var(--superficie)')}
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                    <i className="fa fa-tachometer-alt" style={{ width: '16px', color: '#8B1A1A' }} /> Mi cuenta
+                    <i className="fa fa-tachometer-alt" style={{ width: '16px', color: 'var(--rojo)' }} /> Mi cuenta
                   </Link>
                   <button onClick={cerrarSesion}
                     style={{ display: 'flex', alignItems: 'center', gap: '.6rem', padding: '.7rem 1rem', borderRadius: '8px', color: '#666', fontWeight: 600, fontSize: '.88rem', background: 'none', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left', fontFamily: 'inherit' }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#FEF2F2'; (e.currentTarget as HTMLButtonElement).style.color = '#991b1b' }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--error-fondo)'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--error)' }}
                     onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = '#666' }}>
                     <i className="fa fa-sign-out-alt" style={{ width: '16px' }} /> Cerrar sesión
                   </button>
@@ -143,7 +143,7 @@ export default function Header() {
           <Link href="/dashboard"
             style={{
               display: 'flex', alignItems: 'center', gap: '.4rem',
-              background: 'linear-gradient(135deg,#8B1A1A,#C0392B)',
+              background: 'linear-gradient(135deg,var(--rojo),var(--rojo-claro))',
               color: '#fff', fontWeight: 700, fontSize: '.88rem',
               textDecoration: 'none', padding: '.5rem 1.2rem', borderRadius: '30px',
               fontFamily: 'Montserrat, sans-serif',
@@ -155,7 +155,7 @@ export default function Header() {
 
       {/* Mobile toggle */}
       <button onClick={() => setMenuOpen(!menuOpen)} className="vb-nav-mobile-btn"
-        style={{ display: 'none', fontSize: '1.5rem', color: '#1B365D', background: 'none', border: 'none', cursor: 'pointer' }}
+        style={{ display: 'none', fontSize: '1.5rem', color: 'var(--azul)', background: 'none', border: 'none', cursor: 'pointer' }}
         aria-label="Menú">
         <i className={menuOpen ? 'fas fa-times' : 'fas fa-bars'} />
       </button>
@@ -167,33 +167,33 @@ export default function Header() {
           display: 'flex', flexDirection: 'column', gap: '1rem', zIndex: 999,
         }}>
           {user && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '.8rem', padding: '.7rem 1rem', background: '#F4F6F8', borderRadius: '10px', marginBottom: '.2rem' }}>
-              <span style={{ width: '34px', height: '34px', borderRadius: '50%', background: '#1B365D', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '.9rem', flexShrink: 0, overflow: 'hidden' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '.8rem', padding: '.7rem 1rem', background: 'var(--superficie)', borderRadius: '10px', marginBottom: '.2rem' }}>
+              <span style={{ width: '34px', height: '34px', borderRadius: '50%', background: 'var(--azul)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '.9rem', flexShrink: 0, overflow: 'hidden' }}>
                 {user.photoURL ? <img src={user.photoURL} alt="" style={{ width: '34px', height: '34px', objectFit: 'cover' }} /> : userInitial}
               </span>
               <div>
-                <div style={{ fontWeight: 700, fontSize: '.88rem', color: '#1B365D' }}>{userName}</div>
+                <div style={{ fontWeight: 700, fontSize: '.88rem', color: 'var(--azul)' }}>{userName}</div>
                 <div style={{ fontSize: '.73rem', color: '#888' }}>{user.email}</div>
               </div>
             </div>
           )}
           {NAV_LINKS.map(l => (
             <Link key={l.href} href={l.href} onClick={() => setMenuOpen(false)}
-              style={{ fontWeight: 600, color: '#222831', textDecoration: 'none' }}>
+              style={{ fontWeight: 600, color: 'var(--texto)', textDecoration: 'none' }}>
               {l.label}
             </Link>
           ))}
           {user ? (
             <>
-              <Link href="/dashboard" onClick={() => setMenuOpen(false)} style={{ fontWeight: 700, color: '#1B365D', textDecoration: 'none' }}>
+              <Link href="/dashboard" onClick={() => setMenuOpen(false)} style={{ fontWeight: 700, color: 'var(--azul)', textDecoration: 'none' }}>
                 <i className="fa fa-tachometer-alt" style={{ marginRight: '.4rem' }} />Mi cuenta
               </Link>
-              <button onClick={cerrarSesion} style={{ background: 'none', border: 'none', fontWeight: 700, color: '#991b1b', cursor: 'pointer', textAlign: 'left', padding: 0, fontSize: '1rem', fontFamily: 'inherit' }}>
+              <button onClick={cerrarSesion} style={{ background: 'none', border: 'none', fontWeight: 700, color: 'var(--error)', cursor: 'pointer', textAlign: 'left', padding: 0, fontSize: '1rem', fontFamily: 'inherit' }}>
                 <i className="fa fa-sign-out-alt" style={{ marginRight: '.4rem' }} />Cerrar sesión
               </button>
             </>
           ) : (
-            <Link href="/dashboard" onClick={() => setMenuOpen(false)} style={{ fontWeight: 700, color: '#1B365D', textDecoration: 'none' }}>
+            <Link href="/dashboard" onClick={() => setMenuOpen(false)} style={{ fontWeight: 700, color: 'var(--azul)', textDecoration: 'none' }}>
               <i className="fa fa-lock" style={{ marginRight: '.4rem' }} />Ingresar / Registrarse
             </Link>
           )}

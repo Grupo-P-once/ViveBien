@@ -1,15 +1,53 @@
 @import "tailwindcss";
 
 :root {
+  /* ── Marca ── */
   --rojo: #8B1A1A;
   --rojo-claro: #C0392B;
   --naranja-accion: #FF6B00;
   --azul: #1B365D;
   --azul-claro: #3D5A73;
-  --gris: #EDEAE5;
+  --azul-profundo: #0D1A2E;
+  --dorado: #C9A96E;
+  --dorado-oscuro: #C09C28;
   --blanco: #FFFFFF;
   --texto: #222831;
   --sombra: rgba(0, 0, 0, .08);
+
+  /* ── Superficies ──
+     --gris es el fondo cálido del sitio público; --superficie es el frío
+     de los paneles. Son dos grises distintos y llevaban meses conviviendo
+     sin nombre. */
+  --gris: #EDEAE5;
+  --gris-calido: #E0DBD3;
+  --gris-calido-claro: #E8E4DE;
+  --superficie: #F4F6F8;
+  --borde: #E0E0E0;
+  --borde-frio: #CBD5E1;
+
+  /* ── Estado ──
+     Reservados para comunicar estado. No se reutilizan como color de marca
+     ni como serie de una gráfica. */
+  --exito: #279546;
+  --exito-fuerte: #15803D;
+  --exito-medio: #059669;
+  --exito-fondo: #DCFCE7;
+
+  --aviso: #D97706;
+  --aviso-fuerte: #92400E;
+  --aviso-fondo: #FEF9C3;
+  --aviso-fondo-calido: #FFF7ED;
+
+  --error: #991B1B;
+  --error-fuerte: #B91C1C;
+  --error-fondo: #FEF2F2;
+  --error-fondo-fuerte: #FEE2E2;
+
+  --info-fondo: #EFF6FF;
+
+  /* ── Terceros ── */
+  --whatsapp: #25D366;
+  --morado: #5B4FCF;
 }
 
 @theme inline {
@@ -19,7 +57,12 @@
   --color-azul: var(--azul);
   --color-azul-claro: var(--azul-claro);
   --color-gris: var(--gris);
+  --color-superficie: var(--superficie);
+  --color-dorado: var(--dorado);
   --color-texto: var(--texto);
+  --color-exito: var(--exito);
+  --color-aviso: var(--aviso);
+  --color-error: var(--error);
   --font-sans: var(--font-open-sans);
   --font-heading: var(--font-montserrat);
 }

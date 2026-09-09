@@ -70,7 +70,7 @@ export default function PropertyCard({ propiedad: p }: PropertyCardProps) {
     : 'Consultar precio'
 
   const opBadge = p.operacion === 'venta' ? 'En Venta' : 'En Renta'
-  const opColor = p.operacion === 'venta' ? '#8B1A1A' : '#E07B00'
+  const opColor = p.operacion === 'venta' ? 'var(--rojo)' : '#E07B00'
 
   const wa = p.whatsapp || process.env.NEXT_PUBLIC_WA_NUMBER || '524778116501'
   const waMsg = encodeURIComponent(`Hola, me interesa la propiedad: ${p.titulo}`)
@@ -177,7 +177,7 @@ export default function PropertyCard({ propiedad: p }: PropertyCardProps) {
 
         {/* Location */}
         <p style={{ fontSize: '.82rem', color: '#666', margin: 0, display: 'flex', alignItems: 'flex-start', gap: '.3rem' }}>
-          <i className="fa fa-map-marker-alt" style={{ color: '#1B365D', marginTop: '.15rem', flexShrink: 0 }} />
+          <i className="fa fa-map-marker-alt" style={{ color: 'var(--azul)', marginTop: '.15rem', flexShrink: 0 }} />
           {p.ubicacion}
         </p>
 
@@ -199,15 +199,15 @@ export default function PropertyCard({ propiedad: p }: PropertyCardProps) {
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '.5rem', flexWrap: 'wrap' }}>
           <span style={{
             fontFamily: 'Montserrat, sans-serif', fontWeight: 900,
-            fontSize: '1.25rem', color: '#8B1A1A',
+            fontSize: '1.25rem', color: 'var(--rojo)',
           }}>
             {precioFmt}
           </span>
           {p.precio > 0 && (
             <span style={{
               fontSize: '.68rem', fontWeight: 800, padding: '2px 7px', borderRadius: '4px',
-              background: p.precio_incluye_iva ? '#ecfdf5' : '#fff7ed',
-              color: p.precio_incluye_iva ? '#065f46' : '#92400e',
+              background: p.precio_incluye_iva ? '#ecfdf5' : 'var(--aviso-fondo-calido)',
+              color: p.precio_incluye_iva ? '#065f46' : 'var(--aviso-fuerte)',
               border: `1px solid ${p.precio_incluye_iva ? '#6ee7b7' : '#fcd34d'}`,
               letterSpacing: '.04em',
             }}>
@@ -236,20 +236,20 @@ export default function PropertyCard({ propiedad: p }: PropertyCardProps) {
           style={{
             display: 'inline-flex', alignItems: 'center', gap: '.4rem',
             padding: '.6rem 1.2rem', borderRadius: '10px',
-            border: '2px solid #1B365D', color: '#1B365D', fontWeight: 700,
+            border: '2px solid var(--azul)', color: 'var(--azul)', fontWeight: 700,
             fontFamily: 'Montserrat, sans-serif', fontSize: '.85rem',
             textDecoration: 'none', width: 'fit-content',
             transition: 'all .2s',
           }}
           onMouseEnter={e => {
             const el = e.currentTarget as HTMLAnchorElement
-            el.style.background = '#1B365D'
+            el.style.background = 'var(--azul)'
             el.style.color = '#fff'
           }}
           onMouseLeave={e => {
             const el = e.currentTarget as HTMLAnchorElement
             el.style.background = 'transparent'
-            el.style.color = '#1B365D'
+            el.style.color = 'var(--azul)'
           }}
         >
           Ver más <i className="fa fa-arrow-right" style={{ fontSize: '.75rem' }} />
@@ -267,7 +267,7 @@ export default function PropertyCard({ propiedad: p }: PropertyCardProps) {
               title={isLoggedIn ? 'Llamar' : 'Inicia sesión para contactar'}
               style={{
                 width: '40px', height: '40px', borderRadius: '12px',
-                background: '#1B365D', color: '#fff', display: 'flex',
+                background: 'var(--azul)', color: '#fff', display: 'flex',
                 alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer', fontSize: '.95rem',
               }}>
               <i className="fa fa-phone" />
@@ -278,7 +278,7 @@ export default function PropertyCard({ propiedad: p }: PropertyCardProps) {
               title={isLoggedIn ? 'WhatsApp' : 'Inicia sesión para contactar'}
               style={{
                 width: '40px', height: '40px', borderRadius: '12px',
-                background: '#25D366', color: '#fff', display: 'flex',
+                background: 'var(--whatsapp)', color: '#fff', display: 'flex',
                 alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer', fontSize: '1.05rem',
               }}>
               <i className="fab fa-whatsapp" />
@@ -289,7 +289,7 @@ export default function PropertyCard({ propiedad: p }: PropertyCardProps) {
               title={isLoggedIn ? 'Email' : 'Inicia sesión para contactar'}
               style={{
                 width: '40px', height: '40px', borderRadius: '12px',
-                background: '#8B1A1A', color: '#fff', display: 'flex',
+                background: 'var(--rojo)', color: '#fff', display: 'flex',
                 alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer', fontSize: '.9rem',
               }}>
               <i className="fa fa-envelope" />
@@ -308,8 +308,8 @@ export default function PropertyCard({ propiedad: p }: PropertyCardProps) {
             title={liked ? 'Quitar de favoritos' : 'Guardar'}
             style={{
               width: '40px', height: '40px', borderRadius: '12px',
-              background: liked ? '#fee2e2' : '#F4F6F8',
-              color: liked ? '#8B1A1A' : '#aaa',
+              background: liked ? 'var(--error-fondo-fuerte)' : 'var(--superficie)',
+              color: liked ? 'var(--rojo)' : '#aaa',
               border: 'none', cursor: 'pointer', display: 'flex',
               alignItems: 'center', justifyContent: 'center', fontSize: '1rem',
               transition: 'all .2s',
@@ -320,7 +320,7 @@ export default function PropertyCard({ propiedad: p }: PropertyCardProps) {
 
         {/* Badge de sesión requerida (solo si no está logueado) */}
         {!isLoggedIn && (
-          <div style={{ marginTop: '.6rem', padding: '.45rem .8rem', background: '#FFF7ED', border: '1px solid #FED7AA', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '.4rem', fontSize: '.78rem', color: '#92400e' }}>
+          <div style={{ marginTop: '.6rem', padding: '.45rem .8rem', background: 'var(--aviso-fondo-calido)', border: '1px solid #FED7AA', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '.4rem', fontSize: '.78rem', color: 'var(--aviso-fuerte)' }}>
             <i className="fa fa-lock" style={{ fontSize: '.75rem' }} />
             <span><strong>Inicia sesión</strong> para contactar al asesor</span>
           </div>

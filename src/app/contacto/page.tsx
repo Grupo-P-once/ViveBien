@@ -53,8 +53,8 @@ export default function ContactoPage() {
         <div className="hero-top-line" />
         <div style={{ position: 'relative', zIndex: 2, padding: '0 max(4vw, 2rem) 3.5rem', maxWidth: '720px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '.8rem', marginBottom: '1rem' }}>
-            <div style={{ width: '28px', height: '2px', background: '#C9A96E', flexShrink: 0 }} />
-            <span style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '.68rem', letterSpacing: '3.5px', textTransform: 'uppercase', color: '#C9A96E' }}>
+            <div style={{ width: '28px', height: '2px', background: 'var(--dorado)', flexShrink: 0 }} />
+            <span style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '.68rem', letterSpacing: '3.5px', textTransform: 'uppercase', color: 'var(--dorado)' }}>
               Hablemos · León, Gto.
             </span>
           </div>
@@ -62,7 +62,7 @@ export default function ContactoPage() {
             <span style={{ display: 'block', fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: 'clamp(1.8rem,4vw,3rem)', color: '#fff', letterSpacing: '-.02em' }}>
               Contáctanos
             </span>
-            <span style={{ display: 'block', fontFamily: '"Playfair Display", Georgia, serif', fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(1.4rem,3vw,2.2rem)', color: '#C9A96E' }}>
+            <span style={{ display: 'block', fontFamily: '"Playfair Display", Georgia, serif', fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(1.4rem,3vw,2.2rem)', color: 'var(--dorado)' }}>
               tu asesor te espera
             </span>
           </h1>
@@ -72,22 +72,22 @@ export default function ContactoPage() {
         </div>
       </section>
 
-      <main style={{ background: '#EDEAE5', padding: '4rem 2rem' }}>
+      <main style={{ background: 'var(--gris)', padding: '4rem 2rem' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3rem', alignItems: 'start' }} className="contact-grid">
 
           {/* Info */}
           <div>
             <div className="editorial-label" style={{ marginBottom: '1.2rem' }}>Información de contacto</div>
-            <h2 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, color: '#1B365D', fontSize: 'clamp(1.3rem,2.5vw,1.7rem)', marginBottom: '2rem', lineHeight: 1.15 }}>
+            <h2 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, color: 'var(--azul)', fontSize: 'clamp(1.3rem,2.5vw,1.7rem)', marginBottom: '2rem', lineHeight: 1.15 }}>
               Hablemos de<br />
-              <span style={{ fontFamily: '"Playfair Display", Georgia, serif', fontStyle: 'italic', color: '#8B1A1A' }}>tu próxima inversión</span>
+              <span style={{ fontFamily: '"Playfair Display", Georgia, serif', fontStyle: 'italic', color: 'var(--rojo)' }}>tu próxima inversión</span>
             </h2>
             {[
-              { icon: 'fa-phone', color: '#1B365D', title: 'Teléfono', val: `+52 477 811 6501`, href: `tel:+${WA_NUMBER}` },
-              { icon: 'fab fa-whatsapp', color: '#25D366', title: 'WhatsApp', val: `+52 477 811 6501`, href: `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent('Hola, quiero más información sobre una propiedad.')}` },
-              { icon: 'fa-envelope', color: '#8B1A1A', title: 'Correo', val: 'grupo.p.11.ee@gmail.com', href: 'mailto:grupo.p.11.ee@gmail.com' },
-              { icon: 'fa-map-marker-alt', color: '#D97706', title: 'Ubicación', val: 'León, Guanajuato, México', href: 'https://maps.google.com/?q=León,Guanajuato' },
-              { icon: 'fa-clock', color: '#5B4FCF', title: 'Horario', val: 'Lun–Vie 9:00–18:00 | Sáb 9:00–14:00', href: null },
+              { icon: 'fa-phone', color: 'var(--azul)', title: 'Teléfono', val: `+52 477 811 6501`, href: `tel:+${WA_NUMBER}` },
+              { icon: 'fab fa-whatsapp', color: 'var(--whatsapp)', title: 'WhatsApp', val: `+52 477 811 6501`, href: `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent('Hola, quiero más información sobre una propiedad.')}` },
+              { icon: 'fa-envelope', color: 'var(--rojo)', title: 'Correo', val: 'grupo.p.11.ee@gmail.com', href: 'mailto:grupo.p.11.ee@gmail.com' },
+              { icon: 'fa-map-marker-alt', color: 'var(--aviso)', title: 'Ubicación', val: 'León, Guanajuato, México', href: 'https://maps.google.com/?q=León,Guanajuato' },
+              { icon: 'fa-clock', color: 'var(--morado)', title: 'Horario', val: 'Lun–Vie 9:00–18:00 | Sáb 9:00–14:00', href: null },
             ].map(c => (
               <div key={c.title} style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', alignItems: 'flex-start' }}>
                 <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: c.color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -110,29 +110,29 @@ export default function ContactoPage() {
             {/* WhatsApp CTA */}
             <a href={`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent('Hola, quiero información sobre una propiedad en León.')}`}
               target="_blank" rel="noopener noreferrer"
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.6rem', background: '#25D366', color: '#fff', padding: '1rem 1.5rem', borderRadius: '12px', fontWeight: 800, fontFamily: 'Montserrat, sans-serif', textDecoration: 'none', fontSize: '1rem', marginTop: '1rem' }}>
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.6rem', background: 'var(--whatsapp)', color: '#fff', padding: '1rem 1.5rem', borderRadius: '12px', fontWeight: 800, fontFamily: 'Montserrat, sans-serif', textDecoration: 'none', fontSize: '1rem', marginTop: '1rem' }}>
               <i className="fab fa-whatsapp" style={{ fontSize: '1.3rem' }} /> Chatear por WhatsApp ahora
             </a>
           </div>
 
           {/* Form */}
-          <div style={{ background: '#fff', borderRadius: '0', padding: '2.5rem', boxShadow: '0 8px 30px rgba(0,0,0,.08)', borderTop: '3px solid #8B1A1A' }}>
+          <div style={{ background: '#fff', borderRadius: '0', padding: '2.5rem', boxShadow: '0 8px 30px rgba(0,0,0,.08)', borderTop: '3px solid var(--rojo)' }}>
             {sent ? (
               <div style={{ textAlign: 'center', padding: '2rem 0' }}>
-                <i className="fa fa-check-circle" style={{ fontSize: '3.5rem', color: '#279546', display: 'block', marginBottom: '1rem' }} />
-                <h3 style={{ fontFamily: 'Montserrat, sans-serif', color: '#1B365D', fontSize: '1.3rem', marginBottom: '.5rem' }}>¡Mensaje enviado!</h3>
+                <i className="fa fa-check-circle" style={{ fontSize: '3.5rem', color: 'var(--exito)', display: 'block', marginBottom: '1rem' }} />
+                <h3 style={{ fontFamily: 'Montserrat, sans-serif', color: 'var(--azul)', fontSize: '1.3rem', marginBottom: '.5rem' }}>¡Mensaje enviado!</h3>
                 <p style={{ color: '#666' }}>Un asesor te contactará pronto.<br />También puedes escribirnos por WhatsApp.</p>
                 <a href={`https://wa.me/${WA_NUMBER}`} target="_blank" rel="noopener noreferrer"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: '.5rem', background: '#25D366', color: '#fff', padding: '.75rem 1.5rem', borderRadius: '10px', fontWeight: 700, textDecoration: 'none', marginTop: '1.5rem' }}>
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '.5rem', background: 'var(--whatsapp)', color: '#fff', padding: '.75rem 1.5rem', borderRadius: '10px', fontWeight: 700, textDecoration: 'none', marginTop: '1.5rem' }}>
                   <i className="fab fa-whatsapp" /> WhatsApp
                 </a>
               </div>
             ) : (
               <>
                 <div className="editorial-label">Envíanos un mensaje</div>
-                <h2 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, color: '#1B365D', fontSize: '1.3rem', marginBottom: '1.5rem', lineHeight: 1.2 }}>
+                <h2 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, color: 'var(--azul)', fontSize: '1.3rem', marginBottom: '1.5rem', lineHeight: 1.2 }}>
                   Respuesta en menos de{' '}
-                  <span style={{ fontFamily: '"Playfair Display", Georgia, serif', fontStyle: 'italic', color: '#8B1A1A' }}>2 horas</span>
+                  <span style={{ fontFamily: '"Playfair Display", Georgia, serif', fontStyle: 'italic', color: 'var(--rojo)' }}>2 horas</span>
                 </h2>
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   <div>
@@ -157,12 +157,12 @@ export default function ContactoPage() {
                       style={{ ...inputStyle, resize: 'vertical' }} />
                   </div>
                   {error && (
-                    <p style={{ color: '#991b1b', background: '#fef2f2', padding: '.6rem .8rem', borderRadius: '8px', fontSize: '.85rem', fontWeight: 600 }}>
+                    <p style={{ color: 'var(--error)', background: 'var(--error-fondo)', padding: '.6rem .8rem', borderRadius: '8px', fontSize: '.85rem', fontWeight: 600 }}>
                       <i className="fa fa-exclamation-circle" style={{ marginRight: '.4rem' }} />{error}
                     </p>
                   )}
                   <button type="submit" disabled={sending}
-                    style={{ background: '#8B1A1A', color: '#fff', padding: '1rem', borderRadius: '0', fontWeight: 800, border: 'none', cursor: 'pointer', fontFamily: 'Montserrat, sans-serif', fontSize: '.95rem', opacity: sending ? .7 : 1, letterSpacing: '.06em' }}>
+                    style={{ background: 'var(--rojo)', color: '#fff', padding: '1rem', borderRadius: '0', fontWeight: 800, border: 'none', cursor: 'pointer', fontFamily: 'Montserrat, sans-serif', fontSize: '.95rem', opacity: sending ? .7 : 1, letterSpacing: '.06em' }}>
                     <i className="fa fa-paper-plane" style={{ marginRight: '.5rem' }} />
                     {sending ? 'Enviando...' : 'Enviar mensaje'}
                   </button>

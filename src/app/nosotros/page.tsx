@@ -4,10 +4,10 @@ import Footer from '@/components/Footer'
 import Link from 'next/link'
 
 const STATS = [
-  { value: '15+', label: 'Años de experiencia', icon: 'fa-calendar-alt', color: '#1B365D' },
-  { value: '100+', label: 'Propiedades gestionadas', icon: 'fa-home', color: '#8B1A1A' },
-  { value: '500+', label: 'Clientes satisfechos', icon: 'fa-users', color: '#279546' },
-  { value: '2', label: 'Ciudades atendidas', icon: 'fa-map-marker-alt', color: '#D97706' },
+  { value: '15+', label: 'Años de experiencia', icon: 'fa-calendar-alt', color: 'var(--azul)' },
+  { value: '100+', label: 'Propiedades gestionadas', icon: 'fa-home', color: 'var(--rojo)' },
+  { value: '500+', label: 'Clientes satisfechos', icon: 'fa-users', color: 'var(--exito)' },
+  { value: '2', label: 'Ciudades atendidas', icon: 'fa-map-marker-alt', color: 'var(--aviso)' },
 ]
 
 const VALORES = [
@@ -15,31 +15,31 @@ const VALORES = [
     icon: 'fa-handshake',
     title: 'Integridad',
     desc: 'Actuamos con honestidad y transparencia en cada transacción. Nuestros clientes merecen información veraz y asesoría sin conflictos de interés.',
-    color: '#1B365D',
+    color: 'var(--azul)',
   },
   {
     icon: 'fa-star',
     title: 'Excelencia',
     desc: 'Nos exigimos los más altos estándares en cada proceso, desde la primera consulta hasta la entrega de llaves. La calidad no es negociable.',
-    color: '#8B1A1A',
+    color: 'var(--rojo)',
   },
   {
     icon: 'fa-heart',
     title: 'Compromiso',
     desc: 'Tu satisfacción es nuestra prioridad. Nos comprometemos con cada cliente como si fuera nuestra propia familia buscando un hogar.',
-    color: '#C0392B',
+    color: 'var(--rojo-claro)',
   },
   {
     icon: 'fa-lightbulb',
     title: 'Innovación',
     desc: 'Adoptamos tecnología y nuevas herramientas para ofrecerte búsquedas más eficientes, valuaciones precisas y una experiencia moderna.',
-    color: '#5B4FCF',
+    color: 'var(--morado)',
   },
   {
     icon: 'fa-shield-halved',
     title: 'Confianza',
     desc: 'Cada propiedad en nuestro catálogo ha sido verificada. Respaldamos cada operación con documentación legal en orden y procesos seguros.',
-    color: '#279546',
+    color: 'var(--exito)',
   },
 ]
 
@@ -91,15 +91,15 @@ export default function NosotrosPage() {
         <div style={{ position: 'absolute', top: '1.5rem', left: 'max(4vw, 2rem)', display: 'flex', alignItems: 'center', gap: '.5rem', zIndex: 3 }}>
           <Link href="/" style={{ color: 'rgba(255,255,255,.45)', fontFamily: 'Montserrat, sans-serif', fontSize: '.72rem', fontWeight: 600, letterSpacing: '1.5px', textTransform: 'uppercase', textDecoration: 'none' }}>Inicio</Link>
           <span style={{ color: 'rgba(255,255,255,.25)', fontSize: '.65rem' }}>›</span>
-          <span style={{ color: '#C9A96E', fontFamily: 'Montserrat, sans-serif', fontSize: '.72rem', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase' }}>Nosotros</span>
+          <span style={{ color: 'var(--dorado)', fontFamily: 'Montserrat, sans-serif', fontSize: '.72rem', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase' }}>Nosotros</span>
         </div>
 
         {/* Content */}
         <div style={{ position: 'relative', zIndex: 2, padding: '0 max(4vw, 2rem) 4rem', maxWidth: '860px' }}>
           {/* Editorial label */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '.8rem', marginBottom: '1.2rem' }}>
-            <div style={{ width: '30px', height: '2px', background: '#C9A96E', flexShrink: 0 }} />
-            <span style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '.68rem', letterSpacing: '3.5px', textTransform: 'uppercase', color: '#C9A96E' }}>
+            <div style={{ width: '30px', height: '2px', background: 'var(--dorado)', flexShrink: 0 }} />
+            <span style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '.68rem', letterSpacing: '3.5px', textTransform: 'uppercase', color: 'var(--dorado)' }}>
               Quiénes Somos · León, Gto.
             </span>
           </div>
@@ -107,7 +107,7 @@ export default function NosotrosPage() {
             <span style={{ display: 'block', fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: 'clamp(2rem,4.5vw,3.4rem)', color: '#fff', letterSpacing: '-.02em' }}>
               Más de 15 años
             </span>
-            <span style={{ display: 'block', fontFamily: '"Playfair Display", Georgia, serif', fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(2rem,4.5vw,3.4rem)', color: '#C9A96E' }}>
+            <span style={{ display: 'block', fontFamily: '"Playfair Display", Georgia, serif', fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(2rem,4.5vw,3.4rem)', color: 'var(--dorado)' }}>
               construyendo confianza
             </span>
           </h1>
@@ -146,7 +146,7 @@ export default function NosotrosPage() {
               borderBottom: `4px solid ${s.color}`,
             }}>
               <i className={`fa ${s.icon}`} style={{ fontSize: '1.6rem', color: s.color, marginBottom: '.8rem', display: 'block' }} />
-              <div style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: '2.4rem', color: '#1B365D', lineHeight: 1 }}>
+              <div style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: '2.4rem', color: 'var(--azul)', lineHeight: 1 }}>
                 {s.value}
               </div>
               <div style={{ fontSize: '.85rem', color: '#666', marginTop: '.4rem', fontWeight: 600 }}>{s.label}</div>
@@ -156,13 +156,13 @@ export default function NosotrosPage() {
       </section>
 
       {/* Nuestra Historia */}
-      <section style={{ background: '#EDEAE5', padding: '5rem 2rem' }}>
+      <section style={{ background: 'var(--gris)', padding: '5rem 2rem' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5rem', alignItems: 'center' }}>
           <div>
             <div className="editorial-label">Nuestra Historia</div>
-            <h2 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: 'clamp(1.6rem,3vw,2.4rem)', color: '#1B365D', lineHeight: 1.15, marginBottom: '1.5rem' }}>
+            <h2 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: 'clamp(1.6rem,3vw,2.4rem)', color: 'var(--azul)', lineHeight: 1.15, marginBottom: '1.5rem' }}>
               Nacimos para hacer<br />
-              <span style={{ fontFamily: '"Playfair Display", Georgia, serif', fontStyle: 'italic', fontWeight: 700, color: '#8B1A1A' }}>el proceso más humano</span>
+              <span style={{ fontFamily: '"Playfair Display", Georgia, serif', fontStyle: 'italic', fontWeight: 700, color: 'var(--rojo)' }}>el proceso más humano</span>
             </h2>
             <p style={{ lineHeight: 1.85, color: '#555', fontSize: '1rem', marginBottom: '1.2rem' }}>
               Vive Bien Grupo Inmobiliario nació en 2009 de la mano de José Ponce, con una convicción simple pero poderosa: en el mercado inmobiliario, lo más importante no son los metros cuadrados, sino las personas que los van a habitar.
@@ -179,9 +179,9 @@ export default function NosotrosPage() {
                 { icon: 'fa-file-contract', label: 'Procesos legales seguros' },
                 { icon: 'fa-map-marked-alt', label: 'Cobertura en todo Guanajuato' },
               ].map(f => (
-                <div key={f.label} style={{ display: 'flex', alignItems: 'center', gap: '.6rem', color: '#1B365D', fontWeight: 700, fontSize: '.9rem' }}>
+                <div key={f.label} style={{ display: 'flex', alignItems: 'center', gap: '.6rem', color: 'var(--azul)', fontWeight: 700, fontSize: '.9rem' }}>
                   <div style={{ width: '36px', height: '36px', background: 'rgba(27,54,93,.1)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <i className={`fa ${f.icon}`} style={{ color: '#8B1A1A', fontSize: '.9rem' }} />
+                    <i className={`fa ${f.icon}`} style={{ color: 'var(--rojo)', fontSize: '.9rem' }} />
                   </div>
                   {f.label}
                 </div>
@@ -192,7 +192,7 @@ export default function NosotrosPage() {
           {/* Decorative element */}
           <div style={{ position: 'relative' }}>
             <div style={{
-              background: 'linear-gradient(135deg, #1B365D 0%, #8B1A1A 100%)',
+              background: 'linear-gradient(135deg, var(--azul) 0%, var(--rojo) 100%)',
               borderRadius: '24px', padding: '3rem 2.5rem', color: '#fff',
               boxShadow: '0 20px 50px rgba(27,54,93,.3)',
             }}>
@@ -217,7 +217,7 @@ export default function NosotrosPage() {
             <div style={{
               position: 'absolute', top: '-20px', right: '-20px',
               width: '80px', height: '80px', borderRadius: '50%',
-              background: '#C0392B', display: 'flex', alignItems: 'center',
+              background: 'var(--rojo-claro)', display: 'flex', alignItems: 'center',
               justifyContent: 'center', boxShadow: '0 8px 20px rgba(192,57,43,.4)',
             }}>
               <i className="fa fa-award" style={{ fontSize: '2rem', color: '#fff' }} />
@@ -231,8 +231,8 @@ export default function NosotrosPage() {
         <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '3.5rem' }}>
             <div className="editorial-label" style={{ justifyContent: 'center' }}>Lo que nos define</div>
-            <h2 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: 'clamp(1.6rem,3vw,2.4rem)', color: '#1B365D', margin: '0 0 .5rem', lineHeight: 1.15 }}>
-              Nuestros <span style={{ fontFamily: '"Playfair Display", Georgia, serif', fontStyle: 'italic', color: '#8B1A1A' }}>Valores</span>
+            <h2 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: 'clamp(1.6rem,3vw,2.4rem)', color: 'var(--azul)', margin: '0 0 .5rem', lineHeight: 1.15 }}>
+              Nuestros <span style={{ fontFamily: '"Playfair Display", Georgia, serif', fontStyle: 'italic', color: 'var(--rojo)' }}>Valores</span>
             </h2>
             <p style={{ color: '#666', fontSize: '1rem', maxWidth: '500px', margin: '0 auto', lineHeight: 1.7 }}>
               Cinco pilares que guían cada decisión, cada asesoría y cada relación con nuestros clientes.
@@ -257,7 +257,7 @@ export default function NosotrosPage() {
                 }}>
                   <i className={`fa ${v.icon}`} style={{ fontSize: '1.2rem', color: '#fff' }} />
                 </div>
-                <h3 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '1.1rem', color: '#1B365D', marginBottom: '.7rem' }}>{v.title}</h3>
+                <h3 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '1.1rem', color: 'var(--azul)', marginBottom: '.7rem' }}>{v.title}</h3>
                 <p style={{ color: '#666', fontSize: '.9rem', lineHeight: 1.7 }}>{v.desc}</p>
               </div>
             ))}
@@ -266,13 +266,13 @@ export default function NosotrosPage() {
       </section>
 
       {/* Por qué elegirnos */}
-      <section style={{ background: '#EDEAE5', padding: '5rem 2rem' }}>
+      <section style={{ background: 'var(--gris)', padding: '5rem 2rem' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4rem', alignItems: 'center' }}>
           <div>
             <div className="editorial-label">¿Por qué nosotros?</div>
-            <h2 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: 'clamp(1.6rem,3vw,2.2rem)', color: '#1B365D', lineHeight: 1.15, marginBottom: '2rem' }}>
+            <h2 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: 'clamp(1.6rem,3vw,2.2rem)', color: 'var(--azul)', lineHeight: 1.15, marginBottom: '2rem' }}>
               La diferencia está<br />
-              <span style={{ fontFamily: '"Playfair Display", Georgia, serif', fontStyle: 'italic', color: '#8B1A1A' }}>en los detalles</span>
+              <span style={{ fontFamily: '"Playfair Display", Georgia, serif', fontStyle: 'italic', color: 'var(--rojo)' }}>en los detalles</span>
             </h2>
             {[
               { icon: 'fa-map-marked-alt', title: 'Conocimiento local profundo', desc: 'Conocemos cada colonia, cada parque industrial y cada tendencia de precio en León y Guanajuato.' },
@@ -281,11 +281,11 @@ export default function NosotrosPage() {
               { icon: 'fa-clock', title: 'Respuesta inmediata', desc: 'Nuestro equipo responde en menos de 2 horas, todos los días de la semana, incluso fines de semana.' },
             ].map(r => (
               <div key={r.title} style={{ display: 'flex', gap: '1.2rem', marginBottom: '1.5rem', alignItems: 'flex-start' }}>
-                <div style={{ width: '44px', height: '44px', borderRadius: '10px', background: '#F4F6F8', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <i className={`fa ${r.icon}`} style={{ fontSize: '1rem', color: '#8B1A1A' }} />
+                <div style={{ width: '44px', height: '44px', borderRadius: '10px', background: 'var(--superficie)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <i className={`fa ${r.icon}`} style={{ fontSize: '1rem', color: 'var(--rojo)' }} />
                 </div>
                 <div>
-                  <div style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 700, color: '#1B365D', marginBottom: '.3rem', fontSize: '.95rem' }}>{r.title}</div>
+                  <div style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 700, color: 'var(--azul)', marginBottom: '.3rem', fontSize: '.95rem' }}>{r.title}</div>
                   <div style={{ color: '#666', fontSize: '.88rem', lineHeight: 1.6 }}>{r.desc}</div>
                 </div>
               </div>
@@ -293,16 +293,16 @@ export default function NosotrosPage() {
           </div>
 
           <div style={{
-            background: 'linear-gradient(135deg,#F4F6F8 0%,#EBF0F8 100%)',
+            background: 'linear-gradient(135deg,var(--superficie) 0%,#EBF0F8 100%)',
             borderRadius: '24px', padding: '3rem 2.5rem',
             border: '1px solid rgba(27,54,93,.08)',
           }}>
-            <h3 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '1.3rem', color: '#1B365D', marginBottom: '2rem', textAlign: 'center' }}>
+            <h3 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '1.3rem', color: 'var(--azul)', marginBottom: '2rem', textAlign: 'center' }}>
               Nuestra área de cobertura
             </h3>
             {[
-              { ciudad: 'León, Guanajuato', focus: 'Residencial, Industrial, Comercial', color: '#1B365D' },
-              { ciudad: 'Silao, Guanajuato', focus: 'Parques Industriales, Logística', color: '#8B1A1A' },
+              { ciudad: 'León, Guanajuato', focus: 'Residencial, Industrial, Comercial', color: 'var(--azul)' },
+              { ciudad: 'Silao, Guanajuato', focus: 'Parques Industriales, Logística', color: 'var(--rojo)' },
             ].map(c => (
               <div key={c.ciudad} style={{
                 background: '#fff', borderRadius: '12px', padding: '1.2rem 1.5rem',
@@ -310,7 +310,7 @@ export default function NosotrosPage() {
                 alignItems: 'center', boxShadow: '0 2px 8px rgba(0,0,0,.05)',
               }}>
                 <div>
-                  <div style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 700, color: '#1B365D', fontSize: '.95rem' }}>
+                  <div style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 700, color: 'var(--azul)', fontSize: '.95rem' }}>
                     <i className="fa fa-map-marker-alt" style={{ color: c.color, marginRight: '.5rem' }} />
                     {c.ciudad}
                   </div>
@@ -321,7 +321,7 @@ export default function NosotrosPage() {
             ))}
 
             <div style={{ marginTop: '2rem', padding: '1.2rem', background: 'rgba(27,54,93,.06)', borderRadius: '10px', textAlign: 'center' }}>
-              <i className="fa fa-phone" style={{ color: '#8B1A1A', marginRight: '.5rem' }} />
+              <i className="fa fa-phone" style={{ color: 'var(--rojo)', marginRight: '.5rem' }} />
               <span style={{ fontSize: '.9rem', color: '#333', fontWeight: 700 }}>477 811 6501</span>
               <br />
               <span style={{ fontSize: '.78rem', color: '#888' }}>Atención Lun–Vie 9:00–18:00 | Sáb–Dom 11:00–14:00</span>
@@ -344,7 +344,7 @@ export default function NosotrosPage() {
         <div style={{ maxWidth: '1100px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
           <span style={{
             display: 'inline-block', letterSpacing: '.2em', fontSize: '.72rem',
-            fontWeight: 700, color: '#C09C28', textTransform: 'uppercase', marginBottom: '1.2rem',
+            fontWeight: 700, color: 'var(--dorado-oscuro)', textTransform: 'uppercase', marginBottom: '1.2rem',
           }}>
             Nuestra Familia Empresarial
           </span>
@@ -420,9 +420,9 @@ export default function NosotrosPage() {
                   background: c.active ? 'rgba(192,156,40,.3)' : 'rgba(255,255,255,.08)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
-                  <i className={`fa ${c.icon}`} style={{ fontSize: '1.3rem', color: c.active ? '#C09C28' : 'rgba(255,255,255,.5)' }} />
+                  <i className={`fa ${c.icon}`} style={{ fontSize: '1.3rem', color: c.active ? 'var(--dorado-oscuro)' : 'rgba(255,255,255,.5)' }} />
                 </div>
-                <div style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '.95rem', letterSpacing: '.08em', color: c.active ? '#C09C28' : 'rgba(255,255,255,.75)' }}>
+                <div style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '.95rem', letterSpacing: '.08em', color: c.active ? 'var(--dorado-oscuro)' : 'rgba(255,255,255,.75)' }}>
                   {c.nombre}
                 </div>
                 <div style={{ fontSize: '.7rem', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: c.active ? 'rgba(192,156,40,.7)' : 'rgba(255,255,255,.3)' }}>
@@ -447,7 +447,7 @@ export default function NosotrosPage() {
                 boxShadow: '0 0 20px rgba(192,156,40,.3)',
                 transition: 'border-color .2s, box-shadow .2s',
               }}
-              onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = '#C09C28'; (e.currentTarget as HTMLAnchorElement).style.boxShadow = '0 0 30px rgba(192,156,40,.6)' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = 'var(--dorado-oscuro)'; (e.currentTarget as HTMLAnchorElement).style.boxShadow = '0 0 30px rgba(192,156,40,.6)' }}
               onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = 'rgba(192,156,40,.6)'; (e.currentTarget as HTMLAnchorElement).style.boxShadow = '0 0 20px rgba(192,156,40,.3)' }}
             >
               <img src="/logo-p11-real.png" alt="Grupo P-Once" style={{ width: '78px', height: '78px', objectFit: 'contain' }} />
@@ -459,7 +459,7 @@ export default function NosotrosPage() {
 
       {/* CTA */}
       <section style={{
-        background: 'linear-gradient(135deg, #1B365D 0%, #0d1e2c 50%, #8B1A1A 100%)',
+        background: 'linear-gradient(135deg, var(--azul) 0%, #0d1e2c 50%, var(--rojo) 100%)',
         padding: '5rem 2rem', textAlign: 'center', color: '#fff',
         position: 'relative', overflow: 'hidden',
       }}>
@@ -489,7 +489,7 @@ export default function NosotrosPage() {
               <i className="fa fa-search" /> Ver catálogo
             </Link>
             <a href="https://wa.me/524778116501?text=Hola,%20me%20gustaría%20recibir%20asesoría%20sobre%20propiedades%20en%20León." target="_blank" rel="noopener noreferrer" style={{
-              background: '#25D366', color: '#fff', padding: '1rem 2.5rem',
+              background: 'var(--whatsapp)', color: '#fff', padding: '1rem 2.5rem',
               borderRadius: '12px', textDecoration: 'none', fontWeight: 800,
               fontFamily: 'Montserrat, sans-serif', fontSize: '1rem',
               display: 'inline-flex', alignItems: 'center', gap: '.6rem',

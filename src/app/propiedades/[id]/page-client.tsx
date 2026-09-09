@@ -39,8 +39,8 @@ const tipoLabel: Record<string, string> = {
   comercial: 'Local Comercial', departamento: 'Departamento',
 }
 const tipoColor: Record<string, string> = {
-  nave: '#1B365D', casa: '#8B1A1A', terreno: '#279546',
-  comercial: '#D97706', departamento: '#5B4FCF',
+  nave: 'var(--azul)', casa: 'var(--rojo)', terreno: 'var(--exito)',
+  comercial: 'var(--aviso)', departamento: 'var(--morado)',
 }
 
 export default function DetallePropiedad({ params }: { params: Promise<{ id: string }> }) {
@@ -132,7 +132,7 @@ export default function DetallePropiedad({ params }: { params: Promise<{ id: str
       <Header />
       <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center' }}>
-          <i className="fa fa-spinner fa-spin" style={{ fontSize: '2.5rem', color: '#1B365D', display: 'block', marginBottom: '1rem' }} />
+          <i className="fa fa-spinner fa-spin" style={{ fontSize: '2.5rem', color: 'var(--azul)', display: 'block', marginBottom: '1rem' }} />
           <p style={{ color: '#666' }}>Cargando propiedad...</p>
         </div>
       </div>
@@ -148,10 +148,10 @@ export default function DetallePropiedad({ params }: { params: Promise<{ id: str
         <h2 style={{ color: '#555', fontFamily: 'Montserrat, sans-serif' }}>Error al cargar la propiedad</h2>
         <p style={{ color: '#888', maxWidth: '380px' }}>No pudimos conectar con el servidor. Revisa tu conexión e intenta de nuevo.</p>
         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-          <button onClick={() => window.location.reload()} style={{ background: '#1B365D', color: '#fff', padding: '.7rem 1.5rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 700 }}>
+          <button onClick={() => window.location.reload()} style={{ background: 'var(--azul)', color: '#fff', padding: '.7rem 1.5rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 700 }}>
             <i className="fa fa-redo" style={{ marginRight: '.5rem' }} />Reintentar
           </button>
-          <Link href="/propiedades" style={{ background: '#8B1A1A', color: '#fff', padding: '.7rem 1.5rem', borderRadius: '8px', textDecoration: 'none', fontWeight: 700 }}>
+          <Link href="/propiedades" style={{ background: 'var(--rojo)', color: '#fff', padding: '.7rem 1.5rem', borderRadius: '8px', textDecoration: 'none', fontWeight: 700 }}>
             Ver todas las propiedades
           </Link>
         </div>
@@ -167,7 +167,7 @@ export default function DetallePropiedad({ params }: { params: Promise<{ id: str
         <i className="fa fa-home" style={{ fontSize: '4rem', color: '#ddd' }} />
         <h2 style={{ color: '#888', fontFamily: 'Montserrat, sans-serif' }}>Propiedad no encontrada</h2>
         <p style={{ color: '#aaa' }}>Es posible que haya sido removida o el enlace sea incorrecto.</p>
-        <Link href="/propiedades" style={{ background: '#8B1A1A', color: '#fff', padding: '.7rem 1.5rem', borderRadius: '8px', textDecoration: 'none', fontWeight: 700 }}>
+        <Link href="/propiedades" style={{ background: 'var(--rojo)', color: '#fff', padding: '.7rem 1.5rem', borderRadius: '8px', textDecoration: 'none', fontWeight: 700 }}>
           Ver todas las propiedades
         </Link>
       </div>
@@ -178,7 +178,7 @@ export default function DetallePropiedad({ params }: { params: Promise<{ id: str
   const fotos = prop.fotos?.length ? prop.fotos : [PLACEHOLDER]
   const wa = prop.whatsapp || WA_NUMBER
   const waMsg = encodeURIComponent(`Hola, me interesa la propiedad: ${prop.titulo} (ID: ${id})`)
-  const color = tipoColor[prop.tipo] || '#1B365D'
+  const color = tipoColor[prop.tipo] || 'var(--azul)'
 
   return (
     <>
@@ -188,9 +188,9 @@ export default function DetallePropiedad({ params }: { params: Promise<{ id: str
       {/* Breadcrumb */}
       <div style={{ background: '#fff', borderBottom: '1px solid #eee', padding: '.75rem 2rem' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', fontSize: '.85rem', color: '#888' }}>
-          <Link href="/" style={{ color: '#1B365D', textDecoration: 'none' }}>Inicio</Link>
+          <Link href="/" style={{ color: 'var(--azul)', textDecoration: 'none' }}>Inicio</Link>
           <span style={{ margin: '0 .5rem' }}>›</span>
-          <Link href="/propiedades" style={{ color: '#1B365D', textDecoration: 'none' }}>Propiedades</Link>
+          <Link href="/propiedades" style={{ color: 'var(--azul)', textDecoration: 'none' }}>Propiedades</Link>
           <span style={{ margin: '0 .5rem' }}>›</span>
           <span style={{ color: '#333' }}>{prop.titulo}</span>
         </div>
@@ -220,7 +220,7 @@ export default function DetallePropiedad({ params }: { params: Promise<{ id: str
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             {fotos.slice(0, 2).map((f, i) => (
-              <div key={i} onClick={() => setMainFoto(i)} style={{ flex: 1, overflow: 'hidden', borderRadius: i === 0 ? '0 12px 0 0' : '0 0 12px 0', cursor: 'pointer', position: 'relative', border: mainFoto === i ? '3px solid #C0392B' : 'none' }}>
+              <div key={i} onClick={() => setMainFoto(i)} style={{ flex: 1, overflow: 'hidden', borderRadius: i === 0 ? '0 12px 0 0' : '0 0 12px 0', cursor: 'pointer', position: 'relative', border: mainFoto === i ? '3px solid var(--rojo-claro)' : 'none' }}>
                 <img src={f} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform .3s', display: 'block' }}
                   onMouseEnter={e => { (e.target as HTMLImageElement).style.transform = 'scale(1.05)' }}
                   onMouseLeave={e => { (e.target as HTMLImageElement).style.transform = '' }} />
@@ -236,20 +236,20 @@ export default function DetallePropiedad({ params }: { params: Promise<{ id: str
       </div>
 
       {/* Main content */}
-      <div style={{ background: '#F4F6F8', padding: '2.5rem 2rem 4rem' }}>
+      <div style={{ background: 'var(--superficie)', padding: '2.5rem 2rem 4rem' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 360px', gap: '2.5rem', alignItems: 'start' }} className="detail-grid">
 
           {/* Left: Info */}
           <div>
             <div style={{ display: 'flex', gap: '.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
               <span style={{ background: color, color: '#fff', padding: '4px 14px', borderRadius: '20px', fontSize: '.75rem', fontWeight: 800, textTransform: 'uppercase' }}>{tipoLabel[prop.tipo] || prop.tipo}</span>
-              <span style={{ background: prop.operacion === 'venta' ? '#8B1A1A' : '#279546', color: '#fff', padding: '4px 14px', borderRadius: '20px', fontSize: '.75rem', fontWeight: 800 }}>{prop.operacion === 'venta' ? 'EN VENTA' : 'EN RENTA'}</span>
-              <span style={{ background: '#e6f4ea', color: '#279546', padding: '4px 14px', borderRadius: '20px', fontSize: '.75rem', fontWeight: 700 }}>● Disponible</span>
+              <span style={{ background: prop.operacion === 'venta' ? 'var(--rojo)' : 'var(--exito)', color: '#fff', padding: '4px 14px', borderRadius: '20px', fontSize: '.75rem', fontWeight: 800 }}>{prop.operacion === 'venta' ? 'EN VENTA' : 'EN RENTA'}</span>
+              <span style={{ background: '#e6f4ea', color: 'var(--exito)', padding: '4px 14px', borderRadius: '20px', fontSize: '.75rem', fontWeight: 700 }}>● Disponible</span>
             </div>
 
-            <h1 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: 'clamp(1.5rem,3vw,2.2rem)', color: '#1B365D', marginBottom: '.7rem', lineHeight: 1.2 }}>{prop.titulo}</h1>
+            <h1 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: 'clamp(1.5rem,3vw,2.2rem)', color: 'var(--azul)', marginBottom: '.7rem', lineHeight: 1.2 }}>{prop.titulo}</h1>
             <p style={{ color: '#666', marginBottom: '2rem', fontSize: '1rem' }}>
-              <i className="fa fa-map-marker-alt" style={{ color: '#8B1A1A', marginRight: '.5rem' }} />
+              <i className="fa fa-map-marker-alt" style={{ color: 'var(--rojo)', marginRight: '.5rem' }} />
               {prop.ubicacion}
             </p>
 
@@ -272,8 +272,8 @@ export default function DetallePropiedad({ params }: { params: Promise<{ id: str
 
             {prop.descripcion && (
               <div style={{ background: '#fff', borderRadius: '16px', padding: '1.8rem', marginBottom: '1.5rem', boxShadow: '0 2px 8px rgba(0,0,0,.06)' }}>
-                <h3 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, color: '#1B365D', marginBottom: '1rem', fontSize: '1.1rem' }}>
-                  <i className="fa fa-info-circle" style={{ marginRight: '.5rem', color: '#8B1A1A' }} />Sobre esta propiedad
+                <h3 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, color: 'var(--azul)', marginBottom: '1rem', fontSize: '1.1rem' }}>
+                  <i className="fa fa-info-circle" style={{ marginRight: '.5rem', color: 'var(--rojo)' }} />Sobre esta propiedad
                 </h3>
                 <p style={{ lineHeight: 1.8, color: '#555', fontSize: '.95rem' }}>{prop.descripcion}</p>
               </div>
@@ -281,8 +281,8 @@ export default function DetallePropiedad({ params }: { params: Promise<{ id: str
 
             {prop.video_url && (
               <div style={{ background: '#fff', borderRadius: '16px', padding: '1.8rem', marginBottom: '1.5rem', boxShadow: '0 2px 8px rgba(0,0,0,.06)' }}>
-                <h3 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, color: '#1B365D', marginBottom: '1rem', fontSize: '1.1rem' }}>
-                  <i className="fa fa-play-circle" style={{ marginRight: '.5rem', color: '#8B1A1A' }} />Video de la propiedad
+                <h3 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, color: 'var(--azul)', marginBottom: '1rem', fontSize: '1.1rem' }}>
+                  <i className="fa fa-play-circle" style={{ marginRight: '.5rem', color: 'var(--rojo)' }} />Video de la propiedad
                 </h3>
                 {prop.video_url.includes('youtube.com') || prop.video_url.includes('youtu.be') ? (
                   <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, borderRadius: '10px', overflow: 'hidden' }}>
@@ -305,13 +305,13 @@ export default function DetallePropiedad({ params }: { params: Promise<{ id: str
 
             {prop.amenidades && prop.amenidades.length > 0 && (
               <div style={{ background: '#fff', borderRadius: '16px', padding: '1.8rem', marginBottom: '1.5rem', boxShadow: '0 2px 8px rgba(0,0,0,.06)' }}>
-                <h3 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, color: '#1B365D', marginBottom: '1.2rem', fontSize: '1.1rem' }}>
-                  <i className="fa fa-star" style={{ marginRight: '.5rem', color: '#8B1A1A' }} />Amenidades y Características
+                <h3 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, color: 'var(--azul)', marginBottom: '1.2rem', fontSize: '1.1rem' }}>
+                  <i className="fa fa-star" style={{ marginRight: '.5rem', color: 'var(--rojo)' }} />Amenidades y Características
                 </h3>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(180px,1fr))', gap: '.7rem' }}>
                   {prop.amenidades.map((a, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '.6rem', padding: '.6rem .8rem', background: '#F4F6F8', borderRadius: '8px', fontSize: '.88rem', fontWeight: 600, color: '#333' }}>
-                      <i className="fa fa-check-circle" style={{ color: '#279546', flexShrink: 0 }} />
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '.6rem', padding: '.6rem .8rem', background: 'var(--superficie)', borderRadius: '8px', fontSize: '.88rem', fontWeight: 600, color: '#333' }}>
+                      <i className="fa fa-check-circle" style={{ color: 'var(--exito)', flexShrink: 0 }} />
                       {a}
                     </div>
                   ))}
@@ -322,8 +322,8 @@ export default function DetallePropiedad({ params }: { params: Promise<{ id: str
             {/* Map */}
             <div style={{ background: '#fff', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,.06)' }}>
               <div style={{ padding: '1.2rem 1.8rem .8rem', borderBottom: '1px solid #f0f0f0', display: 'flex', alignItems: 'center', gap: '.5rem' }}>
-                <i className="fa fa-map-location-dot" style={{ color: '#8B1A1A', fontSize: '1.1rem' }} />
-                <h3 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, color: '#1B365D', margin: 0, fontSize: '1.1rem' }}>
+                <i className="fa fa-map-location-dot" style={{ color: 'var(--rojo)', fontSize: '1.1rem' }} />
+                <h3 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, color: 'var(--azul)', margin: 0, fontSize: '1.1rem' }}>
                   Ubicación
                 </h3>
               </div>
@@ -336,7 +336,7 @@ export default function DetallePropiedad({ params }: { params: Promise<{ id: str
                 title={`Ubicación: ${prop.ubicacion}`}
               />
               <div style={{ padding: '.75rem 1.8rem', fontSize: '.83rem', color: '#888', display: 'flex', alignItems: 'center', gap: '.4rem' }}>
-                <i className="fa fa-map-marker-alt" style={{ color: '#8B1A1A' }} />
+                <i className="fa fa-map-marker-alt" style={{ color: 'var(--rojo)' }} />
                 {prop.ubicacion}, León, Guanajuato
               </div>
             </div>
@@ -368,7 +368,7 @@ export default function DetallePropiedad({ params }: { params: Promise<{ id: str
 
               {/* Banner de sesión requerida */}
               {!isLoggedIn && (
-                <div style={{ background: '#FFF7ED', borderBottom: '1px solid #FED7AA', padding: '.7rem 1.2rem', display: 'flex', alignItems: 'center', gap: '.5rem', fontSize: '.82rem', color: '#92400e' }}>
+                <div style={{ background: 'var(--aviso-fondo-calido)', borderBottom: '1px solid #FED7AA', padding: '.7rem 1.2rem', display: 'flex', alignItems: 'center', gap: '.5rem', fontSize: '.82rem', color: 'var(--aviso-fuerte)' }}>
                   <i className="fa fa-lock" />
                   <span><strong>Inicia sesión</strong> para ver los datos de contacto del asesor</span>
                 </div>
@@ -376,11 +376,11 @@ export default function DetallePropiedad({ params }: { params: Promise<{ id: str
 
               {sent ? (
                 <div style={{ padding: '2rem', textAlign: 'center' }}>
-                  <i className="fa fa-check-circle" style={{ fontSize: '3rem', color: '#279546', display: 'block', marginBottom: '1rem' }} />
-                  <h3 style={{ fontFamily: 'Montserrat, sans-serif', color: '#1B365D', marginBottom: '.5rem' }}>¡Solicitud enviada!</h3>
+                  <i className="fa fa-check-circle" style={{ fontSize: '3rem', color: 'var(--exito)', display: 'block', marginBottom: '1rem' }} />
+                  <h3 style={{ fontFamily: 'Montserrat, sans-serif', color: 'var(--azul)', marginBottom: '.5rem' }}>¡Solicitud enviada!</h3>
                   <p style={{ color: '#666', fontSize: '.9rem', marginBottom: '1.5rem' }}>Un asesor te contactará a la brevedad.</p>
                   <button onClick={() => handleContactClick(() => window.open(`https://wa.me/${wa}?text=${waMsg}`, '_blank'))}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.5rem', background: '#25D366', color: '#fff', padding: '.85rem', borderRadius: '10px', fontWeight: 700, fontFamily: 'Montserrat, sans-serif', border: 'none', cursor: 'pointer', width: '100%' }}>
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.5rem', background: 'var(--whatsapp)', color: '#fff', padding: '.85rem', borderRadius: '10px', fontWeight: 700, fontFamily: 'Montserrat, sans-serif', border: 'none', cursor: 'pointer', width: '100%' }}>
                     <i className="fab fa-whatsapp" /> También por WhatsApp
                   </button>
                 </div>
@@ -408,7 +408,7 @@ export default function DetallePropiedad({ params }: { params: Promise<{ id: str
                       style={{ width: '100%', padding: '.65rem .85rem', border: '1.5px solid #E0E4EA', borderRadius: '8px', fontSize: '.9rem', fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box' }} />
                   </div>
                   {sendError && (
-                    <p style={{ color: '#991b1b', background: '#fef2f2', padding: '.6rem .8rem', borderRadius: '8px', fontSize: '.82rem', fontWeight: 600 }}>
+                    <p style={{ color: 'var(--error)', background: 'var(--error-fondo)', padding: '.6rem .8rem', borderRadius: '8px', fontSize: '.82rem', fontWeight: 600 }}>
                       <i className="fa fa-exclamation-circle" style={{ marginRight: '.4rem' }} />{sendError}
                     </p>
                   )}
@@ -416,11 +416,11 @@ export default function DetallePropiedad({ params }: { params: Promise<{ id: str
                     <i className="fa fa-paper-plane" style={{ marginRight: '.5rem' }} />{sending ? 'Enviando...' : 'ENVIAR SOLICITUD'}
                   </button>
                   <button type="button" onClick={() => handleContactClick(() => window.open(`https://wa.me/${wa}?text=${waMsg}`, '_blank'))}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.5rem', background: '#25D366', color: '#fff', padding: '.8rem', borderRadius: '10px', fontWeight: 700, fontFamily: 'Montserrat, sans-serif', fontSize: '.9rem', border: 'none', cursor: 'pointer' }}>
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.5rem', background: 'var(--whatsapp)', color: '#fff', padding: '.8rem', borderRadius: '10px', fontWeight: 700, fontFamily: 'Montserrat, sans-serif', fontSize: '.9rem', border: 'none', cursor: 'pointer' }}>
                     <i className="fab fa-whatsapp" /> HABLAR POR WHATSAPP
                   </button>
                   <button type="button" onClick={() => handleContactClick(() => { window.location.href = `tel:+${wa}` })}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.5rem', background: 'transparent', color: '#1B365D', padding: '.8rem', borderRadius: '10px', fontWeight: 700, fontFamily: 'Montserrat, sans-serif', fontSize: '.9rem', border: '1.5px solid #1B365D', cursor: 'pointer' }}>
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.5rem', background: 'transparent', color: 'var(--azul)', padding: '.8rem', borderRadius: '10px', fontWeight: 700, fontFamily: 'Montserrat, sans-serif', fontSize: '.9rem', border: '1.5px solid var(--azul)', cursor: 'pointer' }}>
                     <i className="fa fa-phone" /> LLAMAR AHORA
                   </button>
                 </form>
@@ -432,14 +432,14 @@ export default function DetallePropiedad({ params }: { params: Promise<{ id: str
 
       {/* Propiedades similares */}
       {similares.length > 0 && (
-        <section style={{ background: '#F4F6F8', padding: '3rem 2rem 4rem', borderTop: '1px solid #e8ecf0' }}>
+        <section style={{ background: 'var(--superficie)', padding: '3rem 2rem 4rem', borderTop: '1px solid #e8ecf0' }}>
           <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '.8rem', marginBottom: '2rem' }}>
               <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <i className="fa fa-th-large" style={{ color: '#fff', fontSize: '1rem' }} />
               </div>
               <div>
-                <h2 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: '1.4rem', color: '#1B365D', margin: 0 }}>
+                <h2 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: '1.4rem', color: 'var(--azul)', margin: 0 }}>
                   Propiedades similares
                 </h2>
                 <p style={{ color: '#888', fontSize: '.85rem', margin: 0 }}>

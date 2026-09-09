@@ -42,7 +42,7 @@ export default function Footer() {
                   fontSize: '.95rem', color: '#fff', transition: 'background .2s',
                   textDecoration: 'none',
                 }}
-                onMouseEnter={e => (e.currentTarget.style.background = '#8B1A1A')}
+                onMouseEnter={e => (e.currentTarget.style.background = 'var(--rojo)')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,.12)')}
               >
                 <i className={r.icon} />
@@ -57,10 +57,10 @@ export default function Footer() {
             Contacto
           </h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '.5rem', fontSize: '.875rem', color: 'rgba(255,255,255,.75)' }}>
-            <span><i className="fa fa-phone" style={{ marginRight: '.5rem', color: '#C0392B' }} />477 811 6501</span>
-            <span><i className="fa fa-envelope" style={{ marginRight: '.5rem', color: '#C0392B' }} />grupo.p.11.ee@gmail.com</span>
-            <span><i className="fa fa-clock" style={{ marginRight: '.5rem', color: '#C0392B' }} />Lun – Vie: 9:00 – 18:00</span>
-            <span><i className="fa fa-clock" style={{ marginRight: '.5rem', color: '#C0392B' }} />Sáb – Dom: 11:00 – 14:00</span>
+            <span><i className="fa fa-phone" style={{ marginRight: '.5rem', color: 'var(--rojo-claro)' }} />477 811 6501</span>
+            <span><i className="fa fa-envelope" style={{ marginRight: '.5rem', color: 'var(--rojo-claro)' }} />grupo.p.11.ee@gmail.com</span>
+            <span><i className="fa fa-clock" style={{ marginRight: '.5rem', color: 'var(--rojo-claro)' }} />Lun – Vie: 9:00 – 18:00</span>
+            <span><i className="fa fa-clock" style={{ marginRight: '.5rem', color: 'var(--rojo-claro)' }} />Sáb – Dom: 11:00 – 14:00</span>
           </div>
         </div>
 
@@ -70,7 +70,7 @@ export default function Footer() {
             Ubicación
           </h4>
           <div style={{ fontSize: '.875rem', color: 'rgba(255,255,255,.75)', lineHeight: 1.8 }}>
-            <i className="fa fa-map-marker-alt" style={{ marginRight: '.5rem', color: '#C0392B' }} />
+            <i className="fa fa-map-marker-alt" style={{ marginRight: '.5rem', color: 'var(--rojo-claro)' }} />
             Blvd. Campestre 2910 - LOCAL 10,<br />
             Cañada del Refugio, C.P. 37358,<br />
             León, Guanajuato.

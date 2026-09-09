@@ -42,7 +42,7 @@ export default function WAFloat() {
         onMouseLeave={() => setHover(false)}
         style={{
           width: '60px', height: '60px', borderRadius: '50%',
-          background: '#25D366',
+          background: 'var(--whatsapp)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           textDecoration: 'none',
           transition: 'transform .2s, box-shadow .2s',

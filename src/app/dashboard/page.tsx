@@ -294,21 +294,21 @@ export default function DashboardPage() {
 
   /* ── Auth Loading ── */
   if (authLoading) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1B365D' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--azul)' }}>
       <i className="fa fa-spinner fa-spin" style={{ fontSize: '2rem', color: '#fff' }} />
     </div>
   )
 
   /* ── Login screen ── */
   if (!user) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1B365D' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--azul)' }}>
       <div style={{
         background: '#fff', padding: '3rem', borderRadius: '12px',
         boxShadow: '0 10px 40px rgba(0,0,0,.3)', textAlign: 'center',
         width: '90%', maxWidth: '420px',
       }}>
-        <i className="fa fa-user-circle" style={{ fontSize: '2.5rem', color: '#8B1A1A', marginBottom: '1rem', display: 'block' }} />
-        <h2 style={{ fontFamily: 'var(--font-montserrat)', color: '#1B365D', marginBottom: '.5rem' }}>Mi Cuenta</h2>
+        <i className="fa fa-user-circle" style={{ fontSize: '2.5rem', color: 'var(--rojo)', marginBottom: '1rem', display: 'block' }} />
+        <h2 style={{ fontFamily: 'var(--font-montserrat)', color: 'var(--azul)', marginBottom: '.5rem' }}>Mi Cuenta</h2>
         <p style={{ fontSize: '.9rem', color: '#666', marginBottom: '1.5rem' }}>Gestión de Propiedades y Leads</p>
 
         {/* Tabs */}
@@ -317,8 +317,8 @@ export default function DashboardPage() {
             <button key={t} onClick={() => { setAuthTab(t); setLoginErr('') }} style={{
               flex: 1, padding: '10px', cursor: 'pointer', fontWeight: 700,
               background: 'none', border: 'none',
-              color: authTab === t ? '#8B1A1A' : '#888',
-              borderBottom: authTab === t ? '2px solid #8B1A1A' : 'none',
+              color: authTab === t ? 'var(--rojo)' : '#888',
+              borderBottom: authTab === t ? '2px solid var(--rojo)' : 'none',
               marginBottom: '-2px',
               fontFamily: 'var(--font-montserrat)',
             }}>
@@ -335,8 +335,8 @@ export default function DashboardPage() {
             <input type="password" value={pass} onChange={e => setPass(e.target.value)}
               placeholder="Contraseña" required
               style={{ padding: '12px', border: '1px solid #ccc', borderRadius: '6px', fontSize: '1rem' }} />
-            {loginErr && <p style={{ color: '#8B1A1A', fontSize: '.85rem' }}>{loginErr}</p>}
-            <button type="submit" style={{ padding: '12px', background: '#8B1A1A', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 700, cursor: 'pointer', fontSize: '1rem' }}>
+            {loginErr && <p style={{ color: 'var(--rojo)', fontSize: '.85rem' }}>{loginErr}</p>}
+            <button type="submit" style={{ padding: '12px', background: 'var(--rojo)', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 700, cursor: 'pointer', fontSize: '1rem' }}>
               Iniciar Sesión
             </button>
           </form>
@@ -359,16 +359,16 @@ export default function DashboardPage() {
                   style={{
                     flex: 1, padding: '10px', fontSize: '.85rem', cursor: 'pointer', borderRadius: '6px',
                     fontWeight: regRol === valor ? 700 : 400,
-                    border: regRol === valor ? '2px solid #8B1A1A' : '1px solid #ccc',
+                    border: regRol === valor ? '2px solid var(--rojo)' : '1px solid #ccc',
                     background: regRol === valor ? '#fdf4f4' : '#fff',
-                    color: regRol === valor ? '#8B1A1A' : '#444',
+                    color: regRol === valor ? 'var(--rojo)' : '#444',
                   }}>
                   {texto}
                 </button>
               ))}
             </div>
-            {loginErr && <p style={{ color: '#8B1A1A', fontSize: '.85rem' }}>{loginErr}</p>}
-            <button type="submit" style={{ padding: '12px', background: '#8B1A1A', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 700, cursor: 'pointer', fontSize: '1rem' }}>
+            {loginErr && <p style={{ color: 'var(--rojo)', fontSize: '.85rem' }}>{loginErr}</p>}
+            <button type="submit" style={{ padding: '12px', background: 'var(--rojo)', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 700, cursor: 'pointer', fontSize: '1rem' }}>
               Registrarme
             </button>
           </form>
@@ -408,7 +408,7 @@ export default function DashboardPage() {
           {googleLoading ? 'Conectando...' : 'Continuar con Google'}
         </button>
 
-        <Link href="/" style={{ display: 'block', marginTop: '20px', color: '#1B365D', fontSize: '.85rem' }}>
+        <Link href="/" style={{ display: 'block', marginTop: '20px', color: 'var(--azul)', fontSize: '.85rem' }}>
           ← Volver al inicio
         </Link>
       </div>
@@ -417,7 +417,7 @@ export default function DashboardPage() {
 
   /* ── CLIENT PORTAL (non-admin) ── */
   if (!isAdmin) return (
-    <div style={{ minHeight: '100vh', background: '#F4F6F8', fontFamily: 'var(--font-montserrat)' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--superficie)', fontFamily: 'var(--font-montserrat)' }}>
       {/* Header */}
       <header style={{
         background: 'rgba(255,255,255,.6)', backdropFilter: 'blur(10px)',
@@ -426,8 +426,8 @@ export default function DashboardPage() {
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         maxWidth: '1000px', margin: '15px auto', position: 'sticky', top: '15px', zIndex: 1000,
       }}>
-        <h1 style={{ color: '#1B365D', fontSize: '1.1rem', fontWeight: 700 }}>
-          <i className="fa fa-user-circle" style={{ marginRight: '.5rem', color: '#8B1A1A' }} />
+        <h1 style={{ color: 'var(--azul)', fontSize: '1.1rem', fontWeight: 700 }}>
+          <i className="fa fa-user-circle" style={{ marginRight: '.5rem', color: 'var(--rojo)' }} />
           Portal de Cliente
         </h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -436,15 +436,15 @@ export default function DashboardPage() {
           </span>
           {rol === 'publicador' && (
             <Link href="/publicador" style={{
-              background: '#1B365D', color: '#fff', fontWeight: 600, fontSize: '.85rem',
+              background: 'var(--azul)', color: '#fff', fontWeight: 600, fontSize: '.85rem',
               padding: '6px 16px', borderRadius: '20px', textDecoration: 'none',
             }}>
               <i className="fa fa-building" style={{ marginRight: '.4rem' }} />Mis propiedades
             </Link>
           )}
-          <Link href="/" style={{ color: '#8B1A1A', fontWeight: 600, fontSize: '.85rem' }}>← Ver sitio</Link>
+          <Link href="/" style={{ color: 'var(--rojo)', fontWeight: 600, fontSize: '.85rem' }}>← Ver sitio</Link>
           <button onClick={() => signOut(auth)} style={{
-            background: 'transparent', color: '#8B1A1A', border: '1px solid #8B1A1A',
+            background: 'transparent', color: 'var(--rojo)', border: '1px solid var(--rojo)',
             padding: '5px 15px', borderRadius: '20px', cursor: 'pointer', fontSize: '.85rem', fontWeight: 600,
           }}>
             <i className="fa fa-sign-out-alt" style={{ marginRight: '.4rem' }} />Cerrar Sesión
@@ -455,7 +455,7 @@ export default function DashboardPage() {
       <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '2rem' }}>
         {/* Welcome banner */}
         <div style={{
-          background: 'linear-gradient(135deg, #1B365D 0%, #8B1A1A 100%)',
+          background: 'linear-gradient(135deg, var(--azul) 0%, var(--rojo) 100%)',
           borderRadius: '20px', padding: '2.5rem', color: '#fff', marginBottom: '2rem',
           display: 'flex', alignItems: 'center', gap: '2rem', flexWrap: 'wrap',
         }}>
@@ -490,8 +490,8 @@ export default function DashboardPage() {
 
         {/* Mis consultas */}
         <div style={{ background: '#fff', borderRadius: '16px', padding: '2rem', boxShadow: '0 4px 15px rgba(0,0,0,.06)', marginBottom: '2rem' }}>
-          <h3 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, color: '#1B365D', marginBottom: '1.5rem', fontSize: '1.1rem' }}>
-            <i className="fa fa-envelope-open" style={{ color: '#8B1A1A', marginRight: '.5rem' }} />
+          <h3 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, color: 'var(--azul)', marginBottom: '1.5rem', fontSize: '1.1rem' }}>
+            <i className="fa fa-envelope-open" style={{ color: 'var(--rojo)', marginRight: '.5rem' }} />
             Mis Consultas Enviadas
           </h3>
           {leads.length === 0 ? (
@@ -499,7 +499,7 @@ export default function DashboardPage() {
               <i className="fa fa-inbox" style={{ fontSize: '2.5rem', marginBottom: '1rem', display: 'block', opacity: .3 }} />
               <p style={{ marginBottom: '1rem' }}>No has enviado consultas aún.</p>
               <Link href="/propiedades" style={{
-                display: 'inline-block', background: '#8B1A1A', color: '#fff',
+                display: 'inline-block', background: 'var(--rojo)', color: '#fff',
                 padding: '.7rem 1.5rem', borderRadius: '8px', textDecoration: 'none', fontWeight: 700,
               }}>
                 Explorar propiedades
@@ -509,12 +509,12 @@ export default function DashboardPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {leads.map((l: any) => (
                 <div key={l.id} style={{
-                  background: '#F4F6F8', borderRadius: '12px', padding: '1.2rem 1.5rem',
-                  borderLeft: '4px solid #1B365D', display: 'flex', justifyContent: 'space-between',
+                  background: 'var(--superficie)', borderRadius: '12px', padding: '1.2rem 1.5rem',
+                  borderLeft: '4px solid var(--azul)', display: 'flex', justifyContent: 'space-between',
                   alignItems: 'center', flexWrap: 'wrap', gap: '.8rem',
                 }}>
                   <div>
-                    <div style={{ fontWeight: 700, color: '#1B365D', marginBottom: '.25rem', fontSize: '.95rem' }}>
+                    <div style={{ fontWeight: 700, color: 'var(--azul)', marginBottom: '.25rem', fontSize: '.95rem' }}>
                       {l.interes || 'Consulta general'}
                     </div>
                     <div style={{ fontSize: '.82rem', color: '#888' }}>
@@ -523,7 +523,7 @@ export default function DashboardPage() {
                     </div>
                     {l.mensaje && <div style={{ fontSize: '.85rem', color: '#555', marginTop: '.3rem', fontStyle: 'italic' }}>"{l.mensaje}"</div>}
                   </div>
-                  <span style={{ background: '#e6f4ea', color: '#279546', padding: '4px 12px', borderRadius: '20px', fontSize: '.78rem', fontWeight: 700 }}>
+                  <span style={{ background: '#e6f4ea', color: 'var(--exito)', padding: '4px 12px', borderRadius: '20px', fontSize: '.78rem', fontWeight: 700 }}>
                     <i className="fa fa-check" style={{ marginRight: '.3rem' }} />Recibida
                   </span>
                 </div>
@@ -535,10 +535,10 @@ export default function DashboardPage() {
         {/* Quick links */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: '1rem' }}>
           {[
-            { href: '/propiedades?tipo=nave', icon: 'fa-industry', label: 'Naves Industriales', color: '#1B365D' },
-            { href: '/propiedades?tipo=casa', icon: 'fa-house', label: 'Casas en Venta', color: '#8B1A1A' },
-            { href: '/propiedades?tipo=terreno', icon: 'fa-map', label: 'Terrenos', color: '#279546' },
-            { href: '/propiedades?tipo=comercial', icon: 'fa-store', label: 'Locales Comerciales', color: '#D97706' },
+            { href: '/propiedades?tipo=nave', icon: 'fa-industry', label: 'Naves Industriales', color: 'var(--azul)' },
+            { href: '/propiedades?tipo=casa', icon: 'fa-house', label: 'Casas en Venta', color: 'var(--rojo)' },
+            { href: '/propiedades?tipo=terreno', icon: 'fa-map', label: 'Terrenos', color: 'var(--exito)' },
+            { href: '/propiedades?tipo=comercial', icon: 'fa-store', label: 'Locales Comerciales', color: 'var(--aviso)' },
           ].map(q => (
             <Link key={q.href} href={q.href} style={{
               background: '#fff', borderRadius: '12px', padding: '1.5rem',
@@ -552,7 +552,7 @@ export default function DashboardPage() {
               <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: q.color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <i className={`fa ${q.icon}`} style={{ color: '#fff', fontSize: '1rem' }} />
               </div>
-              <span style={{ fontWeight: 700, color: '#1B365D', fontSize: '.9rem' }}>{q.label}</span>
+              <span style={{ fontWeight: 700, color: 'var(--azul)', fontSize: '.9rem' }}>{q.label}</span>
             </Link>
           ))}
         </div>
@@ -562,12 +562,12 @@ export default function DashboardPage() {
 
   /* ── ADMIN DASHBOARD ── */
   return (
-    <div style={{ minHeight: '100vh', background: '#F4F6F8', fontFamily: 'var(--font-montserrat)' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--superficie)', fontFamily: 'var(--font-montserrat)' }}>
       {/* Toast de éxito */}
       {saveSuccess && (
         <div style={{
           position: 'fixed', bottom: '2rem', right: '2rem', zIndex: 99999,
-          background: '#059669', color: '#fff', padding: '.9rem 1.5rem',
+          background: 'var(--exito-medio)', color: '#fff', padding: '.9rem 1.5rem',
           borderRadius: '12px', fontWeight: 700, fontSize: '.9rem',
           boxShadow: '0 8px 30px rgba(5,150,105,.4)',
           display: 'flex', alignItems: 'center', gap: '.6rem',
@@ -585,8 +585,8 @@ export default function DashboardPage() {
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         maxWidth: '1200px', margin: '15px auto', position: 'sticky', top: '15px', zIndex: 1000,
       }}>
-        <h1 style={{ color: '#1B365D', fontSize: '1.2rem', fontWeight: 700 }}>
-          <i className="fa fa-chart-pie" style={{ marginRight: '.5rem', color: '#8B1A1A' }} />
+        <h1 style={{ color: 'var(--azul)', fontSize: '1.2rem', fontWeight: 700 }}>
+          <i className="fa fa-chart-pie" style={{ marginRight: '.5rem', color: 'var(--rojo)' }} />
           Panel de Administración – Vive Bien
         </h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -595,14 +595,14 @@ export default function DashboardPage() {
             {user.email}
           </span>
           <Link href="/admin/propiedades/pendientes" style={{
-            background: '#1B365D', color: '#fff', fontWeight: 600, fontSize: '.85rem',
+            background: 'var(--azul)', color: '#fff', fontWeight: 600, fontSize: '.85rem',
             padding: '6px 16px', borderRadius: '20px', textDecoration: 'none',
           }}>
             <i className="fa fa-clipboard-check" style={{ marginRight: '.4rem' }} />Por revisar
           </Link>
-          <Link href="/" style={{ color: '#8B1A1A', fontWeight: 600, fontSize: '.85rem' }}>← Ver sitio</Link>
+          <Link href="/" style={{ color: 'var(--rojo)', fontWeight: 600, fontSize: '.85rem' }}>← Ver sitio</Link>
           <button onClick={() => signOut(auth)} style={{
-            background: 'transparent', color: '#8B1A1A', border: '1px solid #8B1A1A',
+            background: 'transparent', color: 'var(--rojo)', border: '1px solid var(--rojo)',
             padding: '5px 15px', borderRadius: '20px', cursor: 'pointer', fontSize: '.85rem', fontWeight: 600,
           }}>
             <i className="fa fa-sign-out-alt" style={{ marginRight: '.4rem' }} />Cerrar Sesión
@@ -619,8 +619,8 @@ export default function DashboardPage() {
           <button key={t.key} onClick={() => setTab(t.key)} style={{
             padding: '1rem 1.5rem', background: 'none', border: 'none',
             cursor: 'pointer', fontWeight: 600, fontSize: '1rem',
-            color: tab === t.key ? '#8B1A1A' : '#666',
-            borderBottom: tab === t.key ? '3px solid #8B1A1A' : '3px solid transparent',
+            color: tab === t.key ? 'var(--rojo)' : '#666',
+            borderBottom: tab === t.key ? '3px solid var(--rojo)' : '3px solid transparent',
             transition: 'color .2s',
           }}>
             <i className={`fa ${t.icon}`} style={{ marginRight: '.5rem' }} />
@@ -641,8 +641,8 @@ export default function DashboardPage() {
             {/* Tabla de Leads */}
             <div style={{ background: '#fff', borderRadius: '12px', padding: '1.5rem', boxShadow: '0 4px 15px rgba(0,0,0,.08)', marginBottom: '2rem', overflowX: 'auto' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '.8rem' }}>
-                <h3 style={{ color: '#1B365D', fontSize: '1.1rem', margin: 0 }}>
-                  <i className="fa fa-users" style={{ color: '#8B1A1A', marginRight: '.5rem' }} />Leads / Prospectos ({leads.length})
+                <h3 style={{ color: 'var(--azul)', fontSize: '1.1rem', margin: 0 }}>
+                  <i className="fa fa-users" style={{ color: 'var(--rojo)', marginRight: '.5rem' }} />Leads / Prospectos ({leads.length})
                 </h3>
                 {leads.length > 0 && (
                   <button
@@ -660,16 +660,16 @@ export default function DashboardPage() {
                       a.download = `leads-vivebien-${new Date().toISOString().split('T')[0]}.csv`
                       a.click()
                     }}
-                    style={{ display: 'flex', alignItems: 'center', gap: '.4rem', background: '#1B365D', color: '#fff', border: 'none', padding: '.55rem 1.1rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 700, fontSize: '.82rem' }}>
+                    style={{ display: 'flex', alignItems: 'center', gap: '.4rem', background: 'var(--azul)', color: '#fff', border: 'none', padding: '.55rem 1.1rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 700, fontSize: '.82rem' }}>
                     <i className="fa fa-download" /> Exportar CSV
                   </button>
                 )}
               </div>
               <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
                 <thead>
-                  <tr style={{ background: '#F4F6F8' }}>
+                  <tr style={{ background: 'var(--superficie)' }}>
                     {['Nombre', 'Teléfono', 'Email', 'Interés', 'Origen', 'Fecha'].map(h => (
-                      <th key={h} style={{ padding: '12px 15px', textAlign: 'left', borderBottom: '1px solid #ddd', fontSize: '.85rem', fontWeight: 700, color: '#1B365D' }}>{h}</th>
+                      <th key={h} style={{ padding: '12px 15px', textAlign: 'left', borderBottom: '1px solid #ddd', fontSize: '.85rem', fontWeight: 700, color: 'var(--azul)' }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -680,7 +680,7 @@ export default function DashboardPage() {
                     <tr key={l.id} style={{ borderTop: '1px solid #eee' }}>
                       <td style={{ padding: '12px 15px', fontSize: '.9rem' }}>{l.nombre}</td>
                       <td style={{ padding: '12px 15px', fontSize: '.9rem' }}>
-                        <a href={`https://wa.me/52${l.telefono?.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" style={{ color: '#25D366', fontWeight: 600 }}>
+                        <a href={`https://wa.me/52${l.telefono?.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--whatsapp)', fontWeight: 600 }}>
                           {l.telefono}
                         </a>
                       </td>
@@ -699,8 +699,8 @@ export default function DashboardPage() {
             {/* Tabla de Contactos */}
             <div style={{ background: '#fff', borderRadius: '12px', padding: '1.5rem', boxShadow: '0 4px 15px rgba(0,0,0,.08)', overflowX: 'auto' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '.8rem' }}>
-                <h3 style={{ color: '#1B365D', fontSize: '1.1rem', margin: 0 }}>
-                  <i className="fa fa-envelope" style={{ color: '#8B1A1A', marginRight: '.5rem' }} />Contactos del Formulario ({contactos.length})
+                <h3 style={{ color: 'var(--azul)', fontSize: '1.1rem', margin: 0 }}>
+                  <i className="fa fa-envelope" style={{ color: 'var(--rojo)', marginRight: '.5rem' }} />Contactos del Formulario ({contactos.length})
                 </h3>
                 {contactos.length > 0 && (
                   <button
@@ -717,16 +717,16 @@ export default function DashboardPage() {
                       a.download = `contactos-vivebien-${new Date().toISOString().split('T')[0]}.csv`
                       a.click()
                     }}
-                    style={{ display: 'flex', alignItems: 'center', gap: '.4rem', background: '#279546', color: '#fff', border: 'none', padding: '.55rem 1.1rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 700, fontSize: '.82rem' }}>
+                    style={{ display: 'flex', alignItems: 'center', gap: '.4rem', background: 'var(--exito)', color: '#fff', border: 'none', padding: '.55rem 1.1rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 700, fontSize: '.82rem' }}>
                     <i className="fa fa-download" /> Exportar CSV
                   </button>
                 )}
               </div>
               <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
                 <thead>
-                  <tr style={{ background: '#F4F6F8' }}>
+                  <tr style={{ background: 'var(--superficie)' }}>
                     {['Nombre', 'Teléfono', 'Email', 'Interés', 'Fecha'].map(h => (
-                      <th key={h} style={{ padding: '12px 15px', textAlign: 'left', borderBottom: '1px solid #ddd', fontSize: '.85rem', fontWeight: 700, color: '#1B365D' }}>{h}</th>
+                      <th key={h} style={{ padding: '12px 15px', textAlign: 'left', borderBottom: '1px solid #ddd', fontSize: '.85rem', fontWeight: 700, color: 'var(--azul)' }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -755,20 +755,20 @@ export default function DashboardPage() {
           <>
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-              <h2 style={{ fontWeight: 800, color: '#222831', fontSize: '1.3rem', margin: 0 }}>
-                <i className="fa fa-home" style={{ color: '#8B1A1A', marginRight: '.5rem' }} />
+              <h2 style={{ fontWeight: 800, color: 'var(--texto)', fontSize: '1.3rem', margin: 0 }}>
+                <i className="fa fa-home" style={{ color: 'var(--rojo)', marginRight: '.5rem' }} />
                 Propiedades
               </h2>
               <div style={{ display: 'flex', gap: '.8rem', flexWrap: 'wrap' }}>
                 <a href="/admin/seed" style={{
-                  background: '#1B365D', color: '#fff', border: 'none',
+                  background: 'var(--azul)', color: '#fff', border: 'none',
                   padding: '.65rem 1.1rem', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '.82rem',
                   textDecoration: 'none', display: 'inline-flex', alignItems: 'center',
                 }}>
                   <i className="fa fa-database" style={{ marginRight: '.5rem' }} />Seed Supabase
                 </a>
                 <button onClick={() => setEditando({ ...EMPTY })} style={{
-                  background: '#8B1A1A', color: '#fff', border: 'none',
+                  background: 'var(--rojo)', color: '#fff', border: 'none',
                   padding: '.65rem 1.3rem', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '.88rem',
                 }}>
                   <i className="fa fa-plus" style={{ marginRight: '.5rem' }} />Nueva propiedad
@@ -785,10 +785,10 @@ export default function DashboardPage() {
                 eliminada: propiedades.filter(p => p.estatus === 'eliminada' || p.estatus === 'vendida').length,
               }
               const tabs: { key: typeof statusFilter; label: string; color: string; bg: string }[] = [
-                { key: 'todas',      label: `Todas (${counts.todas})`,              color: '#1B365D', bg: '#EFF6FF' },
-                { key: 'disponible', label: `Disponibles (${counts.disponible})`,   color: '#059669', bg: '#ecfdf5' },
-                { key: 'pausada',    label: `Pausadas (${counts.pausada})`,          color: '#D97706', bg: '#FEF9C3' },
-                { key: 'eliminada',  label: `Archivadas (${counts.eliminada})`,      color: '#8B1A1A', bg: '#fee2e2' },
+                { key: 'todas',      label: `Todas (${counts.todas})`,              color: 'var(--azul)', bg: 'var(--info-fondo)' },
+                { key: 'disponible', label: `Disponibles (${counts.disponible})`,   color: 'var(--exito-medio)', bg: '#ecfdf5' },
+                { key: 'pausada',    label: `Pausadas (${counts.pausada})`,          color: 'var(--aviso)', bg: 'var(--aviso-fondo)' },
+                { key: 'eliminada',  label: `Archivadas (${counts.eliminada})`,      color: 'var(--rojo)', bg: 'var(--error-fondo-fuerte)' },
               ]
               return (
                 <div style={{ display: 'flex', gap: '.5rem', marginBottom: '1.2rem', flexWrap: 'wrap' }}>
@@ -811,9 +811,9 @@ export default function DashboardPage() {
             <div style={{ background: '#fff', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,.06)', overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '750px' }}>
                 <thead>
-                  <tr style={{ background: '#F4F6F8' }}>
+                  <tr style={{ background: 'var(--superficie)' }}>
                     {['Título / Ubicación', 'Tipo', 'Precio', 'Estatus', 'Cambiar estatus', 'Acciones'].map(h => (
-                      <th key={h} style={{ padding: '1rem', textAlign: 'left', fontSize: '.82rem', fontWeight: 700, color: '#1B365D', whiteSpace: 'nowrap' }}>{h}</th>
+                      <th key={h} style={{ padding: '1rem', textAlign: 'left', fontSize: '.82rem', fontWeight: 700, color: 'var(--azul)', whiteSpace: 'nowrap' }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -821,23 +821,23 @@ export default function DashboardPage() {
                   {propiedades
                     .filter(p => statusFilter === 'todas' ? true : (statusFilter === 'eliminada' ? (p.estatus === 'eliminada' || p.estatus === 'vendida') : p.estatus === statusFilter))
                     .map(p => {
-                      const estatusColor = p.estatus === 'disponible' ? { bg: '#dcfce7', color: '#15803d' }
-                        : p.estatus === 'pausada' ? { bg: '#fef9c3', color: '#b45309' }
-                        : { bg: '#fee2e2', color: '#991b1b' }
+                      const estatusColor = p.estatus === 'disponible' ? { bg: 'var(--exito-fondo)', color: 'var(--exito-fuerte)' }
+                        : p.estatus === 'pausada' ? { bg: 'var(--aviso-fondo)', color: '#b45309' }
+                        : { bg: 'var(--error-fondo-fuerte)', color: 'var(--error)' }
                       return (
                         <tr key={p.id} style={{ borderTop: '1px solid #eee' }}>
                           <td style={{ padding: '.85rem 1rem', fontSize: '.88rem', fontWeight: 600, maxWidth: '220px' }}>
-                            {p.destacada && <i className="fa fa-star" style={{ color: '#D97706', marginRight: '.4rem', fontSize: '.8rem' }} />}
+                            {p.destacada && <i className="fa fa-star" style={{ color: 'var(--aviso)', marginRight: '.4rem', fontSize: '.8rem' }} />}
                             <div style={{ fontWeight: 700, color: '#1a1a2e', marginBottom: '.15rem' }}>{p.titulo}</div>
                             <div style={{ fontSize: '.75rem', color: '#888', fontWeight: 400 }}>{p.ubicacion}</div>
                           </td>
                           <td style={{ padding: '.85rem 1rem', fontSize: '.88rem', whiteSpace: 'nowrap' }}>
-                            <span style={{ background: '#1B365D', color: '#fff', padding: '3px 10px', borderRadius: '20px', fontSize: '.72rem', fontWeight: 700 }}>
+                            <span style={{ background: 'var(--azul)', color: '#fff', padding: '3px 10px', borderRadius: '20px', fontSize: '.72rem', fontWeight: 700 }}>
                               {p.tipo}
                             </span>
                             <div style={{ fontSize: '.72rem', color: '#aaa', marginTop: '.2rem', textTransform: 'capitalize' }}>{p.operacion}</div>
                           </td>
-                          <td style={{ padding: '.85rem 1rem', fontSize: '.9rem', fontWeight: 800, color: '#8B1A1A', whiteSpace: 'nowrap' }}>
+                          <td style={{ padding: '.85rem 1rem', fontSize: '.9rem', fontWeight: 800, color: 'var(--rojo)', whiteSpace: 'nowrap' }}>
                             {p.precio ? `$${p.precio.toLocaleString('es-MX')}` : '—'}
                             {p.metros ? <div style={{ fontSize: '.72rem', color: '#aaa', fontWeight: 400 }}>{p.metros} m²</div> : null}
                           </td>
@@ -861,7 +861,7 @@ export default function DashboardPage() {
                           <td style={{ padding: '.85rem 1rem' }}>
                             <div style={{ display: 'flex', gap: '.4rem', flexWrap: 'wrap' }}>
                               <button onClick={() => setEditando(p)} style={{
-                                background: '#1B365D', color: '#fff', border: 'none',
+                                background: 'var(--azul)', color: '#fff', border: 'none',
                                 padding: '.4rem .75rem', borderRadius: '6px', cursor: 'pointer', fontSize: '.78rem', fontWeight: 700,
                               }}>
                                 <i className="fa fa-pen" style={{ marginRight: '.3rem' }} />Editar
@@ -909,7 +909,7 @@ export default function DashboardPage() {
             background: '#fff', borderRadius: '20px', padding: '2.5rem',
             maxWidth: '600px', margin: '0 auto',
           }} onClick={e => e.stopPropagation()}>
-            <h2 style={{ fontWeight: 800, color: '#8B1A1A', marginBottom: '1.5rem', fontSize: '1.3rem' }}>
+            <h2 style={{ fontWeight: 800, color: 'var(--rojo)', marginBottom: '1.5rem', fontSize: '1.3rem' }}>
               {editando.id ? 'Editar' : 'Nueva'} Propiedad
             </h2>
 
@@ -924,7 +924,7 @@ export default function DashboardPage() {
                 { key: 'whatsapp', label: 'WhatsApp (sin + ni espacios)', type: 'text', placeholder: '524771234567' },
               ] as const).map(f => (
                 <div key={f.key}>
-                  <label style={{ fontSize: '.85rem', fontWeight: 600, color: '#1B365D', display: 'block', marginBottom: '.3rem' }}>{f.label}</label>
+                  <label style={{ fontSize: '.85rem', fontWeight: 600, color: 'var(--azul)', display: 'block', marginBottom: '.3rem' }}>{f.label}</label>
                   <input
                     type={f.type}
                     value={(editando as any)[f.key] ?? ''}
@@ -938,15 +938,15 @@ export default function DashboardPage() {
               {/* IVA */}
               <label style={{
                 display: 'flex', alignItems: 'center', gap: '.7rem', cursor: 'pointer',
-                padding: '.75rem 1rem', borderRadius: '8px', border: `2px solid ${editando.precio_incluye_iva ? '#059669' : '#DDE'}`,
+                padding: '.75rem 1rem', borderRadius: '8px', border: `2px solid ${editando.precio_incluye_iva ? 'var(--exito-medio)' : '#DDE'}`,
                 background: editando.precio_incluye_iva ? '#ecfdf5' : '#FAFAFA', transition: 'all .2s',
               }}>
                 <input type="checkbox" checked={!!editando.precio_incluye_iva}
                   onChange={e => setEditando(d => ({ ...d, precio_incluye_iva: e.target.checked }))}
-                  style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#059669' }} />
+                  style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--exito-medio)' }} />
                 <div>
-                  <span style={{ fontWeight: 700, color: editando.precio_incluye_iva ? '#065f46' : '#1B365D', fontSize: '.9rem', fontFamily: 'Montserrat, sans-serif' }}>
-                    <i className="fa fa-receipt" style={{ color: editando.precio_incluye_iva ? '#059669' : '#888', marginRight: '.4rem' }} />
+                  <span style={{ fontWeight: 700, color: editando.precio_incluye_iva ? '#065f46' : 'var(--azul)', fontSize: '.9rem', fontFamily: 'Montserrat, sans-serif' }}>
+                    <i className="fa fa-receipt" style={{ color: editando.precio_incluye_iva ? 'var(--exito-medio)' : '#888', marginRight: '.4rem' }} />
                     El precio ya incluye IVA
                   </span>
                   <div style={{ fontSize: '.75rem', color: '#888', marginTop: '.1rem' }}>
@@ -957,21 +957,21 @@ export default function DashboardPage() {
 
               {/* Extra fields for naves */}
               {(editando.tipo === 'nave' || !editando.tipo) && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', padding: '1rem', background: '#EFF6FF', borderRadius: '10px', border: '1px solid #BFDBFE' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', padding: '1rem', background: 'var(--info-fondo)', borderRadius: '10px', border: '1px solid #BFDBFE' }}>
                   <div>
-                    <label style={{ fontSize: '.8rem', fontWeight: 600, color: '#1B365D', display: 'block', marginBottom: '.3rem' }}>Altura libre (m)</label>
+                    <label style={{ fontSize: '.8rem', fontWeight: 600, color: 'var(--azul)', display: 'block', marginBottom: '.3rem' }}>Altura libre (m)</label>
                     <input type="number" value={editando.altura_libre ?? ''} placeholder="0"
                       onChange={e => setEditando(d => ({ ...d, altura_libre: parseFloat(e.target.value) || undefined }))}
                       style={{ width: '100%', padding: '.65rem .8rem', borderRadius: '8px', border: '1.5px solid #DDE', fontSize: '.88rem', boxSizing: 'border-box' }} />
                   </div>
                   <div>
-                    <label style={{ fontSize: '.8rem', fontWeight: 600, color: '#1B365D', display: 'block', marginBottom: '.3rem' }}>Andenes</label>
+                    <label style={{ fontSize: '.8rem', fontWeight: 600, color: 'var(--azul)', display: 'block', marginBottom: '.3rem' }}>Andenes</label>
                     <input type="number" value={editando.andenes ?? ''} placeholder="0"
                       onChange={e => setEditando(d => ({ ...d, andenes: parseFloat(e.target.value) || undefined }))}
                       style={{ width: '100%', padding: '.65rem .8rem', borderRadius: '8px', border: '1.5px solid #DDE', fontSize: '.88rem', boxSizing: 'border-box' }} />
                   </div>
                   <div>
-                    <label style={{ fontSize: '.8rem', fontWeight: 600, color: '#1B365D', display: 'block', marginBottom: '.3rem' }}>Mantenimiento $</label>
+                    <label style={{ fontSize: '.8rem', fontWeight: 600, color: 'var(--azul)', display: 'block', marginBottom: '.3rem' }}>Mantenimiento $</label>
                     <input type="number" value={editando.mantenimiento ?? ''} placeholder="0"
                       onChange={e => setEditando(d => ({ ...d, mantenimiento: parseFloat(e.target.value) || undefined }))}
                       style={{ width: '100%', padding: '.65rem .8rem', borderRadius: '8px', border: '1.5px solid #DDE', fontSize: '.88rem', boxSizing: 'border-box' }} />
@@ -981,7 +981,7 @@ export default function DashboardPage() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div>
-                  <label style={{ fontSize: '.85rem', fontWeight: 600, color: '#1B365D', display: 'block', marginBottom: '.3rem' }}>Tipo</label>
+                  <label style={{ fontSize: '.85rem', fontWeight: 600, color: 'var(--azul)', display: 'block', marginBottom: '.3rem' }}>Tipo</label>
                   <select value={editando.tipo || 'nave'} onChange={e => setEditando(d => ({ ...d, tipo: e.target.value }))}
                     style={{ width: '100%', padding: '.75rem 1rem', borderRadius: '8px', border: '1.5px solid #DDE', fontSize: '.92rem' }}>
                     <option value="nave">Nave/Bodega</option>
@@ -992,7 +992,7 @@ export default function DashboardPage() {
                   </select>
                 </div>
                 <div>
-                  <label style={{ fontSize: '.85rem', fontWeight: 600, color: '#1B365D', display: 'block', marginBottom: '.3rem' }}>Operación</label>
+                  <label style={{ fontSize: '.85rem', fontWeight: 600, color: 'var(--azul)', display: 'block', marginBottom: '.3rem' }}>Operación</label>
                   <select value={editando.operacion || 'renta'} onChange={e => setEditando(d => ({ ...d, operacion: e.target.value }))}
                     style={{ width: '100%', padding: '.75rem 1rem', borderRadius: '8px', border: '1.5px solid #DDE', fontSize: '.92rem' }}>
                     <option value="renta">Renta</option>
@@ -1002,7 +1002,7 @@ export default function DashboardPage() {
               </div>
 
               <div>
-                <label style={{ fontSize: '.85rem', fontWeight: 600, color: '#1B365D', display: 'block', marginBottom: '.3rem' }}>Estatus</label>
+                <label style={{ fontSize: '.85rem', fontWeight: 600, color: 'var(--azul)', display: 'block', marginBottom: '.3rem' }}>Estatus</label>
                 <select value={editando.estatus || 'disponible'} onChange={e => setEditando(d => ({ ...d, estatus: e.target.value }))}
                   style={{ width: '100%', padding: '.75rem 1rem', borderRadius: '8px', border: '1.5px solid #DDE', fontSize: '.92rem' }}>
                   <option value="disponible">Disponible</option>
@@ -1012,7 +1012,7 @@ export default function DashboardPage() {
               </div>
 
               <div>
-                <label style={{ fontSize: '.85rem', fontWeight: 600, color: '#1B365D', display: 'block', marginBottom: '.3rem' }}>
+                <label style={{ fontSize: '.85rem', fontWeight: 600, color: 'var(--azul)', display: 'block', marginBottom: '.3rem' }}>
                   Amenidades <span style={{ fontWeight: 400, color: '#888' }}>(separadas por coma)</span>
                 </label>
                 <input type="text" value={(editando.amenidades || []).join(', ')} placeholder="Acceso tráiler, Oficinas, Vigilancia 24/7"
@@ -1021,7 +1021,7 @@ export default function DashboardPage() {
               </div>
 
               <div>
-                <label style={{ fontSize: '.85rem', fontWeight: 600, color: '#1B365D', display: 'block', marginBottom: '.3rem' }}>
+                <label style={{ fontSize: '.85rem', fontWeight: 600, color: 'var(--azul)', display: 'block', marginBottom: '.3rem' }}>
                   Video URL <span style={{ fontWeight: 400, color: '#888' }}>(YouTube o MP4)</span>
                 </label>
                 <input type="url" value={editando.video_url || ''} placeholder="https://youtube.com/watch?v=..."
@@ -1029,19 +1029,19 @@ export default function DashboardPage() {
                   style={{ width: '100%', padding: '.75rem 1rem', borderRadius: '8px', border: '1.5px solid #DDE', fontSize: '.92rem', boxSizing: 'border-box' }} />
               </div>
 
-              <label style={{ display: 'flex', alignItems: 'center', gap: '.7rem', cursor: 'pointer', padding: '.75rem 1rem', background: editando.destacada ? '#FEF9C3' : '#F4F6F8', borderRadius: '8px', border: `2px solid ${editando.destacada ? '#D97706' : '#DDE'}`, transition: 'all .2s' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '.7rem', cursor: 'pointer', padding: '.75rem 1rem', background: editando.destacada ? 'var(--aviso-fondo)' : 'var(--superficie)', borderRadius: '8px', border: `2px solid ${editando.destacada ? 'var(--aviso)' : '#DDE'}`, transition: 'all .2s' }}>
                 <input type="checkbox" checked={!!editando.destacada}
                   onChange={e => setEditando(d => ({ ...d, destacada: e.target.checked }))}
-                  style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#D97706' }} />
-                <span style={{ fontWeight: 700, color: editando.destacada ? '#92400e' : '#1B365D', fontSize: '.9rem', fontFamily: 'Montserrat, sans-serif' }}>
-                  <i className="fa fa-star" style={{ color: '#D97706', marginRight: '.4rem' }} />
+                  style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--aviso)' }} />
+                <span style={{ fontWeight: 700, color: editando.destacada ? 'var(--aviso-fuerte)' : 'var(--azul)', fontSize: '.9rem', fontFamily: 'Montserrat, sans-serif' }}>
+                  <i className="fa fa-star" style={{ color: 'var(--aviso)', marginRight: '.4rem' }} />
                   Marcar como Propiedad Destacada
                 </span>
-                {editando.destacada && <span style={{ marginLeft: 'auto', fontSize: '.75rem', color: '#92400e', fontWeight: 600 }}>⭐ Aparecerá destacada en el sitio</span>}
+                {editando.destacada && <span style={{ marginLeft: 'auto', fontSize: '.75rem', color: 'var(--aviso-fuerte)', fontWeight: 600 }}>⭐ Aparecerá destacada en el sitio</span>}
               </label>
 
               <div>
-                <label style={{ fontSize: '.85rem', fontWeight: 600, color: '#1B365D', display: 'block', marginBottom: '.3rem' }}>Descripción</label>
+                <label style={{ fontSize: '.85rem', fontWeight: 600, color: 'var(--azul)', display: 'block', marginBottom: '.3rem' }}>Descripción</label>
                 <textarea rows={3} value={editando.descripcion || ''}
                   onChange={e => setEditando(d => ({ ...d, descripcion: e.target.value }))}
                   placeholder="Descripción de la propiedad..."
@@ -1050,7 +1050,7 @@ export default function DashboardPage() {
 
               {/* ── Fotos: upload directo + URL ── */}
               <div>
-                <label style={{ fontSize: '.85rem', fontWeight: 600, color: '#1B365D', display: 'block', marginBottom: '.6rem' }}>
+                <label style={{ fontSize: '.85rem', fontWeight: 600, color: 'var(--azul)', display: 'block', marginBottom: '.6rem' }}>
                   Fotos <span style={{ fontWeight: 400, color: '#888' }}>({(editando.fotos || []).length} imagen{(editando.fotos || []).length !== 1 ? 'es' : ''})</span>
                 </label>
 
@@ -1066,11 +1066,11 @@ export default function DashboardPage() {
                 />
 
                 {uploadingFotos ? (
-                  <div style={{ border: '2px dashed #1B365D', borderRadius: '10px', padding: '1.5rem', textAlign: 'center', background: '#EFF6FF', marginBottom: '.8rem' }}>
-                    <i className="fa fa-spinner fa-spin" style={{ fontSize: '1.6rem', color: '#1B365D', marginBottom: '.5rem', display: 'block' }} />
-                    <span style={{ fontSize: '.88rem', color: '#1B365D', fontWeight: 700 }}>Subiendo fotos… {uploadProgress}%</span>
+                  <div style={{ border: '2px dashed var(--azul)', borderRadius: '10px', padding: '1.5rem', textAlign: 'center', background: 'var(--info-fondo)', marginBottom: '.8rem' }}>
+                    <i className="fa fa-spinner fa-spin" style={{ fontSize: '1.6rem', color: 'var(--azul)', marginBottom: '.5rem', display: 'block' }} />
+                    <span style={{ fontSize: '.88rem', color: 'var(--azul)', fontWeight: 700 }}>Subiendo fotos… {uploadProgress}%</span>
                     <div style={{ width: '100%', height: '6px', background: '#DDE', borderRadius: '3px', overflow: 'hidden', marginTop: '.6rem' }}>
-                      <div style={{ height: '6px', background: '#1B365D', width: `${uploadProgress}%`, transition: 'width .3s', borderRadius: '3px' }} />
+                      <div style={{ height: '6px', background: 'var(--azul)', width: `${uploadProgress}%`, transition: 'width .3s', borderRadius: '3px' }} />
                     </div>
                   </div>
                 ) : (
@@ -1081,8 +1081,8 @@ export default function DashboardPage() {
                       onClick={() => document.getElementById('foto-upload-input')?.click()}
                       style={{
                         width: '100%', padding: '.85rem', borderRadius: '10px',
-                        border: '2px dashed #8B1A1A', background: '#fdf4f4',
-                        color: '#8B1A1A', fontWeight: 700, fontSize: '.92rem',
+                        border: '2px dashed var(--rojo)', background: '#fdf4f4',
+                        color: 'var(--rojo)', fontWeight: 700, fontSize: '.92rem',
                         cursor: 'pointer', display: 'flex', alignItems: 'center',
                         justifyContent: 'center', gap: '.6rem', marginBottom: '.5rem',
                         fontFamily: 'Montserrat, sans-serif', transition: 'all .2s',
@@ -1112,7 +1112,7 @@ export default function DashboardPage() {
                           <i className="fa fa-times" />
                         </button>
                         {i === 0 && (
-                          <span style={{ position: 'absolute', bottom: '4px', left: '4px', background: '#8B1A1A', color: '#fff', fontSize: '.6rem', fontWeight: 800, padding: '2px 6px', borderRadius: '4px', letterSpacing: '.5px' }}>
+                          <span style={{ position: 'absolute', bottom: '4px', left: '4px', background: 'var(--rojo)', color: '#fff', fontSize: '.6rem', fontWeight: 800, padding: '2px 6px', borderRadius: '4px', letterSpacing: '.5px' }}>
                             PRINCIPAL
                           </span>
                         )}
@@ -1139,7 +1139,7 @@ export default function DashboardPage() {
                   />
                   <button
                     onClick={() => { if (fotoInput.trim()) { setEditando(d => ({ ...d, fotos: [...(d?.fotos || []), fotoInput.trim()] })); setFotoInput('') } }}
-                    style={{ background: '#1B365D', color: '#fff', border: 'none', borderRadius: '8px', padding: '.55rem .9rem', cursor: 'pointer', fontWeight: 700, fontSize: '.82rem', whiteSpace: 'nowrap' }}>
+                    style={{ background: 'var(--azul)', color: '#fff', border: 'none', borderRadius: '8px', padding: '.55rem .9rem', cursor: 'pointer', fontWeight: 700, fontSize: '.82rem', whiteSpace: 'nowrap' }}>
                     + URL
                   </button>
                 </div>
@@ -1147,7 +1147,7 @@ export default function DashboardPage() {
             </div>
 
             {saveError && (
-              <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '8px', padding: '.75rem 1rem', color: '#991b1b', fontSize: '.88rem', fontWeight: 600, marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '.5rem' }}>
+              <div style={{ background: 'var(--error-fondo)', border: '1px solid #fca5a5', borderRadius: '8px', padding: '.75rem 1rem', color: 'var(--error)', fontSize: '.88rem', fontWeight: 600, marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '.5rem' }}>
                 <i className="fa fa-exclamation-circle" />
                 {saveError}
               </div>
@@ -1155,11 +1155,11 @@ export default function DashboardPage() {
 
             <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
               <button onClick={() => { setEditando(null); setSaveError('') }} style={{
-                flex: 1, padding: '1rem', background: '#fff', color: '#1B365D',
-                border: '2px solid #1B365D', borderRadius: '10px', fontWeight: 700, cursor: 'pointer',
+                flex: 1, padding: '1rem', background: '#fff', color: 'var(--azul)',
+                border: '2px solid var(--azul)', borderRadius: '10px', fontWeight: 700, cursor: 'pointer',
               }}>Cancelar</button>
               <button onClick={guardar} disabled={saving} style={{
-                flex: 2, padding: '1rem', background: '#8B1A1A', color: '#fff',
+                flex: 2, padding: '1rem', background: 'var(--rojo)', color: '#fff',
                 border: 'none', borderRadius: '10px', fontWeight: 700, cursor: 'pointer',
                 opacity: saving ? .7 : 1,
               }}>

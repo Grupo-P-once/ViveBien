@@ -78,16 +78,16 @@ export default function SeedPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F4F6F8', fontFamily: 'sans-serif' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--superficie)', fontFamily: 'sans-serif' }}>
       <div style={{ background: '#fff', borderRadius: '20px', padding: '3rem', maxWidth: '520px', width: '100%', boxShadow: '0 8px 30px rgba(0,0,0,.1)', textAlign: 'center' }}>
         <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🏭</div>
-        <h1 style={{ color: '#1B365D', marginBottom: '.5rem' }}>Seed: San Juan Bosco</h1>
+        <h1 style={{ color: 'var(--azul)', marginBottom: '.5rem' }}>Seed: San Juan Bosco</h1>
         <p style={{ color: '#666', marginBottom: '2rem', lineHeight: 1.6 }}>
           Haz clic para autenticarte como admin y publicar la nave industrial en <strong>Supabase</strong> con las 6 fotos reales de Cloudinary.
         </p>
         {!done && (
           <button onClick={handleSeed} style={{
-            background: '#8B1A1A', color: '#fff', border: 'none', padding: '1rem 2rem',
+            background: 'var(--rojo)', color: '#fff', border: 'none', padding: '1rem 2rem',
             borderRadius: '10px', fontSize: '1rem', fontWeight: 700, cursor: 'pointer', width: '100%',
           }}>
             🔐 Autenticar con Google y publicar propiedad
@@ -96,16 +96,16 @@ export default function SeedPage() {
         {status && (
           <p style={{
             marginTop: '1.5rem', padding: '1rem',
-            background: isError ? '#fef2f2' : done ? '#f0fdf4' : '#eff6ff',
+            background: isError ? 'var(--error-fondo)' : done ? '#f0fdf4' : 'var(--info-fondo)',
             borderRadius: '8px',
-            color: isError ? '#991b1b' : done ? '#166534' : '#1e40af',
+            color: isError ? 'var(--error)' : done ? '#166534' : '#1e40af',
             fontWeight: 600,
           }}>
             {status}
           </p>
         )}
         {done && (
-          <a href="/propiedades/sanjuan" style={{ display: 'block', marginTop: '1rem', color: '#1B365D', fontWeight: 700 }}>
+          <a href="/propiedades/sanjuan" style={{ display: 'block', marginTop: '1rem', color: 'var(--azul)', fontWeight: 700 }}>
             → Ver la propiedad en el sitio
           </a>
         )}
