@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════════════════════════════
--- Vive Bien · TODO EL SQL PENDIENTE, EN ORDEN
+-- Vive Bien · TODO EL SQL PENDIENTE, EN ORDEN  ·  V-1.1
 -- Pegar completo en: Supabase → SQL Editor → Run
 -- Generado: 2026-09-09
 --
@@ -8,20 +8,26 @@
 -- ═══════════════════════════════════════════════════════════════
 
 
-
 -- ── PARTE 1 · CERRAR LA FUGA ──────────────────────────────────
 
 --
 -- COMPROBADO EL 2026-09-08 contra la base de producción, usando
 -- únicamente la anon key que viaja en el bundle del navegador:
 --
---   GET    /rest/v1/leads        → 200, devolvió nombre, teléfono y
---                                  correo de una persona real
---   PATCH  /rest/v1/propiedades  → 204 (aceptado)
---   DELETE /rest/v1/propiedades  → 204 (aceptado)
+--   GET    /rest/v1/leads        → 200  devolvió nombre, teléfono y
+--                                       correo de una persona real
+--   GET    /rest/v1/contactos    → 200
+--   GET    /rest/v1/envios       → 200
+--   PATCH  /rest/v1/propiedades  → 204  aceptado
+--   DELETE /rest/v1/propiedades  → 204  aceptado
+--   DELETE /rest/v1/leads        → 204  aceptado
+--   DELETE /rest/v1/contactos    → 204  aceptado
+--   POST   /rest/v1/propiedades  → 400  pero por NOT NULL, no por permisos:
+--                                       la escritura estaba autorizada
 --
--- Es decir: cualquiera que abra el sitio, copie la clave del bundle y
--- haga un curl puede leer los leads y modificar o borrar el catálogo.
+-- Las cuatro tablas están abiertas a lectura y escritura. Cualquiera que
+-- abra el sitio, copie la clave del bundle y haga un curl puede leer los
+-- datos de contacto de las personas y vaciar la base.
 --
 -- ANTES DE EJECUTAR: despliega el código que acompaña a este archivo.
 -- El panel pasó a leer leads y contactos por /api/leads y
@@ -76,6 +82,13 @@ create policy "contactos_insertar_publico"
   with check (true);
 
 
+-- ── envios ─────────────────────────────────────────────────────
+-- La app no la toca (sólo el workflow de n8n, que va con service role).
+-- Se cierra por completo al rol público: RLS activo y cero políticas.
+
+alter table public.envios enable row level security;
+
+
 -- ── Comprobación ───────────────────────────────────────────────
 select
   c.relname as tabla,
@@ -91,7 +104,6 @@ order by c.relrowsecurity asc, c.relname;
 -- Después, desde una terminal con la anon key:
 --   curl "$URL/rest/v1/leads?select=*" -H "apikey: $ANON" -H "Authorization: Bearer $ANON"
 -- Esperado: []  (antes devolvía los datos de la persona)
-
 
 
 -- ── PARTE 2 · TABLA DE USUARIOS Y ROLES ───────────────────────
