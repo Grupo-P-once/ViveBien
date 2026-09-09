@@ -433,6 +433,14 @@ export default function DashboardPage() {
           <span style={{ fontSize: '.85rem', color: '#555', background: '#f0f0f0', padding: '5px 15px', borderRadius: '20px', fontWeight: 600 }}>
             {user.displayName || user.email}
           </span>
+          {rol === 'publicador' && (
+            <Link href="/publicador" style={{
+              background: '#1B365D', color: '#fff', fontWeight: 600, fontSize: '.85rem',
+              padding: '6px 16px', borderRadius: '20px', textDecoration: 'none',
+            }}>
+              <i className="fa fa-building" style={{ marginRight: '.4rem' }} />Mis propiedades
+            </Link>
+          )}
           <Link href="/" style={{ color: '#8B1A1A', fontWeight: 600, fontSize: '.85rem' }}>← Ver sitio</Link>
           <button onClick={() => signOut(auth)} style={{
             background: 'transparent', color: '#8B1A1A', border: '1px solid #8B1A1A',
@@ -585,6 +593,12 @@ export default function DashboardPage() {
             <i className="fa fa-user-circle" style={{ marginRight: '.4rem' }} />
             {user.email}
           </span>
+          <Link href="/admin/propiedades/pendientes" style={{
+            background: '#1B365D', color: '#fff', fontWeight: 600, fontSize: '.85rem',
+            padding: '6px 16px', borderRadius: '20px', textDecoration: 'none',
+          }}>
+            <i className="fa fa-clipboard-check" style={{ marginRight: '.4rem' }} />Por revisar
+          </Link>
           <Link href="/" style={{ color: '#8B1A1A', fontWeight: 600, fontSize: '.85rem' }}>← Ver sitio</Link>
           <button onClick={() => signOut(auth)} style={{
             background: 'transparent', color: '#8B1A1A', border: '1px solid #8B1A1A',
