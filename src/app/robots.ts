@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next'
+import { urlDe } from '@/lib/sitio'
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -9,6 +10,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/dashboard', '/admin', '/publicador', '/mi-cuenta', '/api'],
       },
     ],
-    sitemap: 'https://vive-bien.vercel.app/sitemap.xml',
+    sitemap: urlDe('/sitemap.xml'),
   }
 }

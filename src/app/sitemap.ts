@@ -1,7 +1,8 @@
 import type { MetadataRoute } from 'next'
+import { SITIO } from '@/lib/sitio'
 import { createClient } from '@supabase/supabase-js'
 
-const BASE = 'https://vive-bien.vercel.app'
+const BASE = SITIO
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,

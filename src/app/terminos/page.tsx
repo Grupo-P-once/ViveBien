@@ -32,7 +32,7 @@ export default function TerminosPage() {
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
 
           <Section title="1. Aceptación de los términos">
-            <p>Al acceder y utilizar la plataforma Vive Bien Inmobiliaria (<strong>vive-bien.vercel.app</strong>), usted acepta cumplir y quedar vinculado por estos Términos y Condiciones. Si no está de acuerdo con alguno de estos términos, le pedimos que no utilice nuestros servicios.</p>
+            <p>Al acceder y utilizar la plataforma Vive Bien Inmobiliaria (<strong>vivebienn.com</strong>), usted acepta cumplir y quedar vinculado por estos Términos y Condiciones. Si no está de acuerdo con alguno de estos términos, le pedimos que no utilice nuestros servicios.</p>
           </Section>
 
           <Section title="2. Descripción del servicio">

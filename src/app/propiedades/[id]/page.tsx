@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { createClient } from '@supabase/supabase-js'
 import DetallePropiedad from './page-client'
+import { SITIO, urlDe } from '@/lib/sitio'
 
 // Server-side Supabase client para metadata
 const supabaseServer = createClient(
@@ -69,7 +70,7 @@ export default async function Page({ params }: Props) {
         '@type': 'RealEstateListing',
         name: data.titulo,
         description: data.descripcion || '',
-        url: `https://vive-bien.vercel.app/propiedades/${id}`,
+        url: urlDe(`/propiedades/${id}`),
         image: data.fotos?.[0] || '',
         offers: {
           '@type': 'Offer',
@@ -89,7 +90,7 @@ export default async function Page({ params }: Props) {
         seller: {
           '@type': 'RealEstateAgent',
           name: 'Vive Bien Inmobiliaria',
-          url: 'https://vive-bien.vercel.app',
+          url: SITIO,
           telephone: `+${process.env.NEXT_PUBLIC_WA_NUMBER || '524778116501'}`,
         },
       }

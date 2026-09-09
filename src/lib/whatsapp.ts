@@ -18,7 +18,7 @@ const TOKEN = process.env.WHATSAPP_ACCESS_TOKEN
 const PHONE_ID = process.env.WHATSAPP_PHONE_NUMBER_ID
 const PLANTILLA = process.env.WHATSAPP_TEMPLATE_NAME || 'vivebien_nuevo_interesado'
 const IDIOMA = process.env.WHATSAPP_TEMPLATE_LANG || 'es_MX'
-const SITIO = process.env.NEXT_PUBLIC_APP_URL || 'https://vive-bien.vercel.app'
+import { SITIO } from './sitio'
 
 export type EstadoAviso = 'enviado' | 'fallido' | 'sin_numero' | 'pendiente'
 
