@@ -47,3 +47,6 @@ scripts/set-vercel-env.mjs
 
 # la plantilla sin valores si debe versionarse
 !.env.example
+
+# temporales del CLI de supabase
+supabase/.temp/
