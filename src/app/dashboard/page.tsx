@@ -10,6 +10,7 @@ import {
 } from 'firebase/auth'
 import { auth, googleProvider } from '@/lib/firebase'
 import Link from 'next/link'
+import Metricas from '@/components/Metricas'
 
 interface Propiedad {
   id?: string
@@ -633,28 +634,8 @@ export default function DashboardPage() {
         {/* ── TAB: Métricas ── */}
         {tab === 'metricas' && (
           <>
-            {/* KPIs */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(250px,1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-              {[
-                { title: 'Total Propiedades', value: propiedades.length, color: '#1B365D', icon: 'fa-home' },
-                { title: 'Propiedades Activas', value: propiedades.filter(p => p.estatus === 'disponible').length, color: '#8B1A1A', icon: 'fa-check-circle' },
-                { title: 'Leads Registrados', value: leads.length, color: '#5B4FCF', icon: 'fa-users' },
-                { title: 'Contactos Formulario', value: contactos.length, color: '#279546', icon: 'fa-envelope' },
-              ].map(k => (
-                <div key={k.title} style={{
-                  background: '#fff', borderRadius: '12px', padding: '1.5rem',
-                  boxShadow: '0 4px 15px rgba(0,0,0,.08)', borderLeft: `5px solid ${k.color}`,
-                }}>
-                  <div style={{ fontSize: '.9rem', color: '#666', marginBottom: '.5rem' }}>
-                    <i className={`fa ${k.icon}`} style={{ color: k.color, marginRight: '.4rem' }} />
-                    {k.title}
-                  </div>
-                  <div style={{ fontSize: '2rem', fontWeight: 800, color: '#222831' }}>{k.value}</div>
-                  <div style={{ fontSize: '.8rem', color: '#279546', marginTop: '.5rem', fontWeight: 700 }}>
-                    <i className="fa fa-database" style={{ marginRight: '.3rem' }} />Datos reales de Supabase
-                  </div>
-                </div>
-              ))}
+            <div style={{ marginBottom: '2rem' }}>
+              <Metricas propiedades={propiedades} leads={leads} contactos={contactos} />
             </div>
 
             {/* Tabla de Leads */}
