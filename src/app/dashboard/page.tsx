@@ -44,7 +44,21 @@ const EMPTY: Omit<Propiedad, 'id'> = {
   video_url: '', destacada: false,
 }
 
-const ADMIN_EMAILS = ['grupo.p.11.ee@gmail.com']
+// Sólo controla qué se muestra en la interfaz. La autorización real vive en
+// el servidor (src/lib/auth-server.ts) y se configura con ADMIN_EMAILS.
+const ADMIN_EMAILS = (process.env.NEXT_PUBLIC_ADMIN_EMAILS ?? '')
+  .split(',')
+  .map((e) => e.trim().toLowerCase())
+  .filter(Boolean)
+
+/** Cabeceras con el ID token de Firebase para las rutas de administración. */
+async function authHeaders(): Promise<HeadersInit> {
+  const token = await auth.currentUser?.getIdToken()
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  }
+}
 
 type Tab = 'metricas' | 'props' | 'leads'
 type AuthTab = 'login' | 'register'
@@ -75,13 +89,13 @@ export default function DashboardPage() {
   const [uploadingFotos, setUploadingFotos] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
 
-  const isAdmin = user ? ADMIN_EMAILS.includes(user.email || '') : false
+  const isAdmin = user ? ADMIN_EMAILS.includes((user.email || '').toLowerCase()) : false
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, u => {
       setUser(u)
       setAuthLoading(false)
-      if (u && ADMIN_EMAILS.includes(u.email || '')) {
+      if (u && ADMIN_EMAILS.includes((u.email || '').toLowerCase())) {
         cargarPropiedades()
         cargarLeads()
         cargarContactos()
@@ -163,14 +177,14 @@ export default function DashboardPage() {
         const { id, ...rest } = editando
         res = await fetch(`/api/admin/propiedades/${id}`, {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
+          headers: await authHeaders(),
           body: JSON.stringify(rest),
         })
       } else {
         const newId = editando.titulo?.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') || Date.now().toString()
         res = await fetch('/api/admin/propiedades', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: await authHeaders(),
           body: JSON.stringify({ ...editando, id: newId }),
         })
       }
@@ -191,11 +205,16 @@ export default function DashboardPage() {
   }
 
   async function cambiarEstatus(id: string, nuevoEstatus: string) {
-    await fetch(`/api/admin/propiedades/${id}`, {
+    const res = await fetch(`/api/admin/propiedades/${id}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await authHeaders(),
       body: JSON.stringify({ estatus: nuevoEstatus }),
     })
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}))
+      setSaveError(json.error || 'No se pudo cambiar el estatus.')
+      return
+    }
     await cargarPropiedades()
     setSaveSuccess(`✓ Estatus cambiado a "${nuevoEstatus}"`)
     setTimeout(() => setSaveSuccess(''), 3000)
@@ -236,7 +255,15 @@ export default function DashboardPage() {
 
   async function eliminarDefinitivo(id: string) {
     if (!confirm('¿Eliminar DEFINITIVAMENTE? Esta acción no se puede deshacer.')) return
-    await fetch(`/api/admin/propiedades/${id}`, { method: 'DELETE' })
+    const res = await fetch(`/api/admin/propiedades/${id}`, {
+      method: 'DELETE',
+      headers: await authHeaders(),
+    })
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}))
+      setSaveError(json.error || 'No se pudo eliminar la propiedad.')
+      return
+    }
     await cargarPropiedades()
     setSaveSuccess('✓ Propiedad eliminada definitivamente')
     setTimeout(() => setSaveSuccess(''), 3000)

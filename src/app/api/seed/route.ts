@@ -1,8 +1,18 @@
 import { NextResponse } from 'next/server'
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
+import { requireAdmin } from '@/lib/auth-server'
 
-export async function POST() {
+/**
+ * OBSOLETO — escribe en Firestore, que dejó de ser la base de datos activa
+ * cuando se migró a Supabase (2026-04-01). Se conserva gateado en lugar de
+ * borrarse porque la decisión de eliminarlo es del dueño del proyecto.
+ * El seed vigente es /admin/seed, que sí escribe en Supabase.
+ */
+export async function POST(req: Request) {
+  const auth = await requireAdmin(req)
+  if (auth.error) return auth.error
+
   try {
     await setDoc(doc(db, 'propiedades', 'sanjuan'), {
       titulo: 'Nave Industrial San Juan',

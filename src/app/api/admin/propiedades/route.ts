@@ -1,7 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { requireAdmin } from '@/lib/auth-server'
 
-// Para lecturas: anon key (ya funciona con RLS de lectura pública)
+// Para lecturas: anon key (sujeta a las políticas RLS de lectura pública)
 function readClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -9,7 +10,8 @@ function readClient() {
   )
 }
 
-// Para escrituras: service role key (bypasea RLS)
+// Para escrituras: service role key. IGNORA RLS por completo, así que sólo puede
+// usarse después de que requireAdmin() haya validado la sesión.
 function adminClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -17,7 +19,7 @@ function adminClient() {
   )
 }
 
-// GET /api/admin/propiedades
+// GET /api/admin/propiedades — listado para el panel
 export async function GET() {
   const { data, error } = await readClient()
     .from('propiedades')
@@ -27,8 +29,11 @@ export async function GET() {
   return NextResponse.json(data)
 }
 
-// POST /api/admin/propiedades  — crear nueva
+// POST /api/admin/propiedades — crear nueva
 export async function POST(req: Request) {
+  const auth = await requireAdmin(req)
+  if (auth.error) return auth.error
+
   const body = await req.json()
   const { error } = await adminClient().from('propiedades').insert(body)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

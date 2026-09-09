@@ -1,6 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { requireAdmin } from '@/lib/auth-server'
 
+// service role key: IGNORA RLS. Sólo tras validar la sesión con requireAdmin().
 function adminClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -8,11 +10,14 @@ function adminClient() {
   )
 }
 
-// PATCH /api/admin/propiedades/[id]  — actualizar
+// PATCH /api/admin/propiedades/[id] — actualizar
 export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const auth = await requireAdmin(req)
+  if (auth.error) return auth.error
+
   const { id } = await params
   const body = await req.json()
 
@@ -26,7 +31,7 @@ export async function PATCH(
   // reintentar sin ese campo para no bloquear el resto de los cambios
   if (error) {
     if (error.message.includes('precio_incluye_iva')) {
-      const { precio_incluye_iva, ...bodyFallback } = body
+      const { precio_incluye_iva: _omitido, ...bodyFallback } = body
       const { error: err2 } = await adminClient()
         .from('propiedades')
         .update(bodyFallback)
@@ -42,9 +47,12 @@ export async function PATCH(
 
 // DELETE /api/admin/propiedades/[id]
 export async function DELETE(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const auth = await requireAdmin(req)
+  if (auth.error) return auth.error
+
   const { id } = await params
   const { error } = await adminClient()
     .from('propiedades')
