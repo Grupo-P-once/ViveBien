@@ -92,8 +92,14 @@ function PropiedadesContent() {
     try {
       const { data, error } = await supabase.from('propiedades').select('*')
       if (error) throw error
+      // Sólo lo aprobado. RLS ya lo filtra en la base; esto cubre el hueco
+      // mientras la migración de estado_pub no está aplicada, y sirve de
+      // segunda barrera después.
+      const visibles = (data || []).filter(
+        (p: any) => !p.estado_pub || p.estado_pub === 'publicada',
+      )
       // Map snake_case → camelCase for backwards compat
-      const mapped = (data || []).map((p: any) => ({
+      const mapped = visibles.map((p: any) => ({
         ...p,
         alturaLibre: p.altura_libre,
         m2: p.metros,

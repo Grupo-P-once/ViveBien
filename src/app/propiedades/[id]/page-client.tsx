@@ -67,7 +67,10 @@ export default function DetallePropiedad({ params }: { params: Promise<{ id: str
           .eq('id', id)
           .single()
         if (error) throw error
-        if (data) {
+        if (data && data.estado_pub && data.estado_pub !== 'publicada') {
+          // Existe pero no está aprobada: para el público no existe.
+          setProp(null)
+        } else if (data) {
           const mapped = { ...data, alturaLibre: data.altura_libre } as Propiedad
           setProp(mapped)
           // Save to viewed history
