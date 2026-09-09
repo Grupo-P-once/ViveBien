@@ -98,6 +98,11 @@ export const CAMPOS_RESERVADOS = [
   'publicada_en',
   'enviada_en',
   'created_at',
+  // Contadores: los sube el servidor al registrar el evento. Si un
+  // publicador pudiera escribirlos, inflaria las vistas de su anuncio.
+  'vistas',
+  'favoritos_n',
+  'contactos_n',
 ] as const
 
 export function quitarCamposReservados<T extends Record<string, unknown>>(datos: T): Partial<T> {
