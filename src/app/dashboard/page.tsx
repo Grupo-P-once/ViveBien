@@ -15,6 +15,7 @@ import Bienvenida from '@/components/Bienvenida'
 import QuieroPublicar from '@/components/QuieroPublicar'
 import MisFavoritos from '@/components/MisFavoritos'
 import MetricasCliente from '@/components/MetricasCliente'
+import Registros from '@/components/Registros'
 
 interface Propiedad {
   id?: string
@@ -64,7 +65,7 @@ async function authHeaders(): Promise<HeadersInit> {
   }
 }
 
-type Tab = 'metricas' | 'props' | 'leads'
+type Tab = 'metricas' | 'registros' | 'props' | 'leads'
 type AuthTab = 'login' | 'register'
 
 export default function DashboardPage() {
@@ -638,6 +639,7 @@ export default function DashboardPage() {
       <nav style={{ background: '#fff', padding: '0 2rem', display: 'flex', gap: '1rem', borderBottom: '1px solid #ddd', maxWidth: '1200px', margin: '0 auto' }}>
         {([
           { key: 'metricas', label: 'Métricas y Leads', icon: 'fa-chart-bar' },
+          { key: 'registros', label: 'Registros', icon: 'fa-address-book' },
           { key: 'props', label: 'Mis Propiedades', icon: 'fa-home' },
         ] as { key: Tab; label: string; icon: string }[]).map(t => (
           <button key={t.key} onClick={() => setTab(t.key)} style={{
@@ -657,6 +659,10 @@ export default function DashboardPage() {
 
         {/* Primeros pasos del administrador: sobre todo, lo que espera revisión. */}
         <Bienvenida rol="admin" propiedades={propiedades} />
+
+        {/* ── TAB: Registros ──
+             Todo el que dejo sus datos, de las cuatro tablas a la vez. */}
+        {tab === 'registros' && <Registros />}
 
         {/* ── TAB: Métricas ── */}
         {tab === 'metricas' && (
