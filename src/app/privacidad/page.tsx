@@ -1,3 +1,4 @@
+import { CORREO_CONTACTO } from '@/lib/contacto'
 import type { Metadata } from 'next'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
@@ -68,7 +69,7 @@ export default function PrivacidadPage() {
           <Section title="5. Derechos ARCO">
             <p>Usted tiene derecho a <strong>Acceder, Rectificar, Cancelar u Oponerse</strong> al tratamiento de sus datos personales (derechos ARCO). Para ejercerlos, envíe una solicitud a:</p>
             <ul style={{ paddingLeft: '1.5rem', marginTop: '.5rem' }}>
-              <li>Correo: <strong>grupo.p.11.ee@gmail.com</strong></li>
+              <li>Correo: <strong>{CORREO_CONTACTO}</strong></li>
               <li>WhatsApp: <strong>+52 477 811 6501</strong></li>
             </ul>
             <p style={{ marginTop: '.8rem' }}>Responderemos en un plazo máximo de 20 días hábiles.</p>
@@ -87,7 +88,7 @@ export default function PrivacidadPage() {
           </Section>
 
           <Section title="9. Contacto">
-            <p>Para cualquier consulta sobre esta política de privacidad: <strong>grupo.p.11.ee@gmail.com</strong></p>
+            <p>Para cualquier consulta sobre esta política de privacidad: <strong>{CORREO_CONTACTO}</strong></p>
           </Section>
         </div>
       </main>

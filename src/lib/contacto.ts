@@ -75,3 +75,31 @@ export function validarSolicitud(body: Record<string, unknown>): Validacion {
     datos: { nombre: nombre.slice(0, 120), telefono, email: email.slice(0, 160), mensaje: mensaje || null },
   }
 }
+
+/* ── Dirección de contacto pública ──────────────────────────────
+ *
+ * Estaba escrita a mano en **siete sitios**, incluidos el aviso de privacidad y
+ * los términos. Cuando `grupo.p.11.ee@gmail.com` desapareció al convertirse la
+ * cuenta a Google Workspace, quedaron siete direcciones muertas repartidas por
+ * producción — y dos de ellas eran el canal legal:
+ *
+ *   · Aviso de privacidad §5, **Derechos ARCO**: «para ejercerlos, envíe una
+ *     solicitud a…», con promesa de responder en 20 días hábiles.
+ *   · Términos: la solicitud de eliminación de datos.
+ *
+ * Bajo la LFPDPPP el canal para ejercer derechos ARCO tiene que funcionar. Un
+ * buzón que rebota no es un canal.
+ *
+ * Ahora sale de una variable de entorno y cae a una dirección **del dominio
+ * propio**: un correo en `vivebienn.com` sobrevive a que alguien cambie de
+ * cuenta personal; un Gmail no.
+ */
+export const CORREO_CONTACTO =
+  process.env.NEXT_PUBLIC_ADMIN_EMAIL?.trim() || 'joseponcer@vivebienn.com'
+
+/** `mailto:` con asunto opcional, ya codificado. */
+export function mailtoDe(asunto?: string): string {
+  return asunto
+    ? `mailto:${CORREO_CONTACTO}?subject=${encodeURIComponent(asunto)}`
+    : `mailto:${CORREO_CONTACTO}`
+}

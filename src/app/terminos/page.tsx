@@ -1,3 +1,4 @@
+import { CORREO_CONTACTO } from '@/lib/contacto'
 import type { Metadata } from 'next'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
@@ -60,7 +61,7 @@ export default function TerminosPage() {
               <li>Almacenar sus datos de contacto en nuestros sistemas internos.</li>
               <li>Enviar comunicaciones relacionadas con propiedades que puedan ser de su interés.</li>
             </ul>
-            <p style={{ marginTop: '.8rem' }}>El usuario puede solicitar la eliminación de sus datos en cualquier momento enviando un correo a <strong>grupo.p.11.ee@gmail.com</strong>.</p>
+            <p style={{ marginTop: '.8rem' }}>El usuario puede solicitar la eliminación de sus datos en cualquier momento enviando un correo a <strong>{CORREO_CONTACTO}</strong>.</p>
           </Section>
 
           <Section title="6. Propiedad intelectual">
@@ -80,7 +81,7 @@ export default function TerminosPage() {
           </Section>
 
           <Section title="10. Contacto">
-            <p>Para dudas sobre estos términos: <strong>grupo.p.11.ee@gmail.com</strong> | WhatsApp: +52 477 811 6501</p>
+            <p>Para dudas sobre estos términos: <strong>{CORREO_CONTACTO}</strong> | WhatsApp: +52 477 811 6501</p>
           </Section>
         </div>
       </main>

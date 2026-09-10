@@ -1,4 +1,5 @@
 'use client'
+import { CORREO_CONTACTO, mailtoDe } from '@/lib/contacto'
 import { useState } from 'react'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
@@ -85,7 +86,7 @@ export default function ContactoPage() {
             {[
               { icon: 'fa-phone', color: 'var(--azul)', title: 'Teléfono', val: `+52 477 811 6501`, href: `tel:+${WA_NUMBER}` },
               { icon: 'fab fa-whatsapp', color: 'var(--whatsapp)', title: 'WhatsApp', val: `+52 477 811 6501`, href: `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent('Hola, quiero más información sobre una propiedad.')}` },
-              { icon: 'fa-envelope', color: 'var(--rojo)', title: 'Correo', val: 'grupo.p.11.ee@gmail.com', href: 'mailto:grupo.p.11.ee@gmail.com' },
+              { icon: 'fa-envelope', color: 'var(--rojo)', title: 'Correo', val: CORREO_CONTACTO, href: mailtoDe() },
               { icon: 'fa-map-marker-alt', color: 'var(--aviso)', title: 'Ubicación', val: 'León, Guanajuato, México', href: 'https://maps.google.com/?q=León,Guanajuato' },
               { icon: 'fa-clock', color: 'var(--morado)', title: 'Horario', val: 'Lun–Vie 9:00–18:00 | Sáb 9:00–14:00', href: null },
             ].map(c => (

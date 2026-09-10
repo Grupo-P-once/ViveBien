@@ -1,4 +1,5 @@
 'use client'
+import { CORREO_CONTACTO } from '@/lib/contacto'
 import Link from 'next/link'
 
 const linkStyle = {
@@ -58,7 +59,7 @@ export default function Footer() {
           </h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '.5rem', fontSize: '.875rem', color: 'rgba(255,255,255,.75)' }}>
             <span><i className="fa fa-phone" style={{ marginRight: '.5rem', color: 'var(--rojo-claro)' }} />477 811 6501</span>
-            <span><i className="fa fa-envelope" style={{ marginRight: '.5rem', color: 'var(--rojo-claro)' }} />grupo.p.11.ee@gmail.com</span>
+            <span><i className="fa fa-envelope" style={{ marginRight: '.5rem', color: 'var(--rojo-claro)' }} />{CORREO_CONTACTO}</span>
             <span><i className="fa fa-clock" style={{ marginRight: '.5rem', color: 'var(--rojo-claro)' }} />Lun – Vie: 9:00 – 18:00</span>
             <span><i className="fa fa-clock" style={{ marginRight: '.5rem', color: 'var(--rojo-claro)' }} />Sáb – Dom: 11:00 – 14:00</span>
           </div>

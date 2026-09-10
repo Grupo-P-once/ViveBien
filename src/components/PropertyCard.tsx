@@ -1,4 +1,5 @@
 'use client'
+import { mailtoDe } from '@/lib/contacto'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/lib/useAuth'
@@ -285,7 +286,7 @@ export default function PropertyCard({ propiedad: p }: PropertyCardProps) {
             </button>
             {/* Email — requiere sesión */}
             <button
-              onClick={e => { e.stopPropagation(); requireAuth(() => { window.location.href = `mailto:grupo.p.11.ee@gmail.com?subject=Interesado en: ${encodeURIComponent(p.titulo)}` }) }}
+              onClick={e => { e.stopPropagation(); requireAuth(() => { window.location.href = mailtoDe(`Interesado en: ${p.titulo}`) }) }}
               title={isLoggedIn ? 'Email' : 'Inicia sesión para contactar'}
               style={{
                 width: '40px', height: '40px', borderRadius: '12px',
