@@ -4,7 +4,9 @@ import { useState } from 'react'
 import { auth, googleProvider } from '@/lib/firebase'
 import { signInWithPopup } from 'firebase/auth'
 
-const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || ''
+import { CORREO_CONTACTO } from '@/lib/contacto'
+
+const ADMIN_EMAIL = CORREO_CONTACTO
 
 const SANJUAN = {
   id: 'sanjuan',

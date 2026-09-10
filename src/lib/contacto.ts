@@ -94,8 +94,19 @@ export function validarSolicitud(body: Record<string, unknown>): Validacion {
  * propio**: un correo en `vivebienn.com` sobrevive a que alguien cambie de
  * cuenta personal; un Gmail no.
  */
-export const CORREO_CONTACTO =
-  process.env.NEXT_PUBLIC_ADMIN_EMAIL?.trim() || 'joseponcer@vivebienn.com'
+/**
+ * La dirección oficial. **Constante, no variable de entorno**, y a propósito.
+ *
+ * Estuvo saliendo de `NEXT_PUBLIC_ADMIN_EMAIL`, y en Vercel esa variable
+ * apuntaba a un Gmail personal. Resultado: el aviso de privacidad **en
+ * producción** daba como canal ARCO una dirección que no era la oficial, y el
+ * código «funcionaba» — respetaba la variable, sólo que la variable estaba mal.
+ *
+ * Una dirección legal no debe depender de que alguien se acuerde de actualizar
+ * una variable. Es del dominio propio, así que sobrevive a los cambios de
+ * cuenta personal que ya rompieron la anterior. Cambiarla es una línea aquí.
+ */
+export const CORREO_CONTACTO = 'joseponcer@vivebienn.com'
 
 /** `mailto:` con asunto opcional, ya codificado. */
 export function mailtoDe(asunto?: string): string {

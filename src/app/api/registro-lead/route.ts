@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/auth-server'
 import { frenar, origenDe, TOPES } from '@/lib/limites'
+import { avisarDeLead } from '@/lib/aviso-lead'
 import {
   normalizarTelefono,
   VERSION_CONSENTIMIENTO,
@@ -122,7 +123,19 @@ export async function POST(req: Request) {
     )
   }
 
-  return NextResponse.json({ ok: true })
+  // El aviso va DESPUES de guardar y nunca tumba la respuesta: si el correo
+  // falla, el lead ya esta a salvo. Guardar es lo importante; avisar, el extra.
+  const aviso = await avisarDeLead({
+    nombre: nombre.slice(0, 120),
+    telefono,
+    email: email || null,
+    mensaje: mensaje || null,
+    interes: interes || null,
+    origen,
+    propiedadId: propiedadId || null,
+  })
+
+  return NextResponse.json({ ok: true, avisado: aviso.enviado })
 }
 
 /** Para que el formulario pueda enseñar el texto exacto que se va a registrar. */
