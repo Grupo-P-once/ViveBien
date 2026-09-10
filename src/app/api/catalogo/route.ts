@@ -45,10 +45,19 @@ export async function GET() {
   try {
     // Un tiempo límite propio: sin esto, un Supabase que tarda 30 s deja la
     // página cargando 30 s. Mejor fallar rápido y servir la copia.
+    // `limit` y no sin tope: OTLI documentó que sus consultas sin LIMIT sobre
+    // el historial de conversaciones acabaron en cinco minutos de latencia con
+    // tres clientes a la vez. Aquí hay dos propiedades, así que hoy da igual —
+    // y por eso mismo es el momento de ponerlo, antes de que importe.
+    //
+    // Sigue en `select('*')` a propósito: elegir columnas a mano es la otra
+    // mitad de esa lección, pero una columna que se olvide rompe la ficha
+    // pública, y con la base caída no hay forma de comprobarlo. Queda anotado.
     const consulta = clienteLectura()
       .from('propiedades')
       .select('*')
       .order('created_at', { ascending: false })
+      .limit(500)
 
     const datos = await Promise.race([
       consulta.then(({ data, error }) => {
