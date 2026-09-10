@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { onAuthStateChanged, type User } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 type Prop = {
   id: string
@@ -28,6 +29,7 @@ async function cabeceras(): Promise<HeadersInit> {
 }
 
 export default function PanelPublicador() {
+  const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
   const [cargando, setCargando] = useState(true)
   const [props, setProps] = useState<Prop[]>([])
@@ -70,6 +72,9 @@ export default function PanelPublicador() {
     const j = await res.json().catch(() => ({}))
     if (!res.ok) { setError(j.error || 'No se pudo crear.'); return }
     setNuevoTitulo('')
+    // Un borrador con sólo el título no sirve para nada: el sitio natural
+    // después de crearlo es el asistente, no esta lista.
+    if (j.id) { router.push(`/publicador/propiedades/${j.id}/editar`); return }
     setAviso('Borrador creado. Complétalo para poder enviarlo a revisión.')
     setTimeout(() => setAviso(''), 6000)
     cargar()
@@ -156,6 +161,18 @@ export default function PanelPublicador() {
               )}
 
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {est !== 'en_revision' && (
+                  <Link href={`/publicador/propiedades/${p.id}/editar`}
+                    style={{
+                      padding: '8px 16px',
+                      background: completa ? '#fff' : 'var(--rojo)',
+                      color: completa ? 'var(--azul)' : '#fff',
+                      border: completa ? '1px solid var(--borde-frio)' : 'none',
+                      borderRadius: 6, fontWeight: 700, fontSize: '.85rem', textDecoration: 'none',
+                    }}>
+                    {completa ? 'Editar ficha' : 'Completar ficha'}
+                  </Link>
+                )}
                 {(est === 'borrador' || est === 'cambios_solicitados') && (
                   <button onClick={() => cambiarEstado(p.id, 'en_revision')} disabled={!completa}
                     title={completa ? 'Enviar a revisión' : 'Complétala al 80% primero'}
