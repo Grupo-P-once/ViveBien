@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { frenar, origenDe, TOPES } from '@/lib/limites'
 import { verifyIdToken, supabaseAdmin } from '@/lib/auth-server'
 
 /**
@@ -26,6 +27,12 @@ export async function GET(req: Request) {
 
 /** POST /api/favoritos — alterna una propiedad. Body: { propiedadId } */
 export async function POST(req: Request) {
+  // Tope por origen. Sin esto, cualquiera con la consola abierta llena
+  // esta tabla en un minuto. Ver lib/limites.ts para lo que cubre y lo
+  // que no.
+  const frenado = frenar(`favoritos:${origenDe(req)}`, TOPES.favoritos)
+  if (frenado) return frenado
+
   const user = await verifyIdToken(req)
   if (!user) return NextResponse.json({ error: 'Inicia sesión para guardar favoritos.' }, { status: 401 })
 

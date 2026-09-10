@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { frenar, origenDe, TOPES } from '@/lib/limites'
 import { verifyIdToken, getPerfil, supabaseAdmin, isAdminEmail } from '@/lib/auth-server'
 import { registrar } from '@/lib/auditoria'
 import { notificarPublicador } from '@/lib/whatsapp'
@@ -20,6 +21,12 @@ import {
  * él ya hizo su parte.
  */
 export async function POST(req: Request) {
+  // Tope por origen. Sin esto, cualquiera con la consola abierta llena
+  // esta tabla en un minuto. Ver lib/limites.ts para lo que cubre y lo
+  // que no.
+  const frenado = frenar(`contacto:${origenDe(req)}`, TOPES.contacto)
+  if (frenado) return frenado
+
   const user = await verifyIdToken(req)
   if (!user) {
     return NextResponse.json(

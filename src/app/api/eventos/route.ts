@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { frenar, origenDe, TOPES } from '@/lib/limites'
 import { verifyIdToken, supabaseAdmin, isAdminEmail } from '@/lib/auth-server'
 
 /**
@@ -22,6 +23,12 @@ const PERMITIDOS = new Set([
 
 /** POST /api/eventos — registra un evento. Body: { nombre, propiedadId?, sesion?, datos? } */
 export async function POST(req: Request) {
+  // Tope por origen. Sin esto, cualquiera con la consola abierta llena
+  // esta tabla en un minuto. Ver lib/limites.ts para lo que cubre y lo
+  // que no.
+  const frenado = frenar(`eventos:${origenDe(req)}`, TOPES.eventos)
+  if (frenado) return frenado
+
   const body = await req.json().catch(() => ({}))
   const nombre = typeof body.nombre === 'string' ? body.nombre : ''
 

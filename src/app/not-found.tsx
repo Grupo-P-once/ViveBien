@@ -6,13 +6,13 @@ export default function NotFound() {
   return (
     <>
       <Header />
-      <main style={{ background: 'var(--superficie)', minHeight: '70vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '3rem 2rem' }}>
+      <main style={{ background: 'var(--hueso)', minHeight: '70vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '3rem 2rem' }}>
         <div style={{ textAlign: 'center', maxWidth: '520px' }}>
           {/* Número grande */}
           <div style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: 'clamp(5rem,15vw,9rem)', color: 'var(--azul)', lineHeight: 1, marginBottom: '.5rem', letterSpacing: '-4px' }}>
             404
           </div>
-          <div style={{ width: '60px', height: '4px', background: 'var(--rojo)', borderRadius: '4px', margin: '0 auto 1.5rem' }} />
+          <div style={{ width: '60px', height: '4px', background: 'var(--rojo-marca)', borderRadius: '4px', margin: '0 auto 1.5rem' }} />
           <h1 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, color: 'var(--texto)', fontSize: '1.5rem', marginBottom: '1rem' }}>
             Página no encontrada
           </h1>
@@ -22,7 +22,7 @@ export default function NotFound() {
           </p>
           <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
             <Link href="/propiedades"
-              style={{ background: 'linear-gradient(135deg,var(--rojo),var(--rojo-claro))', color: '#fff', padding: '.85rem 1.8rem', borderRadius: '12px', fontWeight: 800, textDecoration: 'none', fontFamily: 'Montserrat, sans-serif', display: 'flex', alignItems: 'center', gap: '.5rem' }}>
+              style={{ background: 'var(--rojo-marca)', color: '#fff', padding: '.85rem 1.8rem', borderRadius: '12px', fontWeight: 800, textDecoration: 'none', fontFamily: 'Montserrat, sans-serif', display: 'flex', alignItems: 'center', gap: '.5rem' }}>
               <i className="fa fa-home" /> Ver propiedades
             </Link>
             <Link href="/"
