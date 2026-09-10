@@ -48,6 +48,75 @@
   /* ── Terceros ── */
   --whatsapp: #25D366;
   --morado: #5B4FCF;
+
+  /* ── Identidad de marca (lámina de esencia) ──
+     La lámina fija una dirección que el sitio no seguía: negro de alto
+     contraste, rojo más vivo que el granate de los paneles, lavanda para
+     «Grupo inmobiliario», y un blanco cálido —no gris— para las secciones
+     claras. Estos tokens conviven con los de arriba en vez de sustituirlos:
+     el granate --rojo sigue siendo el color de acción de los formularios,
+     donde un rojo saturado cansa. */
+  --negro: #0B0B0C;
+  --negro-suave: #16171A;
+  --negro-carta: #1F2024;
+  --rojo-marca: #C8102E;
+  --lavanda: #A5ABD4;
+  --hueso: #F1EFEC;
+  --hueso-hundido: #E7E4DF;
+
+  /* Reglas finas. En oscuro se ven por transparencia, no por color fijo:
+     así funcionan sobre foto y sobre negro plano. */
+  --linea-clara: rgba(255, 255, 255, .16);
+  --linea-oscura: rgba(11, 11, 12, .12);
+
+  /* Tracking de las etiquetas en versales. */
+  --tracking-etiqueta: .18em;
+}
+
+/* ══ Piezas de la identidad ══════════════════════════════════════
+   Tres clases, no una librería. Lo que la lámina repite en cada bloque
+   es: una etiqueta pequeña en versales muy espaciadas, un titular de peso
+   alto con interlínea corta, y una regla fina roja debajo. */
+
+.etiqueta {
+  font-family: var(--font-montserrat), system-ui, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-etiqueta);
+  font-size: .72rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.titular {
+  font-family: var(--font-montserrat), system-ui, sans-serif;
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: -.01em;
+  text-transform: uppercase;
+}
+
+/* La regla roja corta bajo la etiqueta, como en la lámina. */
+.regla-marca::after {
+  content: "";
+  display: block;
+  width: 44px;
+  height: 2px;
+  background: var(--rojo-marca);
+  margin-top: .55rem;
+}
+
+/* Superficie oscura de marca: se usa en el hero y en el mosaico. */
+.superficie-negra {
+  background: var(--negro);
+  color: #fff;
+}
+
+/* Sombra de tarjeta de panel. Una sola, para que no haya cinco distintas. */
+.carta {
+  background: #fff;
+  border: 1px solid var(--linea-oscura);
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(11, 11, 12, .04), 0 8px 24px rgba(11, 11, 12, .05);
 }
 
 @theme inline {
@@ -63,6 +132,10 @@
   --color-exito: var(--exito);
   --color-aviso: var(--aviso);
   --color-error: var(--error);
+  --color-negro: var(--negro);
+  --color-rojo-marca: var(--rojo-marca);
+  --color-lavanda: var(--lavanda);
+  --color-hueso: var(--hueso);
   --font-sans: var(--font-open-sans);
   --font-heading: var(--font-montserrat);
 }

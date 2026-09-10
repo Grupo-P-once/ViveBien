@@ -12,6 +12,8 @@ import { auth, googleProvider } from '@/lib/firebase'
 import Link from 'next/link'
 import Metricas from '@/components/Metricas'
 import Bienvenida from '@/components/Bienvenida'
+import QuieroPublicar from '@/components/QuieroPublicar'
+import MisFavoritos from '@/components/MisFavoritos'
 
 interface Propiedad {
   id?: string
@@ -494,6 +496,13 @@ export default function DashboardPage() {
 
         {/* Primeros pasos: se tacha solo, mirando los datos reales. */}
         <Bienvenida rol={rol === 'publicador' ? 'publicador' : 'cliente'} />
+
+        {/* Sólo a quien todavía no publica: al publicador ya no le dice nada. */}
+        {rol !== 'publicador' && <QuieroPublicar />}
+
+        {/* El corazon de la ficha guardaba en `favoritos` desde la Fase 5 y
+            este panel nunca leia esa tabla. */}
+        <MisFavoritos />
 
         {/* Mis consultas */}
         <div style={{ background: '#fff', borderRadius: '16px', padding: '2rem', boxShadow: '0 4px 15px rgba(0,0,0,.06)', marginBottom: '2rem' }}>
