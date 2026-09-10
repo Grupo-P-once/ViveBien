@@ -64,7 +64,7 @@ function TypewriterCycle({ words }: { words: string[] }) {
   return (
     <span>
       {displayed}
-      <span style={{ display: 'inline-block', width: '2px', height: '1em', background: 'var(--dorado)', marginLeft: '2px', verticalAlign: 'middle', animation: 'cursorBlink .8s steps(1) infinite' }} />
+      <span style={{ display: 'inline-block', width: '2px', height: '1em', background: 'var(--rojo-marca)', marginLeft: '2px', verticalAlign: 'middle', animation: 'cursorBlink .8s steps(1) infinite' }} />
     </span>
   )
 }
@@ -118,7 +118,7 @@ export default function HomePage() {
       {/* ===== HERO — CINEMATIC REDESIGN ===== */}
       <section ref={heroRef} style={{
         position: 'relative', minHeight: '100vh',
-        overflow: 'hidden', background: '#08101e',
+        overflow: 'hidden', background: 'var(--negro)',
         display: 'flex', alignItems: 'center',
       }}>
         {/* Parallax background image */}
@@ -133,15 +133,15 @@ export default function HomePage() {
         </motion.div>
 
         {/* Gradient overlays */}
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(8,16,30,.25) 0%, rgba(8,16,30,.55) 50%, rgba(8,16,30,.88) 100%)', zIndex: 1 }} />
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(100deg, rgba(139,26,26,.4) 0%, transparent 55%)', zIndex: 1 }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(11,11,12,.25) 0%, rgba(11,11,12,.58) 50%, rgba(11,11,12,.92) 100%)', zIndex: 1 }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(100deg, rgba(200,16,46,.30) 0%, transparent 55%)', zIndex: 1 }} />
         <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(rgba(255,255,255,.025) 1px, transparent 1px)', backgroundSize: '28px 28px', zIndex: 1, pointerEvents: 'none' }} />
 
         {/* Top animated accent line */}
         <motion.div
           initial={{ scaleX: 0 }} animate={{ scaleX: 1 }}
           transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
-          style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'linear-gradient(90deg, var(--rojo) 0%, var(--dorado) 50%, var(--azul) 100%)', transformOrigin: 'left', zIndex: 10 }}
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'linear-gradient(90deg, var(--rojo-marca) 0%, var(--lavanda) 100%)', transformOrigin: 'left', zIndex: 10 }}
         />
 
         {/* Main content grid */}
@@ -162,11 +162,11 @@ export default function HomePage() {
               transition={{ duration: 0.7, delay: 0.1 }}
               style={{ display: 'flex', alignItems: 'center', gap: '.75rem', marginBottom: '2.2rem' }}
             >
-              <div style={{ width: '28px', height: '1.5px', background: 'var(--dorado)', flexShrink: 0 }} />
+              <div style={{ width: '28px', height: '1.5px', background: 'var(--rojo-marca)', flexShrink: 0 }} />
               <span style={{ color: 'rgba(255,255,255,.6)', fontSize: '.68rem', letterSpacing: '4.5px', textTransform: 'uppercase', fontFamily: 'var(--font-montserrat)', fontWeight: 600 }}>
                 León · Guanajuato · México
               </span>
-              <div style={{ width: '28px', height: '1.5px', background: 'var(--dorado)', flexShrink: 0 }} />
+              <div style={{ width: '28px', height: '1.5px', background: 'var(--rojo-marca)', flexShrink: 0 }} />
             </motion.div>
 
             {/* GIANT SERIF H1 */}
@@ -181,7 +181,7 @@ export default function HomePage() {
               <motion.span
                 initial={{ opacity: 0, y: 55 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.9, delay: 0.33, ease: [0.22, 1, 0.36, 1] }}
-                style={{ display: 'block', fontFamily: '"Playfair Display", Georgia, serif', fontSize: 'clamp(3.2rem,6.5vw,7rem)', fontWeight: 700, fontStyle: 'italic', color: 'var(--dorado)', letterSpacing: '-1.5px' }}
+                style={{ display: 'block', fontFamily: '"Playfair Display", Georgia, serif', fontSize: 'clamp(3.2rem,6.5vw,7rem)', fontWeight: 700, fontStyle: 'italic', color: 'var(--lavanda)', letterSpacing: '-1.5px' }}
               >
                 espacio
               </motion.span>
@@ -200,7 +200,7 @@ export default function HomePage() {
               transition={{ delay: 0.85 }}
               style={{ display: 'flex', alignItems: 'center', gap: '.75rem', marginBottom: '2.8rem', color: 'rgba(255,255,255,.5)', fontFamily: 'var(--font-montserrat)', fontSize: 'clamp(.85rem,1.6vw,1rem)', fontWeight: 500, letterSpacing: '.5px', minHeight: '1.8rem' }}
             >
-              <i className="fa fa-location-dot" style={{ color: 'var(--dorado)', fontSize: '.8rem', flexShrink: 0 }} />
+              <i className="fa fa-location-dot" style={{ color: 'var(--rojo-marca)', fontSize: '.8rem', flexShrink: 0 }} />
               <TypewriterCycle words={['Naves Industriales en León', 'Casas Residenciales', 'Terrenos en Venta', 'Locales Comerciales']} />
             </motion.div>
 
@@ -219,8 +219,8 @@ export default function HomePage() {
                       fontFamily: 'var(--font-montserrat)', fontWeight: 700,
                       fontSize: '.75rem', letterSpacing: '2px', textTransform: 'uppercase',
                       transition: 'all .2s',
-                      background: form.op === tab.val ? 'rgba(201,169,110,.22)' : 'rgba(255,255,255,.06)',
-                      color: form.op === tab.val ? 'var(--dorado)' : 'rgba(255,255,255,.45)',
+                      background: form.op === tab.val ? 'rgba(200,16,46,.28)' : 'rgba(255,255,255,.06)',
+                      color: form.op === tab.val ? '#fff' : 'rgba(255,255,255,.45)',
                     }}
                   >{tab.label}</button>
                 ))}
@@ -243,7 +243,7 @@ export default function HomePage() {
                   onChange={e => setForm(f => ({ ...f, zona: e.target.value }))}
                   style={{ flex: '1 1 170px', padding: '.72rem 1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,.14)', background: 'rgba(255,255,255,.08)', color: '#fff', fontSize: '.84rem' }} />
                 <button type="submit" style={{
-                  background: 'linear-gradient(135deg, var(--dorado) 0%, #a07830 100%)',
+                  background: 'var(--rojo-marca)',
                   color: '#0a0e1a', border: 'none', borderRadius: '8px',
                   padding: '.72rem 1.6rem', cursor: 'pointer',
                   fontFamily: 'var(--font-montserrat)', fontWeight: 800,
@@ -262,7 +262,7 @@ export default function HomePage() {
               transition={{ delay: 1.35 }}
               style={{ marginTop: '1.6rem', display: 'flex', alignItems: 'center', gap: '1.2rem', flexWrap: 'wrap' }}
             >
-              <Link href="/propiedades" style={{ color: 'var(--dorado)', fontFamily: 'var(--font-montserrat)', fontWeight: 700, fontSize: '.78rem', letterSpacing: '1.5px', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '.4rem' }}>
+              <Link href="/propiedades" style={{ color: 'var(--lavanda)', fontFamily: 'var(--font-montserrat)', fontWeight: 700, fontSize: '.78rem', letterSpacing: '1.5px', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '.4rem' }}>
                 Ver catálogo completo <i className="fa fa-arrow-right" style={{ fontSize: '.72rem' }} />
               </Link>
               <span style={{ color: 'rgba(255,255,255,.15)', fontSize: '1.2rem' }}>|</span>
@@ -288,14 +288,14 @@ export default function HomePage() {
                   padding: '1.1rem 1.4rem', display: 'flex', alignItems: 'center', gap: '1.1rem',
                   transition: 'border-color .3s, background .3s',
                 }}
-                whileHover={{ borderColor: 'rgba(201,169,110,.35)', background: 'rgba(201,169,110,.07)' } as any}
+                whileHover={{ borderColor: 'rgba(200,16,46,.35)', background: 'rgba(200,16,46,.07)' } as any}
               >
                 <div style={{
                   width: '46px', height: '46px', flexShrink: 0, borderRadius: '12px',
-                  background: 'linear-gradient(135deg,rgba(201,169,110,.18),rgba(201,169,110,.04))',
-                  border: '1px solid rgba(201,169,110,.25)',
+                  background: 'linear-gradient(135deg,rgba(200,16,46,.18),rgba(200,16,46,.04))',
+                  border: '1px solid rgba(200,16,46,.25)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: 'var(--dorado)', fontSize: '1.05rem',
+                  color: 'var(--rojo-marca)', fontSize: '1.05rem',
                 }}>
                   <i className={`fa ${s.icon}`} />
                 </div>
@@ -303,7 +303,7 @@ export default function HomePage() {
                   <div style={{ fontFamily: 'var(--font-montserrat)', fontSize: '1.75rem', fontWeight: 900, color: '#fff', lineHeight: 1 }}>
                     <CountUp end={s.n} duration={2.5} suffix={s.suffix} enableScrollSpy scrollSpyOnce />
                   </div>
-                  <div style={{ fontSize: '.72rem', fontWeight: 700, color: 'var(--dorado)', letterSpacing: '1.5px', textTransform: 'uppercase', marginTop: '.15rem' }}>{s.label}</div>
+                  <div style={{ fontSize: '.72rem', fontWeight: 700, color: 'rgba(255,255,255,.55)', letterSpacing: '1.5px', textTransform: 'uppercase', marginTop: '.15rem' }}>{s.label}</div>
                   <div style={{ fontSize: '.68rem', color: 'rgba(255,255,255,.35)', marginTop: '.1rem' }}>{s.desc}</div>
                 </div>
               </motion.div>
@@ -345,7 +345,7 @@ export default function HomePage() {
             transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
             style={{ width: '18px', height: '30px', border: '1.5px solid rgba(255,255,255,.2)', borderRadius: '9px', position: 'relative' }}
           >
-            <div style={{ position: 'absolute', top: '5px', left: '50%', transform: 'translateX(-50%)', width: '2.5px', height: '6px', background: 'var(--dorado)', borderRadius: '2px' }} />
+            <div style={{ position: 'absolute', top: '5px', left: '50%', transform: 'translateX(-50%)', width: '2.5px', height: '6px', background: 'var(--rojo-marca)', borderRadius: '2px' }} />
           </motion.div>
           <span>Scroll</span>
         </div>
