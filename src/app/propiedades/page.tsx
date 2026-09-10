@@ -154,6 +154,34 @@ function PropiedadesContent() {
 
   const disponibles = propiedades.filter(p => (p.estatus || p.estado) === 'disponible').length
 
+  /**
+   * El lugar sale de lo que hay en el catálogo, no escrito a mano.
+   *
+   * Decía «León, Guanajuato» siempre. En cuanto entre una propiedad de otra
+   * ciudad, el titular miente — y en un portal inmobiliario la ubicación no es
+   * un detalle decorativo, es la mitad de la decisión.
+   *
+   * Con una sola ciudad la nombra; con varias dice cuántas. Sin datos cae a
+   * León, que es donde opera la casa.
+   */
+  const lugarDelCatalogo = (() => {
+    const ciudades = new Set(
+      propiedades
+        .map(p => {
+          const u = (p as unknown as Record<string, unknown>).ciudad ?? p.ubicacion ?? ''
+          const txt = String(u).trim()
+          if (!txt) return null
+          // «San Juan Bosco, León, Guanajuato» -> «León»
+          const partes = txt.split(',').map(x => x.trim()).filter(Boolean)
+          return partes.length >= 2 ? partes[partes.length - 2] : partes[0]
+        })
+        .filter((c): c is string => Boolean(c)),
+    )
+    if (ciudades.size === 0) return 'León, Guanajuato'
+    if (ciudades.size === 1) return [...ciudades][0]
+    return `${ciudades.size} ciudades`
+  })()
+
   return (
     <>
       <Header />
@@ -182,17 +210,17 @@ function PropiedadesContent() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem', marginBottom: '1.5rem', color: 'rgba(255,255,255,.45)', fontSize: '.75rem', fontFamily: 'Montserrat,sans-serif', letterSpacing: '1px' }}>
             <Link href="/" style={{ color: 'rgba(255,255,255,.45)', textDecoration: 'none' }}>Inicio</Link>
             <i className="fa fa-chevron-right" style={{ fontSize: '.6rem' }} />
-            <span style={{ color: 'var(--dorado)' }}>Propiedades</span>
+            <span style={{ color: 'var(--lavanda)' }}>Propiedades</span>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1.5rem' }}>
             <div>
-              <span style={{ display: 'inline-block', background: 'rgba(201,169,110,.18)', border: '1px solid rgba(201,169,110,.35)', color: 'var(--dorado)', padding: '.3rem .9rem', borderRadius: '50px', fontSize: '.68rem', fontFamily: 'Montserrat,sans-serif', fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', marginBottom: '1rem' }}>
+              <span style={{ display: 'inline-block', background: 'rgba(200,16,46,.16)', border: '1px solid rgba(200,16,46,.38)', color: 'var(--rojo-marca)', padding: '.3rem .9rem', borderRadius: '50px', fontSize: '.68rem', fontFamily: 'Montserrat,sans-serif', fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', marginBottom: '1rem' }}>
                 Catálogo completo
               </span>
               <h1 style={{ fontFamily: '"Playfair Display",Georgia,serif', fontWeight: 700, fontSize: 'clamp(2rem,4.5vw,3.8rem)', color: '#fff', lineHeight: 1.1, margin: 0, letterSpacing: '-1px' }}>
                 Propiedades en<br />
-                <span style={{ fontStyle: 'italic', color: 'var(--dorado)' }}>León, Guanajuato</span>
+                <span style={{ fontStyle: 'italic', color: 'var(--lavanda)' }}>{lugarDelCatalogo}</span>
               </h1>
             </div>
             {/* Stats pill */}

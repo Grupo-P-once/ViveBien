@@ -422,3 +422,28 @@ textarea::placeholder {
     transform: none;
   }
 }
+
+/* ══ Cabecera ════════════════════════════════════════════════════
+   La altura iba en línea: 120px fijos en cualquier pantalla. En un
+   teléfono de 780px de alto eso es un 15% comido por una barra pegajosa,
+   antes de ver una sola propiedad. */
+.vb-header {
+  height: 120px;
+  padding: 0 2rem;
+}
+
+.vb-logo img {
+  height: 100px;
+  width: auto;
+  object-fit: contain;
+}
+
+@media (max-width: 900px) {
+  .vb-header {
+    height: 76px;
+    padding: 0 1rem;
+  }
+  .vb-logo img {
+    height: 56px;
+  }
+}

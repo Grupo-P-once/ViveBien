@@ -358,7 +358,7 @@ export default function HomePage() {
 
       {/* ===== MARQUEE STRIP ===== */}
       <div style={{
-        background: '#0a0a0a', overflow: 'hidden',
+        background: 'var(--negro)', overflow: 'hidden',
         padding: '.9rem 0', borderBottom: '1px solid rgba(255,255,255,.06)',
       }}>
         <div style={{
@@ -443,14 +443,14 @@ export default function HomePage() {
       </section>
 
       {/* ===== POR QUÉ ELEGIRNOS ===== */}
-      <section style={{ background: 'var(--gris)', padding: '6rem 2rem' }}>
+      <section style={{ background: 'var(--hueso)', padding: '6rem 2rem' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
             <span style={{
-              display: 'inline-block', color: 'var(--rojo)', fontWeight: 800,
+              display: 'inline-block', color: 'var(--rojo-marca)', fontWeight: 800,
               fontSize: '.72rem', textTransform: 'uppercase', letterSpacing: '3.5px',
               fontFamily: 'var(--font-montserrat)',
-              borderBottom: '2px solid var(--rojo)', paddingBottom: '.3rem',
+              borderBottom: '2px solid var(--rojo-marca)', paddingBottom: '.3rem',
               marginBottom: '.9rem',
             }}>
               ¿Por qué elegirnos?
@@ -492,10 +492,10 @@ export default function HomePage() {
         <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
             <span style={{
-              display: 'inline-block', color: 'var(--rojo)', fontWeight: 800,
+              display: 'inline-block', color: 'var(--rojo-marca)', fontWeight: 800,
               fontSize: '.72rem', textTransform: 'uppercase', letterSpacing: '3.5px',
               fontFamily: 'var(--font-montserrat)',
-              borderBottom: '2px solid var(--rojo)', paddingBottom: '.3rem',
+              borderBottom: '2px solid var(--rojo-marca)', paddingBottom: '.3rem',
               marginBottom: '.9rem',
             }}>Identidad corporativa</span>
             <h2 style={{ fontFamily: 'var(--font-montserrat)', fontWeight: 900, fontSize: 'clamp(1.6rem,3.5vw,2.4rem)', color: 'var(--azul)' }}>
@@ -554,7 +554,7 @@ export default function HomePage() {
       </section>
 
       {/* ===== CTA PROPIEDADES ===== */}
-      <section style={{ background: 'linear-gradient(135deg,var(--rojo) 0%,var(--azul) 100%)', padding: '5rem 2rem', textAlign: 'center', color: '#fff' }}>
+      <section style={{ background: 'var(--negro)', padding: '5rem 2rem', textAlign: 'center', color: '#fff' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ fontFamily: 'var(--font-montserrat)', fontWeight: 900, fontSize: 'clamp(1.4rem,3vw,2rem)', marginBottom: '1rem' }}>
             Explora Nuestras Propiedades
@@ -563,7 +563,7 @@ export default function HomePage() {
             Naves industriales, casas, terrenos y locales en León, Guanajuato
           </p>
           <Link href="/propiedades" style={{
-            display: 'inline-block', background: '#fff', color: 'var(--rojo)',
+            display: 'inline-block', background: 'var(--rojo-marca)', color: '#fff',
             padding: '1rem 2.5rem', borderRadius: '10px', fontWeight: 700,
             fontFamily: 'var(--font-montserrat)', fontSize: '1rem',
             transition: 'transform .2s',
@@ -575,19 +575,19 @@ export default function HomePage() {
 
       {/* ===== TESTIMONIOS ===== */}
       <section style={{
-        background: 'linear-gradient(135deg,#1a2634 0%,#000 100%)',
+        background: 'linear-gradient(160deg, #17181C 0%, var(--negro) 100%)',
         padding: '6rem 2rem', position: 'relative', overflow: 'hidden',
       }}>
         {/* Decoración */}
-        <div style={{ position: 'absolute', top: '-100px', right: '-100px', width: '300px', height: '300px', background: 'rgba(139,26,26,.1)', borderRadius: '50%', filter: 'blur(60px)' }} />
+        <div style={{ position: 'absolute', top: '-100px', right: '-100px', width: '300px', height: '300px', background: 'rgba(200,16,46,.12)', borderRadius: '50%', filter: 'blur(60px)' }} />
         <div style={{ position: 'absolute', bottom: '-100px', left: '-100px', width: '300px', height: '300px', background: 'rgba(26,38,52,.2)', borderRadius: '50%', filter: 'blur(60px)' }} />
 
         <div style={{ textAlign: 'center', marginBottom: '4rem', position: 'relative', zIndex: 2 }}>
           <span style={{
-            display: 'inline-block', color: 'rgba(192,57,43,.9)', fontWeight: 800,
+            display: 'inline-block', color: 'var(--rojo-marca)', fontWeight: 800,
             fontSize: '.72rem', textTransform: 'uppercase', letterSpacing: '3.5px',
             fontFamily: 'var(--font-montserrat)',
-            borderBottom: '2px solid rgba(192,57,43,.6)', paddingBottom: '.3rem',
+            borderBottom: '2px solid var(--rojo-marca)', paddingBottom: '.3rem',
             marginBottom: '.9rem',
           }}>Lo que dicen de nosotros</span>
           <h2 style={{ color: '#fff', fontSize: 'clamp(1.8rem,3vw,2.6rem)', fontFamily: 'var(--font-montserrat)', fontWeight: 900 }}>
@@ -642,14 +642,14 @@ export default function HomePage() {
       </section>
 
       {/* ===== CONTACTO ===== */}
-      <section id="contacto" style={{ background: 'var(--gris)', padding: '6rem 2rem' }}>
+      <section id="contacto" style={{ background: 'var(--hueso)', padding: '6rem 2rem' }}>
         <div style={{ maxWidth: '680px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
             <span style={{
-              display: 'inline-block', color: 'var(--rojo)', fontWeight: 800,
+              display: 'inline-block', color: 'var(--rojo-marca)', fontWeight: 800,
               fontSize: '.72rem', textTransform: 'uppercase', letterSpacing: '3.5px',
               fontFamily: 'var(--font-montserrat)',
-              borderBottom: '2px solid var(--rojo)', paddingBottom: '.3rem',
+              borderBottom: '2px solid var(--rojo-marca)', paddingBottom: '.3rem',
               marginBottom: '.9rem',
             }}>Estamos para ayudarte</span>
             <h2 style={{ fontFamily: 'var(--font-montserrat)', fontWeight: 900, fontSize: 'clamp(1.6rem,3.5vw,2.4rem)', color: 'var(--azul)' }}>

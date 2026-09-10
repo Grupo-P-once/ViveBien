@@ -47,15 +47,16 @@ export default function Header() {
   ]
 
   return (
-    <header style={{
+    <header className="vb-header" style={{
       position: 'sticky', top: 0, zIndex: 1000,
       background: '#fff', boxShadow: '0 2px 12px rgba(0,0,0,.08)',
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      padding: '0 2rem', height: '120px',
     }}>
-      {/* Brand */}
-      <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
-        <Image src="/logo_transparent.png" alt="Vive Bien" width={130} height={100} style={{ objectFit: 'contain' }} priority />
+      {/* Brand. La altura sale de la clase, no de aquí: en línea le ganaría a
+          la media query y la cabecera seguiría midiendo 120px en un teléfono
+          — un 15% de la pantalla ocupado por algo pegajoso. Ver E-15. */}
+      <Link href="/" className="vb-logo" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+        <Image src="/logo_transparent.png" alt="Vive Bien" width={130} height={100} priority />
       </Link>
 
       {/* Desktop nav */}
