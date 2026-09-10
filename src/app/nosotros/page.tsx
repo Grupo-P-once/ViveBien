@@ -91,15 +91,15 @@ export default function NosotrosPage() {
         <div style={{ position: 'absolute', top: '1.5rem', left: 'max(4vw, 2rem)', display: 'flex', alignItems: 'center', gap: '.5rem', zIndex: 3 }}>
           <Link href="/" style={{ color: 'rgba(255,255,255,.45)', fontFamily: 'Montserrat, sans-serif', fontSize: '.72rem', fontWeight: 600, letterSpacing: '1.5px', textTransform: 'uppercase', textDecoration: 'none' }}>Inicio</Link>
           <span style={{ color: 'rgba(255,255,255,.25)', fontSize: '.65rem' }}>›</span>
-          <span style={{ color: 'var(--dorado)', fontFamily: 'Montserrat, sans-serif', fontSize: '.72rem', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase' }}>Nosotros</span>
+          <span style={{ color: 'var(--rojo-marca)', fontFamily: 'Montserrat, sans-serif', fontSize: '.72rem', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase' }}>Nosotros</span>
         </div>
 
         {/* Content */}
         <div style={{ position: 'relative', zIndex: 2, padding: '0 max(4vw, 2rem) 4rem', maxWidth: '860px' }}>
           {/* Editorial label */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '.8rem', marginBottom: '1.2rem' }}>
-            <div style={{ width: '30px', height: '2px', background: 'var(--dorado)', flexShrink: 0 }} />
-            <span style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '.68rem', letterSpacing: '3.5px', textTransform: 'uppercase', color: 'var(--dorado)' }}>
+            <div style={{ width: '30px', height: '2px', background: 'var(--rojo-marca)', flexShrink: 0 }} />
+            <span style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '.68rem', letterSpacing: '3.5px', textTransform: 'uppercase', color: 'var(--rojo-marca)' }}>
               Quiénes Somos · León, Gto.
             </span>
           </div>
@@ -107,7 +107,7 @@ export default function NosotrosPage() {
             <span style={{ display: 'block', fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: 'clamp(2rem,4.5vw,3.4rem)', color: '#fff', letterSpacing: '-.02em' }}>
               Más de 15 años
             </span>
-            <span style={{ display: 'block', fontFamily: '"Playfair Display", Georgia, serif', fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(2rem,4.5vw,3.4rem)', color: 'var(--dorado)' }}>
+            <span style={{ display: 'block', fontFamily: '"Playfair Display", Georgia, serif', fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(2rem,4.5vw,3.4rem)', color: 'var(--rojo-marca)' }}>
               construyendo confianza
             </span>
           </h1>
@@ -156,7 +156,7 @@ export default function NosotrosPage() {
       </section>
 
       {/* Nuestra Historia */}
-      <section style={{ background: 'var(--gris)', padding: '5rem 2rem' }}>
+      <section style={{ background: 'var(--hueso)', padding: '5rem 2rem' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5rem', alignItems: 'center' }}>
           <div>
             <div className="editorial-label">Nuestra Historia</div>
@@ -266,7 +266,7 @@ export default function NosotrosPage() {
       </section>
 
       {/* Por qué elegirnos */}
-      <section style={{ background: 'var(--gris)', padding: '5rem 2rem' }}>
+      <section style={{ background: 'var(--hueso)', padding: '5rem 2rem' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4rem', alignItems: 'center' }}>
           <div>
             <div className="editorial-label">¿Por qué nosotros?</div>
@@ -281,7 +281,7 @@ export default function NosotrosPage() {
               { icon: 'fa-clock', title: 'Respuesta inmediata', desc: 'Nuestro equipo responde en menos de 2 horas, todos los días de la semana, incluso fines de semana.' },
             ].map(r => (
               <div key={r.title} style={{ display: 'flex', gap: '1.2rem', marginBottom: '1.5rem', alignItems: 'flex-start' }}>
-                <div style={{ width: '44px', height: '44px', borderRadius: '10px', background: 'var(--superficie)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <div style={{ width: '44px', height: '44px', borderRadius: '10px', background: 'var(--hueso)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <i className={`fa ${r.icon}`} style={{ fontSize: '1rem', color: 'var(--rojo)' }} />
                 </div>
                 <div>
@@ -344,7 +344,7 @@ export default function NosotrosPage() {
         <div style={{ maxWidth: '1100px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
           <span style={{
             display: 'inline-block', letterSpacing: '.2em', fontSize: '.72rem',
-            fontWeight: 700, color: 'var(--dorado-oscuro)', textTransform: 'uppercase', marginBottom: '1.2rem',
+            fontWeight: 700, color: 'var(--rojo-marca)', textTransform: 'uppercase', marginBottom: '1.2rem',
           }}>
             Nuestra Familia Empresarial
           </span>
@@ -420,9 +420,9 @@ export default function NosotrosPage() {
                   background: c.active ? 'rgba(192,156,40,.3)' : 'rgba(255,255,255,.08)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
-                  <i className={`fa ${c.icon}`} style={{ fontSize: '1.3rem', color: c.active ? 'var(--dorado-oscuro)' : 'rgba(255,255,255,.5)' }} />
+                  <i className={`fa ${c.icon}`} style={{ fontSize: '1.3rem', color: c.active ? 'var(--rojo-marca)' : 'rgba(255,255,255,.5)' }} />
                 </div>
-                <div style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '.95rem', letterSpacing: '.08em', color: c.active ? 'var(--dorado-oscuro)' : 'rgba(255,255,255,.75)' }}>
+                <div style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '.95rem', letterSpacing: '.08em', color: c.active ? 'var(--rojo-marca)' : 'rgba(255,255,255,.75)' }}>
                   {c.nombre}
                 </div>
                 <div style={{ fontSize: '.7rem', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: c.active ? 'rgba(192,156,40,.7)' : 'rgba(255,255,255,.3)' }}>
@@ -447,7 +447,7 @@ export default function NosotrosPage() {
                 boxShadow: '0 0 20px rgba(192,156,40,.3)',
                 transition: 'border-color .2s, box-shadow .2s',
               }}
-              onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = 'var(--dorado-oscuro)'; (e.currentTarget as HTMLAnchorElement).style.boxShadow = '0 0 30px rgba(192,156,40,.6)' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = 'var(--rojo-marca)'; (e.currentTarget as HTMLAnchorElement).style.boxShadow = '0 0 30px rgba(192,156,40,.6)' }}
               onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = 'rgba(192,156,40,.6)'; (e.currentTarget as HTMLAnchorElement).style.boxShadow = '0 0 20px rgba(192,156,40,.3)' }}
             >
               <img src="/logo-p11-real.png" alt="Grupo P-Once" style={{ width: '78px', height: '78px', objectFit: 'contain' }} />
@@ -466,13 +466,13 @@ export default function NosotrosPage() {
         <div style={{ position: 'absolute', top: '-100px', left: '50%', transform: 'translateX(-50%)', width: '600px', height: '300px', background: 'rgba(255,255,255,.03)', borderRadius: '50%', pointerEvents: 'none' }} />
         <div style={{ maxWidth: '700px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.8rem', marginBottom: '1.5rem' }}>
-            <div style={{ width: '30px', height: '2px', background: 'rgba(201,169,110,.5)' }} />
-            <span style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '.68rem', letterSpacing: '3.5px', textTransform: 'uppercase', color: 'rgba(201,169,110,.8)' }}>Tu próxima propiedad</span>
-            <div style={{ width: '30px', height: '2px', background: 'rgba(201,169,110,.5)' }} />
+            <div style={{ width: '30px', height: '2px', background: 'rgba(200,16,46,.5)' }} />
+            <span style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '.68rem', letterSpacing: '3.5px', textTransform: 'uppercase', color: 'rgba(200,16,46,.8)' }}>Tu próxima propiedad</span>
+            <div style={{ width: '30px', height: '2px', background: 'rgba(200,16,46,.5)' }} />
           </div>
           <h2 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: 'clamp(1.8rem,4vw,2.8rem)', marginBottom: '1rem', lineHeight: 1.15 }}>
             ¿Listo para encontrar<br />
-            <span style={{ fontFamily: '"Playfair Display", Georgia, serif', fontStyle: 'italic', fontWeight: 700, color: 'rgba(201,169,110,.9)' }}>tu propiedad ideal?</span>
+            <span style={{ fontFamily: '"Playfair Display", Georgia, serif', fontStyle: 'italic', fontWeight: 700, color: 'rgba(200,16,46,.9)' }}>tu propiedad ideal?</span>
           </h2>
           <p style={{ opacity: .8, fontSize: '1.05rem', lineHeight: 1.7, marginBottom: '2.5rem' }}>
             Nuestro equipo está listo para asesorarte sin compromiso. Cuéntanos qué buscas y te ayudamos a encontrarlo.

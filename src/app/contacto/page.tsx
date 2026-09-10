@@ -67,8 +67,8 @@ export default function ContactoPage() {
         <div className="hero-top-line" />
         <div style={{ position: 'relative', zIndex: 2, padding: '0 max(4vw, 2rem) 3.5rem', maxWidth: '720px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '.8rem', marginBottom: '1rem' }}>
-            <div style={{ width: '28px', height: '2px', background: 'var(--dorado)', flexShrink: 0 }} />
-            <span style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '.68rem', letterSpacing: '3.5px', textTransform: 'uppercase', color: 'var(--dorado)' }}>
+            <div style={{ width: '28px', height: '2px', background: 'var(--rojo-marca)', flexShrink: 0 }} />
+            <span style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '.68rem', letterSpacing: '3.5px', textTransform: 'uppercase', color: 'var(--rojo-marca)' }}>
               Hablemos · León, Gto.
             </span>
           </div>
@@ -76,7 +76,7 @@ export default function ContactoPage() {
             <span style={{ display: 'block', fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: 'clamp(1.8rem,4vw,3rem)', color: '#fff', letterSpacing: '-.02em' }}>
               Contáctanos
             </span>
-            <span style={{ display: 'block', fontFamily: '"Playfair Display", Georgia, serif', fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(1.4rem,3vw,2.2rem)', color: 'var(--dorado)' }}>
+            <span style={{ display: 'block', fontFamily: '"Playfair Display", Georgia, serif', fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(1.4rem,3vw,2.2rem)', color: 'var(--rojo-marca)' }}>
               tu asesor te espera
             </span>
           </h1>
@@ -86,7 +86,7 @@ export default function ContactoPage() {
         </div>
       </section>
 
-      <main style={{ background: 'var(--gris)', padding: '4rem 2rem' }}>
+      <main style={{ background: 'var(--hueso)', padding: '4rem 2rem' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3rem', alignItems: 'start' }} className="contact-grid">
 
           {/* Info */}

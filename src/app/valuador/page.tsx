@@ -91,8 +91,8 @@ export default function ValuadorPage() {
         <div className="hero-top-line" />
         <div style={{ position: 'relative', zIndex: 2, padding: '0 max(4vw, 2rem) 3.5rem', maxWidth: '740px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '.8rem', marginBottom: '1rem' }}>
-            <div style={{ width: '28px', height: '2px', background: 'var(--dorado)', flexShrink: 0 }} />
-            <span style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '.68rem', letterSpacing: '3.5px', textTransform: 'uppercase', color: 'var(--dorado)' }}>
+            <div style={{ width: '28px', height: '2px', background: 'var(--rojo-marca)', flexShrink: 0 }} />
+            <span style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '.68rem', letterSpacing: '3.5px', textTransform: 'uppercase', color: 'var(--rojo-marca)' }}>
               Herramienta gratuita · León, Gto.
             </span>
           </div>
@@ -100,7 +100,7 @@ export default function ValuadorPage() {
             <span style={{ display: 'block', fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: 'clamp(1.8rem,4vw,3rem)', color: '#fff', letterSpacing: '-.02em' }}>
               Valuador
             </span>
-            <span style={{ display: 'block', fontFamily: '"Playfair Display", Georgia, serif', fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(1.8rem,4vw,3rem)', color: 'var(--dorado)' }}>
+            <span style={{ display: 'block', fontFamily: '"Playfair Display", Georgia, serif', fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(1.8rem,4vw,3rem)', color: 'var(--rojo-marca)' }}>
               de Propiedades
             </span>
           </h1>
@@ -111,7 +111,7 @@ export default function ValuadorPage() {
       </section>
 
       {/* Calculator */}
-      <main style={{ background: 'var(--gris)', padding: '2rem 1rem 4rem', minHeight: '60vh' }}>
+      <main style={{ background: 'var(--hueso)', padding: '2rem 1rem 4rem', minHeight: '60vh' }}>
         <div style={{
           maxWidth: '800px', margin: '-2rem auto 0',
           background: '#fff', padding: '3rem',
@@ -194,7 +194,7 @@ export default function ValuadorPage() {
           {resultado && (
             <div style={{
               marginTop: '2.5rem', padding: '2rem',
-              background: 'var(--gris)', borderRadius: '0',
+              background: 'var(--hueso)', borderRadius: '0',
               borderLeft: '4px solid var(--rojo)',
               animation: 'fadeInResult .5s ease forwards',
             }}>
