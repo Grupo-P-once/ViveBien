@@ -79,7 +79,6 @@ export default function DashboardPage() {
   const [email, setEmail] = useState('')
   const [pass, setPass] = useState('')
   const [regName, setRegName] = useState('')
-  const [regRol, setRegRol] = useState<'cliente' | 'publicador'>('cliente')
   const [loginErr, setLoginErr] = useState('')
   const [googleLoading, setGoogleLoading] = useState(false)
 
@@ -146,7 +145,8 @@ export default function DashboardPage() {
       await fetch('/api/usuarios/me', {
         method: 'PATCH',
         headers: await authHeaders(),
-        body: JSON.stringify({ nombre: regName, rol: regRol }),
+        // El rol no viaja: todos entran como cliente.
+        body: JSON.stringify({ nombre: regName }),
       }).catch(() => { })
     } catch (err: any) {
       setLoginErr(err.message || 'Error al crear la cuenta')
@@ -357,22 +357,9 @@ export default function DashboardPage() {
             <input type="password" value={pass} onChange={e => setPass(e.target.value)}
               placeholder="Contraseña (mín. 6 caracteres)" minLength={6} required
               style={{ padding: '12px', border: '1px solid #ccc', borderRadius: '6px', fontSize: '1rem' }} />
-            <p style={{ fontSize: '.85rem', color: '#555', margin: '6px 0 2px' }}>¿Qué quieres hacer?</p>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              {([['cliente', 'Buscar propiedades'], ['publicador', 'Publicar una propiedad']] as const).map(([valor, texto]) => (
-                <button key={valor} type="button" onClick={() => setRegRol(valor)}
-                  aria-pressed={regRol === valor}
-                  style={{
-                    flex: 1, padding: '10px', fontSize: '.85rem', cursor: 'pointer', borderRadius: '6px',
-                    fontWeight: regRol === valor ? 700 : 400,
-                    border: regRol === valor ? '2px solid var(--rojo)' : '1px solid #ccc',
-                    background: regRol === valor ? '#fdf4f4' : '#fff',
-                    color: regRol === valor ? 'var(--rojo)' : '#444',
-                  }}>
-                  {texto}
-                </button>
-              ))}
-            </div>
+            {/* Sin eleccion de rol. Publicar no es una preferencia que uno
+                marca al registrarse: es permiso para meter contenido en el
+                catalogo publico, y lo concede un administrador. */}
             {loginErr && <p style={{ color: 'var(--rojo)', fontSize: '.85rem' }}>{loginErr}</p>}
             <button type="submit" style={{ padding: '12px', background: 'var(--rojo)', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 700, cursor: 'pointer', fontSize: '1rem' }}>
               Registrarme

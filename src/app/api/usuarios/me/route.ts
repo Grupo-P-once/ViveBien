@@ -70,7 +70,21 @@ export async function GET(req: Request) {
   })
 }
 
-const ROLES_ELEGIBLES: Rol[] = ['cliente', 'publicador']
+/**
+ * Lo que una persona puede elegir para sí misma: **sólo cliente**.
+ *
+ * Antes incluía `publicador`, así que cualquiera con la consola del navegador
+ * abierta —o el botón de «quiero publicar»— se ascendía solo. Publicar no es
+ * una preferencia: es permiso para meter contenido en el catálogo público de
+ * la casa, con su teléfono al lado.
+ *
+ * Ahora lo concede un administrador desde el panel de usuarios. Quien quiera
+ * publicar lo **solicita**, y alguien lo revisa.
+ *
+ * Este es el candado que cuenta. El de la interfaz sólo evita que se ofrezca;
+ * éste evita que se consiga.
+ */
+const ROLES_ELEGIBLES: Rol[] = ['cliente']
 
 /** Recorta y normaliza un valor de texto, o devuelve undefined si viene vacío. */
 function texto(v: unknown, max: number): string | undefined {
@@ -138,7 +152,14 @@ export async function PATCH(req: Request) {
 
   if (typeof body.rol === 'string') {
     if (!ROLES_ELEGIBLES.includes(body.rol as Rol)) {
-      return NextResponse.json({ error: 'Ese rol no se puede elegir.' }, { status: 400 })
+      return NextResponse.json(
+        {
+          error: body.rol === 'publicador'
+            ? 'Publicar lo autoriza un administrador. Escríbenos y te damos acceso.'
+            : 'Ese rol no se puede elegir.',
+        },
+        { status: 403 },
+      )
     }
     // Un administrador no se degrada a sí mismo sin querer al guardar el perfil.
     if (!isAdminEmail(user.email)) cambios.rol = body.rol
