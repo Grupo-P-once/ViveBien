@@ -50,3 +50,6 @@ scripts/set-vercel-env.mjs
 
 # temporales del CLI de supabase
 supabase/.temp/
+
+# Skills instaladas por maquina, no por repo
+.agents/
