@@ -136,6 +136,7 @@ export default function EditarPropiedad({ params }: { params: Promise<{ id: stri
   const [subiendo, setSubiendo] = useState(false)
   const [progresoFotos, setProgresoFotos] = useState(0)
   const [enviando, setEnviando] = useState(false)
+  const [faltaPerfil, setFaltaPerfil] = useState(false)
 
   const pendiente = useRef<Record<string, unknown>>({})
   const temporizador = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -268,8 +269,15 @@ export default function EditarPropiedad({ params }: { params: Promise<{ id: stri
     })
     const j = await res.json().catch(() => ({}))
     setEnviando(false)
-    if (!res.ok) { setError(j.error || 'No se pudo enviar a revisión.'); return }
+    if (!res.ok) {
+      setError(j.error || 'No se pudo enviar a revisión.')
+      // Falta el contacto del publicador, no algo de esta propiedad: el sitio
+      // donde se arregla es el perfil, y hay que llevarlo hasta ahí.
+      setFaltaPerfil(Boolean(j.perfilIncompleto))
+      return
+    }
     setError('')
+    setFaltaPerfil(false)
     cargar()
   }
 
@@ -361,6 +369,14 @@ export default function EditarPropiedad({ params }: { params: Promise<{ id: stri
       {error && (
         <p style={{ background: 'var(--error-fondo-fuerte)', color: 'var(--error-fuerte)', padding: '10px 14px', borderRadius: 8, fontSize: '.88rem', marginBottom: '1rem' }}>
           {error}
+          {faltaPerfil && (
+            <>
+              {' '}
+              <Link href="/mi-cuenta?motivo=publicar" style={{ color: 'var(--error-fuerte)', fontWeight: 700 }}>
+                Completar mi perfil →
+              </Link>
+            </>
+          )}
         </p>
       )}
 

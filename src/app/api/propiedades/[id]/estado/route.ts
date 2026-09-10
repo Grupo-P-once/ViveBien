@@ -8,6 +8,7 @@ import {
   calcularCompletitud,
   type EstadoPub,
 } from '@/lib/publicacion'
+import { puedePublicar } from '@/lib/perfil'
 
 /**
  * POST /api/propiedades/[id]/estado — mueve una propiedad por su ciclo de vida.
@@ -62,6 +63,30 @@ export async function POST(
   if (destino === 'en_revision') {
     const listo = listaParaRevision(prop)
     if (!listo.ok) return NextResponse.json({ error: listo.motivo }, { status: 400 })
+
+    // Ni tampoco uno cuyo dueño no ha dejado cómo lo contacten: la propiedad
+    // estaría completa y el anuncio seguiría siendo un callejón sin salida.
+    //
+    // Se pide `*` a propósito. Con la lista de columnas, un `whatsapp` que aún
+    // no existe —06-perfil.sql sin aplicar— tumba la consulta entera, el perfil
+    // llega vacío y se bloquea a TODOS los publicadores por una migración
+    // pendiente. Aquí la regla es de negocio, no de seguridad: degradar a lo
+    // que la base sí tiene es mejor que cerrar el flujo entero.
+    const { data: fila } = await db
+      .from('usuarios')
+      .select('*')
+      .eq('uid', perfil.uid)
+      .maybeSingle()
+
+    const cuenta = (fila ?? {}) as Record<string, unknown>
+    const conWhatsapp = 'whatsapp' in cuenta
+    const contacto = puedePublicar(
+      conWhatsapp ? cuenta : { ...cuenta, whatsapp: cuenta.telefono },
+      perfil.rol,
+    )
+    if (!contacto.ok) {
+      return NextResponse.json({ error: contacto.motivo, perfilIncompleto: true }, { status: 400 })
+    }
   }
 
   const ahora = new Date().toISOString()

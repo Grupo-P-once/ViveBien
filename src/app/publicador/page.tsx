@@ -4,6 +4,7 @@ import { onAuthStateChanged, type User } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import Bienvenida from '@/components/Bienvenida'
 
 type Prop = {
   id: string
@@ -36,6 +37,7 @@ export default function PanelPublicador() {
   const [error, setError] = useState('')
   const [aviso, setAviso] = useState('')
   const [nuevoTitulo, setNuevoTitulo] = useState('')
+  const [faltaPerfil, setFaltaPerfil] = useState(false)
 
   const cargar = useCallback(async () => {
     try {
@@ -87,7 +89,15 @@ export default function PanelPublicador() {
       body: JSON.stringify({ estado }),
     })
     const j = await res.json().catch(() => ({}))
-    if (!res.ok) { setError(j.error || 'No se pudo cambiar el estado.'); return }
+    if (!res.ok) {
+      setError(j.error || 'No se pudo cambiar el estado.')
+      // El servidor distingue «falta tu contacto» de cualquier otro fallo.
+      // Enseñar el motivo y dejar al publicador donde no puede arreglarlo
+      // sería un callejón sin salida más.
+      setFaltaPerfil(Boolean(j.perfilIncompleto))
+      return
+    }
+    setFaltaPerfil(false)
     setError('')
     setAviso(estado === 'en_revision' ? 'Enviada a revisión.' : 'Estado actualizado.')
     setTimeout(() => setAviso(''), 5000)
@@ -108,10 +118,22 @@ export default function PanelPublicador() {
 
   return (
     <main style={{ maxWidth: 1000, margin: '0 auto', padding: '2rem 1.25rem 5rem', fontFamily: 'system-ui' }}>
-      <h1 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--azul)', marginBottom: '.3rem' }}>Mis propiedades</h1>
+      <div style={{ display: 'flex', gap: 12, alignItems: 'baseline', flexWrap: 'wrap' }}>
+        <h1 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--azul)', marginBottom: '.3rem', flex: 1, minWidth: 200 }}>
+          Mis propiedades
+        </h1>
+        <Link href="/mi-cuenta" style={{ color: 'var(--azul)', fontWeight: 600, fontSize: '.87rem' }}>
+          Mi perfil
+        </Link>
+        <Link href="/dashboard" style={{ color: 'var(--rojo)', fontWeight: 600, fontSize: '.87rem' }}>
+          Panel
+        </Link>
+      </div>
       <p style={{ color: '#666', marginBottom: '1.5rem', fontSize: '.92rem' }}>
         Una propiedad nueva empieza como borrador. Cuando esté completa la envías a revisión, y un administrador la aprueba.
       </p>
+
+      <Bienvenida rol="publicador" propiedades={props} />
 
       <form onSubmit={crear} style={{ display: 'flex', gap: 8, marginBottom: '1.5rem', flexWrap: 'wrap' }}>
         <input value={nuevoTitulo} onChange={e => setNuevoTitulo(e.target.value)}
@@ -122,7 +144,19 @@ export default function PanelPublicador() {
         </button>
       </form>
 
-      {error && <p style={{ background: 'var(--error-fondo-fuerte)', color: 'var(--error-fuerte)', padding: '10px 14px', borderRadius: 8, fontSize: '.9rem' }}>{error}</p>}
+      {error && (
+        <p style={{ background: 'var(--error-fondo-fuerte)', color: 'var(--error-fuerte)', padding: '10px 14px', borderRadius: 8, fontSize: '.9rem' }}>
+          {error}
+          {faltaPerfil && (
+            <>
+              {' '}
+              <Link href="/mi-cuenta?motivo=publicar" style={{ color: 'var(--error-fuerte)', fontWeight: 700 }}>
+                Completar mi perfil →
+              </Link>
+            </>
+          )}
+        </p>
+      )}
       {aviso && <p style={{ background: 'var(--exito-fondo)', color: 'var(--exito-fuerte)', padding: '10px 14px', borderRadius: 8, fontSize: '.9rem' }}>{aviso}</p>}
 
       {props.length === 0 && !error && (

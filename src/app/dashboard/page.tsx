@@ -11,6 +11,7 @@ import {
 import { auth, googleProvider } from '@/lib/firebase'
 import Link from 'next/link'
 import Metricas from '@/components/Metricas'
+import Bienvenida from '@/components/Bienvenida'
 
 interface Propiedad {
   id?: string
@@ -442,6 +443,9 @@ export default function DashboardPage() {
               <i className="fa fa-building" style={{ marginRight: '.4rem' }} />Mis propiedades
             </Link>
           )}
+          <Link href="/mi-cuenta" style={{ color: 'var(--azul)', fontWeight: 600, fontSize: '.85rem' }}>
+            <i className="fa fa-id-card" style={{ marginRight: '.4rem' }} />Mi perfil
+          </Link>
           <Link href="/" style={{ color: 'var(--rojo)', fontWeight: 600, fontSize: '.85rem' }}>← Ver sitio</Link>
           <button onClick={() => signOut(auth)} style={{
             background: 'transparent', color: 'var(--rojo)', border: '1px solid var(--rojo)',
@@ -487,6 +491,9 @@ export default function DashboardPage() {
             <i className="fa fa-search" style={{ marginRight: '.4rem' }} />Ver Propiedades
           </Link>
         </div>
+
+        {/* Primeros pasos: se tacha solo, mirando los datos reales. */}
+        <Bienvenida rol={rol === 'publicador' ? 'publicador' : 'cliente'} />
 
         {/* Mis consultas */}
         <div style={{ background: '#fff', borderRadius: '16px', padding: '2rem', boxShadow: '0 4px 15px rgba(0,0,0,.06)', marginBottom: '2rem' }}>
@@ -600,6 +607,9 @@ export default function DashboardPage() {
           }}>
             <i className="fa fa-clipboard-check" style={{ marginRight: '.4rem' }} />Por revisar
           </Link>
+          <Link href="/mi-cuenta" style={{ color: 'var(--azul)', fontWeight: 600, fontSize: '.85rem' }}>
+            <i className="fa fa-id-card" style={{ marginRight: '.4rem' }} />Mi perfil
+          </Link>
           <Link href="/" style={{ color: 'var(--rojo)', fontWeight: 600, fontSize: '.85rem' }}>← Ver sitio</Link>
           <button onClick={() => signOut(auth)} style={{
             background: 'transparent', color: 'var(--rojo)', border: '1px solid var(--rojo)',
@@ -630,6 +640,9 @@ export default function DashboardPage() {
       </nav>
 
       <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
+
+        {/* Primeros pasos del administrador: sobre todo, lo que espera revisión. */}
+        <Bienvenida rol="admin" propiedades={propiedades} />
 
         {/* ── TAB: Métricas ── */}
         {tab === 'metricas' && (
