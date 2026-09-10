@@ -42,15 +42,6 @@ interface Propiedad {
   destacada?: boolean
 }
 
-const EMPTY: Omit<Propiedad, 'id'> = {
-  titulo: '', tipo: 'nave', operacion: 'renta', precio: 0,
-  precio_incluye_iva: false,
-  ubicacion: '', descripcion: '', fotos: [], estatus: 'disponible',
-  metros: undefined, recamaras: undefined, banos: undefined, whatsapp: '',
-  altura_libre: undefined, andenes: undefined, amenidades: [], mantenimiento: undefined,
-  video_url: '', destacada: false,
-}
-
 // Sólo controla qué se muestra en la interfaz. La autorización real vive en
 // el servidor (src/lib/auth-server.ts) y se configura con ADMIN_EMAILS.
 const ADMIN_EMAILS = (process.env.NEXT_PUBLIC_ADMIN_EMAILS ?? '')
