@@ -14,6 +14,7 @@ import Metricas from '@/components/Metricas'
 import Bienvenida from '@/components/Bienvenida'
 import QuieroPublicar from '@/components/QuieroPublicar'
 import MisFavoritos from '@/components/MisFavoritos'
+import MetricasCliente from '@/components/MetricasCliente'
 
 interface Propiedad {
   id?: string
@@ -499,6 +500,10 @@ export default function DashboardPage() {
 
         {/* Sólo a quien todavía no publica: al publicador ya no le dice nada. */}
         {rol !== 'publicador' && <QuieroPublicar />}
+
+        {/* Dos preguntas, no un tablero: cual esta mejor de precio, y si el
+            presupuesto alcanza. */}
+        <MetricasCliente />
 
         {/* El corazon de la ficha guardaba en `favoritos` desde la Fase 5 y
             este panel nunca leia esa tabla. */}
