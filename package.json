@@ -10,16 +10,20 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.9.1",
     "@supabase/supabase-js": "^2.101.1",
+    "@vis.gl/react-google-maps": "^1.10.0",
     "firebase": "^12.11.0",
     "framer-motion": "^12.38.0",
     "gsap": "^3.14.2",
     "jose": "^6.2.12",
-    "next": "16.2.1",
+    "next": "^16.3.4",
     "react": "19.2.4",
     "react-countup": "^6.5.3",
     "react-dom": "19.2.4",
-    "recharts": "^3.10.1"
+    "react-hook-form": "^7.87.0",
+    "recharts": "^3.10.1",
+    "zod": "^4.6.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
