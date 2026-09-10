@@ -110,8 +110,23 @@ export default function Usuarios() {
       )}
 
       {!cargando && datos.length === 0 && !error && (
-        <p style={{ textAlign: 'center', padding: '2.5rem 1rem', color: '#8B95A3', fontSize: '.88rem' }}>
-          Todavía no hay usuarios registrados.
+        <div style={{ textAlign: 'center', padding: '2.5rem 1rem', color: '#8B95A3', fontSize: '.88rem', lineHeight: 1.65 }}>
+          <p style={{ margin: 0 }}>Todavía no hay usuarios en la tabla.</p>
+          <p style={{ margin: '.6rem 0 0', fontSize: '.82rem' }}>
+            La fila de cada persona se crea la primera vez que entra al panel.
+            Si alguien se registró mientras la base no respondía, aparecerá
+            cuando vuelva a entrar.
+          </p>
+        </div>
+      )}
+
+      {/* Advertencia permanente: la lista puede no estar completa, y saberlo
+          importa antes de concluir que "no hay usuarios". */}
+      {datos.length > 0 && (
+        <p style={{ fontSize: '.78rem', color: '#8B95A3', marginBottom: '.75rem', lineHeight: 1.55 }}>
+          Esta lista sale de la tabla <code>usuarios</code>, que se llena la primera
+          vez que alguien entra al panel. Quien creó cuenta y no ha vuelto todavía
+          no aparece aquí.
         </p>
       )}
 

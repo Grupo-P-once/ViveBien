@@ -45,8 +45,23 @@ export async function GET(req: Request) {
 
     const { data } = await db.from('usuarios').select(COLUMNAS).eq('uid', user.uid).maybeSingle()
     fila = (data as Record<string, unknown> | null) ?? null
-  } catch {
-    // Migración sin aplicar todavía.
+  } catch (e) {
+    // Antes esto era `catch {}` a secas, pensando sólo en «la migración no
+    // está aplicada». Pero también se traga que la base esté caída — y
+    // entonces el alta silenciosa NO OCURRE.
+    //
+    // Consecuencia real: quien se registra durante una caída existe en
+    // Firebase pero no en `usuarios`. No sale en el panel, no tiene rol, y
+    // sólo aparece si vuelve a entrar. Si no vuelve, es invisible para
+    // siempre y nadie sabe que se perdió.
+    //
+    // No se puede arreglar aquí -si la base no responde, no responde- pero
+    // sí se puede dejar de perder en silencio.
+    console.error(
+      '[usuarios/me] no se pudo dar de alta a %s (%s):',
+      user.email ?? 'sin correo', user.uid,
+      e instanceof Error ? e.message : e,
+    )
   }
 
   // Sin fila, se responde con lo que se sabe del token. Devolver 500 aquí
