@@ -16,6 +16,7 @@ import QuieroPublicar from '@/components/QuieroPublicar'
 import MisFavoritos from '@/components/MisFavoritos'
 import MetricasCliente from '@/components/MetricasCliente'
 import Registros from '@/components/Registros'
+import Usuarios from '@/components/Usuarios'
 
 interface Propiedad {
   id?: string
@@ -65,7 +66,7 @@ async function authHeaders(): Promise<HeadersInit> {
   }
 }
 
-type Tab = 'metricas' | 'registros' | 'props' | 'leads'
+type Tab = 'metricas' | 'registros' | 'usuarios' | 'props' | 'leads'
 type AuthTab = 'login' | 'register'
 
 export default function DashboardPage() {
@@ -640,6 +641,7 @@ export default function DashboardPage() {
         {([
           { key: 'metricas', label: 'Métricas y Leads', icon: 'fa-chart-bar' },
           { key: 'registros', label: 'Registros', icon: 'fa-address-book' },
+          { key: 'usuarios', label: 'Usuarios', icon: 'fa-users-gear' },
           { key: 'props', label: 'Mis Propiedades', icon: 'fa-home' },
         ] as { key: Tab; label: string; icon: string }[]).map(t => (
           <button key={t.key} onClick={() => setTab(t.key)} style={{
@@ -663,6 +665,9 @@ export default function DashboardPage() {
         {/* ── TAB: Registros ──
              Todo el que dejo sus datos, de las cuatro tablas a la vez. */}
         {tab === 'registros' && <Registros />}
+
+        {/* Roles y suspension. `estado: suspendido` existia sin pantalla. */}
+        {tab === 'usuarios' && <Usuarios />}
 
         {/* ── TAB: Métricas ── */}
         {tab === 'metricas' && (

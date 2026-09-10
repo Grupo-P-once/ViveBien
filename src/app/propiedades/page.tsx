@@ -1,5 +1,12 @@
 'use client'
 import BarraComparar from '@/components/BarraComparar'
+import dynamic from 'next/dynamic'
+
+// Leaflet toca `window` al importarse: sin ssr:false rompe el prerenderizado.
+const MapaListado = dynamic(() => import('@/components/MapaListado'), {
+  ssr: false,
+  loading: () => <div style={{ height: 460, borderRadius: 12, background: 'var(--hueso-hundido,#E7E4DF)', display: 'grid', placeItems: 'center', color: '#8B95A3', fontSize: '.88rem' }}>Cargando el mapa…</div>,
+})
 import { useState, useEffect, Suspense, useCallback } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
@@ -50,6 +57,7 @@ function PropiedadesContent() {
   const [loading, setLoading] = useState(true)
   const [falloConsulta, setFalloConsulta] = useState(false)
   const [desactualizado, setDesactualizado] = useState(false)
+  const [vista, setVista] = useState<'lista' | 'mapa'>('lista')
   const [filtros, setFiltros] = useState({
     op: searchParams.get('op') || '',
     tipo: searchParams.get('tipo') || '',
@@ -386,9 +394,39 @@ function PropiedadesContent() {
                   </button>
                 </div>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: '1.8rem' }}>
-                  {sortear(filtrar(propiedades)).map(p => <PropertyCard key={p.id} propiedad={p} />)}
-                </div>
+                <>
+                  {/* Lista o mapa. Mucha gente no busca por filtros, busca por
+                      DONDE: «cerca del trabajo», «en esta zona». Eso una lista
+                      no lo puede expresar. */}
+                  <div style={{ display: 'flex', gap: 6, marginBottom: '1.5rem' }}>
+                    {([['lista', 'Lista', 'fa-grip'], ['mapa', 'Mapa', 'fa-map-location-dot']] as const).map(([v, t, ic]) => (
+                      <button key={v} onClick={() => setVista(v)}
+                        aria-pressed={vista === v}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: '.45rem',
+                          padding: '.55rem 1.1rem', borderRadius: 20, cursor: 'pointer',
+                          fontSize: '.84rem', fontWeight: vista === v ? 700 : 500,
+                          fontFamily: 'Montserrat,sans-serif',
+                          border: `1px solid ${vista === v ? 'var(--azul)' : 'var(--borde-frio)'}`,
+                          background: vista === v ? 'var(--azul)' : '#fff',
+                          color: vista === v ? '#fff' : '#374151',
+                        }}>
+                        <i className={`fa ${ic}`} style={{ fontSize: '.78rem' }} />
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+
+                  {vista === 'mapa' && (
+                    <div style={{ marginBottom: '1.8rem' }}>
+                      <MapaListado propiedades={sortear(filtrar(propiedades)) as never[]} />
+                    </div>
+                  )}
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: '1.8rem' }}>
+                    {sortear(filtrar(propiedades)).map(p => <PropertyCard key={p.id} propiedad={p} />)}
+                  </div>
+                </>
               )}
             </div>
           </section>
