@@ -1,4 +1,6 @@
 @import "tailwindcss";
+/* Leaflet: sin su CSS las tiles se apilan y los controles quedan sueltos. */
+@import "leaflet/dist/leaflet.css";
 
 :root {
   /* ── Marca ── */

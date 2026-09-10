@@ -6,6 +6,13 @@ import Link from 'next/link'
 import { calcularCompletitud, faltantes, COMPLETITUD_MINIMA } from '@/lib/publicacion'
 import { MINIMO_DESCRIPCION } from '@/lib/esquemas/propiedad'
 import VistaPreviaAnuncio from '@/components/VistaPreviaAnuncio'
+import dynamic from 'next/dynamic'
+
+// Leaflet toca `window` al importarse: sin ssr:false rompe el prerenderizado.
+const MapaSelector = dynamic(() => import('@/components/MapaSelector'), {
+  ssr: false,
+  loading: () => <div style={{ height: 320, borderRadius: 10, background: 'var(--hueso-hundido, #E7E4DF)', display: 'grid', placeItems: 'center', color: '#8B95A3', fontSize: '.85rem' }}>Cargando el mapa…</div>,
+})
 
 type Prop = {
   id: string
@@ -17,6 +24,8 @@ type Prop = {
   mantenimiento?: number
   ubicacion?: string
   descripcion?: string
+  lat?: number | null
+  lng?: number | null
   fotos?: string[]
   metros?: number
   recamaras?: number
@@ -402,10 +411,30 @@ export default function EditarPropiedad({ params }: { params: Promise<{ id: stri
           )}
 
           {paso === 1 && (
-            <Campo etiqueta="Ubicación" ayuda="Calle o boulevard y colonia. No hace falta el número exacto si prefieres reservarlo.">
-              <input value={prop.ubicacion ?? ''} onChange={e => guardar({ ubicacion: e.target.value })}
-                placeholder="Blvd. San Juan Bosco, Cañada del Refugio, León, Gto." style={campoBase} />
-            </Campo>
+            <>
+              <Campo etiqueta="Ubicación" ayuda="Calle o boulevard y colonia. No hace falta el número exacto si prefieres reservarlo.">
+                <input value={prop.ubicacion ?? ''} onChange={e => guardar({ ubicacion: e.target.value })}
+                  placeholder="Blvd. San Juan Bosco, Cañada del Refugio, León, Gto." style={campoBase} />
+              </Campo>
+
+              {/* El pin en el mapa. Sin coordenadas no hay busqueda por area,
+                  que es lo que mas se espera de un portal inmobiliario.
+                  Mientras 07-ubicacion-y-fotos.sql no este aplicado no existe
+                  la columna: la ruta PATCH reintenta sin ella, asi que esto no
+                  rompe nada — sencillamente todavia no guarda. */}
+              <Campo etiqueta="Marca el punto en el mapa"
+                ayuda="Es lo que permite que te encuentren buscando por zona.">
+                <MapaSelector
+                  lat={typeof prop.lat === 'number' ? prop.lat : null}
+                  lng={typeof prop.lng === 'number' ? prop.lng : null}
+                  direccion={prop.ubicacion ?? ''}
+                  deshabilitado={!editable}
+                  onCambio={({ lat, lng, direccion }) =>
+                    guardar(direccion ? { lat, lng, ubicacion: direccion } : { lat, lng })
+                  }
+                />
+              </Campo>
+            </>
           )}
 
           {paso === 2 && (
