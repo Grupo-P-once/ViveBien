@@ -120,8 +120,8 @@ export default function MosaicoCategorias() {
           color: '#fff',
           textDecoration: 'none',
           overflow: 'hidden',
-          // La regla fina entre celdas, como en la lámina.
-          borderRight: '1px solid var(--linea-clara)',
+          // El borde va en globals.css: en línea le ganaría a la media query
+          // que lo pasa de vertical a horizontal al apilarse.
         }}>
           {foto && (
             // eslint-disable-next-line @next/next/no-img-element

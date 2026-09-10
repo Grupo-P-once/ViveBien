@@ -150,6 +150,13 @@
 
 html {
   scroll-behavior: smooth;
+  /* Las animaciones de entrada empiezan desplazadas ±50px en horizontal.
+     Mientras no se disparan, ese desplazamiento asoma fuera del viewport y
+     produce scroll horizontal — en 360px son un 14% del ancho.
+
+     `clip` y no `hidden` a propósito: `hidden` crea un contenedor de scroll y
+     rompe el `position: sticky` de la cabecera. `clip` recorta sin crearlo. */
+  overflow-x: clip;
 }
 
 body {
@@ -313,6 +320,11 @@ textarea::placeholder {
 
 /* Cuando las celdas se apilan, la regla pasa de vertical a horizontal:
    una línea a la derecha de una celda a todo lo ancho no separa nada. */
+/* Mismo motivo: el borde iba en línea y la media query no podía ganarle. */
+.mosaico-celda {
+  border-right: 1px solid var(--linea-clara);
+}
+
 @media (max-width: 980px) {
   .mosaico-celda {
     border-right: none;
@@ -320,7 +332,57 @@ textarea::placeholder {
   }
 }
 
-/* ══ Propósito y valores ═════════════════════════════════════════ */
+/* ══ Propósito y valores ═════════════════════════════════════════
+   La maquetación va aquí y NO en atributos `style`. Estaba en línea y el
+   resultado fue scroll horizontal en móvil: **un estilo en línea le gana a
+   cualquier media query**, así que la rejilla de dos columnas no se apilaba
+   nunca y empujaba el documento a 660px en una pantalla de 360.
+
+   Es la trampa de este código, que usa estilos en línea por convención: todo
+   lo que dependa del ancho tiene que vivir en una clase. */
+
+.proposito-grid {
+  max-width: 1240px;
+  margin: 0 auto;
+  display: grid;
+  gap: 3rem;
+  grid-template-columns: minmax(260px, 1fr) minmax(320px, 1.35fr);
+  align-items: start;
+}
+
+.proposito-texto {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: minmax(110px, auto) 1fr;
+  align-items: start;
+}
+
+.valores-bloque {
+  display: grid;
+  gap: 1.75rem;
+  grid-template-columns: minmax(100px, auto) 1fr;
+  align-items: center;
+}
+
+.proposito-parrafo {
+  margin: 0;
+  color: #3A3A3E;
+  font-size: .95rem;
+  line-height: 1.75;
+  border-left: 1px solid rgba(11, 11, 12, .14);
+  padding-left: 1.5rem;
+}
+
+.valores-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 1.75rem;
+  border-left: 1px solid rgba(11, 11, 12, .14);
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+}
+
 @media (max-width: 900px) {
   .proposito-grid {
     grid-template-columns: 1fr;
@@ -329,7 +391,7 @@ textarea::placeholder {
 }
 
 /* En móvil la etiqueta deja de ir al lado y pasa encima: dos columnas de
-   110px y texto no caben en 360px sin romper palabras. */
+   110px más el texto no caben en 360px sin romper palabras. */
 @media (max-width: 560px) {
   .proposito-texto,
   .valores-bloque {
@@ -337,12 +399,17 @@ textarea::placeholder {
     gap: 1rem;
   }
 
-  .proposito-texto p,
-  .valores-bloque ul {
+  .proposito-parrafo,
+  .valores-lista {
     border-left: none;
     padding-left: 0;
     border-top: 1px solid rgba(11, 11, 12, .14);
     padding-top: 1.25rem;
+  }
+
+  .valores-lista {
+    grid-template-columns: repeat(auto-fit, minmax(78px, 1fr));
+    gap: 1.1rem;
   }
 }
 
