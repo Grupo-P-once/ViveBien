@@ -10,6 +10,7 @@ import {
 } from 'firebase/auth'
 import { auth, googleProvider } from '@/lib/firebase'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import Metricas from '@/components/Metricas'
 import Bienvenida from '@/components/Bienvenida'
 import QuieroPublicar from '@/components/QuieroPublicar'
@@ -83,6 +84,7 @@ export default function DashboardPage() {
   const [googleLoading, setGoogleLoading] = useState(false)
 
   // Dashboard state
+  const router = useRouter()
   const [tab, setTab] = useState<Tab>('metricas')
   const [propiedades, setPropiedades] = useState<Propiedad[]>([])
   const [leads, setLeads] = useState<any[]>([])
@@ -427,7 +429,7 @@ export default function DashboardPage() {
           <span style={{ fontSize: '.85rem', color: '#555', background: '#f0f0f0', padding: '5px 15px', borderRadius: '20px', fontWeight: 600 }}>
             {user.displayName || user.email}
           </span>
-          {rol === 'publicador' && (
+          {(rol === 'publicador' || isAdmin) && (
             <Link href="/publicador" style={{
               background: 'var(--azul)', color: '#fff', fontWeight: 600, fontSize: '.85rem',
               padding: '6px 16px', borderRadius: '20px', textDecoration: 'none',
@@ -435,6 +437,13 @@ export default function DashboardPage() {
               <i className="fa fa-building" style={{ marginRight: '.4rem' }} />Mis propiedades
             </Link>
           )}
+          {/* El admin tambien publica, y hasta ahora no tenia por donde. */}
+          <Link href="/publicador" style={{
+            background: 'var(--rojo-marca)', color: '#fff', fontWeight: 600,
+            fontSize: '.85rem', padding: '6px 16px', borderRadius: '20px', textDecoration: 'none',
+          }}>
+            <i className="fa fa-plus" style={{ marginRight: '.4rem' }} />Publicar
+          </Link>
           <Link href="/mi-cuenta" style={{ color: 'var(--azul)', fontWeight: 600, fontSize: '.85rem' }}>
             <i className="fa fa-id-card" style={{ marginRight: '.4rem' }} />Mi perfil
           </Link>
@@ -792,8 +801,27 @@ export default function DashboardPage() {
                 }}>
                   <i className="fa fa-database" style={{ marginRight: '.5rem' }} />Seed Supabase
                 </a>
-                <button onClick={() => setEditando({ ...EMPTY })} style={{
-                  background: 'var(--rojo)', color: '#fff', border: 'none',
+                {/* Crea el borrador y lleva AL ASISTENTE, no al formulario en
+                    linea. Habia dos editores de propiedad y el admin veia el
+                    viejo: el asistente de 4 etapas existia, funcionaba para
+                    admin -la API acepta ['publicador','admin']- y no habia
+                    ningun enlace que llevara ahi. E-13 otra vez. */}
+                <button onClick={async () => {
+                  try {
+                    const t = await auth.currentUser?.getIdToken()
+                    const res = await fetch('/api/publicador/propiedades', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json', ...(t ? { Authorization: `Bearer ${t}` } : {}) },
+                      body: JSON.stringify({ titulo: 'Propiedad sin título' }),
+                    })
+                    const j = await res.json().catch(() => ({}))
+                    if (res.ok && j.id) router.push(`/publicador/propiedades/${j.id}/editar`)
+                    else alert(j.error || 'No se pudo crear el borrador.')
+                  } catch {
+                    alert('Error de red al crear el borrador.')
+                  }
+                }} style={{
+                  background: 'var(--rojo-marca)', color: '#fff', border: 'none',
                   padding: '.65rem 1.3rem', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '.88rem',
                 }}>
                   <i className="fa fa-plus" style={{ marginRight: '.5rem' }} />Nueva propiedad
