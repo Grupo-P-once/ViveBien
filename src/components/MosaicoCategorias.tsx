@@ -12,10 +12,17 @@ import Link from 'next/link'
  * claramente de contorno fino, y los de Font Awesome son macizos. Un icono
  * relleno al lado de una tipografía tan ligera se ve como de otra marca.
  *
- * Tres categorías todavía no tienen foto propia (casas, departamentos y
- * locales). En vez de repetir la de otra categoría —que sería mentir sobre lo
- * que hay— esas quedan en negro pleno con el icono. Contra el fondo oscuro de
- * la lámina eso se lee como decisión, no como hueco.
+ * Las fotos son de stock libre de derechos (Unsplash), descargadas a
+ * `public/categorias/`. **No son propiedades del catálogo**: enseñar una nave
+ * concreta —con su letrero de «EN RENTA» y todo— como si fuera la categoría
+ * entera confunde el ejemplo con la oferta, y esa nave puede venderse mañana.
+ *
+ * Se sirven desde nuestro dominio y no enlazadas: si Unsplash cambia una URL,
+ * la portada no se queda con huecos.
+ *
+ * Cada una se eligió mirándola, no por el nombre del archivo. La primera
+ * candidata para «locales» era un supermercado de París con el rótulo de la
+ * calle en francés — correcta en el buscador y absurda en un portal de León.
  */
 
 const TRAZO = {
@@ -79,24 +86,27 @@ const CATEGORIAS: Categoria[] = [
   {
     clave: 'casa', titulo: 'Casas', bajada: 'Hogares\npara tu historia',
     href: '/propiedades?tipo=casa', Icono: IconoCasa,
+    foto: '/categorias/casa.jpg',
   },
   {
     clave: 'departamento', titulo: 'Departamentos', bajada: 'Comodidad\ny ubicación',
     href: '/propiedades?tipo=departamento', Icono: IconoDepartamento,
+    foto: '/categorias/departamento.jpg',
   },
   {
     clave: 'nave', titulo: 'Naves industriales', bajada: 'Espacios para hacer\ncrecer tu negocio',
     href: '/propiedades?tipo=nave', Icono: IconoNave,
-    foto: '/3vive_bien_fotos/naves_industriales/nave_industrial_SanJuanBosco_Renta/foto1.jpg',
+    foto: '/categorias/nave.jpg',
   },
   {
     clave: 'comercial', titulo: 'Locales comerciales', bajada: 'Oportunidades\nen el lugar correcto',
     href: '/propiedades?tipo=comercial', Icono: IconoLocal,
+    foto: '/categorias/comercial.jpg',
   },
   {
     clave: 'terreno', titulo: 'Terrenos', bajada: 'Invierte hoy\nen el futuro',
     href: '/propiedades?tipo=terreno', Icono: IconoTerreno,
-    foto: '/3vive_bien_fotos/terrenos/terreno_panam_silao_venta/foto1.jpg',
+    foto: '/categorias/terreno.jpg',
   },
 ]
 

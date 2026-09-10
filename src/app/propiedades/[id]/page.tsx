@@ -1,3 +1,4 @@
+import { lugarDe } from '@/lib/ubicacion'
 import type { Metadata } from 'next'
 import { createClient } from '@supabase/supabase-js'
 import DetallePropiedad from './page-client'
@@ -28,7 +29,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const opStr = data.operacion === 'venta' ? 'en venta' : 'en renta'
     const title = `${data.titulo} – ${precio} | Vive Bien León`
     const description = data.descripcion
-      || `${data.titulo} ${opStr} en ${data.ubicacion}. ${precio}. Vive Bien Inmobiliaria – León, Guanajuato.`
+      || `${data.titulo} ${opStr} en ${data.ubicacion}. ${precio}. Vive Bien Inmobiliaria – ${lugarDe(data).ciudad}, ${lugarDe(data).estado}.`
     const image = data.fotos?.[0] || '/logo_transparent.png'
 
     return {
@@ -79,10 +80,13 @@ export default async function Page({ params }: Props) {
           availability: 'https://schema.org/InStock',
           priceValidUntil: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         },
+        // La ciudad sale de la propiedad, no escrita a mano. Decia siempre
+        // 'León' y eso le dice a Google que una nave de Silao esta en Leon:
+        // no es cosmetico, es indexar una direccion falsa.
         address: {
           '@type': 'PostalAddress',
-          addressLocality: 'León',
-          addressRegion: 'Guanajuato',
+          addressLocality: lugarDe(data).ciudad,
+          addressRegion: lugarDe(data).estado,
           addressCountry: 'MX',
           streetAddress: data.ubicacion,
         },

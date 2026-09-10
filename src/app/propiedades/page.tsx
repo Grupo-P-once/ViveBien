@@ -48,6 +48,7 @@ function PropiedadesContent() {
   const [propiedades, setPropiedades] = useState<Propiedad[]>([])
   const [loading, setLoading] = useState(true)
   const [falloConsulta, setFalloConsulta] = useState(false)
+  const [desactualizado, setDesactualizado] = useState(false)
   const [filtros, setFiltros] = useState({
     op: searchParams.get('op') || '',
     tipo: searchParams.get('tipo') || '',
@@ -91,14 +92,14 @@ function PropiedadesContent() {
   async function cargarPropiedades() {
     setLoading(true)
     try {
-      const { data, error } = await supabase.from('propiedades').select('*')
-      if (error) throw error
-      // Sólo lo aprobado. RLS ya lo filtra en la base; esto cubre el hueco
-      // mientras la migración de estado_pub no está aplicada, y sirve de
-      // segunda barrera después.
-      const visibles = (data || []).filter(
-        (p: any) => !p.estado_pub || p.estado_pub === 'publicada',
-      )
+      // Por /api/catalogo y no directo a Supabase: esa ruta cachea y guarda
+      // la última copia buena, así que una caída de la base ya no vacía el
+      // sitio. Antes esto iba navegador -> Supabase, sin red debajo.
+      const res = await fetch('/api/catalogo')
+      if (!res.ok) throw new Error(`catalogo ${res.status}`)
+      const payload = await res.json()
+      const visibles = (payload.propiedades || []) as any[]
+      setDesactualizado(Boolean(payload.desactualizado))
       // Map snake_case → camelCase for backwards compat
       const mapped = visibles.map((p: any) => ({
         ...p,
@@ -429,6 +430,17 @@ function PropiedadesContent() {
                 </section>
               )
             })}
+
+            {desactualizado && !loading && (
+              <div style={{
+                background: 'var(--aviso-fondo-calido)', border: '1px solid #FDE68A',
+                color: 'var(--aviso-fuerte)', padding: '10px 16px', borderRadius: 9,
+                fontSize: '.86rem', marginBottom: '1.25rem', lineHeight: 1.55,
+              }}>
+                Estás viendo una copia reciente del catálogo: no pudimos conectar
+                ahora mismo. Puede que falte algo publicado en los últimos minutos.
+              </div>
+            )}
 
             {disponibles === 0 && !loading && (
               falloConsulta ? (

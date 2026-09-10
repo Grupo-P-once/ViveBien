@@ -1,4 +1,5 @@
 'use client'
+import { lugarDe } from '@/lib/ubicacion'
 import { useState, useEffect, use } from 'react'
 import { supabase } from '@/lib/supabase'
 import Header from '@/components/Header'
@@ -337,7 +338,7 @@ export default function DetallePropiedad({ params }: { params: Promise<{ id: str
               />
               <div style={{ padding: '.75rem 1.8rem', fontSize: '.83rem', color: '#888', display: 'flex', alignItems: 'center', gap: '.4rem' }}>
                 <i className="fa fa-map-marker-alt" style={{ color: 'var(--rojo)' }} />
-                {prop.ubicacion}, León, Guanajuato
+                {lugarDe(prop).completo}
               </div>
             </div>
           </div>
@@ -443,7 +444,7 @@ export default function DetallePropiedad({ params }: { params: Promise<{ id: str
                   Propiedades similares
                 </h2>
                 <p style={{ color: '#888', fontSize: '.85rem', margin: 0 }}>
-                  {tipoLabel[prop.tipo] || prop.tipo}s disponibles en León
+                  {tipoLabel[prop.tipo] || prop.tipo}s disponibles en {lugarDe(prop).ciudad}
                 </p>
               </div>
             </div>
