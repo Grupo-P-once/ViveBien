@@ -726,14 +726,19 @@ function ContactForm() {
     if (!acepto) { alert('Debes aceptar el aviso de privacidad'); return }
     setEstado('enviando')
     try {
-      const { error } = await supabase.from('contactos').insert({
-        nombre: data.nombre,
-        telefono: data.telefono,
-        email: data.email,
-        interes: data.interes,
-        mensaje: data.mensaje,
+      const res = await fetch('/api/registro-lead', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombre: data.nombre, telefono: data.telefono, email: data.email,
+          interes: data.interes, mensaje: data.mensaje,
+          origen: 'portada', consentimiento: true,
+        }),
       })
-      if (error) throw error
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}))
+        throw new Error(j.error || 'fallo')
+      }
       setEstado('ok')
     } catch {
       setEstado('err')

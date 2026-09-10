@@ -28,13 +28,16 @@ export default function RegisterModal({ isOpen, onClose, propertyTitle }: Regist
     setError('')
     setLoading(true)
     try {
-      const { error: sbError } = await supabase.from('leads').insert({
-        nombre: nombre.trim(),
-        telefono: telefono.trim(),
-        email: email.trim(),
-        mensaje: propertyTitle ? `Interés en: ${propertyTitle}` : 'Registro general',
+      const res = await fetch('/api/registro-lead', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombre: nombre.trim(), telefono: telefono.trim(), email: email.trim(),
+          mensaje: propertyTitle ? `Interés en: ${propertyTitle}` : 'Registro general',
+          origen: 'registro', consentimiento: true,
+        }),
       })
-      if (sbError) throw sbError
+      if (!res.ok) throw new Error('fallo')
     } catch (e) {
       console.error('Error guardando lead:', e)
       // No bloqueamos el flujo — el usuario ya mostró intención

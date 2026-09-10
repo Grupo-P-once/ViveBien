@@ -1,4 +1,5 @@
 'use client'
+import Consentimiento from '@/components/Consentimiento'
 import { lugarDe } from '@/lib/ubicacion'
 import { useState, useEffect, use } from 'react'
 import { supabase } from '@/lib/supabase'
@@ -49,6 +50,7 @@ export default function DetallePropiedad({ params }: { params: Promise<{ id: str
   const [prop, setProp] = useState<Propiedad | null>(null)
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState(false)
+  const [acepta, setAcepta] = useState(false)
   const [mainFoto, setMainFoto] = useState(0)
   const [lightbox, setLightbox] = useState<number | null>(null)
   const [form, setForm] = useState({ nombre: '', telefono: '', email: '', mensaje: 'Estoy interesado en esta propiedad. Por favor, contáctenme.' })
@@ -108,14 +110,19 @@ export default function DetallePropiedad({ params }: { params: Promise<{ id: str
     setSending(true)
     setSendError('')
     try {
-      const { error } = await supabase.from('leads').insert({
-        nombre: form.nombre,
-        telefono: form.telefono,
-        email: form.email,
-        mensaje: form.mensaje,
-        propiedad_id: id,
+      const res = await fetch('/api/registro-lead', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombre: form.nombre, telefono: form.telefono, email: form.email,
+          mensaje: form.mensaje, propiedadId: id,
+          origen: 'ficha', consentimiento: acepta,
+        }),
       })
-      if (error) throw error
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}))
+        throw new Error(j.error || 'fallo')
+      }
       setSent(true)
     } catch (err) {
       console.error('Error enviando solicitud:', err)
@@ -413,7 +420,8 @@ export default function DetallePropiedad({ params }: { params: Promise<{ id: str
                       <i className="fa fa-exclamation-circle" style={{ marginRight: '.4rem' }} />{sendError}
                     </p>
                   )}
-                  <button type="submit" disabled={sending} style={{ background: color, color: '#fff', border: 'none', padding: '.9rem', borderRadius: '10px', fontWeight: 800, cursor: 'pointer', fontSize: '.95rem', fontFamily: 'Montserrat, sans-serif', opacity: sending ? .7 : 1 }}>
+                  <Consentimiento marcado={acepta} onChange={setAcepta} id="cons-ficha" />
+                  <button type="submit" disabled={sending || !acepta} style={{ background: color, color: '#fff', border: 'none', padding: '.9rem', borderRadius: '10px', fontWeight: 800, cursor: 'pointer', fontSize: '.95rem', fontFamily: 'Montserrat, sans-serif', opacity: sending ? .7 : 1 }}>
                     <i className="fa fa-paper-plane" style={{ marginRight: '.5rem' }} />{sending ? 'Enviando...' : 'ENVIAR SOLICITUD'}
                   </button>
                   <button type="button" onClick={() => handleContactClick(() => window.open(`https://wa.me/${wa}?text=${waMsg}`, '_blank'))}

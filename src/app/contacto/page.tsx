@@ -1,4 +1,5 @@
 'use client'
+import Consentimiento from '@/components/Consentimiento'
 import { CORREO_CONTACTO, mailtoDe } from '@/lib/contacto'
 import { useState } from 'react'
 import Header from '@/components/Header'
@@ -11,6 +12,7 @@ export default function ContactoPage() {
   const [form, setForm] = useState({ nombre: '', telefono: '', email: '', mensaje: '' })
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
+  const [acepta, setAcepta] = useState(false)
   const [error, setError] = useState('')
 
   async function handleSubmit(e: React.FormEvent) {
@@ -18,11 +20,22 @@ export default function ContactoPage() {
     if (!form.nombre || !form.telefono) { setError('Nombre y teléfono son requeridos.'); return }
     setSending(true); setError('')
     try {
-      const { error: sbErr } = await supabase.from('contactos').insert({
-        nombre: form.nombre.trim(), telefono: form.telefono.trim(),
-        email: form.email.trim(), mensaje: form.mensaje.trim(),
+      // Por la API y no directo a Supabase: asi se valida, se normaliza el
+      // telefono y -sobre todo- queda registrada la version del aviso que
+      // esta persona acepto. Sin esa prueba no se pueden compartir sus datos.
+      const res = await fetch('/api/registro-lead', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombre: form.nombre.trim(), telefono: form.telefono.trim(),
+          email: form.email.trim(), mensaje: form.mensaje.trim(),
+          origen: 'contacto', consentimiento: acepta,
+        }),
       })
-      if (sbErr) throw sbErr
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}))
+        throw new Error(j.error || 'fallo')
+      }
       setSent(true)
     } catch {
       setError('No pudimos enviar tu mensaje. Por favor escríbenos por WhatsApp.')
@@ -162,7 +175,8 @@ export default function ContactoPage() {
                       <i className="fa fa-exclamation-circle" style={{ marginRight: '.4rem' }} />{error}
                     </p>
                   )}
-                  <button type="submit" disabled={sending}
+                  <Consentimiento marcado={acepta} onChange={setAcepta} id="cons-contacto" />
+                  <button type="submit" disabled={sending || !acepta}
                     style={{ background: 'var(--rojo)', color: '#fff', padding: '1rem', borderRadius: '0', fontWeight: 800, border: 'none', cursor: 'pointer', fontFamily: 'Montserrat, sans-serif', fontSize: '.95rem', opacity: sending ? .7 : 1, letterSpacing: '.06em' }}>
                     <i className="fa fa-paper-plane" style={{ marginRight: '.5rem' }} />
                     {sending ? 'Enviando...' : 'Enviar mensaje'}

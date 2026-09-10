@@ -1,4 +1,5 @@
 'use client'
+import Consentimiento from '@/components/Consentimiento'
 import { useState } from 'react'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
@@ -18,6 +19,7 @@ export default function ValuadorPage() {
   const [m2, setM2] = useState('')
   const [resultado, setResultado] = useState<{ min: number; max: number } | null>(null)
   const [guardado, setGuardado] = useState(false)
+  const [acepta, setAcepta] = useState(false)
   const [tipo, setTipo] = useState('casa')
   const [comparables, setComparables] = useState<number>(0)
   const [loadingComp, setLoadingComp] = useState(false)
@@ -54,10 +56,15 @@ export default function ValuadorPage() {
   async function solicitarAvaluo() {
     const msg = `Hola Vive Bien. Usé el Valuador web y me gustaría solicitar un avalúo oficial. Tipo: ${tipo}, Zona: ${ZONAS[zona]?.label || zona}, ${m2}m².`
     window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank')
-    if (nombre && telefono) {
+    if (nombre && telefono && acepta) {
       try {
-        await supabase.from('leads').insert({
-          nombre, telefono, interes: `avaluo - ${tipo}`, origen: 'valuador',
+        await fetch('/api/registro-lead', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            nombre, telefono, interes: `avaluo - ${tipo}`,
+            origen: 'valuador', consentimiento: acepta,
+          }),
         })
         setGuardado(true)
       } catch { }
@@ -263,6 +270,10 @@ export default function ValuadorPage() {
                 >
                   <i className="fa fa-map-location-dot" /> Consultar Plano Catastral Oficial (León)
                 </a>
+                {/* El WhatsApp se abre acepte o no: ahi el dato lo da la persona
+                    en su propio mensaje. La casilla decide si ADEMAS lo
+                    guardamos nosotros, que es lo que necesita consentimiento. */}
+                <Consentimiento marcado={acepta} onChange={setAcepta} id="cons-valuador" />
                 <button onClick={solicitarAvaluo} style={{
                   display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px',
                   padding: '12px', background: 'var(--whatsapp)', color: '#fff',
