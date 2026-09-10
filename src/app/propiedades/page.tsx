@@ -47,6 +47,7 @@ function PropiedadesContent() {
   const router = useRouter()
   const [propiedades, setPropiedades] = useState<Propiedad[]>([])
   const [loading, setLoading] = useState(true)
+  const [falloConsulta, setFalloConsulta] = useState(false)
   const [filtros, setFiltros] = useState({
     op: searchParams.get('op') || '',
     tipo: searchParams.get('tipo') || '',
@@ -105,7 +106,15 @@ function PropiedadesContent() {
         m2: p.metros,
       }))
       setPropiedades(mapped)
-    } catch (err) { console.error(err) }
+      setFalloConsulta(false)
+    } catch (err) {
+      // Antes esto era `console.error(err)` y nada mas. La lista se quedaba
+      // vacia y la pagina decia «Sin propiedades activas» — es decir, mentia:
+      // afirmaba que no hay inventario cuando en realidad no se pudo
+      // preguntar. Paso de verdad el 2026-09-10, con Supabase devolviendo 504.
+      console.error(err)
+      setFalloConsulta(true)
+    }
     setLoading(false)
   }
 
@@ -230,7 +239,7 @@ function PropiedadesContent() {
                 { n: 15, label: 'años exp.', icon: 'fa-award' },
               ].map(s => (
                 <div key={s.label} style={{ background: 'rgba(255,255,255,.07)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,.1)', borderRadius: '14px', padding: '.8rem 1.2rem', textAlign: 'center', minWidth: '100px' }}>
-                  <div style={{ fontFamily: 'Montserrat,sans-serif', fontWeight: 900, fontSize: '1.6rem', color: '#fff', lineHeight: 1 }}>{loading ? '—' : s.n}{s.label !== 'años exp.' ? '+' : ''}</div>
+                  <div style={{ fontFamily: 'Montserrat,sans-serif', fontWeight: 900, fontSize: '1.6rem', color: '#fff', lineHeight: 1 }}>{loading || falloConsulta ? '—' : s.n}{!loading && !falloConsulta && s.label !== 'años exp.' ? '+' : ''}</div>
                   <div style={{ fontSize: '.68rem', color: 'var(--dorado)', textTransform: 'uppercase', letterSpacing: '2px', fontWeight: 700, marginTop: '.2rem' }}>{s.label}</div>
                 </div>
               ))}
@@ -422,11 +431,34 @@ function PropiedadesContent() {
             })}
 
             {disponibles === 0 && !loading && (
-              <div style={{ textAlign: 'center', padding: '8rem 2rem', color: '#888' }}>
-                <i className="fa fa-building" style={{ fontSize: '3.5rem', opacity: .2, display: 'block', marginBottom: '1.2rem' }} />
-                <h3 style={{ fontFamily: 'Montserrat,sans-serif', fontWeight: 800, color: 'var(--azul)', marginBottom: '.5rem' }}>Sin propiedades activas</h3>
-                <p>Pronto tendremos nuevas propiedades disponibles.</p>
-              </div>
+              falloConsulta ? (
+                <div style={{ textAlign: 'center', padding: '6rem 2rem', maxWidth: 520, margin: '0 auto' }}>
+                  <i className="fa fa-triangle-exclamation" style={{ fontSize: '3rem', color: 'var(--aviso)', opacity: .55, display: 'block', marginBottom: '1.2rem' }} />
+                  <h3 style={{ fontFamily: 'Montserrat,sans-serif', fontWeight: 800, color: 'var(--azul)', marginBottom: '.6rem' }}>
+                    No pudimos cargar el catálogo
+                  </h3>
+                  <p style={{ color: '#5A6472', lineHeight: 1.65, marginBottom: '1.5rem' }}>
+                    Es un problema nuestro, no tuyo: <strong>las propiedades siguen ahí</strong>,
+                    pero ahora mismo no pudimos consultarlas. Vuelve a intentarlo en un momento.
+                  </p>
+                  <button onClick={cargarPropiedades} style={{
+                    background: 'var(--rojo-marca)', color: '#fff', border: 'none',
+                    padding: '.85rem 1.8rem', borderRadius: 9, fontWeight: 700,
+                    fontFamily: 'Montserrat,sans-serif', fontSize: '.92rem', cursor: 'pointer',
+                  }}>
+                    Reintentar
+                  </button>
+                  <p style={{ marginTop: '1.5rem', fontSize: '.85rem', color: '#8B95A3' }}>
+                    ¿Buscas algo concreto? Escríbenos por WhatsApp y te lo mandamos.
+                  </p>
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '8rem 2rem', color: '#888' }}>
+                  <i className="fa fa-building" style={{ fontSize: '3.5rem', opacity: .2, display: 'block', marginBottom: '1.2rem' }} />
+                  <h3 style={{ fontFamily: 'Montserrat,sans-serif', fontWeight: 800, color: 'var(--azul)', marginBottom: '.5rem' }}>Sin propiedades activas</h3>
+                  <p>Pronto tendremos nuevas propiedades disponibles.</p>
+                </div>
+              )
             )}
           </>
         )}
