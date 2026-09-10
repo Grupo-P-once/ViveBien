@@ -98,33 +98,50 @@ export async function POST(req: Request) {
     consentimiento_version: VERSION_CONSENTIMIENTO,
   }
 
-  const { error } = await db.from('leads').insert(fila)
+  /* ── Guardar ──
+     Se intenta, pero el resultado NO decide si el lead se pierde. */
+  let guardado = false
+  let fallo = ''
 
-  if (error) {
-    // Alguna columna puede no existir todavía (`consentimiento_version`,
-    // `origen`). Antes que perder el lead, se reintenta con lo básico y se
-    // deja constancia de que faltó la prueba del consentimiento.
-    const m = error.message.match(/'([a-z_]+)' column/) ?? error.message.match(/column "([a-z_]+)"/)
-    const columna = m?.[1]
+  try {
+    const { error } = await db.from('leads').insert(fila)
 
-    if (columna && columna in fila) {
-      const { [columna]: _fuera, ...reintento } = fila
-      const { error: err2 } = await db.from('leads').insert(reintento)
-      if (!err2) {
-        console.warn(`[registro-lead] guardado sin '${columna}': columna pendiente de migración`)
-        return NextResponse.json({ ok: true, aviso: `${columna} no guardado` })
+    if (error) {
+      // Alguna columna puede no existir todavía. Antes que perder el lead, se
+      // reintenta sin ella y queda constancia.
+      const m = error.message.match(/'([a-z_]+)' column/) ?? error.message.match(/column "([a-z_]+)"/)
+      const columna = m?.[1]
+
+      if (columna && columna in fila) {
+        const { [columna]: _fuera, ...reintento } = fila
+        const { error: err2 } = await db.from('leads').insert(reintento)
+        if (!err2) {
+          console.warn(`[registro-lead] guardado sin '${columna}': columna pendiente de migración`)
+          guardado = true
+        } else {
+          fallo = err2.message
+        }
+      } else {
+        fallo = error.message
       }
+    } else {
+      guardado = true
     }
-
-    console.error('[registro-lead] no se pudo guardar:', error.message)
-    return NextResponse.json(
-      { error: 'No pudimos guardar tus datos. Escríbenos por WhatsApp y te atendemos.' },
-      { status: 500 },
-    )
+  } catch (e) {
+    fallo = e instanceof Error ? e.message : 'error desconocido'
   }
 
-  // El aviso va DESPUES de guardar y nunca tumba la respuesta: si el correo
-  // falla, el lead ya esta a salvo. Guardar es lo importante; avisar, el extra.
+  if (!guardado) console.error('[registro-lead] no se pudo guardar:', fallo)
+
+  /* ── Avisar ──
+     ESTO OCURRE PASE LO QUE PASE, y ese es el punto.
+
+     Antes el correo sólo se mandaba si la base había guardado bien. Está al
+     revés: cuando la base falla es justo cuando el correo importa, porque es
+     el único sitio donde queda el dato. Con el orden anterior, una caída de
+     Supabase perdía el lead dos veces — ni guardado ni avisado.
+
+     El correo es la red, no el adorno. */
   const aviso = await avisarDeLead({
     nombre: nombre.slice(0, 120),
     telefono,
@@ -133,9 +150,19 @@ export async function POST(req: Request) {
     interes: interes || null,
     origen,
     propiedadId: propiedadId || null,
+    sinGuardar: !guardado,
   })
 
-  return NextResponse.json({ ok: true, avisado: aviso.enviado })
+  // Si al menos una de las dos vías funcionó, para la persona su solicitud
+  // llegó — y es verdad. Sólo se le dice que falló si se perdió de verdad.
+  if (guardado || aviso.enviado) {
+    return NextResponse.json({ ok: true, guardado, avisado: aviso.enviado })
+  }
+
+  return NextResponse.json(
+    { error: 'No pudimos registrar tus datos. Escríbenos por WhatsApp y te atendemos ahora mismo.' },
+    { status: 503 },
+  )
 }
 
 /** Para que el formulario pueda enseñar el texto exacto que se va a registrar. */

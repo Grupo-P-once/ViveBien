@@ -31,6 +31,8 @@ export type Lead = {
   interes?: string | null
   origen: string
   propiedadId?: string | null
+  /** True si la base no pudo guardarlo: entonces este correo es el ÚNICO registro. */
+  sinGuardar?: boolean
 }
 
 const NOMBRE_ORIGEN: Record<string, string> = {
@@ -60,6 +62,9 @@ export async function avisarDeLead(lead: Lead): Promise<Resultado> {
   // Texto plano además de HTML: algunos clientes de correo y casi todos los
   // relojes y notificaciones muestran sólo eso.
   const texto = [
+    lead.sinGuardar
+      ? '⚠️ LA BASE DE DATOS NO RESPONDIÓ. Este correo es el único registro de este contacto: guárdalo.\n'
+      : null,
     `${lead.nombre} dejó sus datos en ${origen}.`,
     ``,
     `Teléfono: ${lead.telefono}`,
@@ -73,6 +78,7 @@ export async function avisarDeLead(lead: Lead): Promise<Resultado> {
 
   const html = `
     <div style="font-family:system-ui,sans-serif;max-width:520px">
+      ${lead.sinGuardar ? `<p style="background:#FEF2F2;border-left:3px solid #B91C1C;color:#991B1B;padding:10px 14px;border-radius:0 8px 8px 0;font-size:13px;line-height:1.55;margin:0 0 16px"><strong>La base de datos no respondió.</strong> Este correo es el <strong>único registro</strong> de este contacto. Guárdalo.</p>` : ''}
       <p style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#8B95A3;margin:0 0 4px">
         Nuevo interesado
       </p>
@@ -107,7 +113,7 @@ export async function avisarDeLead(lead: Lead): Promise<Resultado> {
         to: [CORREO_CONTACTO],
         // El asunto lleva el nombre y el origen: se decide si abrirlo desde la
         // notificación del teléfono, sin entrar.
-        subject: `Nuevo interesado: ${lead.nombre} — ${origen}`,
+        subject: `${lead.sinGuardar ? '⚠️ SIN GUARDAR — ' : ''}Nuevo interesado: ${lead.nombre} — ${origen}`,
         reply_to: lead.email || undefined,
         text: texto,
         html,
