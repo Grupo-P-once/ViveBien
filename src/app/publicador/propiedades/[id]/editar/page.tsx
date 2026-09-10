@@ -53,6 +53,18 @@ const OPERACIONES = [
 ]
 
 /** Los pasos son fijos; lo que cambia dentro es qué campos pide el paso 3. */
+/**
+ * Los pasos, agrupados.
+ *
+ * Antes eran siete botones planos en una fila. Siete puntos en una barra se
+ * leen como siete obstaculos; cuatro con detalle dentro se leen como cuatro
+ * — es la misma cantidad de trabajo contada de otra manera, y es lo que hace
+ * Inmuebles24. Ver la especificacion del wizard en Obsidian.
+ *
+ * `campos` es lo que decide la palomita verde: un sub-paso esta hecho cuando
+ * sus datos EXISTEN, no cuando alguien paso por el. Marcar por visita mentiria
+ * igual que una lista de tareas que se tacha sola.
+ */
 const PASOS = [
   'Tipo',
   'Ubicación',
@@ -62,6 +74,24 @@ const PASOS = [
   'Descripción',
   'Revisar',
 ] as const
+
+const GRUPOS: { nombre: string; pasos: number[] }[] = [
+  { nombre: 'Principales', pasos: [0, 1, 2, 3] },
+  { nombre: 'Multimedia',  pasos: [4] },
+  { nombre: 'Detalles',    pasos: [5] },
+  { nombre: 'Publicar',    pasos: [6] },
+]
+
+/** Qué campo prueba que un sub-paso está resuelto. */
+const CAMPOS_DE_PASO: Record<number, (p: Record<string, unknown>) => boolean> = {
+  0: p => Boolean(p.tipo) && Boolean(p.operacion),
+  1: p => Boolean(p.ubicacion),
+  2: p => Boolean(p.metros),
+  3: p => Boolean(p.precio),
+  4: p => Array.isArray(p.fotos) && (p.fotos as unknown[]).length >= 3,
+  5: p => String(p.descripcion ?? '').trim().length >= MINIMO_DESCRIPCION,
+  6: () => false,
+}
 
 const esResidencial = (tipo?: string) => tipo === 'casa' || tipo === 'departamento'
 const esIndustrial = (tipo?: string) => tipo === 'nave'
@@ -401,25 +431,84 @@ export default function EditarPropiedad({ params }: { params: Promise<{ id: stri
         </div>
       </section>
 
-      {/* ── Pasos ── */}
-      <nav style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: '1.5rem' }} aria-label="Pasos">
-        {PASOS.map((p, i) => (
-          <button
-            key={p} type="button" onClick={() => setPaso(i)}
-            aria-current={paso === i ? 'step' : undefined}
-            style={{
-              padding: '6px 13px', borderRadius: 20, cursor: 'pointer',
-              fontSize: '.8rem', fontFamily: 'inherit',
-              fontWeight: paso === i ? 700 : 500,
-              border: paso === i ? '2px solid var(--azul)' : '1px solid var(--borde-frio)',
-              background: paso === i ? 'var(--azul)' : '#fff',
-              color: paso === i ? '#fff' : '#5A6472',
-            }}
-          >
-            {i + 1}. {p}
-          </button>
-        ))}
+      {/* ── Los cuatro grupos ── */}
+      <nav aria-label="Etapas" style={{
+        display: 'flex', alignItems: 'flex-start', marginBottom: '1.5rem',
+        overflowX: 'auto', paddingBottom: 4,
+      }}>
+        {GRUPOS.map((g, gi) => {
+          const activo = g.pasos.includes(paso)
+          const completo = g.pasos.every(i => CAMPOS_DE_PASO[i]?.(prop as Record<string, unknown>))
+          const pasado = paso > Math.max(...g.pasos)
+          return (
+            <div key={g.nombre} style={{ display: 'flex', alignItems: 'flex-start', flex: 1, minWidth: 108 }}>
+              <button type="button" onClick={() => setPaso(g.pasos[0])}
+                aria-current={activo ? 'step' : undefined}
+                style={{
+                  display: 'grid', justifyItems: 'center', gap: 6,
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  fontFamily: 'inherit', padding: 0, width: '100%',
+                }}>
+                <span style={{
+                  width: 30, height: 30, borderRadius: '50%',
+                  display: 'grid', placeItems: 'center',
+                  fontSize: '.82rem', fontWeight: 800,
+                  background: activo ? 'var(--rojo-marca)' : (completo || pasado) ? 'var(--exito-fuerte)' : '#EDEAE5',
+                  color: activo || completo || pasado ? '#fff' : '#8B95A3',
+                  border: activo ? '3px solid rgba(200,16,46,.22)' : 'none',
+                }}>
+                  {completo && !activo ? '✓' : gi + 1}
+                </span>
+                <span style={{
+                  fontSize: '.74rem', fontWeight: activo ? 700 : 500,
+                  color: activo ? 'var(--rojo-marca)' : '#8B95A3',
+                  fontFamily: 'Montserrat, sans-serif',
+                }}>
+                  {g.nombre}
+                </span>
+              </button>
+              {gi < GRUPOS.length - 1 && (
+                <span aria-hidden style={{
+                  flex: 1, height: 2, marginTop: 14, minWidth: 12,
+                  background: pasado ? 'var(--exito-fuerte)' : '#EDEAE5',
+                }} />
+              )}
+            </div>
+          )
+        })}
       </nav>
+
+      {/* ── Sub-pasos del grupo activo ──
+           Sólo los del grupo en el que se está: enseñar los siete a la vez es
+           justo lo que se quería evitar. */}
+      {(() => {
+        const grupo = GRUPOS.find(g => g.pasos.includes(paso))
+        if (!grupo || grupo.pasos.length < 2) return null
+        return (
+          <nav aria-label={`Pasos de ${grupo.nombre}`} style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: '1.25rem' }}>
+            {grupo.pasos.map(i => {
+              const hecho = CAMPOS_DE_PASO[i]?.(prop as Record<string, unknown>)
+              const aqui = paso === i
+              return (
+                <button key={i} type="button" onClick={() => setPaso(i)}
+                  aria-current={aqui ? 'step' : undefined}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    padding: '6px 13px', borderRadius: 20, cursor: 'pointer',
+                    fontSize: '.8rem', fontFamily: 'inherit',
+                    fontWeight: aqui ? 700 : 500,
+                    border: `1px solid ${aqui ? 'var(--azul)' : 'var(--borde-frio)'}`,
+                    background: aqui ? 'var(--azul)' : '#fff',
+                    color: aqui ? '#fff' : '#5A6472',
+                  }}>
+                  {hecho && !aqui && <span style={{ color: 'var(--exito-fuerte)', fontWeight: 800 }}>✓</span>}
+                  {PASOS[i]}
+                </button>
+              )
+            })}
+          </nav>
+        )
+      })()}
 
       {error && (
         <p style={{ background: 'var(--error-fondo-fuerte)', color: 'var(--error-fuerte)', padding: '10px 14px', borderRadius: 8, fontSize: '.88rem', marginBottom: '1rem' }}>

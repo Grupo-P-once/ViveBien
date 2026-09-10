@@ -412,12 +412,12 @@ export default function NosotrosPage() {
                   transition: 'transform .2s, border-color .2s',
                   cursor: 'pointer',
                 }}
-                onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.transform = 'translateY(-5px)'; (e.currentTarget as HTMLAnchorElement).style.borderColor = 'rgba(192,156,40,.6)' }}
+                onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.transform = 'translateY(-5px)'; (e.currentTarget as HTMLAnchorElement).style.borderColor = 'rgba(200,16,46,.45)' }}
                 onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.transform = ''; (e.currentTarget as HTMLAnchorElement).style.borderColor = c.active ? 'rgba(192,156,40,.55)' : 'rgba(255,255,255,.08)' }}
               >
                 <div style={{
                   width: '56px', height: '56px', borderRadius: '50%',
-                  background: c.active ? 'rgba(192,156,40,.3)' : 'rgba(255,255,255,.08)',
+                  background: c.active ? 'rgba(200,16,46,.25)' : 'rgba(255,255,255,.08)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
                   <i className={`fa ${c.icon}`} style={{ fontSize: '1.3rem', color: c.active ? 'var(--rojo-marca)' : 'rgba(255,255,255,.5)' }} />
@@ -437,22 +437,22 @@ export default function NosotrosPage() {
 
           {/* GP11 logo badge */}
           <div style={{ marginTop: '3.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
-            <div style={{ height: '1px', width: '80px', background: 'rgba(192,156,40,.3)' }} />
-            <a href="https://grupo-p-once.github.io" target="_blank" rel="noopener noreferrer"
+            <div style={{ height: '1px', width: '80px', background: 'rgba(200,16,46,.25)' }} />
+            <a href="https://gp-once.com" target="_blank" rel="noopener noreferrer"
               style={{
                 width: '92px', height: '92px', borderRadius: '50%',
-                background: '#fff', border: '3px solid rgba(192,156,40,.6)',
+                background: '#fff', border: '3px solid rgba(200,16,46,.45)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 textDecoration: 'none', overflow: 'hidden',
-                boxShadow: '0 0 20px rgba(192,156,40,.3)',
+                boxShadow: '0 0 20px rgba(200,16,46,.25)',
                 transition: 'border-color .2s, box-shadow .2s',
               }}
-              onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = 'var(--rojo-marca)'; (e.currentTarget as HTMLAnchorElement).style.boxShadow = '0 0 30px rgba(192,156,40,.6)' }}
-              onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = 'rgba(192,156,40,.6)'; (e.currentTarget as HTMLAnchorElement).style.boxShadow = '0 0 20px rgba(192,156,40,.3)' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = 'var(--rojo-marca)'; (e.currentTarget as HTMLAnchorElement).style.boxShadow = '0 0 30px rgba(200,16,46,.45)' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = 'rgba(200,16,46,.45)'; (e.currentTarget as HTMLAnchorElement).style.boxShadow = '0 0 20px rgba(200,16,46,.25)' }}
             >
               <img src="/logo-p11-real.png" alt="Grupo P-Once" style={{ width: '78px', height: '78px', objectFit: 'contain' }} />
             </a>
-            <div style={{ height: '1px', width: '80px', background: 'rgba(192,156,40,.3)' }} />
+            <div style={{ height: '1px', width: '80px', background: 'rgba(200,16,46,.25)' }} />
           </div>
         </div>
       </section>

@@ -110,7 +110,7 @@ export default function Footer() {
       }}>
         {/* Logo Grupo P-ONCE — círculo */}
         <a
-          href="https://grupo-p-once.vercel.app"
+          href="https://gp-once.com"
           target="_blank"
           rel="noopener noreferrer"
           style={{
