@@ -131,9 +131,23 @@ export default function Footer() {
           <img src="/logo-p11-full.png" alt="Grupo P-ONCE" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
         </a>
 
-        <p style={{ fontSize: '.8rem', color: 'rgba(255,255,255,.45)', textAlign: 'center', flex: 1 }}>
-          © {new Date().getFullYear()} Vive Bien Grupo Inmobiliario. Todos los derechos reservados. | León, Guanajuato, México.
-        </p>
+        <div style={{ flex: 1, textAlign: 'center' }}>
+          {/* Los legales van en el pie porque es donde la gente los busca.
+              /terminos no tenia NI UN enlace en todo el sitio: existia y era
+              inalcanzable, como paso en E-13. */}
+          <p style={{ fontSize: '.82rem', marginBottom: '.5rem' }}>
+            <Link href="/privacidad" style={{ color: 'rgba(255,255,255,.7)', textDecoration: 'none' }}>
+              Aviso de privacidad
+            </Link>
+            <span style={{ color: 'rgba(255,255,255,.25)', margin: '0 .6rem' }}>·</span>
+            <Link href="/terminos" style={{ color: 'rgba(255,255,255,.7)', textDecoration: 'none' }}>
+              Términos y condiciones
+            </Link>
+          </p>
+          <p style={{ fontSize: '.8rem', color: 'rgba(255,255,255,.45)' }}>
+            © {new Date().getFullYear()} Vive Bien Grupo Inmobiliario. Todos los derechos reservados. | León, Guanajuato, México.
+          </p>
+        </div>
       </div>
     </footer>
   )

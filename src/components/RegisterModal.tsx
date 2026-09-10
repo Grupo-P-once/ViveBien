@@ -1,4 +1,5 @@
 'use client'
+import Link from 'next/link'
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 
@@ -153,7 +154,17 @@ export default function RegisterModal({ isOpen, onClose, propertyTitle }: Regist
             </button>
 
             <p style={{ fontSize: '11px', color: '#666', marginTop: '15px', lineHeight: 1.4, textAlign: 'center' }}>
-              Al enviar, aceptas nuestros <strong>Términos y Condiciones</strong> y <strong>Política de Privacidad</strong>.
+              {/* Enlaces, no <strong>. Decir «aceptas los terminos» sin que se
+                  puedan abrir es un consentimiento mal formado: bajo LFPDPPP
+                  el aviso tiene que poder consultarse ANTES de consentir. */}
+              Al enviar, aceptas nuestros{' '}
+              <Link href="/terminos" target="_blank" style={{ color: 'var(--azul)', fontWeight: 700 }}>
+                Términos y Condiciones
+              </Link>{' '}
+              y{' '}
+              <Link href="/privacidad" target="_blank" style={{ color: 'var(--azul)', fontWeight: 700 }}>
+                Política de Privacidad
+              </Link>.
             </p>
           </>
         ) : (
