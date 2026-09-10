@@ -4,6 +4,8 @@ import { onAuthStateChanged, type User } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
 import Link from 'next/link'
 import { calcularCompletitud, faltantes, COMPLETITUD_MINIMA } from '@/lib/publicacion'
+import { MINIMO_DESCRIPCION } from '@/lib/esquemas/propiedad'
+import VistaPreviaAnuncio from '@/components/VistaPreviaAnuncio'
 
 type Prop = {
   id: string
@@ -302,6 +304,7 @@ export default function EditarPropiedad({ params }: { params: Promise<{ id: stri
   const pct = calcularCompletitud(prop as Record<string, unknown>)
   const falta = faltantes(prop as Record<string, unknown>)
   const lista = falta.length === 0
+  const largoDescripcion = (prop.descripcion ?? '').trim().length
   const editable = prop.estado_pub !== 'en_revision' && prop.estado_pub !== 'publicada'
   const fotos = prop.fotos ?? []
 
@@ -526,7 +529,31 @@ export default function EditarPropiedad({ params }: { params: Promise<{ id: stri
               <Campo etiqueta="Descripción" ayuda="Lo que no se ve en las fotos: accesos, estado, para qué sirve, qué hay cerca.">
                 <textarea value={prop.descripcion ?? ''} onChange={e => guardar({ descripcion: e.target.value })}
                   rows={8} placeholder="Bodega sobre Blvd. San Juan Bosco, con acceso rápido a vialidades principales…"
-                  style={{ ...campoBase, resize: 'vertical', lineHeight: 1.6 }} />
+                  aria-describedby="contador-descripcion"
+                  style={{
+                    ...campoBase, resize: 'vertical', lineHeight: 1.6,
+                    borderColor: largoDescripcion > 0 && largoDescripcion < MINIMO_DESCRIPCION
+                      ? 'var(--error-fuerte)' : undefined,
+                  }} />
+                {/* Avisa mientras escribe, sin bloquearle el teclado. Una
+                    descripción de dos líneas no vende nada, y quien la escribe
+                    así no sabe que se está perjudicando. */}
+                <div id="contador-descripcion" aria-live="polite" style={{
+                  display: 'flex', justifyContent: 'space-between', gap: 12,
+                  marginTop: 5, fontSize: '.78rem',
+                  color: largoDescripcion >= MINIMO_DESCRIPCION ? 'var(--exito-fuerte)' : '#8B95A3',
+                }}>
+                  <span>
+                    {largoDescripcion === 0
+                      ? `Escribe un mínimo de ${MINIMO_DESCRIPCION} caracteres.`
+                      : largoDescripcion < MINIMO_DESCRIPCION
+                        ? `Te faltan ${MINIMO_DESCRIPCION - largoDescripcion} caracteres.`
+                        : 'Buena longitud.'}
+                  </span>
+                  <strong style={{ fontVariantNumeric: 'tabular-nums' }}>
+                    {largoDescripcion}
+                  </strong>
+                </div>
               </Campo>
               <Campo etiqueta="WhatsApp de contacto" ayuda="Sólo lo usa el sistema para avisarte. No se publica.">
                 <input value={prop.whatsapp ?? ''} onChange={e => guardar({ whatsapp: e.target.value })}
@@ -540,6 +567,12 @@ export default function EditarPropiedad({ params }: { params: Promise<{ id: stri
               <h2 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--azul)', marginBottom: '1rem' }}>
                 Antes de enviar
               </h2>
+
+              {/* La tarjeta real, no un resumen de campos. Es donde uno ve que
+                  la portada esta oscura o que el titulo se corta. */}
+              <div style={{ marginBottom: '1.5rem' }}>
+                <VistaPreviaAnuncio {...prop} />
+              </div>
 
               {lista ? (
                 <p style={{ background: 'var(--exito-fondo)', color: 'var(--exito-fuerte)', padding: '12px 15px', borderRadius: 8, fontSize: '.9rem', lineHeight: 1.6 }}>

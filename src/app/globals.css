@@ -289,3 +289,69 @@ textarea::placeholder {
   .nosotros-two-col { grid-template-columns: 1fr !important; gap: 2rem !important; }
   .calc-grid { grid-template-columns: 1fr !important; }
 }
+
+/* ══ Mosaico de categorías ═══════════════════════════════════════
+   El zoom lento de la foto y el aclarado del velo son la única señal de
+   que la celda es pulsable: no hay borde ni sombra que lo diga. */
+.mosaico-celda:last-child {
+  border-right: none;
+}
+
+.mosaico-celda img {
+  transition: transform .7s cubic-bezier(.2, .7, .3, 1);
+}
+
+.mosaico-celda:hover img,
+.mosaico-celda:focus-visible img {
+  transform: scale(1.06);
+}
+
+.mosaico-celda:focus-visible {
+  outline: 2px solid var(--rojo-marca);
+  outline-offset: -3px;
+}
+
+/* Cuando las celdas se apilan, la regla pasa de vertical a horizontal:
+   una línea a la derecha de una celda a todo lo ancho no separa nada. */
+@media (max-width: 980px) {
+  .mosaico-celda {
+    border-right: none;
+    border-bottom: 1px solid var(--linea-clara);
+  }
+}
+
+/* ══ Propósito y valores ═════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .proposito-grid {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+}
+
+/* En móvil la etiqueta deja de ir al lado y pasa encima: dos columnas de
+   110px y texto no caben en 360px sin romper palabras. */
+@media (max-width: 560px) {
+  .proposito-texto,
+  .valores-bloque {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .proposito-texto p,
+  .valores-bloque ul {
+    border-left: none;
+    padding-left: 0;
+    border-top: 1px solid rgba(11, 11, 12, .14);
+    padding-top: 1.25rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mosaico-celda img {
+    transition: none;
+  }
+  .mosaico-celda:hover img,
+  .mosaico-celda:focus-visible img {
+    transform: none;
+  }
+}

@@ -15,6 +15,8 @@ import FadeContent from '@/components/FadeContent'
 import AnimatedContent from '@/components/AnimatedContent'
 import GlareHover from '@/components/GlareHover'
 import ScrollReveal from '@/components/ScrollReveal'
+import MosaicoCategorias from '@/components/MosaicoCategorias'
+import PropositoValores from '@/components/PropositoValores'
 
 const WA_NUMBER = '524778116501'
 
@@ -349,6 +351,11 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ===== MOSAICO DE CATEGORIAS (lamina de marca) =====
+           Va pegado al hero, sin aire entre medias: en la lamina las cinco
+           celdas nacen del bloque negro de arriba y forman una sola pieza. */}
+      <MosaicoCategorias />
+
       {/* ===== MARQUEE STRIP ===== */}
       <div style={{
         background: '#0a0a0a', overflow: 'hidden',
@@ -388,6 +395,9 @@ export default function HomePage() {
           ))}
         </div>
       </div>
+
+      {/* ===== PROPOSITO Y VALORES (lamina de marca) ===== */}
+      <PropositoValores />
 
       {/* ===== SOBRE NOSOTROS ===== */}
       <section style={{ background: '#fff', padding: '6rem 2rem' }}>
