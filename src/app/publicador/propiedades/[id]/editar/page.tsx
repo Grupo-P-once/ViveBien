@@ -141,7 +141,50 @@ export default function EditarPropiedad({ params }: { params: Promise<{ id: stri
   const [user, setUser] = useState<User | null>(null)
   const [cargando, setCargando] = useState(true)
   const [prop, setProp] = useState<Prop | null>(null)
-  const [paso, setPaso] = useState(0)
+  /**
+   * El paso vive en la URL, no sólo en el estado.
+   *
+   * Antes era `useState` a secas, y pulsar **Atrás en el navegador** te
+   * expulsaba del asistente entero — perdías el sitio en el que ibas después
+   * de rellenar seis pantallas. En un móvil, donde Atrás es un gesto y no un
+   * botón, eso pasa constantemente.
+   *
+   * `?paso=N` lo arregla sin partir el archivo en siete rutas: Atrás y
+   * Adelante recorren los pasos, y cada uno es enlazable — útil para el correo
+   * de «cambios solicitados», que puede llevar directo al paso que falla.
+   */
+  const [paso, setPasoEstado] = useState(0)
+
+  // Al cargar, respetar el paso de la URL.
+  useEffect(() => {
+    const n = Number(new URLSearchParams(window.location.search).get('paso'))
+    if (Number.isInteger(n) && n >= 0 && n < PASOS.length) setPasoEstado(n)
+  }, [])
+
+  // Atrás y Adelante del navegador.
+  useEffect(() => {
+    const alVolver = () => {
+      const n = Number(new URLSearchParams(window.location.search).get('paso'))
+      setPasoEstado(Number.isInteger(n) && n >= 0 && n < PASOS.length ? n : 0)
+    }
+    window.addEventListener('popstate', alVolver)
+    return () => window.removeEventListener('popstate', alVolver)
+  }, [])
+
+  const setPaso = useCallback((v: number | ((p: number) => number)) => {
+    setPasoEstado(anterior => {
+      const siguiente = typeof v === 'function' ? v(anterior) : v
+      const limitado = Math.max(0, Math.min(PASOS.length - 1, siguiente))
+      if (limitado !== anterior && typeof window !== 'undefined') {
+        const url = new URL(window.location.href)
+        url.searchParams.set('paso', String(limitado))
+        // `pushState` y no `replaceState`: es lo que crea la entrada en el
+        // historial que hace que Atrás vuelva al paso anterior.
+        window.history.pushState({ paso: limitado }, '', url)
+      }
+      return limitado
+    })
+  }, [])
   const [error, setError] = useState('')
   const [guardado, setGuardado] = useState<'limpio' | 'guardando' | 'guardado' | 'error'>('limpio')
   const [subiendo, setSubiendo] = useState(false)
