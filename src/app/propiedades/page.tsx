@@ -1,4 +1,5 @@
 'use client'
+import BarraComparar from '@/components/BarraComparar'
 import { useState, useEffect, Suspense, useCallback } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
@@ -509,6 +510,7 @@ function PropiedadesContent() {
         <PropModal p={selected} onClose={() => setSelected(null)} onContact={() => setRegOpen(true)} isLoggedIn={isLoggedIn} />
       )}
 
+      <BarraComparar />
       <Footer />
     </>
   )

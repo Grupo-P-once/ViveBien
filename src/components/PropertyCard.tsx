@@ -1,4 +1,5 @@
 'use client'
+import { alternarComparar, obtenerComparar, alCambiarComparar } from '@/lib/comparador'
 import { mailtoDe } from '@/lib/contacto'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
@@ -52,11 +53,20 @@ const PLACEHOLDER = 'https://images.unsplash.com/photo-1564013799919-ab600027ffc
 export default function PropertyCard({ propiedad: p }: PropertyCardProps) {
   const [fotoIdx, setFotoIdx] = useState(0)
   const [liked, setLiked] = useState(false)
+  const [comparando, setComparando] = useState(false)
+  const [avisoComp, setAvisoComp] = useState('')
   const [regOpen, setRegOpen] = useState(false)
   const { isLoggedIn } = useAuth()
 
   useEffect(() => {
     setLiked(getFavs().includes(p.id))
+  }, [p.id])
+
+  // El comparador vive en localStorage: se lee tras montar y se escucha, para
+  // que quitar una desde la barra flotante apague el boton de esta tarjeta.
+  useEffect(() => {
+    setComparando(obtenerComparar().includes(p.id))
+    return alCambiarComparar(ids => setComparando(ids.includes(p.id)))
   }, [p.id])
 
   function requireAuth(action: () => void) {
@@ -120,6 +130,40 @@ export default function PropertyCard({ propiedad: p }: PropertyCardProps) {
         }}>
           {opBadge}
         </span>
+
+        {/* Comparar. Arriba a la derecha: no compite con el badge de
+            operacion ni con las flechas de la galeria. */}
+        <button
+          aria-pressed={comparando}
+          title={comparando ? 'Quitar de la comparacion' : 'Comparar esta propiedad'}
+          onClick={e => {
+            e.preventDefault(); e.stopPropagation()
+            const r = alternarComparar(p.id)
+            if (!r.ok) { setAvisoComp(r.motivo); setTimeout(() => setAvisoComp(''), 3500) }
+          }}
+          style={{
+            position: 'absolute', top: '14px', right: '14px', zIndex: 3,
+            display: 'flex', alignItems: 'center', gap: '.35rem',
+            background: comparando ? 'var(--rojo-marca, #C8102E)' : 'rgba(255,255,255,.94)',
+            color: comparando ? '#fff' : '#374151',
+            border: 'none', borderRadius: '30px', padding: '.3rem .7rem',
+            fontSize: '.72rem', fontWeight: 700, cursor: 'pointer',
+            boxShadow: '0 2px 8px rgba(0,0,0,.2)', fontFamily: 'inherit',
+          }}>
+          <i className={comparando ? 'fa fa-check' : 'fa fa-scale-balanced'} style={{ fontSize: '.7rem' }} />
+          {comparando ? 'Comparando' : 'Comparar'}
+        </button>
+
+        {avisoComp && (
+          <span style={{
+            position: 'absolute', top: '52px', right: '14px', zIndex: 4,
+            background: 'var(--aviso-fondo-calido)', color: '#7c2d12',
+            padding: '.4rem .7rem', borderRadius: 7, fontSize: '.7rem',
+            maxWidth: 190, lineHeight: 1.4, boxShadow: '0 2px 10px rgba(0,0,0,.15)',
+          }}>
+            {avisoComp}
+          </span>
+        )}
 
         {/* Foto count badge */}
         {fotos.length > 1 && (
