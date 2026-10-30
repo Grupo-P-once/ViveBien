@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto'
-import { DESTINO_PRUEBAS, entornoCorreo, type EntornoDeCupo } from './config'
+import { DESTINO_PRUEBAS, entornoCorreo, entornoDeCupo, envioPermitido, type EntornoDeCupo } from './config'
 import { marcarEnvio, reservarCupo, type CategoriaCorreo, type DbCorreo } from './enviar'
 import { dbDelLibro } from './libro'
 import { normalizarCorreo } from './seguridad'
@@ -37,7 +37,7 @@ export type PedidoEmisor = {
   modoPruebas?: boolean
 }
 
-export type EstadoEmisor = 'enviado' | 'duplicado' | 'suprimido' | 'sin_cupo' | 'sin_confirmar' | 'sin_clave' | 'invalido' | 'rechazado' | 'error'
+export type EstadoEmisor = 'bloqueado' | 'enviado' | 'duplicado' | 'suprimido' | 'sin_cupo' | 'sin_confirmar' | 'sin_clave' | 'invalido' | 'rechazado' | 'error'
 export type ResultadoEmisor = {
   /** `true` sólo si el correo salió ahora o ya había salido antes con esta misma clave. */
   ok: boolean
@@ -63,6 +63,8 @@ export async function enviarPorEmisorUnico(p: PedidoEmisor): Promise<ResultadoEm
   // fuera de él, una dirección que no sea UNA dirección válida no se manda (Resend la habría rechazado de todos modos).
   const para = pruebas ? DESTINO_PRUEBAS : normalizarCorreo(p.para)
   if (!para) return { ok: false, estado: 'invalido', detalle: 'destinatario_invalido' }
+
+  if (!envioPermitido(p.entornoCupo ?? entornoDeCupo(), pruebas)) return { ok: false, estado: 'bloqueado', detalle: 'fuera_de_produccion_sin_modo_de_pruebas' }
 
   let db: DbCorreo
   try {

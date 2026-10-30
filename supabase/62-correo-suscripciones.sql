@@ -249,9 +249,9 @@ begin
   select * into v_previo from public.correo_envios where clave = p_clave;
   if found then
     -- Un fallo de red o del proveedor se puede reintentar (con la MISMA clave en el proveedor, que el proveedor repite sin duplicar).
-    -- El reintento reutiliza la misma fila: ya está contada, no gasta cupo nuevo.
+    -- El reintento reutiliza la misma fila (no es una fila nueva), pero se fecha de nuevo: cuenta en el día en que de verdad se envía.
     if v_previo.estado in ('error', 'pendiente') and v_previo.creado_en < now() - interval '10 minutes' then
-      update public.correo_envios set estado = 'pendiente', error = null where id = v_previo.id;
+      update public.correo_envios set estado = 'pendiente', error = null, creado_en = now() where id = v_previo.id; -- el reintento cuenta HOY y reinicia la espera de 10 min (no se puede reenviar dos veces seguidas)
       return jsonb_build_object('accion', 'enviar', 'id', v_previo.id, 'reintento', true);
     end if;
     return jsonb_build_object('accion', 'duplicado', 'estado', v_previo.estado, 'id', v_previo.id);

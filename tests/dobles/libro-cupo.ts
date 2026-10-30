@@ -33,7 +33,7 @@ export async function crearLibro(): Promise<Libro> {
     db,
     pg,
     vaciar: async () => { await pg.exec('delete from public.correo_envios; delete from public.correo_supresiones;') },
-    usados: async (entorno = 'pruebas') => {
+    usados: async (entorno = 'produccion') => {
       const r = await pg.query<{ n: number }>(`select count(*)::int n from public.correo_envios where entorno = $1 and estado not in ('suprimido', 'omitido')`, [entorno])
       return r.rows[0].n
     },

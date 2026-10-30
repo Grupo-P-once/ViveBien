@@ -413,3 +413,56 @@ describe('la reversa borra sólo lo creado por la migración', () => {
     expect(await q(`select 1 from pg_class where relnamespace = 'public'::regnamespace and relname = 'correo_envios'`)).toHaveLength(1)
   })
 })
+
+describe('auditoría del cupo: zona horaria, supresiones por categoría y reintentos ambiguos', () => {
+  it('el día y el ciclo son UTC aunque la sesión use la hora de México (UTC-6)', async () => {
+    await db.exec('delete from public.correo_envios')
+    const utc = await fn(`public.correo_cupo_estado($1)`, ['produccion'])
+    await db.exec(`set time zone 'America/Mexico_City'`)
+    const mx = await fn(`public.correo_cupo_estado($1)`, ['produccion'])
+    await db.exec(`set time zone 'Asia/Tokyo'`)
+    const jp = await fn(`public.correo_cupo_estado($1)`, ['produccion'])
+    await db.exec(`reset time zone`)
+    expect(new Date(String(mx.inicio_ciclo)).getTime()).toBe(new Date(String(utc.inicio_ciclo)).getTime())
+    expect(new Date(String(jp.inicio_ciclo)).getTime()).toBe(new Date(String(utc.inicio_ciclo)).getTime())
+    // Un envío justo antes de las 00:00 UTC de hoy NO cuenta hoy; uno justo después, sí.
+    const hoy0 = new Date(); hoy0.setUTCHours(0, 0, 0, 0)
+    await db.query(`insert into public.correo_envios (clave, categoria, tipo, email_norm, estado, entorno, creado_en) values
+      ('zh/antes', 'transaccional', 'x', 'a@b.cc', 'enviado', 'produccion', $1::timestamptz - interval '1 second'),
+      ('zh/despues', 'transaccional', 'x', 'a@b.cc', 'enviado', 'produccion', $1::timestamptz + interval '1 second')`, [hoy0.toISOString()])
+    await db.exec(`set time zone 'America/Mexico_City'`)
+    const e = await fn(`public.correo_cupo_estado($1)`, ['produccion'])
+    await db.exec(`reset time zone`)
+    // «después» puede estar en el futuro si son las 00:00:00 UTC exactas; en cualquier otro instante cuenta 1 hoy.
+    expect(e.hoy).toBeGreaterThanOrEqual(1)
+    expect(e.hoy).toBeLessThanOrEqual(1)
+  })
+
+  it('una queja bloquea los avisos de servicio y el marketing, pero no lo transaccional; un rebote bloquea todo', async () => {
+    await db.exec('delete from public.correo_envios; delete from public.correo_supresiones')
+    await db.exec(`insert into public.correo_supresiones values ('quejosa@ejemplo.test', 'queja'), ('rebotada2@ejemplo.test', 'rebote')`)
+    expect((await reservar('aud/q1', 'servicio', 'quejosa@ejemplo.test')).accion).toBe('suprimido')
+    expect((await reservar('aud/q2', 'transaccional', 'quejosa@ejemplo.test')).accion).toBe('enviar')
+    expect((await reservar('aud/r1', 'servicio', 'rebotada2@ejemplo.test')).accion).toBe('suprimido')
+    expect((await reservar('aud/r2', 'transaccional', 'rebotada2@ejemplo.test')).accion).toBe('suprimido')
+  })
+
+  it('un evento de rebote/queja del proveedor sigue contando el envío (se envió) y no libera cupo', async () => {
+    await db.exec('delete from public.correo_envios; delete from public.correo_supresiones')
+    const a = await reservar('aud/ev/1', 'transaccional', 'ev@ejemplo.test')
+    await fn('public.correo_marcar_envio($1, $2, $3, $4)', [a.id, 'enviado', 're_ev', null]).catch(() => undefined)
+    await evento('svix-ev-1', 'email.complained', 'ev@ejemplo.test', 're_ev')
+    expect(await fn(`public.correo_cupo_estado($1)`, ['produccion'])).toMatchObject({ hoy: 1 })
+  })
+
+  it('un error ambiguo reintentado con la misma clave NO duplica la fila ni el conteo, y un 11.º minuto después sí se reintenta una sola vez', async () => {
+    await db.exec('delete from public.correo_envios')
+    const a = await reservar('aud/amb/1', 'transaccional', 'amb@ejemplo.test')
+    await fn('public.correo_marcar_envio($1, $2, $3, $4)', [a.id, 'error', null, 'red']).catch(() => undefined)
+    expect((await reservar('aud/amb/1', 'transaccional', 'amb@ejemplo.test')).accion).toBe('duplicado')
+    await db.exec(`update public.correo_envios set creado_en = now() - interval '11 minutes'`)
+    expect((await reservar('aud/amb/1', 'transaccional', 'amb@ejemplo.test')).accion).toBe('enviar')
+    expect((await reservar('aud/amb/1', 'transaccional', 'amb@ejemplo.test')).accion).toBe('duplicado')
+    expect(await fn(`public.correo_cupo_estado($1)`, ['produccion'])).toMatchObject({ hoy: 1 })
+  })
+})

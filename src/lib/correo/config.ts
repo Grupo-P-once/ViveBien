@@ -40,8 +40,15 @@ export const DIA_DE_CICLO = 23
  * cualquier otra cosa usan `pruebas` (la rebanada pequeña): equivocarse hacia ese lado sólo deja sin cupo, nunca lo excede.
  */
 export function entornoDeCupo(env: Record<string, string | undefined> = process.env): EntornoDeCupo {
-  return env.VERCEL_ENV === 'production' && env.NODE_ENV === 'production' ? 'produccion' : 'pruebas'
+  return env.VERCEL_ENV === 'production' ? 'produccion' : 'pruebas'
 }
+
+/**
+ * BARRERA contra el límite agregado (auditoría del 29-oct): cada base de datos cuenta sólo lo suyo, así que varias bases "de pruebas" no se pueden sumar
+ * como un límite global. En vez de fingir que lo son, FUERA DE PRODUCCIÓN no sale ningún correo real: sólo se permite con el modo de pruebas
+ * (destino único, `informes@`, y rebanada chica). Mientras RESEND_API_KEY exista sólo en Production, eso es todo el riesgo de esas bases.
+ */
+export const envioPermitido = (entornoCupo: EntornoDeCupo, modoPruebas: boolean): boolean => entornoCupo === 'produccion' || modoPruebas
 
 /**
  * Texto de consentimiento promocional APROBADO por quien corresponda (abogado/dueño). Mientras sea `false`, ninguna variable de

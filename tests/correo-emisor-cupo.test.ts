@@ -48,7 +48,7 @@ describe('cada correo cuenta contra el cupo ANTES de salir', () => {
       await emitir()
       expect(peticiones).toHaveLength(1)
       expect(await libro.usados()).toBe(1)
-      expect((await libro.filas())[0]).toMatchObject({ estado: 'enviado', categoria: 'transaccional', entorno: 'pruebas' })
+      expect((await libro.filas())[0]).toMatchObject({ estado: 'enviado', categoria: 'transaccional', entorno: 'produccion' })
     })
   }
 
@@ -62,15 +62,15 @@ describe('cada correo cuenta contra el cupo ANTES de salir', () => {
 describe('SIN CUPO NO SE ENVÍA', () => {
   async function llenarHoy(n: number) {
     await libro.pg.query(`insert into public.correo_envios (clave, categoria, tipo, email_norm, estado, entorno)
-                          select 'lleno/' || g, 'transaccional', 'x', 'lleno@ejemplo.test', 'enviado', 'pruebas' from generate_series(1, $1::int) g`, [n])
+                          select 'lleno/' || g, 'transaccional', 'x', 'lleno@ejemplo.test', 'enviado', 'produccion' from generate_series(1, $1::int) g`, [n])
   }
 
   for (const [nombre, emitir] of emisores) {
     it(`${nombre}: con el cupo del día agotado NO llama al proveedor`, async () => {
-      await llenarHoy(10)
+      await llenarHoy(80)
       await emitir()
       expect(peticiones).toEqual([])
-      expect(await libro.usados()).toBe(10)
+      expect(await libro.usados()).toBe(80)
     })
 
     it(`${nombre}: si la base del libro no contesta NO llama al proveedor`, async () => {
@@ -89,11 +89,12 @@ describe('SIN CUPO NO SE ENVÍA', () => {
   }
 
   it('el aviso de leads informa que no salió (el lead se guarda aparte): no finge éxito', async () => {
-    await llenarHoy(10)
+    await llenarHoy(80)
     expect(await avisarDeLead(LEAD)).toMatchObject({ enviado: false })
   })
 
   it('un cupo de 10 en la rebanada de pruebas se agota exacto: el 11.º correo no sale aunque se pidan en paralelo', async () => {
+    vi.stubEnv('VERCEL_ENV', 'preview'); vi.stubEnv('CORREO_MODO_PRUEBAS', '1')
     const r = await Promise.all(Array.from({ length: 25 }, (_, i) => enviarPorEmisorUnico({
       apiKey: 'k', clave: `par/${i}`, categoria: 'transaccional', tipo: 'x', para: `p${i}@ejemplo.test`, cuerpo: { from: 'a', to: [`p${i}@ejemplo.test`], subject: 's', html: 'h', text: 't' }, db: libro.db,
     })))
@@ -122,7 +123,7 @@ describe('SIN CUPO NO SE ENVÍA', () => {
 })
 
 describe('MODO DE PRUEBAS cuenta igual y marca el asunto con un ID', () => {
-  beforeEach(() => { vi.stubEnv('CORREO_MODO_PRUEBAS', '1') })
+  beforeEach(() => { vi.stubEnv('CORREO_MODO_PRUEBAS', '1'); vi.stubEnv('VERCEL_ENV', 'preview') })
 
   it('va SOLO a informes@vivebienn.com, con asunto «[PRUEBA VB · ID] …», y el libro lo cuenta', async () => {
     await enviarInvitacion({ email: 'persona.real@cliente-real.test', rol: 'publicador', invitadoPor: 'otra.real@cliente-real.test' })
@@ -130,7 +131,7 @@ describe('MODO DE PRUEBAS cuenta igual y marca el asunto con un ID', () => {
     expect(peticiones[0].cuerpo.to).toEqual([DESTINO_PRUEBAS])
     expect(DESTINO_PRUEBAS).toBe('informes@vivebienn.com')
     expect(String(peticiones[0].cuerpo.subject)).toMatch(/^\[PRUEBA VB · [0-9A-F]{8}\] Te invitaron/)
-    expect(await libro.usados()).toBe(1)
+    expect(await libro.usados('pruebas')).toBe(1)
     const filas = await libro.filas()
     expect(filas[0].email_norm).toBe(DESTINO_PRUEBAS) // ni el libro guarda la dirección real
     // El TEXTO de una invitación menciona a quien se invita (es su contenido); lo que no puede aparecer es en un campo de destinatario, de respuesta, en cabeceras ni en el libro.
@@ -171,5 +172,41 @@ describe('duplicados', () => {
     expect(r.estado).toBe('suprimido')
     expect(peticiones).toEqual([])
     expect(await libro.usados()).toBe(0)
+  })
+})
+
+describe('FUERA DE PRODUCCIÓN no sale ningún correo real (los contadores de otras bases no se suman: auditoría del límite agregado)', () => {
+  beforeEach(() => { vi.stubEnv('VERCEL_ENV', 'preview'); vi.stubEnv('CORREO_MODO_PRUEBAS', '') })
+
+  for (const [nombre, emitir] of emisores) {
+    it(`${nombre}: en Preview/local sin modo de pruebas NO llama al proveedor ni toca el libro`, async () => {
+      await emitir()
+      expect(peticiones).toEqual([])
+      expect(await libro.filas()).toEqual([])
+    })
+  }
+
+  it('con el modo de pruebas sí sale, pero sólo a informes@ y contando en la rebanada de pruebas', async () => {
+    vi.stubEnv('CORREO_MODO_PRUEBAS', '1')
+    await avisarDeLead(LEAD)
+    expect(peticiones).toHaveLength(1)
+    expect(peticiones[0].cuerpo.to).toEqual([DESTINO_PRUEBAS])
+    expect(await libro.usados('pruebas')).toBe(1)
+  })
+})
+
+describe('MIGRACIÓN 62 AÚN NO APLICADA: qué se detiene', () => {
+  const faltante = { rpc: async () => ({ data: null, error: { code: 'PGRST202', message: 'Could not find the function public.correo_reservar_envio in the schema cache' } }), from: () => { throw new Error('no se usa') } }
+  for (const [nombre, emitir] of emisores) {
+    it(`${nombre}: se DETIENE (falla cerrada); por eso la migración va antes que el código`, async () => {
+      const original = libroH.db
+      libroH.db = faltante
+      try { await emitir() } finally { libroH.db = original }
+      expect(peticiones).toEqual([])
+    })
+  }
+  it('con la migración aplicada y el libro VACÍO nada se bloquea', async () => {
+    for (const [, emitir] of emisores) await emitir()
+    expect(peticiones).toHaveLength(emisores.length)
   })
 })

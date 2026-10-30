@@ -1,5 +1,5 @@
 import { NEGOCIO } from '../config/negocio'
-import { DESTINO_PRUEBAS, entornoCorreo, entornoDeCupo, type EntornoCorreo, type EntornoDeCupo } from './config'
+import { DESTINO_PRUEBAS, entornoCorreo, entornoDeCupo, envioPermitido, type EntornoCorreo, type EntornoDeCupo } from './config'
 import { normalizarCorreo } from './seguridad'
 import { cuerpoDePruebas, exigirSoloDestinoDePruebas, idDePrueba, llamarResend, MARCA_PRUEBA, prefijoDePrueba } from './resend'
 
@@ -113,6 +113,7 @@ export async function enviarCorreo(db: DbCorreo, s: SolicitudCorreo, o: Opciones
   if (s.categoria === 'marketing' && (!env.marketing || !env.secreto)) return { estado: 'omitido', motivo: 'marketing_apagado' }
   if (!env.resendKey) return { estado: 'omitido', motivo: 'sin_clave_del_proveedor' }
 
+  if (!envioPermitido(o.entornoCupo ?? entornoDeCupo(), env.modoPruebas === true)) return { estado: 'omitido', motivo: 'fuera_de_produccion_sin_modo_de_pruebas' }
   // Cupo duro: si no se puede CONFIRMAR que hay lugar, no se envía (ni se llama al proveedor).
   const r = await reservarCupo(db, { clave: s.clave, categoria: s.categoria, tipo: s.tipo, para, suscriptorId: s.suscriptorId, propiedades: s.propiedades, entornoCupo: o.entornoCupo })
   if (r.accion === 'sin_confirmar') {

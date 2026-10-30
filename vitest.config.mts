@@ -23,6 +23,8 @@ export default defineConfig({
     },
   },
   test: {
+    // Las pruebas corren «como producción» para el cupo de correo (VERCEL_ENV); las que prueban otra rebanada la cambian a propósito.
+    setupFiles: ['./tests/setup-entorno-correo.ts'],
     testTimeout: 60_000,
     hookTimeout: 60_000,
   },

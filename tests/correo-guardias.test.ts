@@ -210,6 +210,17 @@ describe('MODO DE PRUEBAS y CUPO: todo emisor de correo del código pasa por un 
     expect(e).not.toMatch(/p_dia_max|p_mes_max|p_reserva_transaccional/)
   })
 
+  it('FUERA DE PRODUCCIÓN: ambos emisores comprueban envioPermitido ANTES de reservar o llamar (no se suman contadores de otras bases)', () => {
+    for (const f of [EMISOR_UNICO, D80]) {
+      const t = codigo(leer(f))
+      expect(t.indexOf('envioPermitido('), f).toBeGreaterThan(0)
+      expect(t.indexOf('envioPermitido('), f).toBeLessThan(t.indexOf('await reservarCupo('))
+    }
+    const c = codigo(leer('src/lib/correo/config.ts'))
+    expect(c).toContain("entornoCupo === 'produccion' || modoPruebas")
+    expect(c).toContain("env.VERCEL_ENV === 'production' ? 'produccion' : 'pruebas'")
+  })
+
   it('MARKETING: sigue apagado por una constante de código mientras no exista texto legal aprobado (la variable de entorno sola no lo enciende)', () => {
     const c = codigo(leer('src/lib/correo/config.ts'))
     // Para encender el correo promocional hay que cambiar esta línea en una revisión de código, con el texto y su versión aprobados.

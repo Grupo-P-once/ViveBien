@@ -82,8 +82,8 @@ describe('la reserva en la base decide ANTES de llamar al proveedor', () => {
   })
 
   it('manda a la reserva sólo la rebanada (produccion/pruebas), NUNCA los topes: esos viven fijos en la base', async () => {
-    await enviarCorreo(db, BASE, { entorno: ENV, fetch: fetchOk as unknown as typeof fetch, entornoCupo: 'pruebas' })
-    expect(llamadas[0].args).toEqual({ p_clave: 'bienvenida/uid-1', p_categoria: 'transaccional', p_tipo: 'bienvenida', p_email: 'persona@ejemplo.test', p_suscriptor: null, p_props: null, p_entorno: 'pruebas' })
+    await enviarCorreo(db, BASE, { entorno: ENV, fetch: fetchOk as unknown as typeof fetch, entornoCupo: 'produccion' })
+    expect(llamadas[0].args).toEqual({ p_clave: 'bienvenida/uid-1', p_categoria: 'transaccional', p_tipo: 'bienvenida', p_email: 'persona@ejemplo.test', p_suscriptor: null, p_props: null, p_entorno: 'produccion' })
     expect(Object.keys(llamadas[0].args).some((k) => /max|reserva_trans|tope/.test(k))).toBe(false)
   })
 })
@@ -144,5 +144,17 @@ describe('la petición a Resend', () => {
     expect(registros).not.toContain('detalle interno')
     expect(registros).not.toContain('re_clave_secreta')
     expect(registros).not.toContain('persona@ejemplo.test')
+  })
+})
+
+describe('fuera de producción', () => {
+  it('sin modo de pruebas NO se reserva ni se llama al proveedor; con el modo de pruebas sí (rebanada chica)', async () => {
+    const r = await enviarCorreo(db, BASE, { entorno: ENV, fetch: fetchOk as unknown as typeof fetch, entornoCupo: 'pruebas' })
+    expect(r).toEqual({ estado: 'omitido', motivo: 'fuera_de_produccion_sin_modo_de_pruebas' })
+    expect(llamadas).toEqual([])
+    expect(fetchOk).not.toHaveBeenCalled()
+    const r2 = await enviarCorreo(db, BASE, { entorno: { ...ENV, modoPruebas: true }, fetch: fetchOk as unknown as typeof fetch, entornoCupo: 'pruebas' })
+    expect(r2.estado).toBe('enviado')
+    expect(llamadas[0].args).toMatchObject({ p_entorno: 'pruebas' })
   })
 })
