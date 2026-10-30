@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/auth-server'
 import { frenarAsync, origenDe, TOPES } from '@/lib/limites'
 import { avisarDeLead } from '@/lib/aviso-lead'
+import { verifyIdToken } from '@/lib/auth-server'
+import { INTERES_PUBLICAR } from '@/lib/correo/constantes'
+import { despuesDeResponder, enviarConfirmacionPublicador } from '@/lib/correo/transaccionales'
+import type { DbCorreo } from '@/lib/correo/enviar'
 import { escribirTolerante } from '@/lib/columnas'
 import { avisar } from '@/lib/alertas'
 import {
@@ -110,6 +114,7 @@ export async function POST(req: Request) {
   /* ── Guardar ──
      Se intenta, pero el resultado NO decide si el lead se pierde. */
   let guardado = false
+  let leadId: number | null = null
   let fallo = ''
 
   try {
@@ -117,7 +122,11 @@ export async function POST(req: Request) {
     // TODAS las que falten —antes sólo una, y con tres ausentes no entraba
     // ningún lead— y lo quitado se pliega en `mensaje`: el consentimiento no
     // se puede perder en silencio.
-    const r = await escribirTolerante((f) => db.from('leads').insert(f), fila, { plegarEn: 'mensaje' })
+    const r = await escribirTolerante(async (f) => {
+      const w = await db.from('leads').insert(f).select('id').maybeSingle()
+      if (!w.error && typeof w.data?.id === 'number') leadId = w.data.id
+      return { error: w.error }
+    }, fila, { plegarEn: 'mensaje' })
     if (r.error) {
       fallo = r.error
     } else {
@@ -182,6 +191,16 @@ export async function POST(req: Request) {
 
   // Si al menos una de las dos vías funcionó, para la persona su solicitud
   // llegó — y es verdad. Sólo se le dice que falló si se perdió de verdad.
+  // D-80: la persona que SOLICITA publicar recibe una confirmación (no es una aprobación). Sólo a su correo verificado de la
+  // sesión, una vez por solicitud, después de responder y sin tumbar el registro del lead.
+  if (guardado && leadId !== null && interes === INTERES_PUBLICAR) {
+    const id = leadId
+    const usuario = await verifyIdToken(req).catch(() => null)
+    if (usuario) {
+      despuesDeResponder(() => enviarConfirmacionPublicador(db as unknown as DbCorreo, id, { correo: usuario.email, verificado: usuario.emailVerified, nombre }))
+    }
+  }
+
   if (guardado || aviso.enviado) {
     return NextResponse.json({ ok: true, guardado, avisado: aviso.enviado })
   }

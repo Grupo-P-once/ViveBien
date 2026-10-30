@@ -1,5 +1,6 @@
 import { CORREO_CONTACTO } from './contacto'
 import { NEGOCIO } from './config/negocio'
+import { llamarResend } from './correo/resend'
 
 /**
  * Avisar de que entró un lead.
@@ -108,13 +109,10 @@ export async function avisarDeLead(lead: Lead): Promise<Resultado> {
   `
 
   try {
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${clave}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    // Pasa por el único emisor (`correo/resend.ts`): con CORREO_MODO_PRUEBAS=1 el destino y la respuesta se fijan ahí.
+    const res = await llamarResend({
+      apiKey: clave,
+      cuerpo: {
         from: process.env.RESEND_FROM || NEGOCIO.remitente,
         to: [CORREO_CONTACTO],
         // El asunto lleva el nombre y el origen: se decide si abrirlo desde la
@@ -123,7 +121,7 @@ export async function avisarDeLead(lead: Lead): Promise<Resultado> {
         reply_to: lead.email || undefined,
         text: texto,
         html,
-      }),
+      },
     })
 
     if (!res.ok) {

@@ -1,0 +1,142 @@
+import { COLUMNAS_PROPIEDAD_PORTAL, type FilaPropiedadPortal } from '../portal/tarjeta'
+import { CORREO, entornoCorreo, SECRETO_MINIMO, type EntornoCorreo, type LimitesCorreo } from './config'
+import { enviarCorreo, type DbCorreo } from './enviar'
+import { plantillaRecomendaciones } from './plantillas'
+import { aTarjetaCorreo, elegirPropiedades, leerPreferencias, motivoDe } from './recomendaciones'
+import { urlBaja, urlBajaUnClic, urlPreferencias } from './suscripcion'
+
+/**
+ * La tarea diaria de recomendaciones (D-80). Vercel Hobby sólo permite UNA ejecución al día (±59 min), así que la
+ * frecuencia de «cada tres días» se logra con la fecha `proximo_envio_en` de cada persona, no con el reloj del cron.
+ *
+ * Antes de cada envío, y por persona: se vuelve a leer su estado (una baja o un rebote de hace un minuto cuenta), se
+ * consulta el catálogo VIGENTE, se descartan las propiedades de los últimos correos y se reserva el envío en la base (que
+ * decide duplicado / supresión / presupuesto). Si no hay nada relevante no se manda nada. Un fallo en una persona no
+ * detiene a las demás; un agotamiento del presupuesto sí.
+ */
+
+/** Personas que se procesan por ejecución de la tarea cuando está activo el modo de pruebas. */
+export const TOPE_LOTE_PRUEBAS = 3
+
+export type ResumenTarea = {
+  estado: 'desactivada' | 'pausada' | 'terminada' | 'error'
+  motivo?: string
+  procesadas: number
+  enviadas: number
+  sinNovedades: number
+  suprimidas: number
+  fallidas: number
+  presupuestoAgotado: boolean
+}
+
+const vacio = (estado: ResumenTarea['estado'], motivo?: string): ResumenTarea => ({
+  estado, motivo, procesadas: 0, enviadas: 0, sinNovedades: 0, suprimidas: 0, fallidas: 0, presupuestoAgotado: false,
+})
+
+const DIA = 86_400_000
+
+/** ¿Hay señales de que enviar más correo comercial sería dañino para la reputación del dominio? */
+export function debePausarse(s: { enviados7?: number; rebotados7?: number; quejas7?: number } | null): string | null {
+  if (!s) return 'salud_desconocida'
+  const p = CORREO.pausa
+  if ((s.quejas7 ?? 0) >= p.quejas7d) return 'quejas'
+  const enviados = s.enviados7 ?? 0
+  if (enviados >= p.minimoEnvios && ((s.rebotados7 ?? 0) / enviados) * 100 > p.rebotePorcentaje) return 'rebotes'
+  return null
+}
+
+export async function ejecutarTareaMarketing(
+  db: DbCorreo,
+  o: { entorno?: EntornoCorreo; fetch?: typeof fetch; ahora?: Date; limites?: Partial<LimitesCorreo> } = {},
+): Promise<ResumenTarea> {
+  const env = o.entorno ?? entornoCorreo()
+  if (!env.marketing || !env.resendKey || env.secreto.length < SECRETO_MINIMO) return vacio('desactivada', 'banderas_o_claves')
+  const ahora = o.ahora ?? new Date()
+  const lim = { ...CORREO, ...(o.limites ?? {}) }
+  // Modo de pruebas: todo va a UNA bandeja, así que se procesan pocas personas por ejecución (no se inunda ni se gasta la cuota diaria).
+  if (env.modoPruebas) lim.loteMarketing = Math.min(lim.loteMarketing, TOPE_LOTE_PRUEBAS)
+
+  const salud = await db.rpc('correo_salud')
+  const pausa = debePausarse(salud.error ? null : (salud.data as { enviados7?: number; rebotados7?: number; quejas7?: number }))
+  if (pausa) return vacio('pausada', pausa)
+
+  const personas = await db
+    .from('correo_suscriptores')
+    .select('id, email, nombre, preferencias')
+    .eq('estado', 'activa')
+    .lte('proximo_envio_en', ahora.toISOString())
+    .order('proximo_envio_en', { ascending: true })
+    .limit(lim.loteMarketing)
+  if (personas.error) return vacio('error', 'leer_suscriptores')
+  const lista = (personas.data ?? []) as Array<{ id: string; email: string; nombre: string | null; preferencias: unknown }>
+  const r = vacio('terminada')
+  if (lista.length === 0) return r
+
+  const cat = await db.from('propiedades').select(COLUMNAS_PROPIEDAD_PORTAL).eq('estado_pub', 'publicada').limit(500)
+  if (cat.error) return vacio('error', 'leer_catalogo')
+  const catalogo = (cat.data ?? []) as FilaPropiedadPortal[]
+
+  const proximo = (dias: number) => new Date(ahora.getTime() + dias * DIA).toISOString()
+  for (const p of lista) {
+    r.procesadas++
+    // Estado FRESCO de esta persona: una baja posterior a la lectura de la lista la detiene aquí.
+    const fresca = await db.from('correo_suscriptores').select('estado').eq('id', p.id).maybeSingle()
+    if (fresca.error || fresca.data?.estado !== 'activa') { r.suprimidas++; continue }
+
+    const previos = await db
+      .from('correo_envios')
+      .select('propiedades')
+      .eq('suscriptor_id', p.id)
+      .in('estado', ['enviado', 'entregado'])
+      .order('creado_en', { ascending: false })
+      .limit(lim.memoriaEnvios)
+    const ya = new Set<string>(((previos.data ?? []) as Array<{ propiedades: string[] | null }>).flatMap((x) => x.propiedades ?? []))
+
+    const prefs = leerPreferencias(p.preferencias)
+    const elegidas = elegirPropiedades(prefs, catalogo, ya, lim.propiedadesPorCorreo)
+    if (elegidas.length === 0) {
+      // Nada nuevo y relevante: no se escribe. Se vuelve a mirar dentro de un periodo normal.
+      r.sinNovedades++
+      await db.from('correo_suscriptores').update({ proximo_envio_en: proximo(lim.entreMarketingDias) }).eq('id', p.id)
+      continue
+    }
+
+    const correo = plantillaRecomendaciones({
+      nombre: p.nombre,
+      propiedades: elegidas.map(aTarjetaCorreo),
+      motivo: motivoDe(prefs),
+      urlBaja: urlBaja(env.secreto, p.id),
+      urlPreferencias: urlPreferencias(),
+    })
+    const dia = ahora.toISOString().slice(0, 10)
+    const e = await enviarCorreo(
+      db,
+      {
+        clave: `reco/${p.id}/${dia}`,
+        categoria: 'marketing',
+        tipo: 'recomendaciones',
+        para: p.email,
+        ...correo,
+        suscriptorId: p.id,
+        propiedades: elegidas.map((x) => x.id),
+        urlBaja: urlBajaUnClic(env.secreto, p.id),
+      },
+      { entorno: env, fetch: o.fetch, limites: o.limites },
+    )
+    if (e.estado === 'enviado') {
+      r.enviadas++
+      await db.from('correo_suscriptores').update({ ultimo_envio_en: ahora.toISOString(), proximo_envio_en: proximo(lim.entreMarketingDias) }).eq('id', p.id)
+    } else if (e.estado === 'sin_presupuesto') {
+      r.presupuestoAgotado = true
+      break
+    } else if (e.estado === 'suprimido') {
+      r.suprimidas++
+    } else if (e.estado === 'duplicado') {
+      // Ya se mandó (o se está mandando) hoy: se agenda como si se hubiera enviado.
+      await db.from('correo_suscriptores').update({ proximo_envio_en: proximo(lim.entreMarketingDias) }).eq('id', p.id)
+    } else {
+      r.fallidas++
+    }
+  }
+  return r
+}

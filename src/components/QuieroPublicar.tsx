@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { auth } from '@/lib/firebase'
+import { INTERES_PUBLICAR } from '@/lib/correo/constantes'
 
 /**
  * El camino de cliente a publicador.
@@ -39,7 +40,7 @@ export default function QuieroPublicar() {
         body: JSON.stringify({
           nombre: nombre.trim(),
           telefono: telefono.trim(),
-          interes: 'Quiere publicar una propiedad',
+          interes: INTERES_PUBLICAR,
           mensaje: 'Solicita acceso de publicador desde su panel.',
           origen: 'registro',
           consentimiento: true,

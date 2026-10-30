@@ -102,7 +102,7 @@ describe('guardia · webhooks', () => {
     expect(webhooks.length).toBeGreaterThanOrEqual(2)
     for (const f of webhooks) {
       const t = leer(f)
-      expect(t, rel(f) + ': secreto/firma en tiempo constante').toMatch(/timingSafeEqual/)
+      expect(t, rel(f) + ': secreto/firma en tiempo constante').toMatch(/timingSafeEqual|verificarWebhook\(/)
       expect(t, rel(f) + ': tope de tamaño del cuerpo').toMatch(/MAX_CUERPO/)
       expect(t, rel(f) + ': registros saneados').toMatch(/limpiarTexto/)
     }

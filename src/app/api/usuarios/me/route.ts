@@ -12,6 +12,8 @@ import {
 import { normalizarOperacion, normalizarPresupuesto, normalizarTipos, normalizarZonas } from '@/lib/cliente/busqueda'
 import { leerFlags } from '@/lib/config/flags-servidor'
 import { portalAbiertoPara } from '@/lib/portal/apertura'
+import { despuesDeResponder, enviarBienvenida } from '@/lib/correo/transaccionales'
+import type { DbCorreo } from '@/lib/correo/enviar'
 
 /** Columnas del perfil que puede no haber si 06-perfil.sql no está aplicado. */
 const COLUMNAS = [
@@ -151,6 +153,11 @@ async function leerMiPerfil(req: Request) {
     fila = (data as Record<string, unknown> | null) ?? null
 
     await registrarAcceso(db, user.uid)
+
+    // D-80: cuenta NUEVA → bienvenida transaccional (apagada por defecto; después de responder; nunca tumba el alta).
+    if (!yaExiste) {
+      despuesDeResponder(() => enviarBienvenida(db as unknown as DbCorreo, user.uid, { correo: user.email, verificado: user.emailVerified, nombre: perfil.nombre }))
+    }
   } catch (e) {
     // Antes esto era `catch {}` a secas, pensando sólo en «la migración no
     // está aplicada». Pero también se traga que la base esté caída — y

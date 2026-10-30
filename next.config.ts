@@ -113,6 +113,7 @@ const rutasPrivadas = [
   "/api/alertas/:path*",
   "/api/busquedas/:path*",
   "/api/contacto/:path*",
+  "/api/correo/:path*",
   "/api/cuenta/:path*",
   "/api/comision/:path*",
   "/api/legal/:path*",

@@ -90,6 +90,12 @@ export const TOPES = {
   citas: { maximo: 40, ventanaMs: 10 * 60 * 1000 },
   /** Firmas de subida: una por foto. Un anuncio lleva 30; nadie firma 150 en diez minutos. */
   medios: { maximo: 150, ventanaMs: 10 * 60 * 1000 },
+  /** D-80: pedir recomendaciones por correo. Cada envío cuesta presupuesto y, si alguien escribe el correo de OTRA persona, le llega un mensaje: pocas veces por hora y por origen. */
+  correo: { maximo: 5, ventanaMs: 60 * 60 * 1000 },
+  /** D-80: confirmar o darse de baja desde un enlace firmado (el correo nunca se escribe aquí): un gesto de persona. */
+  correoEnlaces: { maximo: 30, ventanaMs: 10 * 60 * 1000 },
+  /** D-80: eventos del proveedor de correo; la firma es lo que manda, esto sólo acota un bucle. */
+  correoWebhook: { maximo: 600, ventanaMs: 10 * 60 * 1000 },
   /** Fallos al entrar con Google (bitácora anónima): pocos por persona; lo demás es ruido. */
   acceso: { maximo: 20, ventanaMs: 10 * 60 * 1000 },
   /**

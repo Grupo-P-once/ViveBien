@@ -1,5 +1,6 @@
 import { SITIO } from './sitio'
 import { NEGOCIO } from './config/negocio'
+import { llamarResend } from './correo/resend'
 
 /**
  * El correo de invitación al panel.
@@ -84,17 +85,17 @@ export async function enviarInvitacion(opciones: {
   `
 
   try {
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${clave}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+    // Pasa por el único emisor (`correo/resend.ts`): con CORREO_MODO_PRUEBAS=1 el destino y la respuesta se fijan ahí.
+    const res = await llamarResend({
+      apiKey: clave,
+      cuerpo: {
         from: process.env.RESEND_FROM || NEGOCIO.remitente,
         to: [opciones.email],
         subject: 'Te invitaron a Vive Bien Grupo Inmobiliario',
         reply_to: opciones.invitadoPor || undefined,
         text: texto,
         html,
-      }),
+      },
     })
     if (!res.ok) {
       const cuerpo = await res.text().catch(() => '')

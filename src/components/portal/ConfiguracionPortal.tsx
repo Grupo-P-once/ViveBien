@@ -3,6 +3,7 @@
 import { Settings } from 'lucide-react'
 import { Pantalla } from '@/components/portal/Pantalla'
 import CuentaYSeguridad from '@/components/cuenta/CuentaYSeguridad'
+import PreferenciaCorreo from '@/components/correo/PreferenciaCorreo'
 
 /**
  * «Configuración» del portal (3b-2).
@@ -17,6 +18,7 @@ export default function ConfiguracionPortal({ metodos, propiedades }: { metodos?
   return (
     <Pantalla titulo="Configuración" descripcion="Tu cuenta y cómo entras." icono={Settings}>
       <CuentaYSeguridad metodos={metodos} propiedades={propiedades} />
+      <PreferenciaCorreo />
     </Pantalla>
   )
 }

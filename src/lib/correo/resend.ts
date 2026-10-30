@@ -1,0 +1,110 @@
+import { NEGOCIO } from '../config/negocio'
+import { DESTINO_PRUEBAS } from './config'
+
+/**
+ * ÚNICO punto del sitio que llama a la API de Resend (D-80, modo de pruebas).
+ *
+ * Los cuatro emisores (correo D-80, aviso de leads, citas e invitaciones) arman su cuerpo y llegan aquí. Con `CORREO_MODO_PRUEBAS=1`
+ * el cuerpo se RECONSTRUYE desde una lista blanca —no se «limpia»—, de modo que lo que el emisor haya puesto en `to`, `cc`, `bcc`, `cco`,
+ * `reply_to`, adjuntos o cabeceras de destinatarios no existe para el proveedor. Después una barrera independiente vuelve a revisar el
+ * resultado y lanza si algo quedó fuera de lugar. Una prueba estática obliga a que ningún otro archivo hable con la API.
+ *
+ * Sin el modo activo, el cuerpo pasa tal cual: producción no cambia.
+ */
+export const URL_RESEND = 'https://api.resend.com/emails'
+
+/** Prefijo del asunto en modo de pruebas: se ve a simple vista que no es un correo real. */
+export const PREFIJO_PRUEBA = '[PRUEBA] '
+
+/** Hacia dónde apuntan los enlaces sensibles en un correo de pruebas: a una página cualquiera del sitio, sin efecto. */
+export const ENLACE_INERTE = 'https://vivebienn.com/?enlace=deshabilitado-en-pruebas'
+
+export function modoPruebasActivo(env: Record<string, string | undefined> = process.env): boolean {
+  return env.CORREO_MODO_PRUEBAS === '1'
+}
+
+// Rutas que actúan sobre datos reales con sólo abrirse (confirmar o dar de baja una suscripción, aceptar/cancelar una cita) y cualquier
+// enlace con un parámetro `t=` (token). En un correo de pruebas se sustituyen por `ENLACE_INERTE`: el token real ni siquiera sale.
+const ENLACE_SENSIBLE = /https?:\/\/[^\s"'<>)]*(?:\/citas\/accion|\/correo\/(?:confirmar|baja|preferencias)|\/api\/correo\/|\/api\/citas\/|[?#&]t=)[^\s"'<>)]*/gi
+export function neutralizarEnlaces(texto: unknown): string {
+  return typeof texto === 'string' ? texto.replace(ENLACE_SENSIBLE, ENLACE_INERTE) : ''
+}
+
+/** Cabeceras que se conservan: sólo las que no son de destinatarios ni de baja (la baja de un correo de pruebas no debe poder actuar). */
+const CABECERA_PROHIBIDA = /^(to|cc|bcc|cco|reply-to|list-unsubscribe|list-unsubscribe-post)$/i
+
+/**
+ * Reconstruye el cuerpo para el modo de pruebas desde una lista blanca: remitente, asunto y contenido del emisor; destinatario y
+ * respuesta fijos; cabeceras seguras; enlaces sensibles neutralizados; sin adjuntos (un .ics lleva organizador y asistentes, y aceptarlo
+ * enviaría una respuesta a una dirección real).
+ */
+export function cuerpoDePruebas(c: Record<string, unknown>): Record<string, unknown> {
+  const asunto = typeof c.subject === 'string' ? c.subject : ''
+  const cab: Record<string, string> = {}
+  if (c.headers && typeof c.headers === 'object') {
+    for (const [k, v] of Object.entries(c.headers as Record<string, unknown>)) {
+      if (!CABECERA_PROHIBIDA.test(k.trim()) && typeof v === 'string' && !/[\r\n]/.test(v) && !/[\r\n]/.test(k)) cab[k] = neutralizarEnlaces(v)
+    }
+  }
+  cab['X-Vive-Bien-Modo'] = 'pruebas'
+  return {
+    from: c.from,
+    to: [DESTINO_PRUEBAS],
+    reply_to: NEGOCIO.email,
+    subject: asunto.startsWith(PREFIJO_PRUEBA) ? asunto : `${PREFIJO_PRUEBA}${asunto.replace(/[\r\n]+/g, ' ')}`,
+    html: neutralizarEnlaces(c.html),
+    text: neutralizarEnlaces(c.text),
+    headers: cab,
+  }
+}
+
+const CLAVES_PERMITIDAS = new Set(['from', 'to', 'reply_to', 'subject', 'html', 'text', 'headers'])
+
+/**
+ * Última barrera: el cuerpo que va al proveedor sólo puede tener UN destinatario (el de pruebas) y ninguna clave fuera de la lista
+ * (copias, adjuntos, programación…). Se llama justo antes de enviar, sobre el objeto ya armado. Lanza si algo se escapó.
+ */
+export function exigirSoloDestinoDePruebas(cuerpo: Record<string, unknown>): void {
+  const to = cuerpo.to
+  if (!Array.isArray(to) || to.length !== 1 || to[0] !== DESTINO_PRUEBAS) throw new Error('fuga_modo_pruebas')
+  if (Object.keys(cuerpo).some((k) => !CLAVES_PERMITIDAS.has(k))) throw new Error('fuga_modo_pruebas')
+  // Las respuestas tampoco pueden irse a otra dirección: en modo de pruebas el «reply_to» es siempre el institucional.
+  if (cuerpo.reply_to !== NEGOCIO.email) throw new Error('fuga_modo_pruebas')
+  const cab = cuerpo.headers
+  if (cab !== undefined && (!cab || typeof cab !== 'object' || Array.isArray(cab))) throw new Error('fuga_modo_pruebas')
+  if (cab) {
+    // Ni una cabecera de destinatarios o de baja, ni un salto de línea en una cabecera (así no se inyecta «Bcc:» dentro de otra).
+    for (const [k, v] of Object.entries(cab as Record<string, unknown>)) {
+      if (CABECERA_PROHIBIDA.test(k.trim()) || /[\r\n]/.test(k) || typeof v !== 'string' || /[\r\n]/.test(v)) throw new Error('fuga_modo_pruebas')
+    }
+  }
+}
+
+type Llamada = {
+  apiKey: string
+  cuerpo: Record<string, unknown>
+  /** Cabecera `Idempotency-Key` (sólo la usan los emisores que ya la usaban). */
+  idempotencia?: string
+  fetch?: typeof fetch
+  /** Para pruebas; por defecto se lee `CORREO_MODO_PRUEBAS`. */
+  modoPruebas?: boolean
+}
+
+/** Llama a Resend. En modo de pruebas redirige y revisa el cuerpo; si algo no cuadra lanza `fuga_modo_pruebas` SIN llamar al proveedor. */
+export async function llamarResend(l: Llamada): Promise<Response> {
+  const pruebas = l.modoPruebas ?? modoPruebasActivo()
+  let cuerpo = l.cuerpo
+  if (pruebas) {
+    cuerpo = cuerpoDePruebas(l.cuerpo)
+    exigirSoloDestinoDePruebas(cuerpo)
+  }
+  return (l.fetch ?? fetch)(URL_RESEND, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${l.apiKey}`,
+      'Content-Type': 'application/json',
+      ...(l.idempotencia ? { 'Idempotency-Key': l.idempotencia } : {}),
+    },
+    body: JSON.stringify(cuerpo),
+  })
+}

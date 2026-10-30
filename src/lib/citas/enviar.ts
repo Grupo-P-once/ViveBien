@@ -1,6 +1,7 @@
 import { supabaseAdmin } from '../auth-server'
 import { SITIO } from '../sitio'
 import { NEGOCIO } from '../config/negocio'
+import { llamarResend } from '../correo/resend'
 import { claveCorreo, planDeCorreos, plantilla, type CorreoPlaneado, type EventoCorreo, type Para } from './correos'
 import { enlaceGoogleCalendar, generarIcs } from './ics'
 import { caducidad, nuevoToken } from './tokens'
@@ -58,7 +59,8 @@ export function enlaceParaVer(citaId: string, para: Para, asesorEsPublicador = f
   return `${SITIO}${rutaDeVisitas(para === 'cliente' ? 'cliente' : asesorEsPublicador ? 'publicador' : 'equipo', citaId)}`
 }
 
-async function mandar(opts: {
+/** Exportada sólo para que una prueba demuestre que NINGÚN correo de citas salta el modo de pruebas; el único llamador es `uno`. */
+export async function mandar(opts: {
   clave: string
   para: string
   asunto: string
@@ -69,10 +71,11 @@ async function mandar(opts: {
   const api = process.env.RESEND_API_KEY?.trim()
   if (!api) return { ok: false, error: 'sin RESEND_API_KEY' }
   try {
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${api}`, 'Content-Type': 'application/json', 'Idempotency-Key': opts.clave },
-      body: JSON.stringify({
+    // Pasa por el único emisor (`correo/resend.ts`): con CORREO_MODO_PRUEBAS=1 el destino, la respuesta y los enlaces con token se fijan ahí.
+    const res = await llamarResend({
+      apiKey: api,
+      idempotencia: opts.clave,
+      cuerpo: {
         from: process.env.RESEND_FROM || NEGOCIO.remitente,
         to: [opts.para],
         // Quien responda a una cita habla con VIVE BIEN, no con un remitente que no lee nadie.
@@ -81,7 +84,7 @@ async function mandar(opts: {
         html: opts.html,
         text: opts.texto,
         ...(opts.ics ? { attachments: [{ filename: 'visita-vive-bien.ics', content: Buffer.from(opts.ics, 'utf8').toString('base64') }] } : {}),
-      }),
+      },
     })
     const cuerpo = await res.text().catch(() => '')
     if (!res.ok) return { ok: false, error: `Resend ${res.status}: ${cuerpo.slice(0, 200)}` }
