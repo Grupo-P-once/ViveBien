@@ -201,17 +201,17 @@ describe('notificaciones y preferencias', () => {
     expect(estado.base!.tablas.notificaciones.find((n) => n.id === 2)!.leida_en).toBeNull()
     expect((await marcar(POST('/x', { ids: ['x'] }))).status).toBe(400)
   })
-  it('preferencias: sin elegir = alertas APAGADAS y legal ENCENDIDO; encender alertas guarda la fecha del consentimiento y la bitácora', async () => {
+  it('preferencias: sin elegir = alertas, precio y legal ACTIVADOS (decisión del dueño, 30-oct-2026); apagar y volver a encender guarda la fecha del consentimiento y la bitácora', async () => {
     estado.base = crearBase({ preferencias_notificacion: [] })
     const { GET: leer, PUT } = await import('../src/app/api/portal/preferencias/route')
-    expect(await (await leer(GET('/x'))).json()).toEqual({ correoAlertas: false, correoLegal: true, correoPrecio: false, consentimientoEn: null, consentimientoPrecioEn: null })      // 28-oct: el DTO suma el consentimiento PROPIO del correo de precio (apagado por defecto)
+    expect(await (await leer(GET('/x'))).json()).toEqual({ correoAlertas: true, correoLegal: true, correoPrecio: true, consentimientoEn: null, consentimientoPrecioEn: null })
+    const off = await (await PUT(new Request('https://vb.test/x', { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ correoAlertas: false }) }))).json()
+    expect(off.correoAlertas).toBe(false)
+    expect(estado.bitacora[0]).toMatchObject({ accion: 'cuenta.avisos_correo_desactivados' })
     const r = await PUT(new Request('https://vb.test/x', { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ correoAlertas: true }) }))
     const j = await r.json()
     expect(j.correoAlertas).toBe(true); expect(j.consentimientoEn).toBeTruthy()
-    expect(estado.bitacora[0]).toMatchObject({ accion: 'cuenta.avisos_correo_activados' })
-    const off = await (await PUT(new Request('https://vb.test/x', { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ correoAlertas: false }) }))).json()
-    expect(off.correoAlertas).toBe(false)
-    expect(estado.bitacora[1]).toMatchObject({ accion: 'cuenta.avisos_correo_desactivados' })
+    expect(estado.bitacora[1]).toMatchObject({ accion: 'cuenta.avisos_correo_activados' })
   })
   it('preferencias rechaza valores que no son sí/no y cuerpos vacíos', async () => {
     estado.base = crearBase({ preferencias_notificacion: [] })

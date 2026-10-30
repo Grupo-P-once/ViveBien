@@ -167,7 +167,8 @@ export async function avisosDeClientes(ahora = Date.now()): Promise<ResumenDeAvi
     if (r.correosEnviados >= TOPE_CORREOS) break
     const u = usuario.get(uid)
     if (!u?.email || (u.estado && u.estado !== 'activo')) continue
-    const p = pref.get(uid) ?? { correo_alertas: false, correo_legal: true, correo_precio: false }
+    // Sin fila de preferencias = valores por omisión ACTIVADOS (decisión del dueño, 30-oct-2026); quien se dio de baja tiene su fila en false y se respeta.
+    const p = pref.get(uid) ?? { correo_alertas: true, correo_legal: true, correo_precio: true }
     const baja = crearTokenDeBaja(uid)
     const urlBaja = baja ? `${SITIO}/api/avisos/baja?t=${baja}` : `${SITIO}/portal/configuracion`
     const urlPreferencias = `${SITIO}/portal/configuracion`

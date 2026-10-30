@@ -40,7 +40,17 @@ export function urlSegura(url: unknown): string {
 
 export type Correo = { asunto: string; html: string; texto: string }
 
-export const LOGO_URL = urlDe('/logo_transparent.png')
+/** Logotipo COMPLETO de VIVE BIEN (con la bajada «Grupo inmobiliario» entera). `logo_transparent.png` tiene la bajada recortada en el propio archivo. */
+export const LOGO_ARCHIVO = '/logo-vivebien-completo.png'
+export const LOGO_URL = urlDe(LOGO_ARCHIVO)
+
+/** VIVE BIEN es una empresa de Grupo P-ONCE: su símbolo va al pie de TODOS los correos, en un círculo blanco que lleva a su sitio. */
+export const PONCE_URL = 'https://gp-once.com/'
+export const PONCE_LOGO_ARCHIVO = '/logo-p11-simbolo.png'
+export const PONCE_LOGO_URL = urlDe(PONCE_LOGO_ARCHIVO)
+export function bloqueGrupoPOnce(): string {
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:18px auto 0"><tr><td align="center" bgcolor="#FFFFFF" width="68" height="68" style="width:68px;height:68px;background:#FFFFFF;border-radius:34px;border:1px solid #E5E0D6"><a href="${PONCE_URL}" target="_blank" title="Grupo P-ONCE" style="text-decoration:none"><img src="${escapar(PONCE_LOGO_URL)}" width="44" height="44" alt="Grupo P-ONCE" style="display:block;margin:0 auto;border:0;outline:none;width:44px;height:44px"></a></td></tr></table><p style="margin:8px 0 0;font-size:11px;line-height:17px;color:#4B5563;text-align:center">VIVE BIEN es una empresa de <a href="${PONCE_URL}" target="_blank" style="color:#4B5563;text-decoration:underline">Grupo P-ONCE</a></p>`
+}
 
 export function boton(texto: string, url: string): string {
   return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:22px 0 6px"><tr><td align="center" bgcolor="${COLORES.rojo}" style="border-radius:8px;background:${COLORES.rojo}"><a href="${escapar(urlSegura(url))}" target="_blank" style="display:inline-block;padding:14px 28px;font-family:${FUENTE};font-size:15px;font-weight:700;line-height:20px;color:${COLORES.blanco};text-decoration:none;border-radius:8px">${escapar(texto)}</a></td></tr></table>`
@@ -79,6 +89,7 @@ export function layout({ preheader, contenido, pie = '' }: OpcionesLayout): stri
       ${pie}
       <div>VIVE BIEN Grupo Inmobiliario · ${escapar(DIRECCION_CORTA)}, ${escapar(NEGOCIO.ciudad)}, ${escapar(NEGOCIO.estado)}</div>
       <div><a href="mailto:${escapar(NEGOCIO.email)}" style="color:${COLORES.gris}">${escapar(NEGOCIO.email)}</a> · ${escapar(NEGOCIO.telefonoVisible)}</div>
+      ${bloqueGrupoPOnce()}
     </td></tr>
   </table>
 </td></tr></table>
@@ -86,7 +97,7 @@ export function layout({ preheader, contenido, pie = '' }: OpcionesLayout): stri
 }
 
 export function pieTexto(): string {
-  return `\n--\nVIVE BIEN Grupo Inmobiliario · ${DIRECCION_CORTA}, ${NEGOCIO.ciudad}, ${NEGOCIO.estado}\n${NEGOCIO.email} · ${NEGOCIO.telefonoVisible}\n${SITIO}\n`
+  return `\n--\nVIVE BIEN Grupo Inmobiliario · ${DIRECCION_CORTA}, ${NEGOCIO.ciudad}, ${NEGOCIO.estado}\n${NEGOCIO.email} · ${NEGOCIO.telefonoVisible}\n${SITIO}\nVIVE BIEN es una empresa de Grupo P-ONCE: ${PONCE_URL}\n`
 }
 
 /** Una propiedad lista para pintarse en un correo. Todos los datos salen de la base; si falta uno, se omite. */

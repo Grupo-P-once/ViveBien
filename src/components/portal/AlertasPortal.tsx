@@ -12,7 +12,6 @@ import { useSesion } from '@/components/admin/sesion'
 import { fechaCorta } from '@/lib/admin/formato'
 import type { AlertaVista } from '@/lib/portal/pantallas'
 import BandejaDeAvisos from '@/components/portal/BandejaDeAvisos'
-import PreferenciasDeAvisos from '@/components/portal/PreferenciasDeAvisos'
 
 /**
  * «Mis alertas» — lo nuevo de cada búsqueda guardada (3b-1, D-27.3 y D-28.2).
@@ -63,9 +62,8 @@ export default function AlertasPortal({ fijo }: { fijo?: DatosAlertas }) {
       }
     >
       {!fijo && (
-        <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+        <div className="mb-8">
           <BandejaDeAvisos />
-          <PreferenciasDeAvisos />
         </div>
       )}
       <h2 className="mb-3 font-heading text-[1.02rem] font-semibold">Por búsqueda</h2>

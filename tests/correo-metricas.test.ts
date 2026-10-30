@@ -188,7 +188,7 @@ describe('vista previa fiel', () => {
     expect(v.texto.length).toBeGreaterThan(20)
   })
   it('un correo sin plantilla visualizable aparece con su motivo, no como si funcionara', () => {
-    expect(SIN_VISTA_PREVIA.length).toBeGreaterThanOrEqual(3)
+    expect(SIN_VISTA_PREVIA.length).toBeGreaterThanOrEqual(1)
     for (const s of SIN_VISTA_PREVIA) { expect(s.nombre.length).toBeGreaterThan(5); expect(s.motivo.length).toBeGreaterThan(30) }
     expect(vistaPrevia('no-existe')).toBeNull()
   })

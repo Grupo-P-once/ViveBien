@@ -1,4 +1,5 @@
 import { fechaLarga, horaCorta } from './zona'
+import { bloqueGrupoPOnce, PONCE_URL } from '../correo/plantillas/marca'
 
 /**
  * Qué correo sale con cada cambio de una cita, a quién, y qué dice.
@@ -234,6 +235,7 @@ export function plantilla(tipo: TipoCorreo, para: Para, d: DatosPlantilla): Corr
     ${d.acciones.length ? '<p style="margin:14px 0 0;font-size:12px;line-height:1.5;color:#8A8882">Abrir este correo o el enlace no cambia nada: la acción sólo cuenta cuando pulses el botón en la página. Los enlaces sirven una vez y caducan.</p>' : ''}
   </div>
   <p style="margin:16px 0 0;text-align:center;font-size:12px;color:#8A8882">Vive Bien Grupo Inmobiliario · León, Gto. · Horarios en hora de León</p>
+  ${bloqueGrupoPOnce()}
 </div></body></html>`
 
   const quitarEtiquetas = (t: string) => t.replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'")
@@ -251,6 +253,7 @@ export function plantilla(tipo: TipoCorreo, para: Para, d: DatosPlantilla): Corr
     '',
     ...(d.acciones.length ? ['Abrir el enlace no cambia nada: la acción sólo cuenta cuando pulses el botón en la página.'] : []),
     'Vive Bien Grupo Inmobiliario · León, Gto.',
+    `VIVE BIEN es una empresa de Grupo P-ONCE: ${PONCE_URL}`,
   ].join('\n')
 
   return { asunto: k.asunto, html, texto }

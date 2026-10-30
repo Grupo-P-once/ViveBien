@@ -5,6 +5,7 @@ import { RefreshCw, type LucideIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useSesion } from '@/components/admin/sesion'
 import { cn } from '@/lib/utils'
+import AjustesDeAvisos from '@/components/portal/AjustesDeAvisos'
 
 /**
  * La forma que comparten todas las pantallas del portal (V-1.1.85, H-14).
@@ -54,7 +55,8 @@ export function Pantalla({ titulo, descripcion, icono: Icono, acciones, children
   children: React.ReactNode
 }) {
   return (
-    <main className="mx-auto w-full max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+    <main className="relative mx-auto w-full max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+      <AjustesDeAvisos />
       <header className="flex flex-wrap items-start gap-3">
         <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[var(--marca-tinte)] text-[var(--marca)]">
           <Icono className="size-6" aria-hidden />

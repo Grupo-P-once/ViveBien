@@ -17,6 +17,7 @@ const EXISTENCIA: Record<string, { texto: string; clase: string }> = {
   envia_hoy: { texto: 'Se envía hoy', clase: 'border-emerald-300 bg-emerald-50 text-emerald-950' },
   codigo_apagado: { texto: 'Existe en el código, apagado', clase: 'border-amber-300 bg-amber-50 text-amber-950' },
   apagado_por_texto_legal: { texto: 'Apagado: falta texto legal aprobado', clase: 'border-amber-300 bg-amber-50 text-amber-950' },
+  plantilla_sin_evento: { texto: 'Plantilla lista · evento pendiente (no se envía)', clase: 'border-rose-300 bg-rose-50 text-rose-950' },
   lo_manda_firebase: { texto: 'Lo manda Firebase', clase: 'border-slate-300 bg-slate-50 text-slate-900' },
   pendiente: { texto: 'Pendiente de implementación', clase: 'border-rose-300 bg-rose-50 text-rose-950' },
 }
@@ -63,7 +64,7 @@ export default function BibliotecaCorreos({ catalogo }: { catalogo: CatalogoBibl
           Gmail, Outlook y Apple Mail pueden mostrar algunos estilos de forma distinta; su compatibilidad <strong>no está comprobada</strong>.
         </p>
         <p className="mt-2 text-sm" data-resumen-biblioteca>
-          {catalogo.catalogo.length} tipos: {conteo('envia_hoy')} se envían hoy · {conteo('codigo_apagado') + conteo('apagado_por_texto_legal')} existen pero están apagados · {conteo('lo_manda_firebase')} los manda Firebase · <strong>{conteo('pendiente')} pendientes de implementación</strong>.
+          {catalogo.catalogo.length} tipos: {conteo('envia_hoy')} se envían hoy · {conteo('codigo_apagado') + conteo('apagado_por_texto_legal')} existen pero están apagados · {conteo('lo_manda_firebase')} los manda Firebase · {conteo('plantilla_sin_evento')} con plantilla lista y evento pendiente · <strong>{conteo('pendiente')} pendientes de implementación</strong>.
         </p>
       </div>
 
@@ -136,6 +137,7 @@ export default function BibliotecaCorreos({ catalogo }: { catalogo: CatalogoBibl
             ) : !vista ? <p role="status" className="text-sm text-muted-foreground">Cargando vista previa…</p> : (
               <div className="space-y-3">
                 <p data-etiqueta-sintetica className="rounded-lg border border-violet-300 bg-violet-50 p-2 text-sm text-violet-950">Datos de ejemplo: la persona, las propiedades, las imágenes y todos los enlaces (baja, preferencias, botones) son sintéticos e inertes.</p>
+                {(entrada.existencia === 'plantilla_sin_evento' || entrada.existencia === 'lo_manda_firebase') && <p role="note" data-no-se-envia className="rounded-lg border border-rose-300 bg-rose-50 p-2 text-sm text-rose-950">{entrada.existencia === 'lo_manda_firebase' ? 'Este correo lo manda Firebase con su propia plantilla. Lo que ves es el diseño propuesto de VIVE BIEN para configurarla allí: no está conectado a ningún envío.' : 'Pendiente de implementación: la plantilla está lista, pero ningún evento del código la envía todavía. Hoy este correo NO se manda.'}</p>}
                 <article className="rounded-lg border bg-background p-3" aria-label="Cabecera del correo">
                   <h3 className="font-heading text-lg font-semibold">{vista.asunto}</h3>
                   <p className="mt-1"><Etiqueta existencia={entrada.existencia} /></p>
@@ -146,7 +148,7 @@ export default function BibliotecaCorreos({ catalogo }: { catalogo: CatalogoBibl
                     <dt className="text-muted-foreground">Preencabezado</dt><dd>{vista.preencabezado ?? <span className="text-muted-foreground">Esta plantilla no trae preencabezado: la bandeja mostraría el inicio del texto.</span>}</dd>
                     <dt className="text-muted-foreground">Categoría</dt><dd>{CATEGORIA[vista.categoria] ?? vista.categoria}</dd>
                     <dt className="text-muted-foreground">Cuándo sale</dt><dd>{entrada.disparador}</dd>
-                    <dt className="text-muted-foreground">Dónde se manda</dt><dd className="break-all">{entrada.rastro}</dd>
+                    <dt className="text-muted-foreground">Dónde se manda</dt><dd className="break-all">{entrada.rastro ?? (entrada.existencia === 'lo_manda_firebase' ? 'Lo envía Firebase Auth; este diseño es una propuesta para configurar allí.' : 'En ningún lugar todavía: falta el evento que la envíe.')}</dd>
                   </dl>
                 </article>
                 <div role="tablist" aria-label="Formato de la vista previa" className="flex gap-2">

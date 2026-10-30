@@ -1,6 +1,6 @@
 import { DIRECCION_CORTA, NEGOCIO, enlaceWhatsApp } from '../../config/negocio'
 import { SITIO } from '../../sitio'
-import { COLORES, LOGO_URL, escapar, urlSegura } from './marca'
+import { COLORES, LOGO_URL, bloqueGrupoPOnce, escapar, urlSegura } from './marca'
 
 /**
  * Bloques del diseño de los correos (D-80 v2), tomados de las maquetas del dueño (`campana_recomendaciones_vive_bien.html` y
@@ -91,11 +91,12 @@ export function marcoCorreo(o: { preheader: string; filas: string; pie?: string;
       <p style="margin:0 0 8px;font-family:${FUENTE};font-size:15px;line-height:21px;font-weight:700;color:${COLORES.negro}">VIVE BIEN <span style="font-weight:400;color:${AZUL}">Grupo Inmobiliario</span></p>
       <p style="margin:0 0 14px">Más que propiedades, mejores historias.</p>
       <p style="margin:0 0 6px"><a href="${escapar(SITIO)}" target="_blank" style="color:${COLORES.rojo};text-decoration:none">vivebienn.com</a> · <a href="mailto:${escapar(NEGOCIO.email)}" style="color:#4B5563">${escapar(NEGOCIO.email)}</a> · ${escapar(NEGOCIO.telefonoVisible)}</p>
-      <p style="margin:0 0 15px;font-size:11px;line-height:17px;color:#6B7280">${escapar(DIRECCION_CORTA)}, ${escapar(NEGOCIO.ciudad)}, ${escapar(NEGOCIO.estado)}.</p>
-      ${o.pie ? `<div style="font-size:11px;line-height:18px;color:#6B7280">${o.pie}</div>` : ''}
+      <p style="margin:0 0 15px;font-size:11px;line-height:17px;color:#4B5563">${escapar(DIRECCION_CORTA)}, ${escapar(NEGOCIO.ciudad)}, ${escapar(NEGOCIO.estado)}.</p>
+      ${o.pie ? `<div style="font-size:11px;line-height:18px;color:#4B5563">${o.pie}</div>` : ''}
+      ${bloqueGrupoPOnce()}
     </td></tr>
   </table>
-  ${o.avisoPropiedades === false ? '' : `<p style="max-width:600px;margin:13px auto 0;font-family:${TEXTO};font-size:10px;line-height:15px;color:#6B7280;text-align:center">La disponibilidad, el precio y las condiciones de las propiedades pueden cambiar. Confirma la información con VIVE BIEN antes de tomar una decisión.</p>`}
+  ${o.avisoPropiedades === false ? '' : `<p style="max-width:600px;margin:13px auto 0;font-family:${TEXTO};font-size:10px;line-height:15px;color:#4B5563;text-align:center">La disponibilidad, el precio y las condiciones de las propiedades pueden cambiar. Confirma la información con VIVE BIEN antes de tomar una decisión.</p>`}
 </td></tr></table>
 </body></html>`
 }

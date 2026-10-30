@@ -2,6 +2,8 @@ import { aHref, coincide, describir, type Filtros } from './busquedas'
 import { rutaDe } from './propiedad-publica'
 import { disponible } from './portal/pantallas'
 import type { FilaPropiedadPortal } from './portal/tarjeta'
+import { filaTexto, marcoCorreo } from './correo/plantillas/bloques'
+import { pieTexto } from './correo/plantillas/marca'
 
 /**
  * Avisos al cliente (28-oct-2026): el motor de las ALERTAS con entrega real. Código puro (sin base ni red): decide QUÉ avisar y CUÁNDO; el servidor lo guarda y lo envía.
@@ -119,6 +121,11 @@ export function notificacionesLegales(vigentes: VersionesLegales, aceptadas: Ace
 // ── Correo ───────────────────────────────────────────────────────────────────────────────
 
 const escapar = (t: string) => t.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] as string)
+const ROJO = '#971010'
+const filaDeAviso = (contenido: string) => `<tr><td class="mobile-pad" style="padding:4px 42px 14px;background:#FFFFFF">${contenido}</td></tr>`
+const tarjetaDeAviso = (titulo: string, cuerpo: string, url: string) =>
+  `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 10px;border:1px solid #E7E3DD"><tr><td style="padding:14px 16px"><a href="${escapar(url)}" target="_blank" style="font-family:Montserrat,Arial,sans-serif;font-size:15px;line-height:22px;font-weight:700;color:${ROJO};text-decoration:none">${escapar(titulo)}</a><p style="margin:5px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:20px;color:#4B5563">${escapar(cuerpo)}</p></td></tr></table>`
+const enlacePie = (texto: string, url: string) => `<a href="${escapar(url)}" style="color:#66709F;text-decoration:underline">${escapar(texto)}</a>`
 export type GrupoDeCorreo = { busquedaNombre: string; href: string; items: Array<{ titulo: string; cuerpo: string; url: string }> }
 
 /** Resumen de alertas en UN correo: agrupado por búsqueda, con enlace a cada propiedad, baja en un clic y la razón por la que se recibe. Todo escapado. */
@@ -129,22 +136,11 @@ export function correoDeAlertas(o: { nombre?: string | null; grupos: GrupoDeCorr
   const pie = 'Recibes este correo porque activaste los avisos de tus búsquedas guardadas en Vive Bien.'
   const texto = [saludo, '', asunto + '.', '',
     ...o.grupos.flatMap((g) => [`Búsqueda: ${g.busquedaNombre}`, ...g.items.map((i) => `  · ${i.titulo}\n    ${i.cuerpo}\n    ${i.url}`), '']),
-    pie, `Cambiar tus avisos: ${o.urlPreferencias}`, `Dejar de recibirlos con un clic: ${o.urlBaja}`].join('\n')
-  const html = `
-<div style="font-family:system-ui,sans-serif;max-width:560px;color:#1a1a1a">
-  <p style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#5b6472;margin:0 0 4px">Tus búsquedas guardadas</p>
-  <h2 style="margin:0 0 12px;color:#971010;font-size:20px">${escapar(asunto)}</h2>
-  <p style="font-size:14px;line-height:1.6;margin:0 0 14px">${escapar(saludo)}</p>
-  ${o.grupos.map((g) => `
-  <h3 style="font-size:15px;margin:18px 0 6px;color:#1b365d">${escapar(g.busquedaNombre)}</h3>
-  ${g.items.map((i) => `<div style="border:1px solid #ece8e1;border-radius:12px;padding:12px 14px;margin:0 0 8px">
-    <a href="${escapar(i.url)}" style="color:#971010;font-weight:700;text-decoration:none;font-size:14px">${escapar(i.titulo)}</a>
-    <div style="font-size:13px;color:#4b5563;margin-top:4px">${escapar(i.cuerpo)}</div>
-  </div>`).join('')}`).join('')}
-  <p style="font-size:12px;line-height:1.6;color:#5b6472;margin:22px 0 0">${escapar(pie)}
-    <a href="${escapar(o.urlPreferencias)}" style="color:#1b365d">Cambiar mis avisos</a> ·
-    <a href="${escapar(o.urlBaja)}" style="color:#1b365d">Dejar de recibirlos</a></p>
-</div>`
+    pie, `Cambiar tus avisos: ${o.urlPreferencias}`, `Dejar de recibirlos con un clic: ${o.urlBaja}`].join('\n') + pieTexto()
+  const filas = filaTexto({ kicker: 'Tus búsquedas guardadas', titulo: asunto, parrafos: [escapar(saludo)] }) +
+    o.grupos.map((g) => filaDeAviso(`<h3 style="margin:8px 0 8px;font-family:Montserrat,Arial,sans-serif;font-size:15px;line-height:21px;color:#66709F">${escapar(g.busquedaNombre)}</h3>` + g.items.map((i) => tarjetaDeAviso(i.titulo, i.cuerpo, i.url)).join(''))).join('')
+  const html = marcoCorreo({ preheader: 'Encontramos propiedades nuevas que coinciden con tus búsquedas guardadas.', filas, avisoPropiedades: false,
+    pie: `${escapar(pie)} ${enlacePie('Cambiar mis avisos', o.urlPreferencias)} · ${enlacePie('Dejar de recibirlos', o.urlBaja)}` })
   return { asunto, texto, html }
 }
 
@@ -152,8 +148,11 @@ export function correoDeAlertas(o: { nombre?: string | null; grupos: GrupoDeCorr
 export function correoLegal(o: { nombre?: string | null; avisos: NotificacionNueva[]; sitio: string; urlPreferencias: string }): { asunto: string; texto: string; html: string } {
   const saludo = o.nombre?.trim() ? `Hola ${o.nombre.trim()}:` : 'Hola:'
   const asunto = o.avisos.length === 1 ? o.avisos[0].titulo : 'Actualizamos nuestros documentos legales'
-  const texto = [saludo, '', ...o.avisos.flatMap((a) => [a.titulo, a.cuerpo, `${o.sitio}${a.enlace}`, '']), `Tus preferencias de aviso: ${o.urlPreferencias}`].join('\n')
-  const html = `<div style="font-family:system-ui,sans-serif;max-width:560px;color:#1a1a1a"><h2 style="margin:0 0 12px;color:#971010;font-size:20px">${escapar(asunto)}</h2><p style="font-size:14px;margin:0 0 12px">${escapar(saludo)}</p>${o.avisos.map((a) => `<p style="font-size:14px;line-height:1.6;margin:0 0 10px"><strong>${escapar(a.titulo)}.</strong> ${escapar(a.cuerpo)} <a href="${escapar(o.sitio + a.enlace)}" style="color:#971010">Leerlo</a></p>`).join('')}<p style="font-size:12px;color:#5b6472;margin:18px 0 0">Te lo enviamos porque modifica las condiciones de tu cuenta. <a href="${escapar(o.urlPreferencias)}" style="color:#1b365d">Tus preferencias de aviso</a></p></div>`
+  const texto = [saludo, '', ...o.avisos.flatMap((a) => [a.titulo, a.cuerpo, `${o.sitio}${a.enlace}`, '']), `Tus preferencias de aviso: ${o.urlPreferencias}`].join('\n') + pieTexto()
+  const filas = filaTexto({ kicker: 'Aviso importante', titulo: asunto, parrafos: [escapar(saludo)] }) +
+    o.avisos.map((a) => filaDeAviso(`<p style="margin:0 0 6px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:24px;color:#303339"><strong>${escapar(a.titulo)}.</strong> ${escapar(a.cuerpo)}</p><p style="margin:0 0 6px;font-family:Arial,Helvetica,sans-serif;font-size:14px"><a href="${escapar(o.sitio + a.enlace)}" style="color:${ROJO};font-weight:700">Leerlo</a></p>`)).join('')
+  const html = marcoCorreo({ preheader: 'Cambiaron las condiciones de tu cuenta: léelo cuando puedas.', filas, avisoPropiedades: false,
+    pie: `Te lo enviamos porque modifica las condiciones de tu cuenta. No es publicidad. ${enlacePie('Tus preferencias de aviso', o.urlPreferencias)}` })
   return { asunto, texto, html }
 }
 
@@ -167,19 +166,9 @@ export function correoDeBajaDePrecio(o: { nombre?: string | null; avisos: Notifi
   const saludo = o.nombre?.trim() ? `Hola ${o.nombre.trim()}:` : 'Hola:'
   const asunto = o.avisos.length === 1 ? o.avisos[0].titulo : `Bajaron de precio ${o.avisos.length} propiedades que sigues en Vive Bien`
   const pie = 'Recibes este correo porque pulsaste «Avisarme cuando baje de precio» en esas propiedades y activaste los avisos de baja de precio por correo.'
-  const texto = [saludo, '', asunto + '.', '', ...o.avisos.flatMap((a) => [`· ${a.titulo}`, `  ${a.cuerpo}`, `  ${o.sitio}${a.enlace}`, '']), pie, `Cambiar tus avisos: ${o.urlPreferencias}`, `Dejar de recibirlos con un clic: ${o.urlBaja}`].join('\n')
-  const html = `
-<div style="font-family:system-ui,sans-serif;max-width:560px;color:#1a1a1a">
-  <p style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#5b6472;margin:0 0 4px">Baja de precio</p>
-  <h2 style="margin:0 0 12px;color:#971010;font-size:20px">${escapar(asunto)}</h2>
-  <p style="font-size:14px;line-height:1.6;margin:0 0 14px">${escapar(saludo)}</p>
-  ${o.avisos.map((a) => `<div style="border:1px solid #ece8e1;border-radius:12px;padding:12px 14px;margin:0 0 8px">
-    <a href="${escapar(o.sitio + a.enlace)}" style="color:#971010;font-weight:700;text-decoration:none;font-size:14px">${escapar(a.titulo)}</a>
-    <div style="font-size:13px;color:#4b5563;margin-top:4px">${escapar(a.cuerpo)}</div>
-  </div>`).join('')}
-  <p style="font-size:12px;line-height:1.6;color:#5b6472;margin:22px 0 0">${escapar(pie)}
-    <a href="${escapar(o.urlPreferencias)}" style="color:#1b365d">Cambiar mis avisos</a> ·
-    <a href="${escapar(o.urlBaja)}" style="color:#1b365d">Dejar de recibirlos</a></p>
-</div>`
+  const texto = [saludo, '', asunto + '.', '', ...o.avisos.flatMap((a) => [`· ${a.titulo}`, `  ${a.cuerpo}`, `  ${o.sitio}${a.enlace}`, '']), pie, `Cambiar tus avisos: ${o.urlPreferencias}`, `Dejar de recibirlos con un clic: ${o.urlBaja}`].join('\n') + pieTexto()
+  const filas = filaTexto({ kicker: 'Baja de precio', titulo: asunto, parrafos: [escapar(saludo)] }) + filaDeAviso(o.avisos.map((a) => tarjetaDeAviso(a.titulo, a.cuerpo, o.sitio + a.enlace)).join(''))
+  const html = marcoCorreo({ preheader: 'Una propiedad que sigues bajó de precio.', filas, avisoPropiedades: false,
+    pie: `${escapar(pie)} ${enlacePie('Cambiar mis avisos', o.urlPreferencias)} · ${enlacePie('Dejar de recibirlos', o.urlBaja)}` })
   return { asunto, texto, html }
 }

@@ -15,7 +15,7 @@ const EXISTEN = new Set(['envia_hoy', 'codigo_apagado', 'apagado_por_texto_legal
 describe('catálogo: estructura y rastro', () => {
   it('ids únicos, grupos y existencias conocidos; están los grupos que pidió el dueño', () => {
     expect(new Set(catalogo.map((e) => e.id)).size).toBe(catalogo.length)
-    for (const e of catalogo) { expect(GRUPOS_DE_CATALOGO).toContain(e.grupo); expect(['envia_hoy', 'codigo_apagado', 'apagado_por_texto_legal', 'lo_manda_firebase', 'pendiente']).toContain(e.existencia) }
+    for (const e of catalogo) { expect(GRUPOS_DE_CATALOGO).toContain(e.grupo); expect(['envia_hoy', 'codigo_apagado', 'apagado_por_texto_legal', 'plantilla_sin_evento', 'lo_manda_firebase', 'pendiente']).toContain(e.existencia) }
     for (const g of ['Cuenta y seguridad', 'Cliente', 'Publicador', 'Avisos legales', 'Marketing']) expect(catalogo.some((e) => e.grupo === g), g).toBe(true)
   })
 
@@ -36,9 +36,9 @@ describe('catálogo: estructura y rastro', () => {
 
   it('lo PENDIENTE no tiene rastro ni vista previa y lo dice; lo de Firebase tampoco finge una vista', () => {
     const pend = catalogo.filter((e) => e.existencia === 'pendiente')
-    expect(pend.length).toBeGreaterThanOrEqual(10)
+    expect(catalogo.filter((e) => e.existencia === 'plantilla_sin_evento').length).toBeGreaterThanOrEqual(11) // todo lo pendiente ya tiene plantilla; ninguna se envía
     for (const e of pend) { expect(e.rastro, e.id).toBeNull(); expect(e.conVista, e.id).toBe(false); expect(e.motivoSinVista, e.id).toMatch(/Pendiente de implementación/); expect(vistaPrevia(e.id), e.id).toBeNull() }
-    for (const e of catalogo.filter((x) => x.existencia === 'lo_manda_firebase')) { expect(e.conVista).toBe(false); expect(e.rastro).toBeNull() }
+    for (const e of catalogo.filter((x) => x.existencia === 'lo_manda_firebase')) expect(e.rastro).toBeNull() // lo manda Firebase: no hay rastro de envío en este código
   })
 
   it('los que existen sin plantilla separada dicen por qué no se pueden ver', () => {
@@ -80,8 +80,9 @@ describe('vistas previas completas', () => {
     const v = vistaPrevia('bienvenida')!
     expect(v.preencabezado).toBeTruthy()
     expect(v.extracto.startsWith(v.preencabezado!.slice(0, 40))).toBe(true)
-    // Las alertas, bajas de precio, avisos legales y citas usan HTML propio sin marco de marca: no traen preencabezado (hallazgo documentado, no se inventa uno).
-    for (const id of ['alertas', 'baja_de_precio', 'legal', 'cita_confirmada']) expect(vistaPrevia(id)!.preencabezado, id).toBeNull()
+    // Alertas, bajas de precio y avisos legales ya usan el marco de marca (con preencabezado); las citas siguen con HTML propio sin marco (pendiente MKT-29).
+    for (const id of ['alertas', 'baja_de_precio', 'legal']) expect(vistaPrevia(id)!.preencabezado, id).toBeTruthy()
+    expect(vistaPrevia('cita_confirmada')!.preencabezado).toBeNull()
   })
 
   it('la bandeja lista exactamente los correos con vista, ordenados por grupo, con remitente, asunto y extracto', () => {
@@ -109,10 +110,10 @@ describe('imágenes de ejemplo', () => {
   })
   it('con un origen de despliegue, el logotipo apunta a ese origen (el Preview no muestra el logo roto) y sin origen queda el del sitio', () => {
     const con = vistaPrevia('bienvenida', { ...MUESTRA_POR_OMISION, origenImagenes: 'https://vista.ejemplo.vercel.app' })!
-    expect(con.imagenes).toContain('https://vista.ejemplo.vercel.app/logo_transparent.png')
+    expect(con.imagenes).toContain('https://vista.ejemplo.vercel.app/logo-vivebien-completo.png')
     const sin = vistaPrevia('bienvenida', MUESTRA_POR_OMISION)!
-    expect(sin.imagenes.some((i) => i.endsWith('/logo_transparent.png') && !i.includes('vista.ejemplo'))).toBe(true)
-    expect(existsSync(path.join(raiz, 'public/logo_transparent.png'))).toBe(true)
+    expect(sin.imagenes.some((i) => i.endsWith('/logo-vivebien-completo.png') && !i.includes('vista.ejemplo'))).toBe(true)
+    expect(existsSync(path.join(raiz, 'public/logo-vivebien-completo.png'))).toBe(true)
   })
   it('las imágenes existen en el repositorio y dicen «FOTO DE EJEMPLO»', () => {
     for (const x of ['a', 'b', 'c']) {

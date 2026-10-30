@@ -190,7 +190,7 @@ describe('la biblioteca: vista previa SINTÉTICA, sin enlaces con token ni scrip
   it('el catálogo distingue lo que se envía hoy, lo apagado y lo que no existe; las promociones están apagadas', () => {
     const marketing = BIBLIOTECA.filter((t) => t.categoria === 'marketing')
     expect(marketing.length).toBeGreaterThan(0)
-    for (const t of marketing) expect(t.estado, t.id).toBe('apagado_por_texto_legal')
+    for (const t of marketing) expect(['apagado_por_texto_legal', 'plantilla_sin_evento'], t.id).toContain(t.estado) // nunca «se envía hoy»: o está apagado por texto legal o ni siquiera tiene evento
     const estados = new Set(MATRIZ_DE_EVENTOS.map((e) => e.estado))
     for (const e of estados) expect(['envia_hoy', 'codigo_apagado', 'apagado_por_texto_legal', 'lo_manda_firebase', 'no_existe']).toContain(e)
     // Ningún evento de marketing figura como «se envía hoy».

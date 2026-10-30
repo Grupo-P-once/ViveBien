@@ -17,7 +17,7 @@ const columnaAusente = (e: { code?: string; message?: string } | null | undefine
 
 type Fila = { correo_alertas: boolean; correo_legal: boolean; consentimiento_alertas_en: string | null; correo_precio?: boolean; consentimiento_precio_en?: string | null }
 const dto = (f: Fila | null) => ({
-  correoAlertas: f?.correo_alertas ?? false, correoLegal: f?.correo_legal ?? true, correoPrecio: f?.correo_precio ?? false,
+  correoAlertas: f?.correo_alertas ?? true, correoLegal: f?.correo_legal ?? true, correoPrecio: f?.correo_precio ?? true,
   consentimientoEn: f?.consentimiento_alertas_en ?? null, consentimientoPrecioEn: f?.consentimiento_precio_en ?? null,
 })
 const COLUMNAS_BASE = 'correo_alertas, correo_legal, consentimiento_alertas_en'
@@ -60,25 +60,25 @@ export async function PUT(req: Request) {
   const ahora = new Date().toISOString()
   const nuevo: Record<string, unknown> = {
     uid: perfil.uid,
-    correo_alertas: c.correoAlertas ?? antes?.correo_alertas ?? false,
+    correo_alertas: c.correoAlertas ?? antes?.correo_alertas ?? true,
     correo_legal: c.correoLegal ?? antes?.correo_legal ?? true,
     consentimiento_alertas_en: c.correoAlertas === true && !antes?.correo_alertas ? ahora : antes?.consentimiento_alertas_en ?? null,
     actualizado_en: ahora,
   }
   if (previo.hayPrecio) {
-    nuevo.correo_precio = c.correoPrecio ?? antes?.correo_precio ?? false
+    nuevo.correo_precio = c.correoPrecio ?? antes?.correo_precio ?? true
     nuevo.consentimiento_precio_en = c.correoPrecio === true && !antes?.correo_precio ? ahora : antes?.consentimiento_precio_en ?? null
   }
   const w = await supabaseAdmin().from('preferencias_notificacion').upsert(nuevo, { onConflict: 'uid' })
   if (w.error) return NextResponse.json({ error: 'No se pudo guardar.' }, { status: 500 })
-  if (c.correoAlertas !== undefined && c.correoAlertas !== (antes?.correo_alertas ?? false)) {
+  if (c.correoAlertas !== undefined && c.correoAlertas !== (antes?.correo_alertas ?? true)) {
     await registrar({ actor: perfil, accion: c.correoAlertas ? 'cuenta.avisos_correo_activados' : 'cuenta.avisos_correo_desactivados', entidad: 'usuario', entidadId: perfil.uid })
   }
-  if (previo.hayPrecio && c.correoPrecio !== undefined && c.correoPrecio !== (antes?.correo_precio ?? false)) {
+  if (previo.hayPrecio && c.correoPrecio !== undefined && c.correoPrecio !== (antes?.correo_precio ?? true)) {
     await registrar({ actor: perfil, accion: c.correoPrecio ? 'cuenta.avisos_precio_correo_activados' : 'cuenta.avisos_precio_correo_desactivados', entidad: 'usuario', entidadId: perfil.uid })
   }
   return NextResponse.json(dto({
     correo_alertas: nuevo.correo_alertas as boolean, correo_legal: nuevo.correo_legal as boolean, consentimiento_alertas_en: nuevo.consentimiento_alertas_en as string | null,
-    correo_precio: (nuevo.correo_precio as boolean | undefined) ?? false, consentimiento_precio_en: (nuevo.consentimiento_precio_en as string | null | undefined) ?? null,
+    correo_precio: (nuevo.correo_precio as boolean | undefined) ?? true, consentimiento_precio_en: (nuevo.consentimiento_precio_en as string | null | undefined) ?? null,
   }))
 }

@@ -7,6 +7,8 @@ import { boton, COLORES, escapar, parrafo, pieTexto, urlSegura, type Correo, typ
 
 export type { Correo, TarjetaCorreo } from './marca'
 export type { ResumenPortal } from './portal'
+export { plantillaContactoWhatsApp, plantillaEvaluacionAtencion, plantillaPublicadorPublicada, plantillaVerificacionCuenta } from './eventos'
+export { plantillaBajaCuenta, plantillaCambioCorreo, plantillaConsultaRespuesta, plantillaNovedades, plantillaNuevoInteresado, plantillaPropiedadEnRevision, plantillaPropiedadRechazada, plantillaPropiedadRecibida, plantillaRecuperarContrasena } from './eventos-pendientes'
 
 /**
  * Las plantillas de D-80. Funciones puras: reciben datos y devuelven {asunto, html, texto}. Todo dato dinámico se escapa

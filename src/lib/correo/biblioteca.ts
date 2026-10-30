@@ -1,10 +1,11 @@
 import { SITIO } from '../sitio'
 import { NEGOCIO } from '../config/negocio'
 import { remitenteDe } from './enviar'
-import { LOGO_URL } from './plantillas/marca'
+import { LOGO_ARCHIVO, LOGO_URL, PONCE_LOGO_ARCHIVO, PONCE_LOGO_URL } from './plantillas/marca'
+import { correoDeLead } from './plantillas/lead'
 import { plantilla as plantillaDeCita, type DatosPlantilla as DatosDeCita, type Para as ParaDeCita, type TipoCorreo as TipoDeCita } from '../citas/correos'
 import { correoDeAlertas, correoDeBajaDePrecio, correoLegal, type NotificacionNueva } from '../avisos-cliente'
-import { plantillaBienvenida, plantillaPrimerasPropiedades, plantillaRecomendaciones, plantillaSolicitudPublicador, type TarjetaCorreo } from './plantillas'
+import { plantillaBajaCuenta, plantillaBienvenida, plantillaCambioCorreo, plantillaConsultaRespuesta, plantillaContactoWhatsApp, plantillaEvaluacionAtencion, plantillaNovedades, plantillaNuevoInteresado, plantillaPrimerasPropiedades, plantillaPropiedadEnRevision, plantillaPropiedadRechazada, plantillaPropiedadRecibida, plantillaPublicadorPublicada, plantillaRecomendaciones, plantillaRecuperarContrasena, plantillaSolicitudPublicador, plantillaVerificacionCuenta, type TarjetaCorreo } from './plantillas'
 
 /**
  * BIBLIOTECA de correos (F1, 30-oct-2026): los correos que YA existen en el código, con una vista previa hecha SOLO con datos SINTÉTICOS (ninguna persona,
@@ -12,7 +13,7 @@ import { plantillaBienvenida, plantillaPrimerasPropiedades, plantillaRecomendaci
  * Es la parte de «solo lectura» de la Fase 1 de la propuesta del diseñador; el editor, las campañas y la aprobación NO existen todavía.
  */
 export type Categoria = 'transaccional' | 'servicio' | 'marketing'
-export type EstadoDeEnvio = 'envia_hoy' | 'codigo_apagado' | 'apagado_por_texto_legal'
+export type EstadoDeEnvio = 'envia_hoy' | 'codigo_apagado' | 'apagado_por_texto_legal' | 'plantilla_sin_evento' | 'lo_manda_firebase'
 
 export type TipoDeCorreo = {
   id: string
@@ -48,6 +49,8 @@ const PROPIEDADES_SINTETICAS: TarjetaCorreo[] = [
 ]
 /** Fotos de EJEMPLO (marcadas «FOTO DE EJEMPLO» en la propia imagen); los correos reales llevan la foto de cada propiedad. */
 const tarjetas = (m: Muestra) => PROPIEDADES_SINTETICAS.slice(0, m.propiedades).map((p, i) => (m.imagenes ? { ...p, foto: `${m.origenImagenes ?? SITIO}/correo-ejemplo/propiedad-${'abc'[i]}.svg` } : p))
+const ANUNCIANTE_DE_EJEMPLO = { nombre: 'Anunciante de Ejemplo', telefono: '+52 477 000 0000', codigo: 'EJ-000' }
+const ENLACE_INERTE = `${SITIO}/?enlace=deshabilitado-en-pruebas`
 const AVISO_PRECIO: NotificacionNueva = { uid: 'sintetico', tipo: 'baja_de_precio', titulo: 'Bajó de precio: Casa de ejemplo B', cuerpo: 'Antes $3,400,000, ahora $3,200,000.', enlace: '/propiedades', busqueda_id: null, propiedad_id: null, clave: 'sintetico/1' }
 const AVISO_LEGAL: NotificacionNueva = { uid: 'sintetico', tipo: 'legal', titulo: 'Actualizamos los Términos y Condiciones', cuerpo: 'Texto de ejemplo del aviso. Versión de ejemplo.', enlace: '/terminos', busqueda_id: null, propiedad_id: null, clave: 'sintetico/2' }
 const PREFERENCIAS = `${SITIO}/portal/configuracion`
@@ -70,13 +73,39 @@ export const BIBLIOTECA: TipoDeCorreo[] = [
     vista: (m) => aVista(plantillaPrimerasPropiedades({ nombre: m.nombre, resumen: 'naves en venta en León', propiedades: tarjetas(m), urlConfirmar: BAJA_INERTE, urlBaja: BAJA_INERTE, diasValidez: 7 })) },
   { id: 'recomendaciones', nombre: 'Recomendaciones de propiedades', categoria: 'marketing', estado: 'apagado_por_texto_legal', disparador: 'Digest periódico: APAGADO por una constante de código hasta tener texto legal y consentimiento aprobados',
     vista: (m) => aVista(plantillaRecomendaciones({ nombre: m.nombre, propiedades: tarjetas(m), motivo: 'Elegimos estas propiedades según lo que pediste (ejemplo).', urlBaja: BAJA_INERTE, urlPreferencias: PREFERENCIAS })) },
+  { id: 'verificacion_correo', nombre: 'Verificación de correo / registro', categoria: 'transaccional', estado: 'lo_manda_firebase', disparador: 'Firebase Auth al registrarse: lo manda Firebase con su plantilla; este es el DISEÑO PROPUESTO para configurarla allí (no está conectado)',
+    vista: (m) => aVista(plantillaVerificacionCuenta({ nombre: m.nombre, urlVerificar: ENLACE_INERTE })) },
+  { id: 'contacto_whatsapp', nombre: 'Contacto por WhatsApp (resumen del aviso, datos del anunciante y propiedades parecidas)', categoria: 'transaccional', estado: 'plantilla_sin_evento', disparador: 'La persona toca el botón de WhatsApp de una propiedad (el evento NO existe todavía)',
+    vista: (m) => { const todas = tarjetas({ ...m, propiedades: 3 }); return aVista(plantillaContactoWhatsApp({ nombre: m.nombre, propiedad: todas[0], anunciante: ANUNCIANTE_DE_EJEMPLO, similares: todas.slice(1, 1 + Math.max(1, Math.min(2, m.propiedades))), urlCatalogo: ENLACE_INERTE, urlPreferencias: PREFERENCIAS })) } },
+  { id: 'evaluacion_atencion', nombre: 'Evaluación de la atención recibida (¿te contactó el anunciante?)', categoria: 'servicio', estado: 'plantilla_sin_evento', disparador: 'Días después de una consulta (el evento y las rutas que reciben «Sí» y «No» NO existen todavía)',
+    vista: (m) => aVista(plantillaEvaluacionAtencion({ nombre: m.nombre, anunciante: ANUNCIANTE_DE_EJEMPLO.nombre, propiedad: tarjetas({ ...m, propiedades: 1 })[0], urlSi: ENLACE_INERTE, urlNo: ENLACE_INERTE, urlActividad: ENLACE_INERTE })) },
+  { id: 'propiedad_aprobada', nombre: 'Propiedad aprobada y publicada (con consejos para quien publica)', categoria: 'transaccional', estado: 'plantilla_sin_evento', disparador: 'en_revision → publicada (hoy la aprobación NO manda correo)',
+    vista: (m) => aVista(plantillaPublicadorPublicada({ nombre: m.nombre, propiedad: tarjetas({ ...m, propiedades: 1 })[0], folio: 'EJ-000', urlPanel: ENLACE_INERTE })) },
+  { id: 'aviso_lead', nombre: 'Aviso interno de nuevo contacto (buzón institucional)', categoria: 'transaccional', estado: 'envia_hoy', disparador: 'Un formulario de contacto, la ficha, el valuador, la portada o una solicitud con cuenta deja sus datos',
+    vista: (m) => aVista(correoDeLead({ nombre: m.nombre, telefono: '4770000000', mensaje: 'Estoy interesado en esta propiedad. Por favor, contáctenme (mensaje de ejemplo).', interes: 'Pide informes (ejemplo)', origen: 'la ficha de una propiedad', origenCorto: 'Ficha de propiedad', propiedad: tarjetas({ ...m, propiedades: 1 })[0] })) },
+  { id: 'recuperar_contrasena', nombre: 'Recuperar o cambiar contraseña', categoria: 'transaccional', estado: 'lo_manda_firebase', disparador: 'Firebase Auth al pedir el cambio: lo manda Firebase con su plantilla; este es el DISEÑO PROPUESTO para configurarla allí (no está conectado)',
+    vista: (m) => aVista(plantillaRecuperarContrasena({ nombre: m.nombre, urlRestablecer: ENLACE_INERTE })) },
+  { id: 'cambio_correo', nombre: 'Cambio de correo o de datos sensibles', categoria: 'transaccional', estado: 'plantilla_sin_evento', disparador: 'Cambio de correo en la cuenta (el evento NO existe todavía)',
+    vista: (m) => aVista(plantillaCambioCorreo({ nombre: m.nombre, correoNuevo: 'n***@e***', urlConfirmar: ENLACE_INERTE, urlNoFuiYo: ENLACE_INERTE })) },
+  { id: 'baja_cuenta', nombre: 'Confirmación de baja de cuenta', categoria: 'transaccional', estado: 'plantilla_sin_evento', disparador: 'Baja de cuenta (el proceso de baja existe; hoy NO manda correo)',
+    vista: (m) => aVista(plantillaBajaCuenta({ nombre: m.nombre, fecha: '30 de octubre de 2026', urlAyuda: ENLACE_INERTE })) },
+  { id: 'consulta_respuesta', nombre: 'Respuesta o seguimiento a una consulta', categoria: 'transaccional', estado: 'plantilla_sin_evento', disparador: 'Formulario de contacto de una propiedad (hoy NO manda correo a quien consulta)',
+    vista: (m) => { const todas = tarjetas({ ...m, propiedades: 3 }); return aVista(plantillaConsultaRespuesta({ nombre: m.nombre, propiedad: todas[0], anunciante: ANUNCIANTE_DE_EJEMPLO.nombre, similares: todas.slice(1, 1 + Math.max(1, Math.min(2, m.propiedades))), urlConsultas: ENLACE_INERTE, urlCatalogo: ENLACE_INERTE, urlPreferencias: PREFERENCIAS })) } },
+  { id: 'propiedad_recibida', nombre: 'Confirmación al subir una propiedad', categoria: 'transaccional', estado: 'plantilla_sin_evento', disparador: 'La propiedad se sube como borrador (el evento NO existe todavía)',
+    vista: (m) => aVista(plantillaPropiedadRecibida({ nombre: m.nombre, propiedad: tarjetas({ ...m, propiedades: 1 })[0], folio: 'EJ-000', porcentaje: 62, urlPanel: ENLACE_INERTE })) },
+  { id: 'propiedad_en_revision', nombre: 'Propiedad enviada a revisión', categoria: 'transaccional', estado: 'plantilla_sin_evento', disparador: 'borrador → en_revision (hoy NO manda correo)',
+    vista: (m) => aVista(plantillaPropiedadEnRevision({ nombre: m.nombre, propiedad: tarjetas({ ...m, propiedades: 1 })[0], folio: 'EJ-000', urlPanel: ENLACE_INERTE })) },
+  { id: 'propiedad_rechazada', nombre: 'Propiedad rechazada o con cambios solicitados', categoria: 'transaccional', estado: 'plantilla_sin_evento', disparador: 'en_revision → rechazada / cambios solicitados (hoy NO manda correo)',
+    vista: (m) => aVista(plantillaPropiedadRechazada({ nombre: m.nombre, propiedad: tarjetas({ ...m, propiedades: 1 })[0], folio: 'EJ-000', motivo: 'Motivo de ejemplo: faltan fotos del exterior.', pideCambios: true, urlEditar: ENLACE_INERTE })) },
+  { id: 'nuevo_interesado', nombre: 'Aviso al anunciante de un nuevo interesado', categoria: 'transaccional', estado: 'plantilla_sin_evento', disparador: 'Consulta sobre su propiedad (hoy NO avisa al anunciante por correo)',
+    vista: (m) => aVista(plantillaNuevoInteresado({ nombre: m.nombre, propiedad: tarjetas({ ...m, propiedades: 1 })[0], canal: 'el formulario', urlPanel: ENLACE_INERTE })) },
+  { id: 'articulos_blog', nombre: 'Artículos del blog y novedades', categoria: 'marketing', estado: 'plantilla_sin_evento', disparador: 'Campaña manual o digest: NO existe el evento ni el módulo de campañas, y los promocionales siguen apagados por falta de texto legal',
+    vista: (m) => aVista(plantillaNovedades({ nombre: m.nombre, articulos: [{ titulo: 'Cómo preparar tu propiedad para venderla (ejemplo)', resumen: 'Texto de ejemplo del artículo: consejos para empezar.', url: ENLACE_INERTE, foto: tarjetas({ ...m, propiedades: 1 })[0].foto }, { titulo: 'Qué revisar antes de rentar una nave (ejemplo)', resumen: 'Texto de ejemplo del segundo artículo.', url: ENLACE_INERTE, foto: null }], propiedades: tarjetas({ ...m, propiedades: 3 }).slice(0, Math.max(2, m.propiedades)), urlBlog: ENLACE_INERTE, urlBaja: ENLACE_INERTE, urlPreferencias: PREFERENCIAS })) },
 ]
 
 /** Correos que existen pero cuya plantilla está escrita DENTRO del emisor (no se pueden previsualizar sin refactorizar el emisor). */
 export const SIN_VISTA_PREVIA: ReadonlyArray<{ nombre: string; motivo: string }> = [
-  { nombre: 'Aviso interno de nuevo contacto (lead)', motivo: 'Su plantilla está escrita dentro del emisor, mezclada con los datos reales del contacto; mostrarla exigiría ejecutarla con datos reales o separarla en una plantilla (refactor pendiente).' },
   { nombre: 'Invitación al panel', motivo: 'Su plantilla está escrita dentro de la ruta que invita y usa un enlace con token; no hay una plantilla independiente que se pueda ejecutar con datos de muestra.' },
-  { nombre: '14 tipos de cita (citas en línea apagadas)', motivo: 'Sus plantillas dependen de una cita real (fechas, asesor, enlaces con token) y las citas en línea están apagadas; falta una versión con datos de muestra.' },
 ]
 
 export type VistaDeCorreo = {
@@ -137,7 +166,7 @@ export function vistaPrevia(id: string, muestra: Muestra = MUESTRA_POR_OMISION):
   const r = renderizar(id, muestra)
   if (!r) return null
   // Sólo el ORIGEN de los recursos cambia: en un Preview el sitio configurado apunta a otro despliegue y el logotipo se vería roto; la plantilla y el texto son los reales.
-  if (muestra.origenImagenes) r.c = { ...r.c, html: r.c.html.split(LOGO_URL).join(`${muestra.origenImagenes}/logo_transparent.png`) }
+  if (muestra.origenImagenes) r.c = { ...r.c, html: r.c.html.split(LOGO_URL).join(`${muestra.origenImagenes}${LOGO_ARCHIVO}`).split(PONCE_LOGO_URL).join(`${muestra.origenImagenes}${PONCE_LOGO_ARCHIVO}`) }
   const pre = r.c.html.match(/<div style="display:none[^>]*>([\s\S]*?)<\/div>/)
   const preencabezado = pre && pre[1].trim() ? pre[1].replace(/&amp;/g, '&').replace(/&#39;/g, "'").replace(/&quot;/g, '"').trim() : null
   return {
@@ -155,7 +184,7 @@ export function vistaPrevia(id: string, muestra: Muestra = MUESTRA_POR_OMISION):
 }
 
 // ── CATÁLOGO completo, por grupo, con su existencia RASTREADA hasta el mecanismo de envío ─────────────────────────────
-export type Existencia = 'envia_hoy' | 'codigo_apagado' | 'apagado_por_texto_legal' | 'lo_manda_firebase' | 'pendiente'
+export type Existencia = 'envia_hoy' | 'codigo_apagado' | 'apagado_por_texto_legal' | 'plantilla_sin_evento' | 'lo_manda_firebase' | 'pendiente'
 export const GRUPOS_DE_CATALOGO = ['Cuenta y seguridad', 'Cliente', 'Visitas a propiedades (citas)', 'Publicador', 'Equipo de VIVE BIEN', 'Avisos legales', 'Marketing'] as const
 export type GrupoDeCatalogo = (typeof GRUPOS_DE_CATALOGO)[number]
 export type EntradaDeCatalogo = {
@@ -178,8 +207,16 @@ const FIREBASE = 'Lo manda Firebase Auth con su propia plantilla (fuera de este 
 const PARA_BIBLIOTECA: Record<string, string> = {
   alertas: 'La persona con cuenta que pidió el aviso', baja_de_precio: 'La persona con cuenta que guardó la propiedad', legal: 'Quien aceptó una versión anterior de los textos legales',
   bienvenida: 'La persona que acaba de crear su cuenta', solicitud_publicador: 'La persona que pidió publicar', primeras_propiedades: 'Visitante que pidió la suscripción (con confirmación)', recomendaciones: 'Persona con consentimiento de marketing vigente',
+  verificacion_correo: 'La persona que se registra', contacto_whatsapp: 'La persona que contactó por WhatsApp', aviso_lead: 'El equipo de VIVE BIEN (buzón institucional)', recuperar_contrasena: 'La persona que pidió el cambio', cambio_correo: 'La persona (correo anterior y nuevo)', baja_cuenta: 'La persona que dio de baja su cuenta', consulta_respuesta: 'La persona que consultó una propiedad', propiedad_recibida: 'La persona que subió la propiedad', propiedad_en_revision: 'La persona que publica', propiedad_rechazada: 'La persona que publica', nuevo_interesado: 'El anunciante de la propiedad', articulos_blog: 'Persona con consentimiento de marketing vigente', evaluacion_atencion: 'La persona que consultó una propiedad', propiedad_aprobada: 'La persona que publicó la propiedad',
 }
-const META_BIBLIOTECA: Record<string, { grupo: GrupoDeCatalogo; rastro: string }> = {
+const META_BIBLIOTECA: Record<string, { grupo: GrupoDeCatalogo; rastro: string | null }> = {
+  verificacion_correo: { grupo: 'Cuenta y seguridad', rastro: null },
+  contacto_whatsapp: { grupo: 'Cliente', rastro: null },
+  aviso_lead: { grupo: 'Equipo de VIVE BIEN', rastro: 'src/lib/aviso-lead.ts' },
+  recuperar_contrasena: { grupo: 'Cuenta y seguridad', rastro: null }, cambio_correo: { grupo: 'Cuenta y seguridad', rastro: null }, baja_cuenta: { grupo: 'Cuenta y seguridad', rastro: null },
+  consulta_respuesta: { grupo: 'Cliente', rastro: null }, propiedad_recibida: { grupo: 'Publicador', rastro: null }, propiedad_en_revision: { grupo: 'Publicador', rastro: null }, propiedad_rechazada: { grupo: 'Publicador', rastro: null }, nuevo_interesado: { grupo: 'Publicador', rastro: null }, articulos_blog: { grupo: 'Marketing', rastro: null },
+  evaluacion_atencion: { grupo: 'Cliente', rastro: null },
+  propiedad_aprobada: { grupo: 'Publicador', rastro: null },
   alertas: { grupo: 'Cliente', rastro: 'src/lib/avisos-cliente-servidor.ts' },
   baja_de_precio: { grupo: 'Cliente', rastro: 'src/lib/avisos-cliente-servidor.ts' },
   legal: { grupo: 'Avisos legales', rastro: 'src/lib/avisos-cliente-servidor.ts' },
@@ -191,28 +228,14 @@ const META_BIBLIOTECA: Record<string, { grupo: GrupoDeCatalogo; rastro: string }
 
 const CATALOGO_FIJO: EntradaDeCatalogo[] = [
   // Cuenta y seguridad
-  E2('verificacion_correo', 'Verificación de correo / registro', 'Cuenta y seguridad', 'seguridad', 'lo_manda_firebase', 'Firebase Auth al registrarse', null, FIREBASE),
-  E2('recuperar_contrasena', 'Recuperar o cambiar contraseña', 'Cuenta y seguridad', 'seguridad', 'lo_manda_firebase', 'Firebase Auth al pedir el cambio', null, FIREBASE),
-  E2('cambio_correo', 'Cambio de correo o de datos sensibles', 'Cuenta y seguridad', 'seguridad', 'pendiente', 'Cambio de correo en la cuenta', null, PENDIENTE),
-  E2('baja_cuenta', 'Confirmación de baja de cuenta', 'Cuenta y seguridad', 'transaccional', 'pendiente', 'Baja de cuenta (el proceso de baja existe; no manda correo)', null, PENDIENTE),
   // Cliente
-  E2('consulta_respuesta', 'Respuesta o seguimiento a una consulta', 'Cliente', 'transaccional', 'pendiente', 'Formulario de contacto de una propiedad', null, PENDIENTE),
-  E2('contacto_whatsapp', 'Contacto por WhatsApp (resumen del aviso y datos del anunciante)', 'Cliente', 'transaccional', 'pendiente', 'La persona toca el botón de WhatsApp de una propiedad', null, PENDIENTE),
-  E2('evaluacion_atencion', 'Evaluación de la atención recibida', 'Cliente', 'servicio', 'pendiente', 'Días después de una consulta', null, PENDIENTE),
   // Publicador
-  E2('propiedad_recibida', 'Confirmación al subir una propiedad', 'Publicador', 'transaccional', 'pendiente', 'La propiedad pasa a borrador / se sube', null, PENDIENTE),
-  E2('propiedad_en_revision', 'Propiedad enviada a revisión', 'Publicador', 'transaccional', 'pendiente', 'borrador → en_revision', null, PENDIENTE),
-  E2('propiedad_aprobada', 'Propiedad aprobada y publicada', 'Publicador', 'transaccional', 'pendiente', 'en_revision → publicada', null, PENDIENTE),
-  E2('propiedad_rechazada', 'Propiedad rechazada o con cambios solicitados', 'Publicador', 'transaccional', 'pendiente', 'en_revision → rechazada / cambios', null, PENDIENTE),
-  E2('nuevo_interesado', 'Aviso al anunciante de un nuevo interesado', 'Publicador', 'transaccional', 'pendiente', 'Consulta sobre su propiedad', null, PENDIENTE),
   // Equipo
-  E2('aviso_lead', 'Aviso interno de nuevo contacto (buzón institucional)', 'Equipo de VIVE BIEN', 'transaccional', 'envia_hoy', 'Formularios de contacto', 'src/lib/aviso-lead.ts', 'Su plantilla está escrita dentro de aviso-lead.ts, mezclada con los datos reales del contacto: mostrarla exigiría ejecutarla con datos reales o separarla (refactor pendiente).'),
   E2('invitacion_equipo', 'Invitación al panel', 'Equipo de VIVE BIEN', 'transaccional', 'envia_hoy', 'Un administrador invita a una persona', 'src/lib/invitacion-correo.ts', 'Su plantilla está escrita dentro de invitacion-correo.ts y usa un enlace con token: no hay una plantilla independiente para ejecutar con datos de muestra.'),
   // Marketing
-  E2('articulos_blog', 'Artículos del blog y novedades', 'Marketing', 'marketing', 'pendiente', 'Campaña manual o digest (no existe módulo de campañas)', null, PENDIENTE),
 ]
 
-const ESTADO_A_EXISTENCIA: Record<EstadoDeEnvio, Existencia> = { envia_hoy: 'envia_hoy', codigo_apagado: 'codigo_apagado', apagado_por_texto_legal: 'apagado_por_texto_legal' }
+const ESTADO_A_EXISTENCIA: Record<EstadoDeEnvio, Existencia> = { envia_hoy: 'envia_hoy', codigo_apagado: 'codigo_apagado', apagado_por_texto_legal: 'apagado_por_texto_legal', plantilla_sin_evento: 'plantilla_sin_evento', lo_manda_firebase: 'lo_manda_firebase' }
 
 /** Todos los tipos de correo conocidos, por grupo. Cada uno con su rastro (archivo que lo manda) o su motivo de no tenerlo: nada se afirma sin rastro. */
 export function catalogoCompleto(): EntradaDeCatalogo[] {

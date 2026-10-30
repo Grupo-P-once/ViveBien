@@ -20,7 +20,7 @@ select c.id,
        'Qué correos existen, cuáles son necesarios, cómo darte de baja de los promocionales y qué guardamos de cada envío.',
        $c$VIVE BIEN te escribe por correo por dos razones distintas, y las tratamos por separado.
 
-**Correos de servicio.** Son los que necesitas para usar tu cuenta o que tú pediste: la bienvenida, la confirmación de una solicitud, los avisos de tus visitas, las alertas de tus búsquedas guardadas, los avisos de baja de precio y los avisos de cambios a los Términos o al Aviso de Privacidad. No son publicidad. En **Configuración** de tu portal activas o apagas las alertas de búsquedas y los avisos de baja de precio.
+**Correos de servicio.** Son los que necesitas para usar tu cuenta o que tú pediste: la bienvenida, la confirmación de una solicitud, los avisos de tus visitas, las alertas de tus búsquedas guardadas, los avisos de baja de precio y los avisos de cambios a los Términos o al Aviso de Privacidad. No son publicidad. Las alertas de búsquedas y los avisos de baja de precio por correo vienen activados; puedes apagarlos en cualquier momento desde el pequeño engranaje de ajustes de tu portal, y cada correo trae un enlace para dejar de recibirlos con un clic.
 
 **Correos promocionales.** Son ofertas, recomendaciones o novedades. Solo se mandarían con tu consentimiento expreso y separado, y cada uno trae un enlace para darte de baja con un clic. Hoy VIVE BIEN no envía correos promocionales.
 

@@ -164,10 +164,12 @@ describe('preferencias y baja en un clic', () => {
     estado.base = montar([], [])
     const { PUT, GET } = await import('../src/app/api/portal/preferencias/route')
     const put = (c: unknown) => PUT(new Request('https://vb.test/api/portal/preferencias', { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify(c) }))
+    // 30-oct-2026: sin fila, el correo de precio nace ACTIVADO (decisión del dueño); para probar el consentimiento con fecha se apaga y se vuelve a encender.
+    expect(((await (await put({ correoPrecio: false })).json()) as { correoPrecio: boolean }).correoPrecio).toBe(false)
     const r = await put({ correoPrecio: true })
     expect(r.status).toBe(200)
     const j = await r.json() as { correoPrecio: boolean; correoAlertas: boolean; consentimientoPrecioEn: string | null }
-    expect(j.correoPrecio).toBe(true); expect(j.correoAlertas).toBe(false); expect(j.consentimientoPrecioEn).toBeTruthy()
+    expect(j.correoPrecio).toBe(true); expect(j.correoAlertas).toBe(true); expect(j.consentimientoPrecioEn).toBeTruthy()
     expect(estado.bitacora.map((b) => b.accion)).toContain('cuenta.avisos_precio_correo_activados')
     expect(JSON.stringify(estado.bitacora.map(({ actor, ...resto }) => { void actor; return resto }))).not.toContain('ana@ejemplo.invalid')   // el detalle de la bitácora no lleva el correo (el actor lo resuelve la propia bitácora)
     expect((await (await GET(new Request('https://vb.test/x'))).json() as { correoPrecio: boolean }).correoPrecio).toBe(true)

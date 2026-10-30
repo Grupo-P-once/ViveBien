@@ -39,6 +39,17 @@ function tarjetaCompacta(p: TarjetaCorreo, lado: 'izq' | 'der' | 'sola'): string
   return `<td class="property-col stack" valign="top" width="${ancho}" style="width:${ancho};padding:${relleno}"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #E7E3DD">${foto}<tr><td style="padding:15px 14px 17px">${etiqueta}<h3 style="margin:0 0 7px;font-family:${FUENTE};font-size:15px;line-height:21px;font-weight:700;color:${COLORES.negro}"><a href="${u}" target="_blank" style="color:${COLORES.negro};text-decoration:none">${escapar(p.titulo)}</a></h3>${lugar}${datos}${precio}<a href="${u}" target="_blank" style="font-family:${FUENTE};font-size:11px;line-height:16px;font-weight:700;color:${COLORES.rojo};text-decoration:none">Ver detalles&nbsp; →</a></td></tr></table></td>`
 }
 
+/** Todas las propiedades en una rejilla de dos columnas (se apilan en el teléfono), sin destacar ninguna. */
+export function rejillaPropiedades(ps: TarjetaCorreo[]): string {
+  if (ps.length === 0) return ''
+  let html = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">`
+  for (let i = 0; i < ps.length; i += 2) {
+    const par = ps.slice(i, i + 2)
+    html += `<tr>${par.length === 2 ? tarjetaCompacta(par[0], 'izq') + tarjetaCompacta(par[1], 'der') : tarjetaCompacta(par[0], 'sola')}</tr>`
+  }
+  return html + '</table>'
+}
+
 /** Las propiedades: la primera destacada y el resto de dos en dos. */
 export function bloquePropiedades(ps: TarjetaCorreo[], tituloResto = 'También podrían interesarte'): string {
   if (ps.length === 0) return ''
