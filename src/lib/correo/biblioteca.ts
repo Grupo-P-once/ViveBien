@@ -1,6 +1,7 @@
 import { SITIO } from '../sitio'
 import { NEGOCIO } from '../config/negocio'
 import { remitenteDe } from './enviar'
+import { plantilla as plantillaDeCita, type DatosPlantilla as DatosDeCita, type Para as ParaDeCita, type TipoCorreo as TipoDeCita } from '../citas/correos'
 import { correoDeAlertas, correoDeBajaDePrecio, correoLegal, type NotificacionNueva } from '../avisos-cliente'
 import { plantillaBienvenida, plantillaPrimerasPropiedades, plantillaRecomendaciones, plantillaSolicitudPublicador, type TarjetaCorreo } from './plantillas'
 
@@ -28,14 +29,15 @@ export type TipoDeCorreo = {
  */
 export const NOMBRES_DE_MUESTRA = ['Persona Sintética', 'Ana Ejemplo', 'Luis Ejemplo'] as const
 export const MAX_PROPIEDADES_DE_MUESTRA = 3
-export type Muestra = { nombre: string; propiedades: number }
-export const MUESTRA_POR_OMISION: Muestra = { nombre: NOMBRES_DE_MUESTRA[0], propiedades: 2 }
+/** `origenImagenes` NUNCA viene del navegador: lo pone la ruta (el propio despliegue) para servir las imágenes de ejemplo de /correo-ejemplo/. */
+export type Muestra = { nombre: string; propiedades: number; imagenes: boolean; origenImagenes?: string }
+export const MUESTRA_POR_OMISION: Muestra = { nombre: NOMBRES_DE_MUESTRA[0], propiedades: 2, imagenes: true }
 
 /** Normaliza lo que llega del navegador a una muestra permitida (cualquier valor fuera de la lista vuelve al valor por omisión). */
-export function muestraPermitida(nombre: unknown, propiedades: unknown): Muestra {
+export function muestraPermitida(nombre: unknown, propiedades: unknown, imagenes: unknown = undefined): Muestra {
   const n = (NOMBRES_DE_MUESTRA as readonly string[]).find((x) => x === nombre) ?? MUESTRA_POR_OMISION.nombre
   const p = Number(propiedades)
-  return { nombre: n, propiedades: Number.isInteger(p) && p >= 1 && p <= MAX_PROPIEDADES_DE_MUESTRA ? p : MUESTRA_POR_OMISION.propiedades }
+  return { nombre: n, propiedades: Number.isInteger(p) && p >= 1 && p <= MAX_PROPIEDADES_DE_MUESTRA ? p : MUESTRA_POR_OMISION.propiedades, imagenes: imagenes === undefined || imagenes === null ? MUESTRA_POR_OMISION.imagenes : imagenes === '1' || imagenes === true }
 }
 
 const PROPIEDADES_SINTETICAS: TarjetaCorreo[] = [
@@ -43,7 +45,8 @@ const PROPIEDADES_SINTETICAS: TarjetaCorreo[] = [
   { titulo: 'Casa de ejemplo B', url: `${SITIO}/propiedades`, foto: null, lugar: 'Colonia de ejemplo, León', precio: '$3,200,000', etiqueta: 'Casa · En venta', datos: ['3 recámaras', '2 baños'] },
   { titulo: 'Terreno de ejemplo C', url: `${SITIO}/propiedades`, foto: null, lugar: 'Zona de ejemplo, León', precio: '$1,450,000', etiqueta: 'Terreno · En venta', datos: ['600 m²'] },
 ]
-const tarjetas = (m: Muestra) => PROPIEDADES_SINTETICAS.slice(0, m.propiedades)
+/** Fotos de EJEMPLO (marcadas «FOTO DE EJEMPLO» en la propia imagen); los correos reales llevan la foto de cada propiedad. */
+const tarjetas = (m: Muestra) => PROPIEDADES_SINTETICAS.slice(0, m.propiedades).map((p, i) => (m.imagenes ? { ...p, foto: `${m.origenImagenes ?? SITIO}/correo-ejemplo/propiedad-${'abc'[i]}.svg` } : p))
 const AVISO_PRECIO: NotificacionNueva = { uid: 'sintetico', tipo: 'baja_de_precio', titulo: 'Bajó de precio: Casa de ejemplo B', cuerpo: 'Antes $3,400,000, ahora $3,200,000.', enlace: '/propiedades', busqueda_id: null, propiedad_id: null, clave: 'sintetico/1' }
 const AVISO_LEGAL: NotificacionNueva = { uid: 'sintetico', tipo: 'legal', titulo: 'Actualizamos los Términos y Condiciones', cuerpo: 'Texto de ejemplo del aviso. Versión de ejemplo.', enlace: '/terminos', busqueda_id: null, propiedad_id: null, clave: 'sintetico/2' }
 const PREFERENCIAS = `${SITIO}/portal/configuracion`
@@ -77,7 +80,11 @@ export const SIN_VISTA_PREVIA: ReadonlyArray<{ nombre: string; motivo: string }>
 
 export type VistaDeCorreo = {
   asunto: string; html: string; texto: string
-  remitente: string; responderA: string; categoria: Categoria
+  remitente: string; responderA: string; para: string; categoria: Categoria
+  /** Texto corto que el buzón muestra junto al asunto; `null` si esa plantilla no lo trae. */
+  preencabezado: string | null
+  /** Lo que la bandeja muestra tras el asunto: el preencabezado o, si no hay, el inicio del texto. */
+  extracto: string
   /** Enlaces del HTML tal como saldrían (los de la muestra son sintéticos: nunca llevan token ni persona). */
   enlaces: string[]
   imagenes: string[]
@@ -85,24 +92,136 @@ export type VistaDeCorreo = {
 }
 
 const unicos = (xs: string[]) => [...new Set(xs)]
+export const DESTINATARIO_DE_EJEMPLO = 'persona.ejemplo@ejemplo.invalid'
+
+// ── Citas (visitas): las plantillas reales de citas/correos.ts, ejecutadas con una cita FICTICIA ──
+const AHORA_DE_EJEMPLO = new Date('2026-10-30T18:00:00Z')
+const INICIO_DE_EJEMPLO = new Date('2026-11-05T17:00:00Z')
+const CITAS: Array<{ tipo: TipoDeCita; para: ParaDeCita; nombre: string }> = [
+  { tipo: 'solicitud_recibida', para: 'cliente', nombre: 'Recibimos tu solicitud de visita' },
+  { tipo: 'por_confirmar', para: 'cliente', nombre: 'Confirma tu visita (la agendó el asesor)' },
+  { tipo: 'confirmada', para: 'cliente', nombre: 'Tu visita está confirmada' },
+  { tipo: 'cambio_propuesto', para: 'cliente', nombre: 'Proponen otro horario para la visita' },
+  { tipo: 'reprogramada', para: 'cliente', nombre: 'Tu visita cambió de horario' },
+  { tipo: 'cambio_rechazado', para: 'cliente', nombre: 'Se mantiene el horario de la visita' },
+  { tipo: 'cambio_retirado', para: 'cliente', nombre: 'Se retiró el cambio de horario' },
+  { tipo: 'cancelada', para: 'cliente', nombre: 'Visita cancelada' },
+  { tipo: 'vencida', para: 'cliente', nombre: 'La solicitud de visita venció' },
+  { tipo: 'recordatorio_24h', para: 'cliente', nombre: 'Recordatorio: tu visita es mañana' },
+  { tipo: 'recordatorio_2h', para: 'cliente', nombre: 'Recordatorio: tu visita es en 2 horas' },
+  { tipo: 'solicitud_nueva', para: 'asesor', nombre: 'Aviso al asesor: nueva solicitud de visita' },
+  { tipo: 'registrada_asesor', para: 'asesor', nombre: 'Aviso al asesor: se registró una visita' },
+  { tipo: 'confirmada_asesor', para: 'asesor', nombre: 'Aviso al asesor: visita confirmada' },
+  { tipo: 'reprogramada_asesor', para: 'asesor', nombre: 'Aviso al asesor: visita reprogramada' },
+]
+const datosDeCita = (m: Muestra, para: ParaDeCita): DatosDeCita => ({
+  destinatario: m.nombre, propiedad: 'Casa de ejemplo B', lugar: 'Colonia de ejemplo, León', inicio: INICIO_DE_EJEMPLO, propuesto: new Date(INICIO_DE_EJEMPLO.getTime() + 86_400_000),
+  motivo: 'Motivo de ejemplo', cliente: para === 'asesor' ? { nombre: 'Persona Sintética', telefono: null } : null, notasCliente: null,
+  acciones: [{ accion: 'confirmar', url: BAJA_INERTE }], enlacePanel: `${SITIO}/?enlace=deshabilitado-en-pruebas`, enlaceGoogle: null, ahora: AHORA_DE_EJEMPLO,
+})
+
+function renderizar(id: string, m: Muestra): { categoria: Categoria; para: string; c: { asunto: string; html: string; texto: string } } | null {
+  const t = BIBLIOTECA.find((x) => x.id === id)
+  if (t) return { categoria: t.categoria, para: PARA_BIBLIOTECA[t.id] ?? 'La persona destinataria', c: t.vista(m) }
+  const cita = CITAS.find((x) => `cita_${x.tipo}` === id)
+  if (cita) return { categoria: 'transaccional', para: cita.para === 'asesor' ? 'El asesor de la propiedad' : 'La persona que pidió la visita', c: plantillaDeCita(cita.tipo, cita.para, datosDeCita(m, cita.para)) }
+  return null
+}
 
 /**
- * Vista previa FIEL: ejecuta la MISMA función de plantilla que usa el envío real (`correoDeAlertas`, `plantilla…`), el MISMO remitente (`remitenteDe`) y
- * los mismos pies/enlaces de baja y preferencias; lo único distinto son los datos, que son de muestra. No lee la base ni dispara nada.
+ * Vista previa FIEL: ejecuta la MISMA función de plantilla que usa el envío real (`correoDeAlertas`, `plantilla…`, `plantilla` de citas), el MISMO remitente
+ * (`remitenteDe`) y los mismos pies/enlaces de baja y preferencias; lo único distinto son los datos, que son de muestra. No lee la base ni dispara nada.
  */
 export function vistaPrevia(id: string, muestra: Muestra = MUESTRA_POR_OMISION): VistaDeCorreo | null {
-  const t = BIBLIOTECA.find((x) => x.id === id)
-  if (!t) return null
-  const c = t.vista(muestra)
+  const r = renderizar(id, muestra)
+  if (!r) return null
+  const pre = r.c.html.match(/<div style="display:none[^>]*>([\s\S]*?)<\/div>/)
+  const preencabezado = pre && pre[1].trim() ? pre[1].replace(/&amp;/g, '&').replace(/&#39;/g, "'").replace(/&quot;/g, '"').trim() : null
   return {
-    ...c,
-    remitente: remitenteDe(t.categoria),
+    ...r.c,
+    remitente: remitenteDe(r.categoria),
     responderA: NEGOCIO.email,
-    categoria: t.categoria,
-    enlaces: unicos([...c.html.matchAll(/href="([^"]+)"/g)].map((m) => m[1].replace(/&amp;/g, '&'))),
-    imagenes: unicos([...c.html.matchAll(/<img[^>]+src="([^"]+)"/g)].map((m) => m[1])),
+    para: r.para,
+    categoria: r.categoria,
+    preencabezado,
+    extracto: (preencabezado ?? r.c.texto.replace(/\s+/g, ' ').trim()).slice(0, 110),
+    enlaces: unicos([...r.c.html.matchAll(/href="([^"]+)"/g)].map((x) => x[1].replace(/&amp;/g, '&'))),
+    imagenes: unicos([...r.c.html.matchAll(/<img[^>]+src="([^"]+)"/g)].map((x) => x[1])),
     muestra,
   }
+}
+
+// ── CATÁLOGO completo, por grupo, con su existencia RASTREADA hasta el mecanismo de envío ─────────────────────────────
+export type Existencia = 'envia_hoy' | 'codigo_apagado' | 'apagado_por_texto_legal' | 'lo_manda_firebase' | 'pendiente'
+export const GRUPOS_DE_CATALOGO = ['Cuenta y seguridad', 'Cliente', 'Visitas a propiedades (citas)', 'Publicador', 'Equipo de VIVE BIEN', 'Avisos legales', 'Marketing'] as const
+export type GrupoDeCatalogo = (typeof GRUPOS_DE_CATALOGO)[number]
+export type EntradaDeCatalogo = {
+  id: string; nombre: string; grupo: GrupoDeCatalogo; categoria: string; existencia: Existencia
+  /** Qué lo dispara (o qué lo dispararía, si está pendiente). */
+  disparador: string
+  /** Archivo del repositorio donde se arma y se manda (llama al emisor). `null` si no existe en el código o lo manda otro servicio. */
+  rastro: string | null
+  /** ¿Se puede previsualizar con la plantilla real? */
+  conVista: boolean
+  /** Por qué no hay vista previa (existe sin plantilla separada, lo manda Firebase o está pendiente). */
+  motivoSinVista: string | null
+}
+
+const E2 = (id: string, nombre: string, grupo: GrupoDeCatalogo, categoria: string, existencia: Existencia, disparador: string, rastro: string | null, motivoSinVista: string | null = null): EntradaDeCatalogo =>
+  ({ id, nombre, grupo, categoria, existencia, disparador, rastro, conVista: motivoSinVista === null, motivoSinVista })
+const PENDIENTE = 'Pendiente de implementación: no hay plantilla ni evento en el código que lo envíe.'
+const FIREBASE = 'Lo manda Firebase Auth con su propia plantilla (fuera de este código): aquí no se puede previsualizar.'
+
+const PARA_BIBLIOTECA: Record<string, string> = {
+  alertas: 'La persona con cuenta que pidió el aviso', baja_de_precio: 'La persona con cuenta que guardó la propiedad', legal: 'Quien aceptó una versión anterior de los textos legales',
+  bienvenida: 'La persona que acaba de crear su cuenta', solicitud_publicador: 'La persona que pidió publicar', primeras_propiedades: 'Visitante que pidió la suscripción (con confirmación)', recomendaciones: 'Persona con consentimiento de marketing vigente',
+}
+const META_BIBLIOTECA: Record<string, { grupo: GrupoDeCatalogo; rastro: string }> = {
+  alertas: { grupo: 'Cliente', rastro: 'src/lib/avisos-cliente-servidor.ts' },
+  baja_de_precio: { grupo: 'Cliente', rastro: 'src/lib/avisos-cliente-servidor.ts' },
+  legal: { grupo: 'Avisos legales', rastro: 'src/lib/avisos-cliente-servidor.ts' },
+  bienvenida: { grupo: 'Cuenta y seguridad', rastro: 'src/lib/correo/transaccionales.ts' },
+  solicitud_publicador: { grupo: 'Publicador', rastro: 'src/lib/correo/transaccionales.ts' },
+  primeras_propiedades: { grupo: 'Marketing', rastro: 'src/lib/correo/suscripcion.ts' },
+  recomendaciones: { grupo: 'Marketing', rastro: 'src/lib/correo/tarea.ts' },
+}
+
+const CATALOGO_FIJO: EntradaDeCatalogo[] = [
+  // Cuenta y seguridad
+  E2('verificacion_correo', 'Verificación de correo / registro', 'Cuenta y seguridad', 'seguridad', 'lo_manda_firebase', 'Firebase Auth al registrarse', null, FIREBASE),
+  E2('recuperar_contrasena', 'Recuperar o cambiar contraseña', 'Cuenta y seguridad', 'seguridad', 'lo_manda_firebase', 'Firebase Auth al pedir el cambio', null, FIREBASE),
+  E2('cambio_correo', 'Cambio de correo o de datos sensibles', 'Cuenta y seguridad', 'seguridad', 'pendiente', 'Cambio de correo en la cuenta', null, PENDIENTE),
+  E2('baja_cuenta', 'Confirmación de baja de cuenta', 'Cuenta y seguridad', 'transaccional', 'pendiente', 'Baja de cuenta (el proceso de baja existe; no manda correo)', null, PENDIENTE),
+  // Cliente
+  E2('consulta_respuesta', 'Respuesta o seguimiento a una consulta', 'Cliente', 'transaccional', 'pendiente', 'Formulario de contacto de una propiedad', null, PENDIENTE),
+  E2('contacto_whatsapp', 'Contacto por WhatsApp (resumen del aviso y datos del anunciante)', 'Cliente', 'transaccional', 'pendiente', 'La persona toca el botón de WhatsApp de una propiedad', null, PENDIENTE),
+  E2('evaluacion_atencion', 'Evaluación de la atención recibida', 'Cliente', 'servicio', 'pendiente', 'Días después de una consulta', null, PENDIENTE),
+  // Publicador
+  E2('propiedad_recibida', 'Confirmación al subir una propiedad', 'Publicador', 'transaccional', 'pendiente', 'La propiedad pasa a borrador / se sube', null, PENDIENTE),
+  E2('propiedad_en_revision', 'Propiedad enviada a revisión', 'Publicador', 'transaccional', 'pendiente', 'borrador → en_revision', null, PENDIENTE),
+  E2('propiedad_aprobada', 'Propiedad aprobada y publicada', 'Publicador', 'transaccional', 'pendiente', 'en_revision → publicada', null, PENDIENTE),
+  E2('propiedad_rechazada', 'Propiedad rechazada o con cambios solicitados', 'Publicador', 'transaccional', 'pendiente', 'en_revision → rechazada / cambios', null, PENDIENTE),
+  E2('nuevo_interesado', 'Aviso al anunciante de un nuevo interesado', 'Publicador', 'transaccional', 'pendiente', 'Consulta sobre su propiedad', null, PENDIENTE),
+  // Equipo
+  E2('aviso_lead', 'Aviso interno de nuevo contacto (buzón institucional)', 'Equipo de VIVE BIEN', 'transaccional', 'envia_hoy', 'Formularios de contacto', 'src/lib/aviso-lead.ts', 'Su plantilla está escrita dentro de aviso-lead.ts, mezclada con los datos reales del contacto: mostrarla exigiría ejecutarla con datos reales o separarla (refactor pendiente).'),
+  E2('invitacion_equipo', 'Invitación al panel', 'Equipo de VIVE BIEN', 'transaccional', 'envia_hoy', 'Un administrador invita a una persona', 'src/lib/invitacion-correo.ts', 'Su plantilla está escrita dentro de invitacion-correo.ts y usa un enlace con token: no hay una plantilla independiente para ejecutar con datos de muestra.'),
+  // Marketing
+  E2('articulos_blog', 'Artículos del blog y novedades', 'Marketing', 'marketing', 'pendiente', 'Campaña manual o digest (no existe módulo de campañas)', null, PENDIENTE),
+]
+
+const ESTADO_A_EXISTENCIA: Record<EstadoDeEnvio, Existencia> = { envia_hoy: 'envia_hoy', codigo_apagado: 'codigo_apagado', apagado_por_texto_legal: 'apagado_por_texto_legal' }
+
+/** Todos los tipos de correo conocidos, por grupo. Cada uno con su rastro (archivo que lo manda) o su motivo de no tenerlo: nada se afirma sin rastro. */
+export function catalogoCompleto(): EntradaDeCatalogo[] {
+  const desdeBiblioteca = BIBLIOTECA.map((t) => ({ id: t.id, nombre: t.nombre, grupo: META_BIBLIOTECA[t.id].grupo, categoria: t.categoria, existencia: ESTADO_A_EXISTENCIA[t.estado], disparador: t.disparador, rastro: META_BIBLIOTECA[t.id].rastro, conVista: true, motivoSinVista: null }) as EntradaDeCatalogo)
+  const desdeCitas = CITAS.map((x) => E2(`cita_${x.tipo}`, x.nombre, 'Visitas a propiedades (citas)', 'transaccional', 'codigo_apagado', 'Cambio de una cita (citas en línea apagadas: flag citasEnLinea)', 'src/lib/citas/enviar.ts'))
+  const todo = [...desdeBiblioteca, ...desdeCitas, ...CATALOGO_FIJO]
+  return GRUPOS_DE_CATALOGO.flatMap((g) => todo.filter((e) => e.grupo === g))
+}
+
+/** Bandeja de entrada de ejemplo: remitente, asunto y extracto de cada correo que se puede previsualizar. */
+export function bandejaDeEjemplo(muestra: Muestra = MUESTRA_POR_OMISION): Array<{ id: string; remitente: string; asunto: string; extracto: string; grupo: GrupoDeCatalogo }> {
+  return catalogoCompleto().filter((e) => e.conVista).flatMap((e) => { const v = vistaPrevia(e.id, muestra); return v ? [{ id: e.id, remitente: v.remitente, asunto: v.asunto, extracto: v.extracto, grupo: e.grupo }] : [] })
 }
 
 /**

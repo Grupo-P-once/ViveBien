@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useSesion } from '@/components/admin/sesion'
 import Resultados from '@/components/admin/marketing/Resultados'
+import BibliotecaCorreos, { type CatalogoBiblioteca } from '@/components/admin/marketing/BibliotecaCorreos'
 
 /**
  * Panel «Marketing y correos» — PRIMERA VERSIÓN, SOLO LECTURA (F1, 30-oct-2026).
@@ -20,8 +21,7 @@ type Resumen = {
 }
 type Tipo = { id: string; nombre: string; categoria: string; estado: string; disparador: string }
 type Evento = { grupo: string; evento: string; destinatario: string; canal: string; categoria: string; preferencia: string; frecuencia: string; plantilla: string; disparador: string; idempotencia: string; estado: string }
-type Catalogo = { tipos: Tipo[]; sinVistaPrevia: Array<{ nombre: string; motivo: string }>; muestras: { nombres: string[]; maxPropiedades: number }; matriz: Evento[] }
-type Vista = { asunto: string; html: string; texto: string; remitente: string; responderA: string; categoria: string; enlaces: string[]; imagenes: string[] }
+type Catalogo = CatalogoBiblioteca & { tipos: Tipo[]; matriz: Evento[] }
 
 const ESTADO: Record<string, string> = {
   envia_hoy: 'Se envía hoy',
@@ -37,11 +37,6 @@ export default function PanelMarketing() {
   const [resumen, setResumen] = useState<Resumen | null>(null)
   const [catalogo, setCatalogo] = useState<Catalogo | null>(null)
   const [error, setError] = useState('')
-  const [tipo, setTipo] = useState('')
-  const [formato, setFormato] = useState<'escritorio' | 'movil' | 'texto'>('escritorio')
-  const [vistas, setVistas] = useState<Record<string, Vista>>({})
-  const [nombreMuestra, setNombreMuestra] = useState('')
-  const [nPropiedades, setNPropiedades] = useState(2)
   const [dia, setDia] = useState('')
   const [mes, setMes] = useState('')
   const [nota, setNota] = useState('')
@@ -53,19 +48,8 @@ export default function PanelMarketing() {
   }, [pedir])
   useEffect(() => { cargar() }, [cargar])
   useEffect(() => {
-    pedir<Catalogo>('/api/admin/marketing/vista-previa').then((c) => { setCatalogo(c); if (c.tipos[0]) setTipo(c.tipos[0].id) }).catch((e) => setError(e instanceof Error ? e.message : 'No se pudo cargar la biblioteca.'))
+    pedir<Catalogo>('/api/admin/marketing/vista-previa').then(setCatalogo).catch((e) => setError(e instanceof Error ? e.message : 'No se pudo cargar la biblioteca.'))
   }, [pedir])
-  // Las vistas ya pedidas se guardan por tipo: cambiar de correo no re-pide y no hay setState síncrono dentro del efecto.
-  const llave = `${tipo}|${nombreMuestra}|${nPropiedades}`
-  useEffect(() => {
-    if (!tipo || vistas[llave]) return
-    let vivo = true
-    const p = new URLSearchParams({ tipo, propiedades: String(nPropiedades) })
-    if (nombreMuestra) p.set('nombre', nombreMuestra)
-    pedir<Vista>(`/api/admin/marketing/vista-previa?${p}`).then((v) => { if (vivo) setVistas((previas) => ({ ...previas, [llave]: v })) }).catch(() => undefined)
-    return () => { vivo = false }
-  }, [tipo, llave, nombreMuestra, nPropiedades, pedir, vistas])
-  const vista = vistas[llave] ?? null
 
   async function conciliar(e: React.FormEvent) {
     e.preventDefault()
@@ -129,62 +113,7 @@ export default function PanelMarketing() {
 
       <Resultados entorno={resumen?.banderas.entorno ?? null} />
 
-      <section aria-labelledby="m-biblioteca" className="rounded-xl border bg-card p-5">
-        <h2 id="m-biblioteca" className="font-heading text-lg font-semibold">Biblioteca de correos (vista previa sintética)</h2>
-        <p className="mt-1 text-sm text-muted-foreground">Cada vista usa la misma plantilla y el mismo remitente que el envío real, pero con datos de ejemplo: ninguna persona, propiedad ni enlace real, y ver una vista previa no envía nada ni lee datos personales. Gmail, Outlook y Apple Mail pueden mostrar algunos estilos de forma distinta; su compatibilidad <strong>no está comprobada</strong>.</p>
-        {!catalogo ? <p role="status" className="mt-2 text-sm text-muted-foreground">Cargando…</p> : (
-          <div className="mt-3 space-y-3">
-            <label className="block text-sm">Correo
-              <select className="mt-1 w-full rounded-md border bg-background px-3 py-2" value={tipo} onChange={(e) => setTipo(e.target.value)}>
-                {catalogo.tipos.map((t) => <option key={t.id} value={t.id}>{t.nombre} — {t.categoria} — {ESTADO[t.estado] ?? t.estado}</option>)}
-              </select>
-            </label>
-            <p className="text-sm text-muted-foreground">{catalogo.tipos.find((t) => t.id === tipo)?.disparador}</p>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="block text-sm">Nombre de la persona de ejemplo
-                <select className="mt-1 w-full rounded-md border bg-background px-3 py-2" value={nombreMuestra || catalogo.muestras.nombres[0]} onChange={(e) => setNombreMuestra(e.target.value)}>
-                  {catalogo.muestras.nombres.map((n) => <option key={n} value={n}>{n}</option>)}
-                </select>
-              </label>
-              <label className="block text-sm">Propiedades de ejemplo (en los correos que las llevan)
-                <select className="mt-1 w-full rounded-md border bg-background px-3 py-2" value={nPropiedades} onChange={(e) => setNPropiedades(Number(e.target.value))}>
-                  {Array.from({ length: catalogo.muestras.maxPropiedades }, (_, i) => i + 1).map((n) => <option key={n} value={n}>{n}</option>)}
-                </select>
-              </label>
-            </div>
-            <div role="tablist" aria-label="Formato de la vista previa" className="flex gap-2">
-              {(['escritorio', 'movil', 'texto'] as const).map((f) => (
-                <button key={f} role="tab" type="button" aria-selected={formato === f} onClick={() => setFormato(f)} className={`rounded-md border px-3 py-1.5 text-sm ${formato === f ? 'bg-[var(--rojo)] text-white' : 'bg-background'}`}>{f === 'escritorio' ? 'Escritorio' : f === 'movil' ? 'Móvil' : 'Texto plano'}</button>
-              ))}
-            </div>
-            {!vista ? <p role="status" className="text-sm text-muted-foreground">Cargando vista previa…</p> : (
-              <div>
-                <p data-etiqueta-sintetica className="mb-2 rounded-lg border border-violet-300 bg-violet-50 p-2 text-sm text-violet-950">Datos y enlaces SINTÉTICOS e INERTES: el enlace de baja, las preferencias y los botones no llevan a ninguna persona ni cuenta real.</p>
-                <dl className="mb-2 grid gap-1 text-sm sm:grid-cols-[auto_1fr] sm:gap-x-3">
-                  <dt className="font-medium">Asunto</dt><dd>{vista.asunto}</dd>
-                  <dt className="font-medium">Remitente</dt><dd className="break-all">{vista.remitente}</dd>
-                  <dt className="font-medium">Responder a</dt><dd className="break-all">{vista.responderA}</dd>
-                  <dt className="font-medium">Categoría</dt><dd>{vista.categoria === 'marketing' ? 'Promocional (requiere consentimiento, con baja y preferencias)' : 'Servicio o seguridad'}</dd>
-                </dl>
-                {formato === 'texto'
-                  ? <pre className="max-h-[480px] overflow-auto whitespace-pre-wrap rounded-lg border bg-background p-4 text-sm">{vista.texto}</pre>
-                  : <iframe title={`Vista previa ${formato}`} sandbox="" srcDoc={vista.html} style={{ width: formato === 'movil' ? 375 : '100%', maxWidth: '100%', height: 560 }} className="mx-auto block rounded-lg border bg-white" />}
-              </div>
-            )}
-            {vista && (
-              <details className="rounded-lg border bg-background p-3 text-sm">
-                <summary className="cursor-pointer font-medium">Enlaces e imágenes de este correo ({vista.enlaces.length} enlaces, {vista.imagenes.length} imágenes)</summary>
-                <ul className="mt-2 list-disc space-y-1 break-all pl-5">{vista.enlaces.map((e) => <li key={e}>{e}</li>)}</ul>
-                <p className="mt-2 text-muted-foreground">{vista.imagenes.length ? `Imágenes: ${vista.imagenes.join(', ')}` : 'Las muestras no llevan fotos de propiedades; el logotipo y los estilos van dentro del HTML.'}</p>
-              </details>
-            )}
-            <div className="rounded-lg border bg-background p-3 text-sm">
-              <h3 className="font-semibold">Sin vista previa disponible</h3>
-              <ul className="mt-2 space-y-2">{catalogo.sinVistaPrevia.map((s) => <li key={s.nombre}><strong>{s.nombre}.</strong> <span className="text-muted-foreground">{s.motivo}</span></li>)}</ul>
-            </div>
-          </div>
-        )}
-      </section>
+      {catalogo ? <BibliotecaCorreos catalogo={catalogo} /> : <section aria-labelledby="m-biblioteca" className="rounded-xl border bg-card p-5"><h2 id="m-biblioteca" className="font-heading text-lg font-semibold">Biblioteca de correos</h2><p role="status" className="mt-2 text-sm text-muted-foreground">Cargando…</p></section>}
 
       <section aria-labelledby="m-audiencia" className="rounded-xl border bg-card p-5">
         <h2 id="m-audiencia" className="font-heading text-lg font-semibold">Consentimientos (solo agregados)</h2>

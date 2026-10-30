@@ -83,7 +83,7 @@ export async function GET(req: Request) {
     const d = datosDeDemostracion(rango)
     return NextResponse.json({
       ...comun,
-      origen: { tipo: 'demostracion', entorno: 'preview_staging', descripcion: 'DATOS DE DEMOSTRACIÓN: valores sintéticos generados por el sistema. No son envíos reales ni de esta base.' },
+      origen: { tipo: 'demostracion', entorno: 'preview_staging', descripcion: 'DATOS DE EJEMPLO: valores sintéticos generados por el sistema. No son envíos reales ni de esta base.' },
       fuentes: { webhookConfigurado: null, eventosDelProveedor: null, truncado: false },
       resultado: calcular(d.filas, d.bajas, filtro),
     }, { headers: cabeceras })

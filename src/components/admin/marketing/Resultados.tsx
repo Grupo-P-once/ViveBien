@@ -197,7 +197,7 @@ export default function Resultados({ entorno }: { entorno: string | null }) {
       {puedeDemo && (
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" checked={demo} onChange={(e) => setDemo(e.target.checked)} className="size-4" />
-          Ver datos de demostración (valores sintéticos, no reales)
+          Ver datos de demostración («Datos de ejemplo»: valores sintéticos, no reales)
         </label>
       )}
       {error && <p role="alert" className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">{error}</p>}

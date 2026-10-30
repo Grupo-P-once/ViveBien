@@ -301,10 +301,11 @@ describe('F1 · privacidad, retención y panel (guardias estáticas)', () => {
   })
 
   it('no hay botones de envío en el panel (solo lectura): ninguna llamada de envío ni POST fuera de la conciliación', () => {
-    const t = codigo(leer('src/app/admin/marketing/page.tsx'))
+    // La pantalla son tres archivos (página, biblioteca y resultados): ninguno puede enviar, y el único POST es la conciliación.
+    const t = ['src/app/admin/marketing/page.tsx', 'src/components/admin/marketing/BibliotecaCorreos.tsx', 'src/components/admin/marketing/Resultados.tsx'].map((r) => codigo(leer(r))).join('\n')
     expect(t).not.toMatch(/enviarCorreo|enviarPorEmisorUnico|llamarResend|\/api\/correo\//)
     expect([...t.matchAll(/method: 'POST'/g)]).toHaveLength(1)
     expect(t).toContain("pedir('/api/admin/marketing/conciliacion'")
-    expect(t).toContain('sandbox=""')
+    expect(codigo(leer('src/components/admin/marketing/BibliotecaCorreos.tsx'))).toContain('sandbox=""')
   })
 })

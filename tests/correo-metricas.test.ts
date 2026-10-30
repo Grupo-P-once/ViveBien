@@ -155,7 +155,7 @@ describe('datos de demostración', () => {
 
 describe('vista previa fiel', () => {
   it('sólo acepta nombres y cantidades de la lista permitida; lo demás vuelve al valor por omisión', () => {
-    expect(muestraPermitida('Ana Ejemplo', 3)).toEqual({ nombre: 'Ana Ejemplo', propiedades: 3 })
+    expect(muestraPermitida('Ana Ejemplo', 3)).toEqual({ nombre: 'Ana Ejemplo', propiedades: 3, imagenes: true })
     expect(muestraPermitida('<script>alert(1)</script>', 99)).toEqual(MUESTRA_POR_OMISION)
     expect(muestraPermitida('maria@cliente.real', '0')).toEqual(MUESTRA_POR_OMISION)
     expect(muestraPermitida(null, '2.5')).toEqual(MUESTRA_POR_OMISION)
@@ -169,8 +169,8 @@ describe('vista previa fiel', () => {
     expect(t.vista(MUESTRA_POR_OMISION).texto).toBe(real.texto)
   })
   it('el cambio de muestra cambia el contenido y sólo con datos de ejemplo', () => {
-    const uno = vistaPrevia('recomendaciones', { nombre: 'Ana Ejemplo', propiedades: 1 })!
-    const tres = vistaPrevia('recomendaciones', { nombre: 'Luis Ejemplo', propiedades: 3 })!
+    const uno = vistaPrevia('recomendaciones', { nombre: 'Ana Ejemplo', propiedades: 1, imagenes: false })!
+    const tres = vistaPrevia('recomendaciones', { nombre: 'Luis Ejemplo', propiedades: 3, imagenes: true })!
     expect(uno.html).toContain('Ana Ejemplo')
     expect(tres.html).toContain('Luis Ejemplo')
     expect(tres.html).toContain('Terreno de ejemplo C')

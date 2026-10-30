@@ -154,7 +154,7 @@ describe('datos de demostración', () => {
     mundo.tablas.correo_envios = muchos(6, 'servicio', 'entregado', '2026-10-28', 'pruebas')
     const j = await (await pedir('?dias=30&demo=1')).json()
     expect(j.origen.tipo).toBe('demostracion')
-    expect(j.origen.descripcion).toMatch(/DEMOSTRACIÓN/)
+    expect(j.origen.descripcion).toMatch(/DATOS DE EJEMPLO/)
     expect(mundo.consultas.filter((c) => c.tabla.startsWith('correo_'))).toEqual([])
     const real = await (await pedir('?dias=30')).json()
     expect(real.origen.tipo).toBe('real')
