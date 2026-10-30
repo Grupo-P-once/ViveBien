@@ -2,7 +2,7 @@
 -- Vive Bien · 64 — Centro de Ayuda: «¿Qué correos me manda VIVE BIEN y cómo los controlo?» (30-oct-2026)
 -- ESTADO: registrada en STAGING (vivebien-staging) pero SIN EFECTO: el Centro de Ayuda de staging está vacío (0 categorías), así que no insertó nada. NO está en producción.
 -- Va DESPUÉS del contenido de la 27 y del código; hay que VOLVER A EJECUTARLA cuando exista la categoría «privacidad-y-seguridad» (es idempotente).
--- Un artículo nuevo en «Privacidad y seguridad». Idempotente. Reversa: 64-ayuda-correos-y-preferencias.REVERTIR.sql
+-- Dos artículos nuevos: «¿Qué correos me manda VIVE BIEN y cómo los controlo?» (Privacidad y seguridad) y «¿Cómo activo o desactivo los avisos por correo?» (Búsquedas y alertas). Idempotente. Reversa: 64-ayuda-correos-y-preferencias.REVERTIR.sql
 --
 -- Describe lo que el código YA hace (rama f0-correo-d80): correos de servicio vs. promocionales, baja con supresión, registro de envíos y plazos.
 -- NO está validado por asesoría legal: debe coincidir con el Aviso de Privacidad cuando éste se publique (ver MKT-34).
@@ -47,6 +47,43 @@ select a.id, f.tipo, f.clave, null
   join public.knowledge_categories c on c.id = a.categoria_id and c.slug = 'privacidad-y-seguridad'
  cross join (values ('product', 'correo.biblioteca'), ('api', '/api/correo/baja'), ('legal', 'privacidad')) as f(tipo, clave)
  where a.slug = 'correos-de-vive-bien-y-tus-preferencias'
+on conflict (articulo_id, tipo, clave) do nothing;
+
+-- ── Segundo artículo: cómo activar y desactivar los avisos por correo (engranaje del portal) ─────────────────────────────────────────────
+insert into public.knowledge_articles
+  (categoria_id, slug, titulo, resumen, cuerpo, ambito, estado, estado_producto, aviso, prioridad,
+   publicado_por, publicado_en, revisado_en)
+select c.id,
+       'activar-o-desactivar-avisos-por-correo',
+       '¿Cómo activo o desactivo los avisos por correo?',
+       'Dónde está el engranaje de ajustes, qué avisos puedes controlar y cómo dejar de recibirlos desde el propio correo.',
+       $c$Los avisos por correo de VIVE BIEN vienen **activados** cuando creas tu cuenta, y tú decides cuáles quieres. Los cambios se guardan al momento y puedes hacerlos cuando quieras. Si tu cuenta ya existía antes de este cambio, conserva lo que tenías elegido.
+
+**Cómo activarlos o desactivarlos.** Entra a tu portal y pulsa el **engranaje pequeño** que está en la esquina superior derecha de la pantalla. Se abre «Cómo quiero que me avisen». Marca la casilla para activar un aviso y desmárcala para desactivarlo. Para cerrar el panel, pulsa Escape o haz clic fuera de él.
+
+**Qué puedes controlar.** **Propiedades nuevas de mis búsquedas:** un resumen por correo cuando haya algo nuevo en las búsquedas donde pulsaste «Avisarme». **Baja de precio:** un correo cuando baje de precio una propiedad en la que pulsaste la campana. **Cambios de Términos o Aviso de Privacidad:** solo cuando cambien las condiciones de tu cuenta.
+
+**Desde el propio correo.** Cada aviso trae un enlace para dejar de recibirlo con un solo clic, sin entrar a tu cuenta.
+
+**Siempre en tu portal.** Aunque desactives el correo, tus avisos siguen apareciendo en **Mis alertas**, dentro del portal.
+
+**Promociones.** Son aparte y no vienen activadas: solo se enviarían si tú das un consentimiento expreso y separado. Puedes leer más en el [Aviso de Privacidad](/privacidad).$c$,
+       'publica', 'PUBLICADO', 'disponible', null, 2,
+       'contenido-correos-30-oct-2026', now(), current_date
+  from public.knowledge_categories c
+ where c.slug = 'busquedas-y-alertas'
+on conflict (categoria_id, slug) do update set
+  titulo = excluded.titulo, resumen = excluded.resumen, cuerpo = excluded.cuerpo,
+  estado = excluded.estado, estado_producto = excluded.estado_producto, aviso = excluded.aviso,
+  prioridad = excluded.prioridad, ambito = excluded.ambito,
+  revisado_en = excluded.revisado_en, actualizado_en = now();
+
+insert into public.knowledge_article_sources (articulo_id, tipo, clave, version_fuente)
+select a.id, f.tipo, f.clave, null
+  from public.knowledge_articles a
+  join public.knowledge_categories c on c.id = a.categoria_id and c.slug = 'busquedas-y-alertas'
+ cross join (values ('component', 'portal/AjustesDeAvisos'), ('route', '/api/portal/preferencias'), ('api', '/api/avisos/baja')) as f(tipo, clave)
+ where a.slug = 'activar-o-desactivar-avisos-por-correo'
 on conflict (articulo_id, tipo, clave) do nothing;
 
 commit;

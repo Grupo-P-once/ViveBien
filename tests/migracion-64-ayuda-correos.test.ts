@@ -62,6 +62,43 @@ describe('migración 64: artículo de correos', () => {
   })
 })
 
+describe('migración 64: artículo «¿Cómo activo o desactivo los avisos por correo?»', () => {
+  const SLUG2 = 'activar-o-desactivar-avisos-por-correo'
+  const art2 = async () => (await db.query<{ cuerpo: string; estado: string; estado_producto: string; aviso: string | null; ambito: string }>(
+    `select a.cuerpo, a.estado, a.estado_producto, a.aviso, a.ambito from public.knowledge_articles a join public.knowledge_categories c on c.id = a.categoria_id and c.slug = 'busquedas-y-alertas' where a.slug = $1`, [SLUG2])).rows[0]
+
+  it('queda publicado en «Búsquedas y alertas», público y «disponible» (la función existe)', async () => {
+    const a = await art2()
+    expect(a).toMatchObject({ estado: 'PUBLICADO', estado_producto: 'disponible', ambito: 'publica', aviso: null })
+  })
+  it('explica dónde está el engranaje, cómo activar y desactivar, qué se controla, la baja de un clic y que las promociones no vienen activadas', async () => {
+    const { cuerpo } = await art2()
+    for (const frag of ['vienen **activados**', '**engranaje pequeño**', 'esquina superior derecha', '«Cómo quiero que me avisen»', 'Marca la casilla para activar', 'desmárcala para desactivarlo', 'pulsa Escape', 'dejar de recibirlo con un solo clic', '**Mis alertas**', 'no vienen activadas', 'consentimiento expreso y separado', 'conserva lo que tenías elegido']) expect(cuerpo, frag).toContain(frag)
+    expect(cuerpo).not.toMatch(/^\s*[-*+] |^\s*\d+\. |\|.*\||<[a-z]/im) // solo párrafos, negritas y enlaces
+  })
+  it('lo que dice coincide con el código: el engranaje, sus textos y la baja de un clic existen', () => {
+    const g = leer('src/components/portal/AjustesDeAvisos.tsx')
+    expect(g).toContain('Ajustes de avisos por correo')
+    expect(g).toContain("e.key === 'Escape'")
+    expect(leer('src/components/portal/Pantalla.tsx')).toContain('<AjustesDeAvisos />')
+    expect(leer('src/components/portal/PreferenciasDeAvisos.tsx')).toContain('Cómo quiero que me avisen')
+    expect(leer('src/app/api/avisos/baja/route.ts')).toMatch(/correo_alertas: false/)
+  })
+  it('registra sus fuentes y es idempotente', async () => {
+    await db.exec(leer('supabase/64-ayuda-correos-y-preferencias.sql'))
+    const n = await db.query<{ n: number }>(`select count(*)::int as n from public.knowledge_articles where slug = $1`, [SLUG2])
+    expect(n.rows[0].n).toBe(1)
+    const f = await db.query<{ tipo: string }>(`select s.tipo from public.knowledge_article_sources s join public.knowledge_articles a on a.id = s.articulo_id where a.slug = $1 order by 1`, [SLUG2])
+    expect(f.rows.map((x) => x.tipo)).toEqual(['api', 'component', 'route'])
+  })
+  it('la reversa quita los dos artículos', async () => {
+    await db.exec(leer('supabase/64-ayuda-correos-y-preferencias.REVERTIR.sql'))
+    expect(await art2()).toBeUndefined()
+    expect(await articulo()).toBeUndefined()
+    await db.exec(leer('supabase/64-ayuda-correos-y-preferencias.sql'))
+  })
+})
+
 describe('borrador del Aviso de Privacidad (correos)', () => {
   const p = leer('src/app/privacidad/page.tsx')
   it('describe los correos de servicio, la baja con supresión, el registro de envíos y a Resend', () => {

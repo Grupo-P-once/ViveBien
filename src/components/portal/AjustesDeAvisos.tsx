@@ -25,7 +25,7 @@ export default function AjustesDeAvisos() {
   }, [abierto])
 
   return (
-    <div ref={raiz} className="absolute right-3 top-2 z-30 sm:right-5" data-ajustes-avisos>
+    <div ref={raiz} className="absolute right-3 top-2 z-[9100] sm:right-5" data-ajustes-avisos>
       <button
         ref={boton}
         type="button"
