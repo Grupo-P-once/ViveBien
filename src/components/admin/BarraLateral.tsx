@@ -41,7 +41,8 @@ const MENU: Entrada[] = [
   { titulo: 'Usuarios', icono: Users, hijos: [{ titulo: 'Todos los usuarios', enlace: '/admin/usuarios' }] },
   { titulo: 'Comisiones', icono: Receipt, enlace: '/admin/comisiones' },
   { titulo: 'Actividad', icono: History, enlace: '/admin/actividad' },
-  { titulo: 'Marketing y correos', icono: Megaphone, enlace: '/admin/marketing' },
+  // Marketing es el grupo de los canales de promoción; hoy solo existe «Correos». Meta, Google Ads y publicidad en IA se agregan aquí cuando existan (sin enlaces vacíos).
+  { titulo: 'Marketing', icono: Megaphone, hijos: [{ titulo: 'Correos', enlace: '/admin/marketing' }] },
 ]
 
 /** «Comisiones» para Super Admin: los cierres y, debajo, la contabilidad de lo que entra y lo que sale (25-oct-2026). */

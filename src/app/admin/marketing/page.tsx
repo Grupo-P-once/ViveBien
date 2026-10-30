@@ -80,7 +80,7 @@ export default function PanelMarketing() {
   return (
     <main className="mx-auto w-full max-w-[1100px] space-y-8 px-4 py-8">
       <header>
-        <h1 className="font-heading text-2xl font-bold">Marketing y correos</h1>
+        <h1 className="font-heading text-2xl font-bold">Marketing · Correos</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Primera versión, <strong>solo lectura</strong>. El editor de plantillas, las audiencias, la programación, la aprobación y las campañas <strong>todavía no existen</strong>; no hay ningún botón para enviar.
         </p>
