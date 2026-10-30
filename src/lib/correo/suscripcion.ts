@@ -148,7 +148,8 @@ export async function fijarMarketingDeCuenta(
 export async function aplicarEventoProveedor(db: DbCorreo, svixId: string, evento: unknown): Promise<'aplicado' | 'duplicado' | 'ignorado' | 'error'> {
   const e = (evento && typeof evento === 'object' ? evento : {}) as { type?: unknown; data?: Record<string, unknown> }
   const tipo = typeof e.type === 'string' ? e.type : ''
-  if (!['email.bounced', 'email.complained', 'email.suppressed', 'email.delivered'].includes(tipo)) return 'ignorado'
+  // Aperturas y clics (email.opened / email.clicked) NO se guardan a propósito: el seguimiento es opcional en Resend, está apagado por omisión y es aproximado.
+  if (!['email.bounced', 'email.complained', 'email.suppressed', 'email.delivered', 'email.failed'].includes(tipo)) return 'ignorado'
   const d = e.data ?? {}
   const para = Array.isArray(d.to) ? d.to[0] : d.to
   const bounce = (d.bounce && typeof d.bounce === 'object' ? d.bounce : {}) as Record<string, unknown>

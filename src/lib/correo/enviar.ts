@@ -22,6 +22,11 @@ export type DbCorreo = {
   from: (tabla: string) => any
 }
 
+/** Remitente de un correo: el MISMO cálculo lo usa el envío real y la vista previa del panel (así no pueden diferir). */
+export function remitenteDe(categoria: CategoriaCorreo, env: EntornoCorreo = entornoCorreo()): string {
+  return (categoria === 'marketing' ? env.remitenteMarketing : null) || env.remitente || NEGOCIO.remitente
+}
+
 export type SolicitudCorreo = {
   /** Única por correo lógico: `bienvenida/<uid>`, `reco/<suscriptor>/<día>`… Es la base de la idempotencia. */
   clave: string
@@ -141,7 +146,7 @@ export async function enviarCorreo(db: DbCorreo, s: SolicitudCorreo, o: Opciones
   }
 
   const base: Record<string, unknown> = {
-    from: (s.categoria === 'marketing' ? env.remitenteMarketing : null) || env.remitente || NEGOCIO.remitente,
+    from: remitenteDe(s.categoria, env),
     to: [para],
     reply_to: s.responderA || NEGOCIO.email,
     subject: s.asunto,

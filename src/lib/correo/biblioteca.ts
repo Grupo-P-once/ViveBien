@@ -1,4 +1,6 @@
 import { SITIO } from '../sitio'
+import { NEGOCIO } from '../config/negocio'
+import { remitenteDe } from './enviar'
 import { correoDeAlertas, correoDeBajaDePrecio, correoLegal, type NotificacionNueva } from '../avisos-cliente'
 import { plantillaBienvenida, plantillaPrimerasPropiedades, plantillaRecomendaciones, plantillaSolicitudPublicador, type TarjetaCorreo } from './plantillas'
 
@@ -17,13 +19,31 @@ export type TipoDeCorreo = {
   estado: EstadoDeEnvio
   /** Qué hace que este correo salga (disparador real en el código). */
   disparador: string
-  vista: () => { asunto: string; html: string; texto: string }
+  vista: (m: Muestra) => { asunto: string; html: string; texto: string }
+}
+
+/**
+ * Lo único que el administrador puede cambiar en una vista previa. Es una LISTA BLANCA: el servidor ignora cualquier otro valor, así que la vista
+ * previa no puede pedir una persona, una propiedad ni un enlace reales (no hay nada que leer de la base).
+ */
+export const NOMBRES_DE_MUESTRA = ['Persona Sintética', 'Ana Ejemplo', 'Luis Ejemplo'] as const
+export const MAX_PROPIEDADES_DE_MUESTRA = 3
+export type Muestra = { nombre: string; propiedades: number }
+export const MUESTRA_POR_OMISION: Muestra = { nombre: NOMBRES_DE_MUESTRA[0], propiedades: 2 }
+
+/** Normaliza lo que llega del navegador a una muestra permitida (cualquier valor fuera de la lista vuelve al valor por omisión). */
+export function muestraPermitida(nombre: unknown, propiedades: unknown): Muestra {
+  const n = (NOMBRES_DE_MUESTRA as readonly string[]).find((x) => x === nombre) ?? MUESTRA_POR_OMISION.nombre
+  const p = Number(propiedades)
+  return { nombre: n, propiedades: Number.isInteger(p) && p >= 1 && p <= MAX_PROPIEDADES_DE_MUESTRA ? p : MUESTRA_POR_OMISION.propiedades }
 }
 
 const PROPIEDADES_SINTETICAS: TarjetaCorreo[] = [
   { titulo: 'Nave industrial de ejemplo A', url: `${SITIO}/propiedades`, foto: null, lugar: 'Zona de ejemplo, León', precio: '$12,000,000', etiqueta: 'Nave · En venta', datos: ['1,800 m²', 'Altura libre 10 m'] },
   { titulo: 'Casa de ejemplo B', url: `${SITIO}/propiedades`, foto: null, lugar: 'Colonia de ejemplo, León', precio: '$3,200,000', etiqueta: 'Casa · En venta', datos: ['3 recámaras', '2 baños'] },
+  { titulo: 'Terreno de ejemplo C', url: `${SITIO}/propiedades`, foto: null, lugar: 'Zona de ejemplo, León', precio: '$1,450,000', etiqueta: 'Terreno · En venta', datos: ['600 m²'] },
 ]
+const tarjetas = (m: Muestra) => PROPIEDADES_SINTETICAS.slice(0, m.propiedades)
 const AVISO_PRECIO: NotificacionNueva = { uid: 'sintetico', tipo: 'baja_de_precio', titulo: 'Bajó de precio: Casa de ejemplo B', cuerpo: 'Antes $3,400,000, ahora $3,200,000.', enlace: '/propiedades', busqueda_id: null, propiedad_id: null, clave: 'sintetico/1' }
 const AVISO_LEGAL: NotificacionNueva = { uid: 'sintetico', tipo: 'legal', titulo: 'Actualizamos los Términos y Condiciones', cuerpo: 'Texto de ejemplo del aviso. Versión de ejemplo.', enlace: '/terminos', busqueda_id: null, propiedad_id: null, clave: 'sintetico/2' }
 const PREFERENCIAS = `${SITIO}/portal/configuracion`
@@ -33,27 +53,56 @@ const aVista = (c: { asunto: string; html: string; texto: string }) => ({ asunto
 
 export const BIBLIOTECA: TipoDeCorreo[] = [
   { id: 'alertas', nombre: 'Alertas de búsquedas guardadas', categoria: 'servicio', estado: 'envia_hoy', disparador: 'Tarea diaria, solo con el consentimiento propio de la persona (apagado por defecto)',
-    vista: () => aVista(correoDeAlertas({ nombre: 'Persona Sintética', grupos: [{ busquedaNombre: 'Naves en venta (ejemplo)', href: '/propiedades', items: [{ titulo: 'Nave industrial de ejemplo A', cuerpo: '1,800 m²', url: `${SITIO}/propiedades` }] }], sitio: SITIO, urlBaja: BAJA_INERTE, urlPreferencias: PREFERENCIAS })) },
+    vista: (m) => aVista(correoDeAlertas({ nombre: m.nombre, grupos: [{ busquedaNombre: 'Naves en venta (ejemplo)', href: '/propiedades', items: [{ titulo: 'Nave industrial de ejemplo A', cuerpo: '1,800 m²', url: `${SITIO}/propiedades` }] }], sitio: SITIO, urlBaja: BAJA_INERTE, urlPreferencias: PREFERENCIAS })) },
   { id: 'baja_de_precio', nombre: 'Baja de precio', categoria: 'servicio', estado: 'envia_hoy', disparador: 'Tarea diaria, solo con el consentimiento propio y la campana de esa propiedad (apagado por defecto)',
-    vista: () => aVista(correoDeBajaDePrecio({ nombre: 'Persona Sintética', avisos: [AVISO_PRECIO], sitio: SITIO, urlBaja: BAJA_INERTE, urlPreferencias: PREFERENCIAS })) },
+    vista: (m) => aVista(correoDeBajaDePrecio({ nombre: m.nombre, avisos: [AVISO_PRECIO], sitio: SITIO, urlBaja: BAJA_INERTE, urlPreferencias: PREFERENCIAS })) },
   { id: 'legal', nombre: 'Aviso de cambio de Términos o Aviso de Privacidad', categoria: 'servicio', estado: 'envia_hoy', disparador: 'Cuando se sube una versión legal y la persona aceptó una anterior (texto y tratamiento pendientes de asesoría legal)',
-    vista: () => aVista(correoLegal({ nombre: 'Persona Sintética', avisos: [AVISO_LEGAL], sitio: SITIO, urlPreferencias: PREFERENCIAS })) },
+    vista: (m) => aVista(correoLegal({ nombre: m.nombre, avisos: [AVISO_LEGAL], sitio: SITIO, urlPreferencias: PREFERENCIAS })) },
   { id: 'bienvenida', nombre: 'Bienvenida a una cuenta nueva', categoria: 'transaccional', estado: 'codigo_apagado', disparador: 'Alta de cuenta; apagado por defecto (CORREO_TRANSACCIONAL)',
-    vista: () => aVista(plantillaBienvenida({ nombre: 'Persona Sintética', urlPreferencias: PREFERENCIAS, resumen: { guardadas: 2, busquedas: 1, citas: 0 }, propiedades: PROPIEDADES_SINTETICAS })) },
+    vista: (m) => aVista(plantillaBienvenida({ nombre: m.nombre, urlPreferencias: PREFERENCIAS, resumen: { guardadas: 2, busquedas: 1, citas: 0 }, propiedades: tarjetas(m) })) },
   { id: 'solicitud_publicador', nombre: 'Confirmación de solicitud para publicar', categoria: 'transaccional', estado: 'codigo_apagado', disparador: 'Solicitud «Quiero publicar»; apagado por defecto (CORREO_TRANSACCIONAL)',
-    vista: () => aVista(plantillaSolicitudPublicador({ nombre: 'Persona Sintética', referencia: 'SOL-EJEMPLO' })) },
+    vista: (m) => aVista(plantillaSolicitudPublicador({ nombre: m.nombre, referencia: 'SOL-EJEMPLO' })) },
   { id: 'primeras_propiedades', nombre: 'Primeras propiedades (suscripción)', categoria: 'marketing', estado: 'apagado_por_texto_legal', disparador: 'Suscripción pública: APLAZADA; sin texto legal aprobado nada de marketing sale',
-    vista: () => aVista(plantillaPrimerasPropiedades({ nombre: 'Persona Sintética', resumen: 'naves en venta en León', propiedades: PROPIEDADES_SINTETICAS, urlConfirmar: BAJA_INERTE, urlBaja: BAJA_INERTE, diasValidez: 7 })) },
+    vista: (m) => aVista(plantillaPrimerasPropiedades({ nombre: m.nombre, resumen: 'naves en venta en León', propiedades: tarjetas(m), urlConfirmar: BAJA_INERTE, urlBaja: BAJA_INERTE, diasValidez: 7 })) },
   { id: 'recomendaciones', nombre: 'Recomendaciones de propiedades', categoria: 'marketing', estado: 'apagado_por_texto_legal', disparador: 'Digest periódico: APAGADO por una constante de código hasta tener texto legal y consentimiento aprobados',
-    vista: () => aVista(plantillaRecomendaciones({ nombre: 'Persona Sintética', propiedades: PROPIEDADES_SINTETICAS, motivo: 'Elegimos estas propiedades según lo que pediste (ejemplo).', urlBaja: BAJA_INERTE, urlPreferencias: PREFERENCIAS })) },
+    vista: (m) => aVista(plantillaRecomendaciones({ nombre: m.nombre, propiedades: tarjetas(m), motivo: 'Elegimos estas propiedades según lo que pediste (ejemplo).', urlBaja: BAJA_INERTE, urlPreferencias: PREFERENCIAS })) },
 ]
 
 /** Correos que existen pero cuya plantilla está escrita DENTRO del emisor (no se pueden previsualizar sin refactorizar el emisor). */
-export const SIN_VISTA_PREVIA = ['Aviso interno de nuevo contacto (lead)', 'Invitación al panel', '14 tipos de cita (citas en línea apagadas)'] as const
+export const SIN_VISTA_PREVIA: ReadonlyArray<{ nombre: string; motivo: string }> = [
+  { nombre: 'Aviso interno de nuevo contacto (lead)', motivo: 'Su plantilla está escrita dentro del emisor, mezclada con los datos reales del contacto; mostrarla exigiría ejecutarla con datos reales o separarla en una plantilla (refactor pendiente).' },
+  { nombre: 'Invitación al panel', motivo: 'Su plantilla está escrita dentro de la ruta que invita y usa un enlace con token; no hay una plantilla independiente que se pueda ejecutar con datos de muestra.' },
+  { nombre: '14 tipos de cita (citas en línea apagadas)', motivo: 'Sus plantillas dependen de una cita real (fechas, asesor, enlaces con token) y las citas en línea están apagadas; falta una versión con datos de muestra.' },
+]
 
-export function vistaPrevia(id: string): { asunto: string; html: string; texto: string } | null {
+export type VistaDeCorreo = {
+  asunto: string; html: string; texto: string
+  remitente: string; responderA: string; categoria: Categoria
+  /** Enlaces del HTML tal como saldrían (los de la muestra son sintéticos: nunca llevan token ni persona). */
+  enlaces: string[]
+  imagenes: string[]
+  muestra: Muestra
+}
+
+const unicos = (xs: string[]) => [...new Set(xs)]
+
+/**
+ * Vista previa FIEL: ejecuta la MISMA función de plantilla que usa el envío real (`correoDeAlertas`, `plantilla…`), el MISMO remitente (`remitenteDe`) y
+ * los mismos pies/enlaces de baja y preferencias; lo único distinto son los datos, que son de muestra. No lee la base ni dispara nada.
+ */
+export function vistaPrevia(id: string, muestra: Muestra = MUESTRA_POR_OMISION): VistaDeCorreo | null {
   const t = BIBLIOTECA.find((x) => x.id === id)
-  return t ? t.vista() : null
+  if (!t) return null
+  const c = t.vista(muestra)
+  return {
+    ...c,
+    remitente: remitenteDe(t.categoria),
+    responderA: NEGOCIO.email,
+    categoria: t.categoria,
+    enlaces: unicos([...c.html.matchAll(/href="([^"]+)"/g)].map((m) => m[1].replace(/&amp;/g, '&'))),
+    imagenes: unicos([...c.html.matchAll(/<img[^>]+src="([^"]+)"/g)].map((m) => m[1])),
+    muestra,
+  }
 }
 
 /**
