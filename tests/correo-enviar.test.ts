@@ -62,14 +62,29 @@ describe('la reserva en la base decide ANTES de llamar al proveedor', () => {
 
   it('un error de la base al reservar NO envía (falla cerrado) y no filtra datos', async () => {
     const mala: DbCorreo = { rpc: async () => ({ data: null, error: { message: 'relation x does not exist' } }), from: db.from }
-    expect(await enviarCorreo(mala, BASE, { entorno: ENV, fetch: fetchOk as unknown as typeof fetch })).toEqual({ estado: 'error', motivo: 'reserva' })
+    expect(await enviarCorreo(mala, BASE, { entorno: ENV, fetch: fetchOk as unknown as typeof fetch })).toEqual({ estado: 'error', motivo: 'cupo_sin_confirmar' })
     expect(fetchOk).not.toHaveBeenCalled()
     expect(JSON.stringify((console.error as unknown as { mock: { calls: unknown[] } }).mock.calls)).not.toContain('relation x')
   })
 
-  it('manda los límites internos a la reserva (70 al día, 2,000 al mes, 20 reservados)', async () => {
-    await enviarCorreo(db, BASE, { entorno: ENV, fetch: fetchOk as unknown as typeof fetch })
-    expect(llamadas[0].args).toMatchObject({ p_dia_max: 70, p_mes_max: 2000, p_reserva_transaccional: 20, p_email: 'persona@ejemplo.test', p_clave: 'bienvenida/uid-1', p_categoria: 'transaccional' })
+  it('SIN CUPO CONFIRMADO NO SE ENVÍA: la base que lanza, que no contesta o que contesta algo ilegible detienen el envío', async () => {
+    const casos: DbCorreo[] = [
+      { rpc: async () => { throw new Error('conexión caída') }, from: db.from },
+      { rpc: async () => ({ data: null, error: null }), from: db.from },
+      { rpc: async () => ({ data: 'texto', error: null }), from: db.from },
+      { rpc: async () => ({ data: { accion: 'enviar' }, error: null }), from: db.from },          // sin id
+      { rpc: async () => ({ data: { accion: 'quizá', id: 3 }, error: null }), from: db.from },    // acción desconocida
+    ]
+    for (const mala of casos) {
+      expect(await enviarCorreo(mala, BASE, { entorno: ENV, fetch: fetchOk as unknown as typeof fetch })).toEqual({ estado: 'error', motivo: 'cupo_sin_confirmar' })
+    }
+    expect(fetchOk).not.toHaveBeenCalled()
+  })
+
+  it('manda a la reserva sólo la rebanada (produccion/pruebas), NUNCA los topes: esos viven fijos en la base', async () => {
+    await enviarCorreo(db, BASE, { entorno: ENV, fetch: fetchOk as unknown as typeof fetch, entornoCupo: 'pruebas' })
+    expect(llamadas[0].args).toEqual({ p_clave: 'bienvenida/uid-1', p_categoria: 'transaccional', p_tipo: 'bienvenida', p_email: 'persona@ejemplo.test', p_suscriptor: null, p_props: null, p_entorno: 'pruebas' })
+    expect(Object.keys(llamadas[0].args).some((k) => /max|reserva_trans|tope/.test(k))).toBe(false)
   })
 })
 

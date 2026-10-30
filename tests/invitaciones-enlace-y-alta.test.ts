@@ -1,4 +1,13 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { crearLibro, type Libro } from './dobles/libro-cupo'
+
+// Todo correo reserva cupo en el libro (migración 62 REAL en PGlite): ningún envío de prueba se salta la cuenta del plan gratuito.
+const libroH = vi.hoisted(() => ({ db: null as unknown }))
+vi.mock('../src/lib/correo/libro', () => ({ dbDelLibro: () => libroH.db }))
+let libro: Libro
+beforeAll(async () => { libro = await crearLibro(); libroH.db = libro.db }, 60_000)
+beforeEach(async () => { await libro.vaciar() })
+afterAll(async () => { await libro?.cerrar() })
 
 /**
  * E-30 — lo que rodea a la aplicación de la invitación:

@@ -3,9 +3,11 @@ import { useCallback, useEffect, useState } from 'react'
 import { useSesion } from '@/components/admin/sesion'
 
 /**
- * «Recomendaciones por correo» en la Configuración del portal (D-80). Aceptar recibir publicidad es una decisión APARTE de
- * crear la cuenta: arranca desactivada, con el texto exacto y la versión que se aceptan. Si la función no está activa en el
- * servidor (`disponible: false`) no se pinta nada.
+ * «Promociones por correo»: el consentimiento comercial (D-80), como UN GRUPO APARTE dentro de `PreferenciasDeAvisos` (la pantalla única de
+ * correo de la persona, visible en Alertas y en Configuración). Aceptar publicidad es una decisión DISTINTA de pedir avisos y de crear la cuenta:
+ * arranca desactivada, con el texto exacto y la versión que se aceptan, y se guarda por SU propia ruta (`/api/correo/preferencias`), nunca junto a
+ * los avisos de servicio (`/api/portal/preferencias`). Mientras no exista texto legal aprobado el servidor responde `disponible: false` y este
+ * grupo no se pinta.
  */
 type Estado = { disponible: boolean; activa: boolean; texto: string }
 
@@ -34,8 +36,8 @@ export default function PreferenciaCorreo() {
 
   if (!estado?.disponible) return null
   return (
-    <section aria-labelledby="pref-correo" className="mt-6 rounded-xl border bg-card p-5">
-      <h2 id="pref-correo" className="font-heading text-base font-bold">Recomendaciones por correo</h2>
+    <section aria-labelledby="pref-correo" className="mt-5 rounded-xl border border-dashed bg-background p-4" data-grupo-promociones>
+      <h3 id="pref-correo" className="font-heading text-sm font-semibold">Promociones (opcional, aparte de tus avisos)</h3>
       <p className="mt-1 text-sm text-muted-foreground">{estado.texto}</p>
       <label className="mt-3 flex items-start gap-3 text-sm">
         <input type="checkbox" className="mt-1 size-4" checked={estado.activa} disabled={guardando} onChange={(e) => cambiar(e.target.checked)} />

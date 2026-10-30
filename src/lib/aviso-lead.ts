@@ -1,6 +1,6 @@
 import { CORREO_CONTACTO } from './contacto'
 import { NEGOCIO } from './config/negocio'
-import { llamarResend } from './correo/resend'
+import { claveResend, claveUnica, enviarPorEmisorUnico } from './correo/emisor'
 
 /**
  * Avisar de que entró un lead.
@@ -55,7 +55,7 @@ export async function avisarDeLead(lead: Lead): Promise<Resultado> {
   // salto de línea, y entonces la cabecera `Authorization` sale rota y Resend
   // la rechaza aunque la clave sea correcta. Pasó igual con el token de
   // Telegram (V-1.1.51) y con CRON_SECRET: media hora de diagnóstico cada vez.
-  const clave = process.env.RESEND_API_KEY?.trim()
+  const clave = claveResend()
   if (!clave) {
     // No es un error: es que todavía no se ha configurado. Se registra para
     // que quede rastro de cuántos avisos se están perdiendo.
@@ -109,9 +109,13 @@ export async function avisarDeLead(lead: Lead): Promise<Resultado> {
   `
 
   try {
-    // Pasa por el único emisor (`correo/resend.ts`): con CORREO_MODO_PRUEBAS=1 el destino y la respuesta se fijan ahí.
-    const res = await llamarResend({
+    // Pasa por el emisor único (`correo/emisor.ts`): reserva cupo del plan antes de salir y, con CORREO_MODO_PRUEBAS=1, fija destino y respuesta.
+    const res = await enviarPorEmisorUnico({
       apiKey: clave,
+      clave: claveUnica('lead'),
+      categoria: 'transaccional',
+      tipo: 'aviso_lead',
+      para: CORREO_CONTACTO,
       cuerpo: {
         from: process.env.RESEND_FROM || NEGOCIO.remitente,
         to: [CORREO_CONTACTO],
@@ -125,9 +129,8 @@ export async function avisarDeLead(lead: Lead): Promise<Resultado> {
     })
 
     if (!res.ok) {
-      const cuerpo = await res.text().catch(() => '')
-      console.error('[aviso-lead] Resend rechazó el envío:', res.status, cuerpo.slice(0, 200))
-      return { enviado: false, motivo: 'fallo', detalle: String(res.status) }
+      console.error('[aviso-lead] el envío no salió:', res.estado, res.status ?? '', (res.detalle ?? '').slice(0, 200))
+      return { enviado: false, motivo: 'fallo', detalle: String(res.status ?? res.estado) }
     }
 
     return { enviado: true }

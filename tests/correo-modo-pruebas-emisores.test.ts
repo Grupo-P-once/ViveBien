@@ -1,6 +1,15 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { crearLibro, type Libro } from './dobles/libro-cupo'
+
+// Todo correo reserva cupo en el libro (migración 62 REAL en PGlite): ningún envío de prueba se salta la cuenta del plan gratuito.
+const libroH = vi.hoisted(() => ({ db: null as unknown }))
+vi.mock('../src/lib/correo/libro', () => ({ dbDelLibro: () => libroH.db }))
+let libro: Libro
+beforeAll(async () => { libro = await crearLibro(); libroH.db = libro.db }, 60_000)
+beforeEach(async () => { await libro.vaciar() })
+afterAll(async () => { await libro?.cerrar() })
 import { DESTINO_PRUEBAS } from '../src/lib/correo/config'
-import { cuerpoDePruebas, ENLACE_INERTE, exigirSoloDestinoDePruebas, llamarResend, modoPruebasActivo, neutralizarEnlaces, PREFIJO_PRUEBA } from '../src/lib/correo/resend'
+import { cuerpoDePruebas, ENLACE_INERTE, exigirSoloDestinoDePruebas, llamarResend, modoPruebasActivo, neutralizarEnlaces, MARCA_PRUEBA } from '../src/lib/correo/resend'
 import { avisarDeLead } from '../src/lib/aviso-lead'
 import { enviarInvitacion } from '../src/lib/invitacion-correo'
 import { mandar } from '../src/lib/citas/enviar'
@@ -50,7 +59,7 @@ describe('con CORREO_MODO_PRUEBAS=1 cada emisor entrega SOLO al destino de prueb
       expect(peticiones[0].url).toBe('https://api.resend.com/emails')
       expect(c.to).toEqual([DESTINO_PRUEBAS])
       expect(c.reply_to).toBe('informes@vivebienn.com')
-      expect(String(c.subject).startsWith(PREFIJO_PRUEBA)).toBe(true)
+      expect(String(c.subject).startsWith(MARCA_PRUEBA)).toBe(true)
       expect(Object.keys(c).filter((k) => !['from', 'to', 'reply_to', 'subject', 'html', 'text', 'headers'].includes(k))).toEqual([])
       expect(Object.keys(c.headers as object)).toEqual(['X-Vive-Bien-Modo'])
       expect(JSON.stringify({ to: c.to, reply_to: c.reply_to, headers: c.headers })).not.toContain('cliente-real')
@@ -60,9 +69,12 @@ describe('con CORREO_MODO_PRUEBAS=1 cada emisor entrega SOLO al destino de prueb
       for (const v of ['', '0', 'true', ' 1']) {
         vi.stubEnv('CORREO_MODO_PRUEBAS', v)
         peticiones = []
+        await libro.vaciar()
         await emitir()
-        expect(peticiones[0].cuerpo.to).not.toEqual([DESTINO_PRUEBAS])
-        expect(String(peticiones[0].cuerpo.subject).startsWith(PREFIJO_PRUEBA)).toBe(false)
+        // El aviso de leads va, de todos modos, al buzón institucional, que es también el destino de pruebas: ahí lo que distingue es el asunto y la cabecera.
+        if (nombre !== 'avisarDeLead') expect(peticiones[0].cuerpo.to).not.toEqual([DESTINO_PRUEBAS])
+        expect(String(peticiones[0].cuerpo.subject).startsWith(MARCA_PRUEBA)).toBe(false)
+        expect(JSON.stringify(peticiones[0].cuerpo.headers ?? {})).not.toContain('X-Vive-Bien-Modo')
       }
     })
   }

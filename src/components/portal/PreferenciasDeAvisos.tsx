@@ -5,12 +5,17 @@ import { BellRing, Loader2, ShieldCheck } from 'lucide-react'
 import { toast } from 'sonner'
 import { useSesion } from '@/components/admin/sesion'
 import { fechaCorta } from '@/lib/admin/formato'
+import PreferenciaCorreo from '@/components/correo/PreferenciaCorreo'
 
 /**
  * «Cómo quiero que me avisen» (28-oct-2026): las dos preferencias de correo del cliente, con su consentimiento a la vista.
  *  · Alertas de búsquedas por correo: NACEN APAGADAS. Encenderlas es el consentimiento (queda la fecha). Un solo resumen, nunca un correo por propiedad, con baja en un clic.
  *  · Cambios de Términos y Aviso de Privacidad: son avisos de servicio y nacen encendidos; se pueden apagar.
  * Lo que se muestra es lo que respondió el servidor (no lo que se tocó).
+ *
+ * ES LA PANTALLA ÚNICA DE CORREO (F0, 29-oct-2026): se muestra en Alertas y en Configuración. Debajo de los avisos de servicio hay un GRUPO APARTE de
+ * promociones (`PreferenciaCorreo`): otro consentimiento, otra ruta, otra tabla; nunca se guarda junto a los avisos. Mientras no haya texto legal aprobado
+ * ese grupo no se pinta (el servidor responde `disponible: false`).
  */
 type Preferencias = { correoAlertas: boolean; correoLegal: boolean; correoPrecio?: boolean; consentimientoEn: string | null; consentimientoPrecioEn?: string | null }
 
@@ -69,6 +74,7 @@ export default function PreferenciasDeAvisos() {
           <p className="flex items-start gap-2 text-xs text-muted-foreground"><ShieldCheck className="mt-0.5 size-3.5 shrink-0" aria-hidden />Tu correo solo se usa para esto. Puedes cambiarlo cuando quieras.</p>
         </div>
       )}
+      <PreferenciaCorreo />
     </section>
   )
 }

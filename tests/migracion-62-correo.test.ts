@@ -2,9 +2,10 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { PGlite } from '@electric-sql/pglite'
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
+import { CUPO_POR_ENTORNO, CUPO_TOTAL } from '../src/lib/correo/config'
 
 /**
- * Migración 36 (D-80): suscripciones, envíos, supresión y presupuesto de correo.
+ * Migración 62 (era la 36 de D-80): suscripciones, envíos, supresión y CUPO DURO de correo.
  * Todo en PGlite, en memoria: NADA toca producción. La migración está PREPARADA, no aplicada.
  */
 const sql = (n: string) => readFileSync(path.join(__dirname, '..', 'supabase', n), 'utf8')
@@ -17,8 +18,12 @@ const fn = async (texto: string, params: unknown[]) => (await db.query<{ r: Reco
 const PREFS = { operacion: 'venta', tipos: ['nave'], zonas: ['León'] }
 const suscribir = (email: string, version: string | null = 'marketing-test', prefs: unknown = PREFS) =>
   fn('public.correo_suscribir($1, $2, $3::jsonb, $4, $5)', [email, 'Ana', JSON.stringify(prefs), 'recomendaciones', version])
-const reservar = (clave: string, cat: string, email: string, sus: string | null = null, dia = 70, mes = 2000, reserva = 20) =>
-  fn('public.correo_reservar_envio($1, $2, $3, $4, $5::uuid, $6::text[], $7, $8, $9)', [clave, cat, 'prueba', email, sus, null, dia, mes, reserva])
+const reservar = (clave: string, cat: string, email: string, sus: string | null = null, entorno = 'produccion') =>
+  fn('public.correo_reservar_envio($1, $2, $3, $4, $5::uuid, $6::text[], $7)', [clave, cat, 'prueba', email, sus, null, entorno])
+/** Llena el libro con `n` envíos de hoy (para probar los topes sin repetir cien llamadas). */
+const llenar = (n: number, categoria: string, entorno: string, estado = 'enviado') =>
+  db.query(`insert into public.correo_envios (clave, categoria, tipo, email_norm, estado, entorno)
+            select 'lleno/' || $1 || '/' || $2 || '/' || $3 || '/' || g || '/' || clock_timestamp()::text, $1, 'x', 'lleno@ejemplo.test', $2, $3 from generate_series(1, $4) g`, [categoria, estado, entorno, n])
 const evento = (id: string, tipo: string, email: string, resend: string | null = null, permanente = false) =>
   fn('public.correo_evento($1, $2, $3, $4, $5)', [id, tipo, email, resend, permanente])
 
@@ -32,13 +37,13 @@ beforeAll(async () => {
   db = new PGlite()
   await db.exec(ROLES)
   await db.exec('create table public.tabla_ajena (id int primary key); insert into public.tabla_ajena values (1);')
-  await db.exec(sql('36-correo-suscripciones.sql'))
+  await db.exec(sql('62-correo-suscripciones.sql'))
 }, 90_000)
 afterAll(async () => { await db?.close() })
 
 describe('la migración aplica y se puede reaplicar', () => {
   it('es idempotente y deja las 4 tablas con RLS activado y SIN políticas', async () => {
-    await db.exec(sql('36-correo-suscripciones.sql'))
+    await db.exec(sql('62-correo-suscripciones.sql'))
     const t = await q<{ relname: string; relrowsecurity: boolean }>(
       `select relname, relrowsecurity from pg_class where relnamespace = 'public'::regnamespace and relname like 'correo\\_%' and relkind = 'r' order by 1`)
     expect(t.map((x) => x.relname)).toEqual(['correo_envios', 'correo_supresiones', 'correo_suscriptores', 'correo_webhook_vistos'])
@@ -211,41 +216,143 @@ describe('reservar un envío: idempotencia, supresión y presupuesto (todo en un
     expect((await reservar('tx/r/1', 'transaccional', 'solo.rebote@ejemplo.test')).accion).toBe('suprimido')
   })
 
-  it('PRESUPUESTO: el marketing se detiene dejando la reserva transaccional; lo transaccional llega hasta el tope', async () => {
+  // ── CUPO DURO (F0): 90/día y 2,700/mes en total; 30/día de reserva transaccional. Cifras fijas dentro de la función. ──
+  it('PRODUCCIÓN: lo opcional se detiene en 50/día (deja la reserva de 30); lo transaccional llega hasta 80', async () => {
     await db.exec('delete from public.correo_envios')
+    await llenar(49, 'servicio', 'produccion')
+    expect((await reservar('srv/p/50', 'servicio', 'a@ejemplo.test')).accion).toBe('enviar')       // la 50.ª
+    expect((await reservar('srv/p/51', 'servicio', 'b@ejemplo.test')).accion).toBe('sin_presupuesto')
     const id = await activar('presupuesto@ejemplo.test')
-    // tope diario 5, reserva 2 → marketing máximo 3
-    const acciones: string[] = []
-    for (let i = 0; i < 5; i++) acciones.push(String((await reservar(`reco/p/${i}`, 'marketing', 'presupuesto@ejemplo.test', id, 5, 2000, 2)).accion))
-    expect(acciones).toEqual(['enviar', 'enviar', 'enviar', 'sin_presupuesto', 'sin_presupuesto'])
-    expect((await reservar('tx/p/1', 'transaccional', 'otro1@ejemplo.test', null, 5, 2000, 2)).accion).toBe('enviar')
-    expect((await reservar('tx/p/2', 'transaccional', 'otro2@ejemplo.test', null, 5, 2000, 2)).accion).toBe('enviar')
-    expect((await reservar('tx/p/3', 'transaccional', 'otro3@ejemplo.test', null, 5, 2000, 2)).accion).toBe('sin_presupuesto')
+    expect((await reservar('reco/p/1', 'marketing', 'presupuesto@ejemplo.test', id)).accion).toBe('sin_presupuesto') // marketing = opcional
+    for (let i = 51; i <= 80; i++) expect((await reservar(`tx/p/${i}`, 'transaccional', `t${i}@ejemplo.test`)).accion).toBe('enviar')
+    expect((await reservar('tx/p/81', 'transaccional', 'c@ejemplo.test')).accion).toBe('sin_presupuesto')
   })
 
-  it('PRESUPUESTO MENSUAL: se cuenta en los últimos 30 días', async () => {
+  it('PRUEBAS (Preview, staging, local): 10/día y nada más; no consume la rebanada de producción', async () => {
     await db.exec('delete from public.correo_envios')
-    for (let i = 0; i < 3; i++) await reservar(`tx/m/${i}`, 'transaccional', `m${i}@ejemplo.test`, null, 100, 3, 0)
-    expect((await reservar('tx/m/3', 'transaccional', 'm3@ejemplo.test', null, 100, 3, 0)).accion).toBe('sin_presupuesto')
-    await db.exec(`update public.correo_envios set creado_en = now() - interval '31 days'`)
-    expect((await reservar('tx/m/4', 'transaccional', 'm4@ejemplo.test', null, 100, 3, 0)).accion).toBe('enviar')
+    for (let i = 1; i <= 10; i++) expect((await reservar(`tx/pr/${i}`, 'transaccional', `p${i}@ejemplo.test`, null, 'pruebas')).accion).toBe('enviar')
+    expect((await reservar('tx/pr/11', 'transaccional', 'p11@ejemplo.test', null, 'pruebas')).accion).toBe('sin_presupuesto')
+    expect((await reservar('srv/pr/12', 'servicio', 'p12@ejemplo.test', null, 'pruebas')).accion).toBe('sin_presupuesto')
+    // La rebanada de producción sigue entera.
+    expect((await reservar('tx/pr/prod', 'transaccional', 'prod@ejemplo.test', null, 'produccion')).accion).toBe('enviar')
   })
 
-  it('lo suprimido y lo duplicado NO gastan presupuesto', async () => {
+  it('las dos rebanadas SUMAN lo que dice el plan: 80 + 10 = 90 al día y 2,400 + 300 = 2,700 al mes', async () => {
+    await db.exec('delete from public.correo_envios')
+    let enviados = 0
+    for (let i = 0; i < 100; i++) {
+      const entorno = i % 2 === 0 ? 'produccion' : 'pruebas'
+      if ((await reservar(`suma/${i}`, 'transaccional', `s${i}@ejemplo.test`, null, entorno)).accion === 'enviar') enviados++
+    }
+    for (let i = 0; i < 100; i++) if ((await reservar(`suma/b${i}`, 'transaccional', `sb${i}@ejemplo.test`, null, 'produccion')).accion === 'enviar') enviados++
+    expect(enviados).toBeLessThanOrEqual(CUPO_TOTAL.dia)
+    expect(enviados).toBe(CUPO_TOTAL.dia)
+    const hoy = await q<{ n: number }>(`select count(*)::int n from public.correo_envios where creado_en >= date_trunc('day', now() at time zone 'utc') at time zone 'utc'`)
+    expect(hoy[0].n).toBe(90)
+  })
+
+  it('cuentan TODOS los intentos: un error ambiguo, un rebote y una queja cuentan; lo suprimido y lo omitido no', async () => {
+    await db.exec('delete from public.correo_envios')
+    await llenar(2, 'transaccional', 'pruebas', 'error')
+    await llenar(2, 'transaccional', 'pruebas', 'rebotado')
+    await llenar(2, 'transaccional', 'pruebas', 'queja')
+    await llenar(2, 'transaccional', 'pruebas', 'entregado')
+    await llenar(5, 'transaccional', 'pruebas', 'suprimido')
+    await llenar(5, 'transaccional', 'pruebas', 'omitido')
+    expect(await fn(`public.correo_cupo_estado($1)`, ['pruebas'])).toMatchObject({ hoy: 8, tope_dia: 10 })
+    expect((await reservar('cuenta/1', 'transaccional', 'x1@ejemplo.test', null, 'pruebas')).accion).toBe('enviar')
+    expect((await reservar('cuenta/2', 'transaccional', 'x2@ejemplo.test', null, 'pruebas')).accion).toBe('enviar')
+    expect((await reservar('cuenta/3', 'transaccional', 'x3@ejemplo.test', null, 'pruebas')).accion).toBe('sin_presupuesto')
+  })
+
+  it('el reintento de un envío fallido reutiliza su fila: no gasta cupo nuevo', async () => {
+    await db.exec('delete from public.correo_envios')
+    const a = await reservar('reint/1', 'transaccional', 'r@ejemplo.test', null, 'pruebas')
+    await fn('public.correo_marcar_envio($1, $2, $3, $4)', [a.id, 'error', null, 'red']).catch(() => undefined)
+    await db.exec(`update public.correo_envios set creado_en = now() - interval '11 minutes'`)
+    expect(await reservar('reint/1', 'transaccional', 'r@ejemplo.test', null, 'pruebas')).toMatchObject({ accion: 'enviar', reintento: true })
+    expect(await fn(`public.correo_cupo_estado($1)`, ['pruebas'])).toMatchObject({ hoy: 1 })
+  })
+
+  it('MES: el ciclo empieza el día 23 (UTC); los envíos de antes del ciclo no cuentan', async () => {
+    await db.exec('delete from public.correo_envios')
+    const ahora = new Date()
+    const y = ahora.getUTCFullYear(), m = ahora.getUTCMonth()
+    const inicio = ahora.getUTCDate() >= 23 ? Date.UTC(y, m, 23) : Date.UTC(y, m - 1, 23)
+    const estado = await fn(`public.correo_cupo_estado($1)`, ['produccion'])
+    expect(new Date(String(estado.inicio_ciclo)).getTime()).toBe(inicio)
+    await db.query(`insert into public.correo_envios (clave, categoria, tipo, email_norm, estado, entorno, creado_en)
+                    select 'antes/' || g, 'transaccional', 'x', 'a@b.cc', 'enviado', 'produccion', $1::timestamptz - interval '1 second' from generate_series(1, 7) g`, [new Date(inicio).toISOString()])
+    await db.query(`insert into public.correo_envios (clave, categoria, tipo, email_norm, estado, entorno, creado_en)
+                    select 'dentro/' || g, 'transaccional', 'x', 'a@b.cc', 'enviado', 'produccion', $1::timestamptz + interval '1 second' from generate_series(1, 3) g`, [new Date(inicio).toISOString()])
+    expect(await fn(`public.correo_cupo_estado($1)`, ['produccion'])).toMatchObject({ mes: 3, tope_mes: 2400 })
+  })
+
+  it('MES: al llegar al tope del mes no sale nada más, aunque el día esté libre', async () => {
+    await db.exec('delete from public.correo_envios')
+    const ahora = new Date()
+    const hoy0 = Date.UTC(ahora.getUTCFullYear(), ahora.getUTCMonth(), ahora.getUTCDate())
+    const inicio = ahora.getUTCDate() >= 23 ? Date.UTC(ahora.getUTCFullYear(), ahora.getUTCMonth(), 23) : Date.UTC(ahora.getUTCFullYear(), ahora.getUTCMonth() - 1, 23)
+    // El día 23 el ciclo y «hoy» empiezan a la vez y no hay un instante que cuente para el mes sin contar para el día: ese día se prueba el cálculo (arriba), no este tope.
+    if (inicio >= hoy0) return
+    const ayer = new Date(hoy0 - 1000).toISOString()
+    await db.query(`insert into public.correo_envios (clave, categoria, tipo, email_norm, estado, entorno, creado_en)
+                    select 'mes/' || g, 'transaccional', 'x', 'a@b.cc', 'enviado', 'pruebas', $1::timestamptz from generate_series(1, 300) g`, [ayer])
+    expect(await fn(`public.correo_cupo_estado($1)`, ['pruebas'])).toMatchObject({ hoy: 0, mes: 300, tope_mes: 300 })
+    expect((await reservar('mes/siguiente', 'transaccional', 'm@ejemplo.test', null, 'pruebas')).accion).toBe('sin_presupuesto')
+  })
+
+  it('lo suprimido y lo duplicado NO gastan cupo', async () => {
     await db.exec('delete from public.correo_envios; delete from public.correo_supresiones')
     await db.exec(`insert into public.correo_supresiones values ('nogasta@ejemplo.test', 'rebote')`)
-    for (let i = 0; i < 4; i++) await reservar(`tx/g/${i}`, 'transaccional', 'nogasta@ejemplo.test', null, 2, 2000, 0)
-    expect(await reservar('tx/g/ok1', 'transaccional', 'bien@ejemplo.test', null, 2, 2000, 0)).toMatchObject({ accion: 'enviar' })
-    await reservar('tx/g/ok1', 'transaccional', 'bien@ejemplo.test', null, 2, 2000, 0)
-    expect(await reservar('tx/g/ok2', 'transaccional', 'bien2@ejemplo.test', null, 2, 2000, 0)).toMatchObject({ accion: 'enviar' })
-    expect((await reservar('tx/g/ok3', 'transaccional', 'bien3@ejemplo.test', null, 2, 2000, 0)).accion).toBe('sin_presupuesto')
+    for (let i = 0; i < 20; i++) await reservar(`tx/g/${i}`, 'transaccional', 'nogasta@ejemplo.test', null, 'pruebas')
+    expect(await reservar('tx/g/ok1', 'transaccional', 'bien@ejemplo.test', null, 'pruebas')).toMatchObject({ accion: 'enviar' })
+    await reservar('tx/g/ok1', 'transaccional', 'bien@ejemplo.test', null, 'pruebas')
+    expect(await fn(`public.correo_cupo_estado($1)`, ['pruebas'])).toMatchObject({ hoy: 1 })
   })
 
-  it('reservas simultáneas: el tope diario se respeta (el candado de la transacción las ordena)', async () => {
+  it('falla cerrada: un entorno o una categoría desconocidos NO reservan nada', async () => {
+    await db.exec('delete from public.correo_envios')
+    for (const entorno of ['produccion ', 'PRODUCCION', 'staging', '', 'x']) {
+      await expect(reservar('malo/e', 'transaccional', 'z@ejemplo.test', null, entorno)).rejects.toThrow(/entorno invalido/)
+    }
+    await expect(db.query(`select public.correo_reservar_envio('malo/c', 'promocion', 't', 'z@ejemplo.test', null, null, 'pruebas')`)).rejects.toThrow(/categoria invalida/)
+    await expect(db.query(`select public.correo_reservar_envio('malo/n', null, 't', 'z@ejemplo.test', null, null, 'pruebas')`)).rejects.toThrow(/categoria invalida/)
+    await expect(db.query(`select public.correo_reservar_envio('malo/n', 'transaccional', 't', 'z@ejemplo.test', null, null, null)`)).rejects.toThrow(/entorno invalido/)
+    expect(await q('select 1 from public.correo_envios')).toEqual([])
+  })
+
+  it('reservas simultáneas: ni producción ni pruebas pasan de su tope aunque lleguen todas a la vez', async () => {
     await db.exec('delete from public.correo_envios; delete from public.correo_supresiones')
-    const r = await Promise.all(Array.from({ length: 12 }, (_, i) => reservar(`tx/par/${i}`, 'transaccional', `par${i}@ejemplo.test`, null, 4, 2000, 0)))
-    expect(r.filter((x) => x.accion === 'enviar')).toHaveLength(4)
-    expect(r.filter((x) => x.accion === 'sin_presupuesto')).toHaveLength(8)
+    const r = await Promise.all(Array.from({ length: 300 }, (_, i) => {
+      const entorno = i % 3 === 0 ? 'pruebas' : 'produccion'
+      const cat = i % 2 === 0 ? 'transaccional' : 'servicio'
+      return reservar(`tx/par/${i}`, cat, `par${i}@ejemplo.test`, null, entorno).then((x) => ({ x, entorno, cat }))
+    }))
+    const sale = r.filter((e) => e.x.accion === 'enviar')
+    expect(sale.filter((e) => e.entorno === 'pruebas').length).toBe(10)
+    expect(sale.filter((e) => e.entorno === 'produccion').length).toBe(80)
+    expect(sale.filter((e) => e.entorno === 'produccion' && e.cat === 'servicio').length).toBeLessThanOrEqual(50)
+    expect(sale.length).toBeLessThanOrEqual(CUPO_TOTAL.dia)
+    expect(r.every((e) => e.x.accion === 'enviar' || e.x.accion === 'sin_presupuesto')).toBe(true)
+  })
+
+  it('las cifras de la función SQL son las de TypeScript (CUPO_POR_ENTORNO), y suman el CUPO_TOTAL', () => {
+    const texto = sql('62-correo-suscripciones.sql')
+    const pr = /if p_entorno = 'produccion' then\s+v_tope_dia := (\d+); v_tope_mes := (\d+); v_reserva_dia := (\d+); v_reserva_mes := (\d+);\s+else\s+v_tope_dia := (\d+); v_tope_mes := (\d+); v_reserva_dia := (\d+); v_reserva_mes := (\d+);/.exec(texto)
+    expect(pr).not.toBeNull()
+    const [, pd, pm, prd, prm, td, tm, trd, trm] = (pr as RegExpExecArray).map(Number)
+    expect({ dia: pd, mes: pm, reservaDia: prd, reservaMes: prm }).toEqual(CUPO_POR_ENTORNO.produccion)
+    expect({ dia: td, mes: tm, reservaDia: trd, reservaMes: trm }).toEqual(CUPO_POR_ENTORNO.pruebas)
+    expect(CUPO_POR_ENTORNO.produccion.dia + CUPO_POR_ENTORNO.pruebas.dia).toBe(CUPO_TOTAL.dia)
+    expect(CUPO_POR_ENTORNO.produccion.mes + CUPO_POR_ENTORNO.pruebas.mes).toBe(CUPO_TOTAL.mes)
+    expect(CUPO_TOTAL.dia).toBeLessThan(100)   // el plan gratuito de Resend permite 100 al día…
+    expect(CUPO_TOTAL.mes).toBeLessThan(3000)  // …y 3,000 al mes: el margen es a propósito
+    expect(CUPO_POR_ENTORNO.produccion.reservaDia).toBe(CUPO_TOTAL.reservaDia)
+    // Las cifras no se pueden cambiar desde fuera: la función no recibe topes ni los lee de ninguna tabla.
+    const firma = /create or replace function public\.correo_reservar_envio\(([^)]*)\)/.exec(texto)
+    expect(firma?.[1]).not.toMatch(/max|tope|reserva|limite/i)
+    expect(texto).toMatch(/pg_advisory_xact_lock\(hashtext\('correo_presupuesto'\)\)[\s\S]*select count\(\*\) into v_hoy/)
   })
 })
 
@@ -298,11 +405,11 @@ describe('cuenta con sesión: el marketing es una decisión aparte de crear la c
 
 describe('la reversa borra sólo lo creado por la migración', () => {
   it('deja las tablas ajenas intactas', async () => {
-    await db.exec(sql('36-correo-suscripciones.REVERTIR.sql'))
+    await db.exec(sql('62-correo-suscripciones.REVERTIR.sql'))
     expect(await q(`select 1 from pg_class where relnamespace = 'public'::regnamespace and relname like 'correo\\_%'`)).toEqual([])
     expect(await q(`select 1 from pg_proc where pronamespace = 'public'::regnamespace and proname like 'correo\\_%'`)).toEqual([])
     expect(await q('select id from public.tabla_ajena')).toEqual([{ id: 1 }])
-    await db.exec(sql('36-correo-suscripciones.sql')) // y se puede volver a aplicar
+    await db.exec(sql('62-correo-suscripciones.sql')) // y se puede volver a aplicar
     expect(await q(`select 1 from pg_class where relnamespace = 'public'::regnamespace and relname = 'correo_envios'`)).toHaveLength(1)
   })
 })

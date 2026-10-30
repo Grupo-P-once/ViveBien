@@ -37,9 +37,9 @@ describe('secretos: la clave de Resend y el secreto de los enlaces sólo viven e
     expect(malos).toEqual([])
   })
 
-  it('RESEND_API_KEY, CORREO_SECRETO y RESEND_WEBHOOK_SECRET sólo se leen en el módulo de configuración y en el cron', () => {
+  it('RESEND_API_KEY, CORREO_SECRETO y RESEND_WEBHOOK_SECRET sólo se leen en el módulo de configuración (y en los diagnósticos que comprueban que EXISTAN)', () => {
     const lectores = TODOS.filter((f) => /process\.env\.(RESEND_API_KEY|CORREO_SECRETO|RESEND_WEBHOOK_SECRET)/.test(codigo(readFileSync(f, 'utf8')))).map(rel).sort()
-    expect(lectores.filter((f) => !['src/lib/correo/config.ts', 'src/lib/correo/resend.ts', 'src/lib/aviso-lead.ts', 'src/lib/citas/enviar.ts', 'src/lib/invitacion-correo.ts', 'src/lib/alertas.ts', 'src/lib/salud-diagnostico.ts', 'src/app/api/alertas/resumen/route.ts'].includes(f))).toEqual([])
+    expect(lectores.filter((f) => !['src/lib/correo/config.ts', 'src/lib/alertas.ts', 'src/lib/salud-diagnostico.ts', 'src/app/api/alertas/resumen/route.ts'].includes(f))).toEqual([])
   })
 
   it('los registros del módulo de correo no imprimen direcciones, cuerpos, claves ni tokens', () => {
@@ -86,11 +86,11 @@ describe('las rutas /api/correo', () => {
     expect(c).toMatch(/status: 401/)
   })
 
-  it('la ejecución diaria está programada UNA vez al día (Vercel Hobby no admite más)', () => {
+  it('CRON: se queda el cron diario existente (el del parte) y NO se añade ninguno para el correo (decisión del 29-oct: sin otro cron todavía)', () => {
     const v = JSON.parse(leer('vercel.json')) as { crons: Array<{ path: string; schedule: string }> }
-    const c = v.crons.find((x) => x.path === '/api/correo/tarea')
-    expect(c).toBeTruthy()
-    expect(c!.schedule).toMatch(/^\d{1,2} \d{1,2} \* \* \*$/) // minuto y hora fijos: una vez al día
+    // Los dos que ya existían en producción; ninguno apunta a /api/correo/tarea.
+    expect(v.crons.map((x) => x.path)).toEqual(['/api/alertas/resumen', '/api/alertas/contabilidad-quincenal'])
+    expect(v.crons.find((x) => x.path === '/api/alertas/resumen')!.schedule).toBe('0 15 * * *') // una vez al día: lo que admite Vercel Hobby
   })
 })
 
@@ -133,8 +133,8 @@ describe('integración con el resto del sitio', () => {
   })
 })
 
-describe('la migración 36', () => {
-  const sql = leer('supabase/36-correo-suscripciones.sql')
+describe('la migración 62 (era la 36 de D-80)', () => {
+  const sql = leer('supabase/62-correo-suscripciones.sql')
   it('todas las tablas nuevas activan RLS y NO crean ninguna política (sólo service_role)', () => {
     const tablas = [...sql.matchAll(/create table if not exists public\.(correo_[a-z_]+)/g)].map((m) => m[1])
     expect(tablas.sort()).toEqual(['correo_envios', 'correo_supresiones', 'correo_suscriptores', 'correo_webhook_vistos'])
@@ -150,7 +150,7 @@ describe('la migración 36', () => {
 
   it('toda función revoca el acceso público y concede sólo a service_role', () => {
     const funciones = [...sql.matchAll(/create or replace function public\.(correo_[a-z_]+)\(/g)].map((m) => m[1])
-    expect(funciones).toHaveLength(9)
+    expect(funciones).toHaveLength(10)
     for (const fn of funciones) {
       expect(sql, fn).toMatch(new RegExp(`revoke all on function public\\.${fn}\\([^)]*\\) from public, anon, authenticated`))
       expect(sql, fn).toMatch(new RegExp(`grant execute on function public\\.${fn}\\([^)]*\\) to service_role`))
@@ -159,36 +159,81 @@ describe('la migración 36', () => {
   })
 })
 
-describe('MODO DE PRUEBAS: todo emisor de correo del código pasa por un único punto', () => {
+describe('MODO DE PRUEBAS y CUPO: todo emisor de correo del código pasa por un único punto', () => {
   const CENTRAL = 'src/lib/correo/resend.ts'
-  const EMISORES = ['src/lib/correo/enviar.ts', 'src/lib/aviso-lead.ts', 'src/lib/citas/enviar.ts', 'src/lib/invitacion-correo.ts']
+  const EMISOR_UNICO = 'src/lib/correo/emisor.ts'
+  /** Los cinco emisores: el de D-80 llama directo a `llamarResend` (después de reservar); los otros cuatro, por el emisor único. */
+  const POR_EMISOR_UNICO = ['src/lib/aviso-lead.ts', 'src/lib/avisos-cliente-servidor.ts', 'src/lib/citas/enviar.ts', 'src/lib/invitacion-correo.ts']
+  const D80 = 'src/lib/correo/enviar.ts'
 
-  it('sólo `correo/resend.ts` conoce la API de Resend: ningún otro archivo llama a api.resend.com', () => {
-    const conApi = TODOS.filter((f) => /api\.resend\.com/.test(codigo(readFileSync(f, 'utf8')))).map(rel)
+  it('sólo `correo/resend.ts` conoce la API de Resend: ningún otro archivo llama a api.resend.com ni a otro host de resend', () => {
+    const conApi = TODOS.filter((f) => /resend\.com/.test(codigo(readFileSync(f, 'utf8')))).map(rel)
     expect(conApi).toEqual([CENTRAL])
   })
 
-  it('los cuatro emisores conocidos usan `llamarResend`, y nadie más lo hace sin que se decida a propósito', () => {
+  it('exactamente estos archivos llaman a `llamarResend`: el central, el emisor único y el de D-80 (que reserva cupo antes); nadie más sin que se decida a propósito', () => {
     const usan = TODOS.filter((f) => /\bllamarResend\(/.test(codigo(readFileSync(f, 'utf8')))).map(rel).sort()
-    expect(usan).toEqual([...EMISORES, CENTRAL].sort())
+    expect(usan).toEqual([CENTRAL, D80, EMISOR_UNICO].sort())
     for (const f of TODOS.filter((x) => rel(x) !== CENTRAL)) expect(codigo(readFileSync(f, 'utf8')), rel(f)).not.toMatch(/\bfetch\([^)]*(resend|URL_RESEND)/i)
+  })
+
+  it('los cuatro emisores heredados usan el emisor único (y NINGUNO lee la clave ni llama al proveedor por su cuenta)', () => {
+    const usan = TODOS.filter((f) => /\benviarPorEmisorUnico\(/.test(codigo(readFileSync(f, 'utf8')))).map(rel).sort()
+    expect(usan).toEqual([...POR_EMISOR_UNICO, EMISOR_UNICO].sort())
+    for (const f of POR_EMISOR_UNICO) {
+      const c = codigo(readFileSync(join(RAIZ, f), 'utf8'))
+      expect(c, f).not.toMatch(/process\.env\.RESEND_API_KEY/)
+      expect(c, f).not.toMatch(/\bfetch\(/)
+      expect(c, f).toMatch(/claveResend\(\)/)
+    }
+  })
+
+  it('CUPO: el emisor único y el de D-80 reservan en el libro ANTES de llamar al proveedor, y sin cupo confirmado no llaman', () => {
+    for (const f of [EMISOR_UNICO, D80]) {
+      const t = codigo(leer(f))
+      expect(t.indexOf('reservarCupo('), f).toBeGreaterThan(0)
+      expect(t.indexOf('reservarCupo('), f).toBeLessThan(t.indexOf('llamarResend('))
+      expect(t, f).toMatch(/sin_confirmar/)
+    }
+    const e = codigo(leer(D80))
+    expect(e.indexOf("r.accion === 'sin_confirmar'")).toBeLessThan(e.indexOf('llamarResend('))
+    const u = codigo(leer(EMISOR_UNICO))
+    expect(u.indexOf("r.accion === 'sin_confirmar'")).toBeLessThan(u.indexOf('llamarResend('))
+    expect(u.indexOf("r.accion === 'sin_cupo'")).toBeLessThan(u.indexOf('llamarResend('))
+  })
+
+  it('CUPO: los topes NO son configurables (ninguna variable de entorno ni parámetro los cambia) y el plan gratuito queda por encima', () => {
+    const c = codigo(leer('src/lib/correo/config.ts'))
+    expect(c).not.toMatch(/process\.env\.[A-Z_]*(CUPO|TOPE|LIMITE|DIA_MAX|MES_MAX)/)
+    expect(c).toMatch(/export const CUPO_TOTAL = \{ dia: 90, mes: 2700, reservaDia: 30, reservaMes: 300 \}/)
+    const e = codigo(leer(D80))
+    expect(e).not.toMatch(/p_dia_max|p_mes_max|p_reserva_transaccional/)
+  })
+
+  it('MARKETING: sigue apagado por una constante de código mientras no exista texto legal aprobado (la variable de entorno sola no lo enciende)', () => {
+    const c = codigo(leer('src/lib/correo/config.ts'))
+    // Para encender el correo promocional hay que cambiar esta línea en una revisión de código, con el texto y su versión aprobados.
+    expect(c).toMatch(/export const MARKETING_AUTORIZADO = false/)
+    expect(c).toMatch(/marketing: env\.CORREO_MARKETING === '1' && MARKETING_AUTORIZADO/)
+    // Ningún cron programado llama a la tarea de recomendaciones.
+    expect(leer('vercel.json')).not.toMatch(/api\/correo\/tarea/)
   })
 
   it('el punto central reconstruye el cuerpo y lo revisa ANTES de llamar al proveedor, con el destino como constante de código', () => {
     const t = codigo(leer(CENTRAL))
-    expect(t.indexOf('cuerpoDePruebas(l.cuerpo)')).toBeGreaterThan(0)
-    expect(t.indexOf('exigirSoloDestinoDePruebas(cuerpo)')).toBeGreaterThan(t.indexOf('cuerpoDePruebas(l.cuerpo)'))
+    expect(t.indexOf('cuerpoDePruebas(l.cuerpo, idDePrueba(l.idempotencia))')).toBeGreaterThan(0)
+    expect(t.indexOf('exigirSoloDestinoDePruebas(cuerpo)')).toBeGreaterThan(t.indexOf('cuerpoDePruebas(l.cuerpo'))
     expect(t.indexOf('exigirSoloDestinoDePruebas(cuerpo)')).toBeLessThan(t.indexOf('URL_RESEND, {'))
     expect(t).toMatch(/body: JSON\.stringify\(cuerpo\)/)
     const c = codigo(leer('src/lib/correo/config.ts'))
-    expect(c).toMatch(/export const DESTINO_PRUEBAS = 'jemilianoponceperez@gmail\.com'/)
+    expect(c).toMatch(/export const DESTINO_PRUEBAS: string = NEGOCIO\.email/)
     expect(c).not.toMatch(/process\.env\.[A-Z_]*DESTINO/)
     expect(c).toMatch(/modoPruebas: env\.CORREO_MODO_PRUEBAS === '1'/)
   })
 
   it('el emisor de D-80 (`enviar.ts`) también revisa su cuerpo antes de llamar y deja el envío en error si algo no cuadra', () => {
-    const t = codigo(leer('src/lib/correo/enviar.ts'))
-    expect(t).toMatch(/cuerpoDePruebas\(base\)/)
+    const t = codigo(leer(D80))
+    expect(t).toMatch(/cuerpoDePruebas\(base, idDePrueba\(s\.clave\)\)/)
     expect(t.indexOf('exigirSoloDestinoDePruebas(cuerpo)')).toBeLessThan(t.indexOf('llamarResend({'))
     expect(t).toMatch(/fuga_modo_pruebas/)
   })

@@ -1,6 +1,6 @@
 import { SITIO } from './sitio'
 import { NEGOCIO } from './config/negocio'
-import { llamarResend } from './correo/resend'
+import { claveResend, claveUnica, enviarPorEmisorUnico } from './correo/emisor'
 
 /**
  * El correo de invitación al panel.
@@ -43,7 +43,7 @@ export async function enviarInvitacion(opciones: {
   rol: string
   invitadoPor?: string | null
 }): Promise<ResultadoInvitacion> {
-  const clave = process.env.RESEND_API_KEY?.trim()
+  const clave = claveResend()
   // `?invitado=` solo sirve para que la pantalla avise si hay abierta una sesión de OTRO correo (E-30); no otorga nada.
   const entrada = `${SITIO}/dashboard?invitado=${encodeURIComponent(opciones.email)}`
   const papel = ROL_EN_PALABRAS[opciones.rol] ?? opciones.rol
@@ -85,9 +85,13 @@ export async function enviarInvitacion(opciones: {
   `
 
   try {
-    // Pasa por el único emisor (`correo/resend.ts`): con CORREO_MODO_PRUEBAS=1 el destino y la respuesta se fijan ahí.
-    const res = await llamarResend({
+    // Pasa por el emisor único (`correo/emisor.ts`): reserva cupo del plan antes de salir y, con CORREO_MODO_PRUEBAS=1, fija destino y respuesta.
+    const res = await enviarPorEmisorUnico({
       apiKey: clave,
+      clave: claveUnica('invitacion'),
+      categoria: 'transaccional',
+      tipo: 'invitacion',
+      para: opciones.email,
       cuerpo: {
         from: process.env.RESEND_FROM || NEGOCIO.remitente,
         to: [opciones.email],
@@ -98,9 +102,8 @@ export async function enviarInvitacion(opciones: {
       },
     })
     if (!res.ok) {
-      const cuerpo = await res.text().catch(() => '')
-      console.error('[invitacion] Resend rechazó el envío:', res.status, cuerpo.slice(0, 200))
-      return { enviado: false, motivo: 'fallo', detalle: String(res.status) }
+      console.error('[invitacion] el envío no salió:', res.estado, res.status ?? '', (res.detalle ?? '').slice(0, 200))
+      return { enviado: false, motivo: 'fallo', detalle: String(res.status ?? res.estado) }
     }
     return { enviado: true }
   } catch (e) {

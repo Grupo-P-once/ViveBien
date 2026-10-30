@@ -1,7 +1,7 @@
 import { supabaseAdmin } from '../auth-server'
 import { SITIO } from '../sitio'
 import { NEGOCIO } from '../config/negocio'
-import { llamarResend } from '../correo/resend'
+import { claveResend, enviarPorEmisorUnico } from '../correo/emisor'
 import { claveCorreo, planDeCorreos, plantilla, type CorreoPlaneado, type EventoCorreo, type Para } from './correos'
 import { enlaceGoogleCalendar, generarIcs } from './ics'
 import { caducidad, nuevoToken } from './tokens'
@@ -68,13 +68,16 @@ export async function mandar(opts: {
   texto: string
   ics?: string | null
 }): Promise<{ ok: true; id: string | null } | { ok: false; error: string }> {
-  const api = process.env.RESEND_API_KEY?.trim()
+  const api = claveResend()
   if (!api) return { ok: false, error: 'sin RESEND_API_KEY' }
   try {
-    // Pasa por el único emisor (`correo/resend.ts`): con CORREO_MODO_PRUEBAS=1 el destino, la respuesta y los enlaces con token se fijan ahí.
-    const res = await llamarResend({
+    // Pasa por el emisor único (`correo/emisor.ts`): reserva cupo del plan antes de salir y, con CORREO_MODO_PRUEBAS=1, fija destino, respuesta y enlaces con token.
+    const res = await enviarPorEmisorUnico({
       apiKey: api,
-      idempotencia: opts.clave,
+      clave: opts.clave.slice(0, 200),
+      categoria: 'transaccional',
+      tipo: 'cita',
+      para: opts.para,
       cuerpo: {
         from: process.env.RESEND_FROM || NEGOCIO.remitente,
         to: [opts.para],
@@ -86,11 +89,8 @@ export async function mandar(opts: {
         ...(opts.ics ? { attachments: [{ filename: 'visita-vive-bien.ics', content: Buffer.from(opts.ics, 'utf8').toString('base64') }] } : {}),
       },
     })
-    const cuerpo = await res.text().catch(() => '')
-    if (!res.ok) return { ok: false, error: `Resend ${res.status}: ${cuerpo.slice(0, 200)}` }
-    let id: string | null = null
-    try { id = (JSON.parse(cuerpo) as { id?: string }).id ?? null } catch { /* sin id */ }
-    return { ok: true, id }
+    if (!res.ok) return { ok: false, error: res.status ? `Resend ${res.status}: ${(res.detalle ?? '').slice(0, 200)}` : `no se envió (${res.estado})` }
+    return { ok: true, id: res.resendId ?? null }
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : 'fallo de red' }
   }

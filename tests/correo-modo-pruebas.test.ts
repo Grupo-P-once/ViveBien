@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { DESTINO_PRUEBAS, entornoCorreo, type EntornoCorreo } from '../src/lib/correo/config'
-import { enviarCorreo, exigirSoloDestinoDePruebas, PREFIJO_PRUEBA, type DbCorreo, type SolicitudCorreo } from '../src/lib/correo/enviar'
+import { enviarCorreo, exigirSoloDestinoDePruebas, MARCA_PRUEBA, type DbCorreo, type SolicitudCorreo } from '../src/lib/correo/enviar'
 import { ENLACE_INERTE } from '../src/lib/correo/resend'
 
 /**
- * D-80 — MODO DE PRUEBAS: con `CORREO_MODO_PRUEBAS=1` NINGÚN correo puede salir hacia otra dirección que `jemilianoponceperez@gmail.com`.
+ * D-80 — MODO DE PRUEBAS: con `CORREO_MODO_PRUEBAS=1` NINGÚN correo puede salir hacia otra dirección que `informes@vivebienn.com`.
  * La restricción vive en el punto central de envío (`enviarCorreo`) y se comprueba otra vez sobre el cuerpo ya armado, justo antes de llamar
  * al proveedor. El proveedor es un doble (nada sale de verdad): estas pruebas no envían ningún correo.
  */
@@ -38,7 +38,7 @@ const todoElTrafico = () => JSON.stringify({ peticiones: peticiones.map((p) => (
 
 describe('la bandera: separada del modo real y apagada por defecto', () => {
   it('el destino de pruebas es una CONSTANTE del código (no se puede apuntar a otra dirección con una variable)', () => {
-    expect(DESTINO_PRUEBAS).toBe('jemilianoponceperez@gmail.com')
+    expect(DESTINO_PRUEBAS).toBe('informes@vivebienn.com')
     expect(entornoCorreo({ CORREO_MODO_PRUEBAS: '1', CORREO_DESTINO_PRUEBAS: 'otra@x.test', DESTINO_PRUEBAS: 'otra@x.test' })).toMatchObject({ modoPruebas: true })
   })
 
@@ -68,7 +68,7 @@ describe('en modo de pruebas TODO sale al destino de pruebas', () => {
   it('transaccional: destinatario sustituido, asunto marcado, cabecera de modo y respuesta institucional', async () => {
     expect((await enviar({ responderA: 'asesor.real@empresa-real.test' })).estado).toBe('enviado')
     expect(peticiones).toHaveLength(1)
-    expect(peticiones[0].cuerpo).toMatchObject({ to: [DESTINO_PRUEBAS], subject: `${PREFIJO_PRUEBA}Hola`, reply_to: 'informes@vivebienn.com' })
+    expect(peticiones[0].cuerpo).toMatchObject({ to: [DESTINO_PRUEBAS], subject: expect.stringMatching(/^\[PRUEBA VB · [0-9A-F]{8}\] Hola$/), reply_to: 'informes@vivebienn.com' })
     expect((peticiones[0].cuerpo.headers as Record<string, string>)['X-Vive-Bien-Modo']).toBe('pruebas')
   })
 
@@ -163,7 +163,7 @@ describe('varios destinatarios, CC y CCO: ninguno puede salir', () => {
   })
 
   it('el destino de pruebas exacto es el ÚNICO que acepta la barrera (ni subdominios ni variantes)', () => {
-    for (const to of ['jemilianoponceperez@gmail.com.otro.test', 'xjemilianoponceperez@gmail.com', 'jemilianoponceperez+x@gmail.com', 'jemilianoponceperez@gmail.co']) {
+    for (const to of ['informes@vivebienn.com.otro.test', 'xinformes@vivebienn.com', 'informes+x@vivebienn.com', 'informes@vivebienn.co']) {
       expect(() => exigirSoloDestinoDePruebas({ to: [to], reply_to: 'informes@vivebienn.com' }), to).toThrow()
     }
   })

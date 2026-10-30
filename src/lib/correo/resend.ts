@@ -1,10 +1,12 @@
+import { createHash, randomUUID } from 'node:crypto'
 import { NEGOCIO } from '../config/negocio'
 import { DESTINO_PRUEBAS } from './config'
 
 /**
  * ÚNICO punto del sitio que llama a la API de Resend (D-80, modo de pruebas).
  *
- * Los cuatro emisores (correo D-80, aviso de leads, citas e invitaciones) arman su cuerpo y llegan aquí. Con `CORREO_MODO_PRUEBAS=1`
+ * Los CINCO emisores (correo D-80, aviso de leads, citas, invitaciones y avisos a clientes) arman su cuerpo y llegan aquí
+ * (los cuatro últimos a través de `emisor.ts`, que además reserva el cupo del plan antes de llamar). Con `CORREO_MODO_PRUEBAS=1`
  * el cuerpo se RECONSTRUYE desde una lista blanca —no se «limpia»—, de modo que lo que el emisor haya puesto en `to`, `cc`, `bcc`, `cco`,
  * `reply_to`, adjuntos o cabeceras de destinatarios no existe para el proveedor. Después una barrera independiente vuelve a revisar el
  * resultado y lanza si algo quedó fuera de lugar. Una prueba estática obliga a que ningún otro archivo hable con la API.
@@ -13,8 +15,15 @@ import { DESTINO_PRUEBAS } from './config'
  */
 export const URL_RESEND = 'https://api.resend.com/emails'
 
-/** Prefijo del asunto en modo de pruebas: se ve a simple vista que no es un correo real. */
-export const PREFIJO_PRUEBA = '[PRUEBA] '
+/** Inicio del asunto en modo de pruebas: se ve a simple vista que no es un correo real. El prefijo completo lleva un ID: `[PRUEBA VB · ID] `. */
+export const MARCA_PRUEBA = '[PRUEBA VB'
+
+/** ID corto y estable del correo de prueba (8 caracteres del hash de su clave de idempotencia; sin datos personales). Sin clave, uno al azar. */
+export function idDePrueba(clave?: string): string {
+  const base = clave && clave.length > 0 ? clave : randomUUID()
+  return createHash('sha256').update(base).digest('hex').slice(0, 8).toUpperCase()
+}
+export const prefijoDePrueba = (id: string) => `${MARCA_PRUEBA} · ${id}] `
 
 /** Hacia dónde apuntan los enlaces sensibles en un correo de pruebas: a una página cualquiera del sitio, sin efecto. */
 export const ENLACE_INERTE = 'https://vivebienn.com/?enlace=deshabilitado-en-pruebas'
@@ -38,7 +47,7 @@ const CABECERA_PROHIBIDA = /^(to|cc|bcc|cco|reply-to|list-unsubscribe|list-unsub
  * respuesta fijos; cabeceras seguras; enlaces sensibles neutralizados; sin adjuntos (un .ics lleva organizador y asistentes, y aceptarlo
  * enviaría una respuesta a una dirección real).
  */
-export function cuerpoDePruebas(c: Record<string, unknown>): Record<string, unknown> {
+export function cuerpoDePruebas(c: Record<string, unknown>, id: string = idDePrueba()): Record<string, unknown> {
   const asunto = typeof c.subject === 'string' ? c.subject : ''
   const cab: Record<string, string> = {}
   if (c.headers && typeof c.headers === 'object') {
@@ -51,7 +60,7 @@ export function cuerpoDePruebas(c: Record<string, unknown>): Record<string, unkn
     from: c.from,
     to: [DESTINO_PRUEBAS],
     reply_to: NEGOCIO.email,
-    subject: asunto.startsWith(PREFIJO_PRUEBA) ? asunto : `${PREFIJO_PRUEBA}${asunto.replace(/[\r\n]+/g, ' ')}`,
+    subject: asunto.startsWith(MARCA_PRUEBA) ? asunto : `${prefijoDePrueba(id)}${asunto.replace(/[\r\n]+/g, ' ')}`,
     html: neutralizarEnlaces(c.html),
     text: neutralizarEnlaces(c.text),
     headers: cab,
@@ -95,8 +104,10 @@ export async function llamarResend(l: Llamada): Promise<Response> {
   const pruebas = l.modoPruebas ?? modoPruebasActivo()
   let cuerpo = l.cuerpo
   if (pruebas) {
-    cuerpo = cuerpoDePruebas(l.cuerpo)
+    cuerpo = cuerpoDePruebas(l.cuerpo, idDePrueba(l.idempotencia))
     exigirSoloDestinoDePruebas(cuerpo)
+    // El asunto de una prueba SIEMPRE empieza por `[PRUEBA VB · ID]`: sin eso no se manda (no se puede confundir con un correo real).
+    if (!/^\[PRUEBA VB · [0-9A-F]{8}\] /.test(String(cuerpo.subject))) throw new Error('fuga_modo_pruebas')
   }
   return (l.fetch ?? fetch)(URL_RESEND, {
     method: 'POST',

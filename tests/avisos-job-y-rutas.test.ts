@@ -1,4 +1,13 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { crearLibro, type Libro } from './dobles/libro-cupo'
+
+// Todo correo reserva cupo en el libro (migración 62 REAL en PGlite): ningún envío de prueba se salta la cuenta del plan gratuito.
+const libroH = vi.hoisted(() => ({ db: null as unknown }))
+vi.mock('../src/lib/correo/libro', () => ({ dbDelLibro: () => libroH.db }))
+let libro: Libro
+beforeAll(async () => { libro = await crearLibro(); libroH.db = libro.db }, 60_000)
+beforeEach(async () => { await libro.vaciar() })
+afterAll(async () => { await libro?.cerrar() })
 import { crearBase, type Fila } from './dobles/supabase-memoria'
 
 /**
@@ -29,7 +38,7 @@ beforeEach(() => {
   process.env.RESEND_API_KEY = 're_prueba'; process.env.CRON_SECRET = 'secreto-de-prueba-largo-123456'
   enviados = []; resendOk = true; estado.perfil = ANA; estado.bitacora = []
   vi.stubGlobal('fetch', vi.fn(async (url: string, init: { body: string }) => {
-    if (String(url).includes('api.resend.com')) { if (!resendOk) return { ok: false, status: 500, text: async () => '' } as unknown as Response; enviados.push(JSON.parse(init.body)); return { ok: true, status: 200 } as unknown as Response }
+    if (String(url).includes('api.resend.com')) { if (!resendOk) return new Response('', { status: 500 }); enviados.push(JSON.parse(init.body)); return new Response('{"id":"re_1"}', { status: 200 }) }
     throw new Error('red no permitida en la prueba')
   }))
 })
@@ -91,6 +100,8 @@ describe('tarea de avisos a clientes', () => {
     expect(r1).toMatchObject({ correosEnviados: 0, correosFallidos: 1 })
     expect(estado.base.tablas.notificaciones.every((n) => !n.correo_enviado_en)).toBe(true)
     resendOk = true
+    // «Al día siguiente»: el envío fallido de la primera corrida ya tiene más de 10 minutos en el libro y se puede reintentar con su misma clave.
+    await libro.pg.exec("update public.correo_envios set creado_en = now() - interval '11 minutes'")
     const r2 = await avisosDeClientes()
     expect(r2).toMatchObject({ notificacionesNuevas: 0, correosEnviados: 1, correosFallidos: 0 })
     expect(estado.base.tablas.notificaciones).toHaveLength(2)

@@ -10,10 +10,47 @@
  * para no depender de que el proveedor corte y para dejar margen a lo transaccional.
  */
 
+import { NEGOCIO } from '../config/negocio'
+
+/**
+ * CUPO DURO del plan gratuito de Resend (F0, 29-oct-2026). Regla del dueño: usar SIEMPRE el límite gratuito y NO pasarlo
+ * (100 correos/día, 3,000/mes). Se deja un margen: 90 al día y 2,700 al mes, de los cuales 30 diarios (300 al mes) quedan
+ * reservados a lo transaccional (citas, invitaciones, avisos internos): lo opcional (alertas, marketing) nunca los toca.
+ *
+ * Estas cifras NO son configurables: no hay variable de entorno ni parámetro que las cambie. Viven aquí (para el texto y las
+ * pruebas) y, con los MISMOS valores, dentro de la función SQL `correo_reservar_envio` (migración 62), que es quien decide
+ * de verdad y de forma atómica. Una prueba compara ambos lados.
+ *
+ * Una sola cuenta de Resend sirve a producción, a los Preview, a staging y a las pruebas locales, pero cada base de datos
+ * sólo ve sus propios envíos. Para que la SUMA no pase del plan, el cupo se reparte en dos rebanadas fijas:
+ *   · `produccion`: 80/día y 2,400/mes (30/día y 300/mes de reserva transaccional dentro de esa rebanada).
+ *   · `pruebas`: 10/día y 300/mes (todo lo demás: Preview, staging, local).   80 + 10 = 90 y 2,400 + 300 = 2,700.
+ */
+export const CUPO_TOTAL = { dia: 90, mes: 2700, reservaDia: 30, reservaMes: 300 } as const
+export const CUPO_POR_ENTORNO = {
+  produccion: { dia: 80, mes: 2400, reservaDia: 30, reservaMes: 300 },
+  pruebas: { dia: 10, mes: 300, reservaDia: 0, reservaMes: 0 },
+} as const
+export type EntornoDeCupo = keyof typeof CUPO_POR_ENTORNO
+/** El plan de Resend cuenta el mes por ciclo de facturación (día 23) y reinicia el día a las 23:59:59 UTC. */
+export const DIA_DE_CICLO = 23
+
+/**
+ * Qué rebanada usa este proceso. SOLO el despliegue de producción de Vercel usa `produccion`; Preview, desarrollo, pruebas y
+ * cualquier otra cosa usan `pruebas` (la rebanada pequeña): equivocarse hacia ese lado sólo deja sin cupo, nunca lo excede.
+ */
+export function entornoDeCupo(env: Record<string, string | undefined> = process.env): EntornoDeCupo {
+  return env.VERCEL_ENV === 'production' && env.NODE_ENV === 'production' ? 'produccion' : 'pruebas'
+}
+
+/**
+ * Texto de consentimiento promocional APROBADO por quien corresponda (abogado/dueño). Mientras sea `false`, ninguna variable de
+ * entorno puede encender el correo promocional: es una barrera de código, no una bandera que alguien cambie por descuido.
+ * Se cambia en una revisión de código, junto con el texto aprobado y su versión.
+ */
+export const MARKETING_AUTORIZADO = false
+
 export type LimitesCorreo = {
-  diaMax: number
-  mesMax: number
-  reservaTransaccional: number
   entreMarketingDias: number
   loteMarketing: number
   propiedadesPorCorreo: number
@@ -23,12 +60,6 @@ export type LimitesCorreo = {
 }
 
 export const CORREO: LimitesCorreo = {
-  /** Tope diario interno (el plan permite 100). */
-  diaMax: 70,
-  /** Tope mensual interno, contado en los últimos 30 días (el plan permite 3,000). */
-  mesMax: 2000,
-  /** Cuánto del tope diario queda SIEMPRE libre para lo transaccional (el marketing no lo toca). */
-  reservaTransaccional: 20,
   /** Un correo comercial por persona, como máximo, cada tantos días. Es un MÁXIMO, no una obligación de enviar. */
   entreMarketingDias: 3,
   /** Cuántas personas procesa una ejecución diaria (cabe holgadamente en el tiempo de una función). */
@@ -54,7 +85,7 @@ export const TEXTO_CONSENTIMIENTO_MARKETING =
  * El destino es una CONSTANTE de código (no una variable de entorno) a propósito: nadie lo puede apuntar a otra dirección por error.
  * Apagado por defecto; no cambia ni activa nada del envío real (sigue mandando `CORREO_TRANSACCIONAL` / `CORREO_MARKETING`).
  */
-export const DESTINO_PRUEBAS = 'jemilianoponceperez@gmail.com'
+export const DESTINO_PRUEBAS: string = NEGOCIO.email // la dirección oficial vive en un solo lugar (lib/config/negocio.ts)
 
 export type EntornoCorreo = {
   transaccional: boolean
@@ -73,7 +104,8 @@ export type EntornoCorreo = {
 export function entornoCorreo(env: Record<string, string | undefined> = process.env): EntornoCorreo {
   return {
     transaccional: env.CORREO_TRANSACCIONAL === '1',
-    marketing: env.CORREO_MARKETING === '1',
+    // Dos llaves: la variable Y la autorización de texto legal (constante de código). Sin la segunda no hay correo promocional.
+    marketing: env.CORREO_MARKETING === '1' && MARKETING_AUTORIZADO,
     resendKey: (env.RESEND_API_KEY ?? '').trim(),
     secreto: (env.CORREO_SECRETO ?? '').trim(),
     webhookSecret: (env.RESEND_WEBHOOK_SECRET ?? '').trim(),

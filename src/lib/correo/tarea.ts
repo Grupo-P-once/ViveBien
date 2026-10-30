@@ -1,5 +1,5 @@
 import { COLUMNAS_PROPIEDAD_PORTAL, type FilaPropiedadPortal } from '../portal/tarjeta'
-import { CORREO, entornoCorreo, SECRETO_MINIMO, type EntornoCorreo, type LimitesCorreo } from './config'
+import { CORREO, entornoCorreo, SECRETO_MINIMO, type EntornoCorreo, type EntornoDeCupo, type LimitesCorreo } from './config'
 import { enviarCorreo, type DbCorreo } from './enviar'
 import { plantillaRecomendaciones } from './plantillas'
 import { aTarjetaCorreo, elegirPropiedades, leerPreferencias, motivoDe } from './recomendaciones'
@@ -47,7 +47,7 @@ export function debePausarse(s: { enviados7?: number; rebotados7?: number; queja
 
 export async function ejecutarTareaMarketing(
   db: DbCorreo,
-  o: { entorno?: EntornoCorreo; fetch?: typeof fetch; ahora?: Date; limites?: Partial<LimitesCorreo> } = {},
+  o: { entorno?: EntornoCorreo; entornoCupo?: EntornoDeCupo; fetch?: typeof fetch; ahora?: Date; limites?: Partial<LimitesCorreo> } = {},
 ): Promise<ResumenTarea> {
   const env = o.entorno ?? entornoCorreo()
   if (!env.marketing || !env.resendKey || env.secreto.length < SECRETO_MINIMO) return vacio('desactivada', 'banderas_o_claves')
@@ -121,13 +121,18 @@ export async function ejecutarTareaMarketing(
         propiedades: elegidas.map((x) => x.id),
         urlBaja: urlBajaUnClic(env.secreto, p.id),
       },
-      { entorno: env, fetch: o.fetch, limites: o.limites },
+      { entorno: env, fetch: o.fetch, entornoCupo: o.entornoCupo },
     )
     if (e.estado === 'enviado') {
       r.enviadas++
       await db.from('correo_suscriptores').update({ ultimo_envio_en: ahora.toISOString(), proximo_envio_en: proximo(lim.entreMarketingDias) }).eq('id', p.id)
     } else if (e.estado === 'sin_presupuesto') {
       r.presupuestoAgotado = true
+      break
+    } else if (e.estado === 'error' && e.motivo === 'cupo_sin_confirmar') {
+      // No se pudo confirmar el cupo: no se sigue intentando con los demás (el plan gratuito no se arriesga).
+      r.presupuestoAgotado = true
+      r.fallidas++
       break
     } else if (e.estado === 'suprimido') {
       r.suprimidas++

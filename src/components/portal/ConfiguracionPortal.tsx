@@ -3,7 +3,7 @@
 import { Settings } from 'lucide-react'
 import { Pantalla } from '@/components/portal/Pantalla'
 import CuentaYSeguridad from '@/components/cuenta/CuentaYSeguridad'
-import PreferenciaCorreo from '@/components/correo/PreferenciaCorreo'
+import PreferenciasDeAvisos from '@/components/portal/PreferenciasDeAvisos'
 
 /**
  * «Configuración» del portal (3b-2).
@@ -18,7 +18,8 @@ export default function ConfiguracionPortal({ metodos, propiedades }: { metodos?
   return (
     <Pantalla titulo="Configuración" descripcion="Tu cuenta y cómo entras." icono={Settings}>
       <CuentaYSeguridad metodos={metodos} propiedades={propiedades} />
-      <PreferenciaCorreo />
+      {/* UNA sola pantalla de correo (la misma que en Alertas): avisos de servicio y, aparte, promociones. Cada consentimiento se guarda por su ruta. */}
+      <div className="mt-6"><PreferenciasDeAvisos /></div>
     </Pantalla>
   )
 }

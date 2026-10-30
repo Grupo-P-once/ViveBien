@@ -5,6 +5,7 @@ import path from 'node:path'
 import { dbCorreoPglite } from './dobles/correo-pglite'
 import type { DbCorreo } from '../src/lib/correo/enviar'
 import type { EntornoCorreo } from '../src/lib/correo/config'
+import { COLUMNAS_PROPIEDAD_PORTAL } from '../src/lib/portal/tarjeta'
 import { aplicarEventoProveedor, confirmarSuscripcion, darDeBaja, fijarMarketingDeCuenta, suscribirVisitante } from '../src/lib/correo/suscripcion'
 import { ejecutarTareaMarketing } from '../src/lib/correo/tarea'
 import { enviarBienvenida, enviarConfirmacionPublicador } from '../src/lib/correo/transaccionales'
@@ -26,23 +27,44 @@ const fetchFalso = (async (url: string, init: RequestInit) => {
   return new Response(JSON.stringify({ id: `re_${++contador}` }), { status: 200 })
 }) as unknown as typeof fetch
 
+/**
+ * La tabla `propiedades` de la prueba se arma con las columnas de `COLUMNAS_PROPIEDAD_PORTAL` (la lista que el código REALMENTE pide). Antes era una copia escrita a
+ * mano: cuando el portal agregó `subtipo`, `videos`, `planos` y `extras` la consulta del catálogo falló en silencio (catálogo vacío) y cuatro pruebas se cayeron por eso,
+ * no por las fechas. Una columna nueva ya no puede romperlas.
+ */
+function tablaDePropiedades(): string {
+  const tipo = (c: string) =>
+    /^(precio|metros|banos|altura_libre)$/.test(c) ? 'float8'
+      : /^(recamaras|andenes)$/.test(c) ? 'int'
+        : c === 'precio_incluye_iva' ? 'boolean'
+          : /^(fotos|videos|planos)$/.test(c) ? 'text[]'
+            : /^(publicada_en|created_at)$/.test(c) ? 'timestamptz'
+              : c === 'extras' ? 'jsonb'
+                : 'text'
+  const definicion = (c: string) => (c === 'id' ? 'id text primary key' : c === 'created_at' ? 'created_at timestamptz default now()' : `${c} ${tipo(c)}`)
+  const cols = COLUMNAS_PROPIEDAD_PORTAL.split(',').map((c) => c.trim())
+  return `create table public.propiedades (${cols.map(definicion).join(', ')})`
+}
+
 let pg: PGlite
 let db: DbCorreo
 const q = async <T = Record<string, unknown>>(texto: string, p: unknown[] = []) => (await pg.query<T>(texto, p)).rows
 
+/** Fecha relativa a hoy: los datos de la prueba no envejecen (antes eran 2026-10-01…20 fijas). */
+const hace = (dias: number) => new Date(Date.now() - dias * 86_400_000).toISOString()
 const NAVE = (id: string, extra: Record<string, unknown> = {}) => ({
   id, titulo: `Nave ${id}`, tipo: 'nave', operacion: 'venta', precio: 12_500_000, ubicacion: 'León, Gto.', colonia: 'Puerto Interior', ciudad: 'León',
   metros: 1800, estatus: 'disponible', estado_pub: 'publicada', slug: `nave-${id}`, fotos: ['https://res.cloudinary.com/demo/image/upload/v1/viv/casa.jpg'],
-  publicada_en: '2026-10-01T00:00:00Z', ...extra,
+  publicada_en: hace(30), ...extra,
 })
 async function insertarPropiedad(p: Record<string, unknown>) {
   const cols = Object.keys(p)
   await pg.query(`insert into public.propiedades (${cols.join(', ')}) values (${cols.map((_, i) => `$${i + 1}`).join(', ')})`, cols.map((c) => p[c]))
 }
-// El «ahora» de la tarea debe ir por DELANTE del reloj real de la base: la migración 36 calcula `proximo_envio_en = greatest(now(), …)` con el reloj
+// El «ahora» de la tarea debe ir por DELANTE del reloj real de la base: la migración 62 calcula `proximo_envio_en = greatest(now(), …)` con el reloj
 // de PGlite, así que con una hora fija (antes 2026-10-10T16:00Z) las suscriptoras confirmadas después de esa hora «aún no tocaban» y dos pruebas fallaban
 // según la hora del día. Se ancla a la fecha fija o al reloj real, lo que sea posterior (+1 min): determinista y sin tocar el código de producción.
-const ahoraBase = new Date(Math.max(Date.parse('2026-10-10T16:00:00Z'), Date.now()) + 60_000)
+const ahoraBase = new Date(Date.now() + 60_000)
 
 async function suscriptoraActiva(correo: string, prefs: Record<string, unknown> = { operacion: 'venta', tipos: ['nave'] }) {
   const fila = await q<{ id: string }>(`select (public.correo_suscribir($1, 'Ana', $2::jsonb, 'recomendaciones', 'marketing-2026-10')->>'id') as id`, [correo, JSON.stringify(prefs)])
@@ -53,10 +75,8 @@ async function suscriptoraActiva(correo: string, prefs: Record<string, unknown> 
 beforeAll(async () => {
   pg = new PGlite()
   await pg.exec('create role anon; create role authenticated; create role service_role;')
-  await pg.exec(`create table public.propiedades (id text primary key, titulo text, tipo text, operacion text, precio float8, precio_incluye_iva boolean, moneda text,
-    ubicacion text, colonia text, ciudad text, metros float8, recamaras int, banos float8, altura_libre float8, andenes int, estatus text, estado_pub text, slug text,
-    fotos text[], publicada_en timestamptz, created_at timestamptz default now())`)
-  await pg.exec(readFileSync(path.join(__dirname, '..', 'supabase', '36-correo-suscripciones.sql'), 'utf8'))
+  await pg.exec(tablaDePropiedades())
+  await pg.exec(readFileSync(path.join(__dirname, '..', 'supabase', '62-correo-suscripciones.sql'), 'utf8'))
   db = dbCorreoPglite(pg) as unknown as DbCorreo
 }, 90_000)
 afterAll(async () => { await pg?.close() })
@@ -69,7 +89,7 @@ beforeEach(async () => {
 describe('visitante sin cuenta → confirmar → recomendaciones → baja', () => {
   it('el ciclo completo, y nada comercial sale antes de confirmar', async () => {
     await insertarPropiedad(NAVE('uno'))
-    await insertarPropiedad(NAVE('dos', { publicada_en: '2026-10-05T00:00:00Z' }))
+    await insertarPropiedad(NAVE('dos', { publicada_en: hace(26) }))
     await insertarPropiedad(NAVE('borrador', { estado_pub: 'borrador' }))
     await insertarPropiedad(NAVE('pausada', { estatus: 'pausada' }))
     await insertarPropiedad(NAVE('casa-renta', { tipo: 'casa', operacion: 'renta' }))
@@ -114,7 +134,7 @@ describe('visitante sin cuenta → confirmar → recomendaciones → baja', () =
     expect(peticiones).toHaveLength(1)
 
     // 6 · llega una propiedad nueva: a los 3 días siguientes se manda SÓLO la nueva, ya como correo comercial con baja de un clic
-    await insertarPropiedad(NAVE('tres', { publicada_en: '2026-10-12T00:00:00Z' }))
+    await insertarPropiedad(NAVE('tres', { publicada_en: hace(19) }))
     const dia6 = new Date(dia3.getTime() + 3 * 86_400_000 + 60_000)
     expect(await ejecutarTareaMarketing(db, { entorno: ENV, fetch: fetchFalso, ahora: dia6 })).toMatchObject({ enviadas: 1 })
     const reco = peticiones[1]
@@ -137,7 +157,7 @@ describe('visitante sin cuenta → confirmar → recomendaciones → baja', () =
     // 8 · se da de baja con el enlace (sin sesión, sin banderas) y ya no sale nada
     expect(await darDeBaja(db, tokenBaja, { entorno: { ...ENV, marketing: false, transaccional: false } })).toEqual({ ok: true })
     expect(await darDeBaja(db, tokenBaja, { entorno: ENV })).toEqual({ ok: true }) // idempotente
-    await insertarPropiedad(NAVE('cuatro', { publicada_en: '2026-10-20T00:00:00Z' }))
+    await insertarPropiedad(NAVE('cuatro', { publicada_en: hace(10) }))
     const dia9 = new Date(dia6.getTime() + 4 * 86_400_000)
     expect((await ejecutarTareaMarketing(db, { entorno: ENV, fetch: fetchFalso, ahora: dia9 })).procesadas).toBe(0)
     expect(peticiones).toHaveLength(2)
@@ -217,15 +237,26 @@ describe('proveedor: rebotes, quejas y presupuesto', () => {
     expect(peticiones).toEqual([])
   })
 
-  it('el presupuesto diario detiene al marketing y deja la reserva a lo transaccional', async () => {
+  it('el cupo diario detiene al marketing en 50 y deja la reserva de 30 a lo transaccional (rebanada de producción, cifras fijas de la base)', async () => {
     await insertarPropiedad(NAVE('uno'))
     for (let i = 0; i < 5; i++) await suscriptoraActiva(`p${i}@ejemplo.test`)
-    const lim = { diaMax: 4, reservaTransaccional: 2 } // marketing máximo 2 al día
-    const r = await ejecutarTareaMarketing(db, { entorno: ENV, fetch: fetchFalso, ahora: ahoraBase, limites: lim })
+    // 48 envíos ya hechos hoy: quedan 2 lugares para lo opcional (50 - 48).
+    await pg.query(`insert into public.correo_envios (clave, categoria, tipo, email_norm, estado, entorno)
+                    select 'previo/' || g, 'transaccional', 'x', 'previo@ejemplo.test', 'enviado', 'produccion' from generate_series(1, 48) g`)
+    const r = await ejecutarTareaMarketing(db, { entorno: ENV, fetch: fetchFalso, ahora: ahoraBase, entornoCupo: 'produccion' })
     expect(r).toMatchObject({ enviadas: 2, presupuestoAgotado: true })
     expect(peticiones).toHaveLength(2)
-    const b = await enviarBienvenida(db, 'uid-reserva', { correo: 'reserva@ejemplo.test', verificado: true }, { entorno: ENV, fetch: fetchFalso, limites: lim })
+    const b = await enviarBienvenida(db, 'uid-reserva', { correo: 'reserva@ejemplo.test', verificado: true }, { entorno: ENV, fetch: fetchFalso, entornoCupo: 'produccion' })
     expect(b.estado).toBe('enviado')
+  })
+
+  it('si no se puede confirmar el cupo, la tarea de marketing no envía a nadie', async () => {
+    await insertarPropiedad(NAVE('uno'))
+    for (let i = 0; i < 3; i++) await suscriptoraActiva(`c${i}@ejemplo.test`)
+    const sinLibro = { ...db, rpc: async (fn: string, args?: Record<string, unknown>) => (fn === 'correo_reservar_envio' ? { data: null, error: { message: 'caído' } } : db.rpc(fn, args)) } as DbCorreo
+    const r = await ejecutarTareaMarketing(sinLibro, { entorno: ENV, fetch: fetchFalso, ahora: ahoraBase })
+    expect(r).toMatchObject({ enviadas: 0, presupuestoAgotado: true })
+    expect(peticiones).toEqual([])
   })
 
   it('las marcas del proveedor y las banderas apagadas no envían ni gastan nada', async () => {
@@ -301,13 +332,13 @@ describe('transaccionales de D-80', () => {
 
 describe('MODO DE PRUEBAS de punta a punta: nada sale a nadie más que al destino de pruebas', () => {
   const PRUEBAS: EntornoCorreo = { ...ENV, modoPruebas: true }
-  const DESTINO = 'jemilianoponceperez@gmail.com'
+  const DESTINO = 'informes@vivebienn.com'
   const soloDestino = () => {
     for (const p of peticiones) {
       expect(p.cuerpo.to).toEqual([DESTINO])
       expect(Object.keys(p.cuerpo).filter((k) => /^(cc|bcc|cco)$/i.test(k))).toEqual([])
       expect(p.cuerpo.reply_to).toBe('informes@vivebienn.com')
-      expect(p.cuerpo.subject.startsWith('[PRUEBA] ')).toBe(true)
+      expect(p.cuerpo.subject).toMatch(/^\[PRUEBA VB · [0-9A-F]{8}\] /)
     }
   }
 

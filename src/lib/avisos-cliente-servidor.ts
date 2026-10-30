@@ -10,6 +10,8 @@ import {
   type BusquedaParaAviso, type GrupoDeCorreo, type NotificacionNueva,
 } from '@/lib/avisos-cliente'
 import { crearTokenDeBaja } from '@/lib/avisos-token'
+import { claveResend, enviarPorEmisorUnico } from '@/lib/correo/emisor'
+import { createHash } from 'node:crypto'
 import { cambiosDePrecio, type PropiedadConPrecio, type SuscripcionDePrecio } from '@/lib/avisos-precio'
 
 /**
@@ -26,22 +28,35 @@ const TOPE_BUSQUEDAS = 3000
 
 export type ResumenDeAvisos = { bajasDePrecio?: number; busquedasRevisadas: number; notificacionesNuevas: number; legalesNuevas: number; correosEnviados: number; correosFallidos: number; omitido?: string }
 
-async function enviarCorreo(para: string, asunto: string, texto: string, html: string, bajaUrl?: string): Promise<boolean> {
-  const clave = process.env.RESEND_API_KEY?.trim()
-  if (!clave) return false
+/** Resultado de un intento de envío. `parar`: no hay cupo (o no se pudo confirmar): no tiene caso seguir intentando con los demás en esta corrida. */
+type Salida = { ok: boolean; parar: boolean }
+
+/**
+ * Manda UN correo por el emisor único (`correo/emisor.ts`): reserva cupo del plan antes de salir, respeta el modo de pruebas y NO sale si no
+ * se puede confirmar el cupo. La clave es estable por persona y por conjunto de avisos: si el correo salió pero no se alcanzó a marcar el aviso,
+ * la corrida siguiente lo reconoce como ya enviado (`duplicado`) en vez de mandarlo otra vez.
+ */
+async function enviarCorreo(uid: string, tipo: 'alertas' | 'baja_de_precio' | 'legal', ids: number[], para: string, asunto: string, texto: string, html: string, bajaUrl?: string): Promise<Salida> {
+  const clave = claveResend()
+  if (!clave) return { ok: false, parar: false }
+  const huella = createHash('sha256').update([...ids].sort((a, b) => a - b).join(',')).digest('hex').slice(0, 16)
   try {
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${clave}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+    const res = await enviarPorEmisorUnico({
+      apiKey: clave,
+      clave: `aviso/${tipo}/${uid}/${huella}`,
+      categoria: 'servicio',
+      tipo: `aviso_${tipo}`,
+      para,
+      cuerpo: {
         from: process.env.RESEND_FROM || NEGOCIO.remitente, to: [para], subject: asunto, text: texto, html,
         // Baja con un clic desde el propio cliente de correo (RFC 8058).
         ...(bajaUrl ? { headers: { 'List-Unsubscribe': `<${bajaUrl}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' } } : {}),
-      }),
+      },
     })
-    if (!res.ok) { console.error('[avisos] Resend rechazó el envío:', res.status); return false }
-    return true
-  } catch (e) { console.error('[avisos] no se pudo enviar:', e instanceof Error ? e.message : 'error'); return false }
+    if (res.ok) return { ok: true, parar: false }
+    console.error('[avisos] el envío no salió:', res.estado, res.status ?? '')
+    return { ok: false, parar: res.estado === 'sin_cupo' || res.estado === 'sin_confirmar' }
+  } catch (e) { console.error('[avisos] no se pudo enviar:', e instanceof Error ? e.message : 'error'); return { ok: false, parar: false } }
 }
 
 /**
@@ -170,28 +185,31 @@ export async function avisosDeClientes(ahora = Date.now()): Promise<ResumenDeAvi
         porBusqueda.set(clave, g)
       }
       const c = correoDeAlertas({ nombre: u.nombre, grupos: [...porBusqueda.values()], sitio: SITIO, urlBaja, urlPreferencias })
-      if (await enviarCorreo(u.email, c.asunto, c.texto, c.html, baja ? urlBaja : undefined)) {
+      const s1 = await enviarCorreo(uid, 'alertas', dealertas.map((f) => f.id), u.email, c.asunto, c.texto, c.html, baja ? urlBaja : undefined)
+      if (s1.ok) {
         await db.from('notificaciones').update({ correo_enviado_en: new Date(ahora).toISOString() }).in('id', dealertas.map((f) => f.id))
         r.correosEnviados++
-      } else r.correosFallidos++
+      } else { r.correosFallidos++; if (s1.parar) { r.omitido = 'sin_cupo'; break } }
     }
     // 3a-bis · Baja de precio: SOLO con su consentimiento propio (`correo_precio`, apagado por defecto). Sin él, el aviso queda en la bandeja y no se manda nada.
     const deprecio = p.correo_precio === true ? suyas.filter((f) => f.tipo === 'baja_de_precio') : []
     if (deprecio.length) {
       const c = correoDeBajaDePrecio({ nombre: u.nombre, avisos: deprecio, sitio: SITIO, urlBaja, urlPreferencias })
-      if (await enviarCorreo(u.email, c.asunto, c.texto, c.html, baja ? urlBaja : undefined)) {
+      const s2 = await enviarCorreo(uid, 'baja_de_precio', deprecio.map((f) => f.id), u.email, c.asunto, c.texto, c.html, baja ? urlBaja : undefined)
+      if (s2.ok) {
         await db.from('notificaciones').update({ correo_enviado_en: new Date(ahora).toISOString() }).in('id', deprecio.map((f) => f.id))
         r.correosEnviados++
-      } else r.correosFallidos++      // NO se marca como enviado: queda pendiente y se reintenta en la siguiente corrida
+      } else { r.correosFallidos++; if (s2.parar) { r.omitido = 'sin_cupo'; break } }      // NO se marca como enviado: queda pendiente y se reintenta en la siguiente corrida
     }
     // 3b · Aviso legal (servicio; se puede apagar)
     const legales = p.correo_legal ? suyas.filter((f) => f.tipo === 'legal') : []
     if (legales.length) {
       const c = correoLegal({ nombre: u.nombre, avisos: legales, sitio: SITIO, urlPreferencias })
-      if (await enviarCorreo(u.email, c.asunto, c.texto, c.html)) {
+      const s3 = await enviarCorreo(uid, 'legal', legales.map((f) => f.id), u.email, c.asunto, c.texto, c.html)
+      if (s3.ok) {
         await db.from('notificaciones').update({ correo_enviado_en: new Date(ahora).toISOString() }).in('id', legales.map((f) => f.id))
         r.correosEnviados++
-      } else r.correosFallidos++
+      } else { r.correosFallidos++; if (s3.parar) { r.omitido = 'sin_cupo'; break } }
     }
   }
   return r

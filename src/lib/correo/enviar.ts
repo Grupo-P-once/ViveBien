@@ -1,7 +1,7 @@
 import { NEGOCIO } from '../config/negocio'
-import { CORREO, DESTINO_PRUEBAS, entornoCorreo, type EntornoCorreo, type LimitesCorreo } from './config'
+import { DESTINO_PRUEBAS, entornoCorreo, entornoDeCupo, type EntornoCorreo, type EntornoDeCupo } from './config'
 import { normalizarCorreo } from './seguridad'
-import { cuerpoDePruebas, exigirSoloDestinoDePruebas, llamarResend, PREFIJO_PRUEBA } from './resend'
+import { cuerpoDePruebas, exigirSoloDestinoDePruebas, idDePrueba, llamarResend, MARCA_PRUEBA, prefijoDePrueba } from './resend'
 
 /**
  * Envío de correo por Resend (D-80). Código de servidor: la clave nunca sale de aquí.
@@ -25,7 +25,7 @@ export type DbCorreo = {
 export type SolicitudCorreo = {
   /** Única por correo lógico: `bienvenida/<uid>`, `reco/<suscriptor>/<día>`… Es la base de la idempotencia. */
   clave: string
-  categoria: 'transaccional' | 'marketing'
+  categoria: CategoriaCorreo
   tipo: string
   para: string
   asunto: string
@@ -44,9 +44,61 @@ export type ResultadoEnvio = {
   motivo?: string
 }
 
-export { PREFIJO_PRUEBA, exigirSoloDestinoDePruebas }
+export { MARCA_PRUEBA, prefijoDePrueba, exigirSoloDestinoDePruebas }
 
-type Opciones = { fetch?: typeof fetch; entorno?: EntornoCorreo; limites?: Partial<LimitesCorreo> }
+/**
+ * `transaccional`: lo que la persona o el equipo necesita para operar (citas, invitaciones, avisos internos). Puede usar TODO el cupo.
+ * `servicio`: avisos que la persona pidió (alertas de búsquedas, baja de precio) y avisos legales; no son publicidad, pero son opcionales para el cupo:
+ *   nunca tocan la reserva transaccional. `marketing`: publicidad (aplazada; exige suscripción activa).
+ */
+export type CategoriaCorreo = 'transaccional' | 'servicio' | 'marketing'
+
+type Opciones = { fetch?: typeof fetch; entorno?: EntornoCorreo; entornoCupo?: EntornoDeCupo }
+
+export type ReservaDeCupo =
+  | { accion: 'enviar'; id: number }
+  | { accion: 'duplicado'; estadoPrevio?: string }
+  | { accion: 'suprimido' }
+  | { accion: 'sin_cupo' }
+  /** La base no contestó o contestó algo ilegible: NO se sabe si hay cupo, y sin cupo confirmado no se envía. */
+  | { accion: 'sin_confirmar' }
+
+/**
+ * Reserva un correo en el libro de cupo (función SQL atómica `correo_reservar_envio`). Es la ÚNICA puerta al cupo: la usan
+ * `enviarCorreo` y el emisor único de los correos heredados. Cualquier cosa distinta de «enviar» significa que NO se llama al proveedor.
+ */
+export async function reservarCupo(
+  db: DbCorreo,
+  r: { clave: string; categoria: CategoriaCorreo; tipo: string; para: string; suscriptorId?: string | null; propiedades?: string[]; entornoCupo?: EntornoDeCupo },
+): Promise<ReservaDeCupo> {
+  let res: RespuestaRpc
+  try {
+    res = await db.rpc('correo_reservar_envio', {
+      p_clave: r.clave,
+      p_categoria: r.categoria,
+      p_tipo: r.tipo,
+      p_email: r.para,
+      p_suscriptor: r.suscriptorId ?? null,
+      p_props: r.propiedades?.length ? r.propiedades : null,
+      p_entorno: r.entornoCupo ?? entornoDeCupo(),
+    })
+  } catch {
+    return { accion: 'sin_confirmar' }
+  }
+  const { data, error } = res
+  if (error || !data || typeof data !== 'object') return { accion: 'sin_confirmar' }
+  const d = data as { accion?: string; id?: number; estado?: string }
+  if (d.accion === 'duplicado') return { accion: 'duplicado', estadoPrevio: typeof d.estado === 'string' ? d.estado : undefined }
+  if (d.accion === 'suprimido') return { accion: 'suprimido' }
+  if (d.accion === 'sin_presupuesto') return { accion: 'sin_cupo' }
+  if (d.accion === 'enviar' && typeof d.id === 'number') return { accion: 'enviar', id: d.id }
+  return { accion: 'sin_confirmar' }
+}
+
+/** Anota el resultado de un envío reservado. Si la anotación falla, el envío queda «pendiente» y SIGUE contando para el cupo (falla hacia el lado seguro). */
+export async function marcarEnvio(db: DbCorreo, id: number, estado: 'enviado' | 'error', resendId: string | null, texto: string | null): Promise<void> {
+  try { await db.rpc('correo_marcar_envio', { p_id: id, p_estado: estado, p_resend_id: resendId, p_error: texto }) } catch { /* queda «pendiente»: sigue contando */ }
+}
 
 export async function enviarCorreo(db: DbCorreo, s: SolicitudCorreo, o: Opciones = {}): Promise<ResultadoEnvio> {
   const env = o.entorno ?? entornoCorreo()
@@ -57,34 +109,22 @@ export async function enviarCorreo(db: DbCorreo, s: SolicitudCorreo, o: Opciones
   const para = env.modoPruebas ? DESTINO_PRUEBAS : original
   if (s.clave.length < 3 || s.clave.length > 200) return { estado: 'omitido', motivo: 'clave_invalida' }
   // Banderas: lo nuevo sale apagado. Sin clave del proveedor no se reserva nada (no se gasta presupuesto ni se deja basura).
-  if (s.categoria === 'transaccional' && !env.transaccional) return { estado: 'omitido', motivo: 'transaccional_apagado' }
+  if ((s.categoria === 'transaccional' || s.categoria === 'servicio') && !env.transaccional) return { estado: 'omitido', motivo: 'transaccional_apagado' }
   if (s.categoria === 'marketing' && (!env.marketing || !env.secreto)) return { estado: 'omitido', motivo: 'marketing_apagado' }
   if (!env.resendKey) return { estado: 'omitido', motivo: 'sin_clave_del_proveedor' }
 
-  const lim = { ...CORREO, ...(o.limites ?? {}) }
-  const { data, error } = await db.rpc('correo_reservar_envio', {
-    p_clave: s.clave,
-    p_categoria: s.categoria,
-    p_tipo: s.tipo,
-    p_email: para,
-    p_suscriptor: s.suscriptorId ?? null,
-    p_props: s.propiedades?.length ? s.propiedades : null,
-    p_dia_max: lim.diaMax,
-    p_mes_max: lim.mesMax,
-    p_reserva_transaccional: lim.reservaTransaccional,
-  })
-  if (error || !data || typeof data !== 'object') {
-    console.error('[correo] no se pudo reservar el envío', s.categoria, s.tipo)
-    return { estado: 'error', motivo: 'reserva' }
+  // Cupo duro: si no se puede CONFIRMAR que hay lugar, no se envía (ni se llama al proveedor).
+  const r = await reservarCupo(db, { clave: s.clave, categoria: s.categoria, tipo: s.tipo, para, suscriptorId: s.suscriptorId, propiedades: s.propiedades, entornoCupo: o.entornoCupo })
+  if (r.accion === 'sin_confirmar') {
+    console.error('[correo] no se pudo confirmar el cupo; no se envía', s.categoria, s.tipo)
+    return { estado: 'error', motivo: 'cupo_sin_confirmar' }
   }
-  const r = data as { accion?: string; id?: number }
   if (r.accion === 'duplicado') return { estado: 'duplicado' }
   if (r.accion === 'suprimido') return { estado: 'suprimido' }
-  if (r.accion === 'sin_presupuesto') return { estado: 'sin_presupuesto' }
-  if (r.accion !== 'enviar' || typeof r.id !== 'number') return { estado: 'error', motivo: 'reserva_desconocida' }
+  if (r.accion === 'sin_cupo') return { estado: 'sin_presupuesto' }
+  const reservaId = r.id
 
-  const marcar = (estado: 'enviado' | 'error', resendId: string | null, texto: string | null) =>
-    db.rpc('correo_marcar_envio', { p_id: r.id, p_estado: estado, p_resend_id: resendId, p_error: texto })
+  const marcar = (estado: 'enviado' | 'error', resendId: string | null, texto: string | null) => marcarEnvio(db, reservaId, estado, resendId, texto)
 
   const cabeceras: Record<string, string> = {}
   if (s.categoria === 'marketing' && !s.urlBaja) {
@@ -107,7 +147,7 @@ export async function enviarCorreo(db: DbCorreo, s: SolicitudCorreo, o: Opciones
     ...(Object.keys(cabeceras).length ? { headers: cabeceras } : {}),
   }
   // Modo de pruebas: el cuerpo se reconstruye (destino fijo, sin copias, sin baja ni enlaces con token) y se revisa ANTES de llamar al proveedor.
-  const cuerpo = env.modoPruebas ? cuerpoDePruebas(base) : base
+  const cuerpo = env.modoPruebas ? cuerpoDePruebas(base, idDePrueba(s.clave)) : base
   if (env.modoPruebas) {
     try {
       exigirSoloDestinoDePruebas(cuerpo)
