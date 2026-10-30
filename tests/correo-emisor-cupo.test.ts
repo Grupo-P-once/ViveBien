@@ -5,6 +5,7 @@ import { avisarDeLead } from '../src/lib/aviso-lead'
 import { enviarInvitacion } from '../src/lib/invitacion-correo'
 import { mandar } from '../src/lib/citas/enviar'
 import { DESTINO_PRUEBAS } from '../src/lib/correo/config'
+import { idDePrueba, llamarResend } from '../src/lib/correo/resend'
 
 /**
  * F0 — CUPO DURO Y EMISOR ÚNICO, de punta a punta con el libro REAL (migración 62 en PGlite) y un «Resend» falso.
@@ -100,7 +101,7 @@ describe('SIN CUPO NO SE ENVÍA', () => {
     })))
     expect(r.filter((x) => x.ok)).toHaveLength(10)
     expect(r.filter((x) => x.estado === 'sin_cupo')).toHaveLength(15)
-    expect(peticiones).toHaveLength(10)
+    expect(peticiones).toHaveLength(0) // Preview/local: la salida está SIMULADA, no hay ninguna petición a Resend
   })
 
   it('lo opcional («servicio») respeta la reserva transaccional en producción: se detiene en 50 y lo transaccional sigue hasta 80', async () => {
@@ -127,33 +128,32 @@ describe('MODO DE PRUEBAS cuenta igual y marca el asunto con un ID', () => {
 
   it('va SOLO a informes@vivebienn.com, con asunto «[PRUEBA VB · ID] …», y el libro lo cuenta', async () => {
     await enviarInvitacion({ email: 'persona.real@cliente-real.test', rol: 'publicador', invitadoPor: 'otra.real@cliente-real.test' })
-    expect(peticiones).toHaveLength(1)
-    expect(peticiones[0].cuerpo.to).toEqual([DESTINO_PRUEBAS])
+    expect(peticiones).toEqual([]) // F2: en Preview la salida está SIMULADA; el cuerpo de prueba se comprueba en correo-modo-pruebas*.test.ts
     expect(DESTINO_PRUEBAS).toBe('informes@vivebienn.com')
-    expect(String(peticiones[0].cuerpo.subject)).toMatch(/^\[PRUEBA VB · [0-9A-F]{8}\] invitacion$/)
     expect(await libro.usados('pruebas')).toBe(1)
     const filas = await libro.filas()
+    expect(filas[0]).toMatchObject({ estado: 'enviado', tipo: 'invitacion' })
+    expect(filas[0].resend_id).toMatch(/^simulado_[0-9a-f]{8}$/)
     expect(filas[0].email_hash).toBe(await libro.huella(DESTINO_PRUEBAS)) // ni el libro guarda la dirección real: sólo la huella del destino de pruebas
     expect(JSON.stringify(filas)).not.toContain(DESTINO_PRUEBAS)
     // F1: el contenido real (que mencionaba al invitado) se descarta: la dirección real no aparece en NINGÚN campo ni en el libro.
     expect(JSON.stringify(peticiones) + JSON.stringify(filas)).not.toContain('cliente-real')
-    expect(String(peticiones[0].cuerpo.text)).toContain('contenido sintético')
   })
 
   it('el ID del asunto es estable para la misma clave y distinto entre correos', async () => {
     const mandarUno = (clave: string) => enviarPorEmisorUnico({ apiKey: 'k', clave, categoria: 'transaccional', tipo: 'x', para: 'a@ejemplo.test', cuerpo: { from: 'a', to: ['a@ejemplo.test'], subject: 'Hola', html: 'h', text: 't' }, db: libro.db })
-    await mandarUno('id/uno'); await mandarUno('id/dos')
-    await libro.vaciar()
     await mandarUno('id/uno')
-    const ids = peticiones.map((p) => /^\[PRUEBA VB · ([0-9A-F]{8})\]/.exec(String(p.cuerpo.subject))?.[1])
-    expect(ids[0]).toBeTruthy()
-    expect(ids[0]).not.toBe(ids[1])
-    expect(ids[2]).toBe(ids[0])
+    const id = idDePrueba('id/uno')
+    expect(id).toMatch(/^[0-9A-F]{8}$/)
+    expect(idDePrueba('id/uno')).toBe(id) // estable para la misma clave
+    expect(idDePrueba('id/dos')).not.toBe(id) // distinto entre correos
+    expect((await libro.filas())[0].resend_id).toBe(`simulado_${id.toLowerCase()}`)
   })
 
   it('una prueba que agota el cupo de pruebas impide más pruebas (10 al día), sin tocar la rebanada de producción', async () => {
     for (let i = 0; i < 12; i++) await enviarPorEmisorUnico({ apiKey: 'k', clave: `t/${i}`, categoria: 'transaccional', tipo: 'x', para: 'a@ejemplo.test', cuerpo: { from: 'a', to: ['a@ejemplo.test'], subject: 's', html: 'h', text: 't' }, db: libro.db })
-    expect(peticiones).toHaveLength(10)
+    expect(peticiones).toHaveLength(0) // simulado
+    expect(await libro.usados('pruebas')).toBe(10)
     expect(await libro.usados('produccion')).toBe(0)
   })
 })
@@ -187,12 +187,26 @@ describe('FUERA DE PRODUCCIÓN no sale ningún correo real (los contadores de ot
     })
   }
 
-  it('con el modo de pruebas sí sale, pero sólo a informes@ y contando en la rebanada de pruebas', async () => {
+  it('con el modo de pruebas tampoco sale nada: se SIMULA y se cuenta en la rebanada de pruebas', async () => {
     vi.stubEnv('CORREO_MODO_PRUEBAS', '1')
     await avisarDeLead(LEAD)
-    expect(peticiones).toHaveLength(1)
-    expect(peticiones[0].cuerpo.to).toEqual([DESTINO_PRUEBAS])
+    expect(peticiones).toEqual([])
     expect(await libro.usados('pruebas')).toBe(1)
+    expect((await libro.filas())[0].resend_id).toMatch(/^simulado_/)
+  })
+
+  it('BARRERA DE SALIDA: con modo de pruebas, clave puesta y un fetch inyectado, NINGUNA ruta de emisión llega a la red en Preview (ni siquiera el fetch inyectado)', async () => {
+    vi.stubEnv('CORREO_MODO_PRUEBAS', '1')
+    const espia = vi.fn(async () => new Response('{}', { status: 200 }))
+    for (const [, emitir] of emisores) await emitir()
+    const directa = await llamarResend({ apiKey: 'k', cuerpo: { from: 'a', to: ['x@y.test'], subject: 's', html: 'h', text: 't' }, fetch: espia as unknown as typeof fetch, modoPruebas: false, idempotencia: 'barrera/1' })
+    const directaPruebas = await llamarResend({ apiKey: 'k', cuerpo: { from: 'a', to: ['x@y.test'], subject: 's', html: 'h', text: 't' }, fetch: espia as unknown as typeof fetch, modoPruebas: true, idempotencia: 'barrera/2' })
+    for (const r of [directa, directaPruebas]) {
+      expect(r.headers.get('x-vive-bien-simulado')).toBe('1')
+      expect(((await r.json()) as { id: string }).id).toMatch(/^simulado_/)
+    }
+    expect(espia).not.toHaveBeenCalled()
+    expect(peticiones).toEqual([])
   })
 })
 

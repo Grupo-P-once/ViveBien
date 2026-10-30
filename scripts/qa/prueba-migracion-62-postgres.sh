@@ -15,6 +15,8 @@ Q() { docker exec -i $C psql -U postgres -d t62 -v ON_ERROR_STOP=1 -X -q -At "$@
 # 1 · base vacía y repetición
 Q -f /tmp/62.sql >/dev/null 2>&1; ver "aplica en base vacía" $? 0
 Q -f /tmp/62.sql >/dev/null 2>&1; ver "se puede aplicar una 2.ª vez" $? 0
+# F2: todo envío en producción exige una lectura vigente del panel de Resend; se siembra una sintética en cero.
+Q -c "select public.correo_conciliar(0, 0, 'sintetico', null)" >/dev/null
 ver "6 tablas correo_*" "$(Q -c "select count(*) from pg_class where relnamespace='public'::regnamespace and relkind='r' and relname like 'correo\_%'")" 6
 ver "14 funciones correo_*" "$(Q -c "select count(*) from pg_proc where pronamespace='public'::regnamespace and proname like 'correo\_%'")" 14
 ver "RLS activo en las 6 tablas" "$(Q -c "select count(*) from pg_class where relnamespace='public'::regnamespace and relkind='r' and relname like 'correo\_%' and relrowsecurity")" 6

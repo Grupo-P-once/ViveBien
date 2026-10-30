@@ -13,7 +13,8 @@ type Cupo = { hoy: number; tope_dia: number; mes: number; tope_mes: number } | n
 type Resumen = {
   banderas: { entorno: string; transaccionalEncendido: boolean; marketingAutorizado: boolean; marketingEncendido: boolean; modoPruebas: boolean }
   cupo: { total: { dia: number; mes: number }; libroProduccion: Cupo; libroPruebas: Cupo; migracionAplicada: boolean; limite: string }
-  conciliacion: { leido_en: string; resend_dia_usado: number; resend_mes_usado: number } | null
+  estadoDeEnvio: { bloqueado: boolean; motivo: string | null; explicacion: string }
+  conciliacion: { leido_en: string; resend_dia_usado: number; resend_mes_usado: number; vence_en: string | null; vigente: boolean; periodo: string } | null
   audiencia: { nota: string; avisosDeBusqueda: number | string | null; bajaDePrecio: number | string | null; avisosLegales: number | string | null; promocionesConConsentimiento: number | string | null }
 }
 type Tipo = { id: string; nombre: string; categoria: string; estado: string; disparador: string }
@@ -99,10 +100,13 @@ export default function PanelMarketing() {
                 {resumen.cupo.migracionAplicada && prod ? <strong>{prod.hoy} de {prod.tope_dia} hoy · {prod.mes} de {prod.tope_mes} en el ciclo</strong> : <strong>sin datos: la migración del libro de correo aún no está aplicada en esta base</strong>}.
               </li>
             </ul>
+            <p role="status" data-estado-envio={resumen.estadoDeEnvio.bloqueado ? 'bloqueado' : 'permitido'} className={`rounded-lg border p-3 font-medium ${resumen.estadoDeEnvio.bloqueado ? 'border-amber-300 bg-amber-50 text-amber-950' : 'bg-background'}`}>
+              Envío de correo: {resumen.estadoDeEnvio.bloqueado ? 'BLOQUEADO' : 'permitido'}. {resumen.estadoDeEnvio.explicacion}
+            </p>
             <p role="note" className="rounded-lg border bg-background p-3">{resumen.cupo.limite}</p>
             <p>
               Última lectura del panel de Resend:{' '}
-              {resumen.conciliacion ? <strong>{new Date(resumen.conciliacion.leido_en).toLocaleString('es-MX')} — {resumen.conciliacion.resend_dia_usado} hoy, {resumen.conciliacion.resend_mes_usado} en el ciclo</strong> : <strong>ninguna (el correo opcional no sale sin una lectura de los últimos 8 días)</strong>}.
+              {resumen.conciliacion ? <strong>{new Date(resumen.conciliacion.leido_en).toLocaleString('es-MX')} — {resumen.conciliacion.resend_dia_usado} hoy, {resumen.conciliacion.resend_mes_usado} en el ciclo ({resumen.conciliacion.periodo}). {resumen.conciliacion.vigente ? `Vigente hasta ${resumen.conciliacion.vence_en ? new Date(resumen.conciliacion.vence_en).toLocaleString('es-MX') : '—'}.` : 'CADUCADA: ya no habilita envíos.'}</strong> : <strong>ninguna (sin una lectura de los últimos 8 días no sale ningún correo en producción)</strong>}.
             </p>
             {perfil.superAdmin ? (
               <form onSubmit={conciliar} className="grid gap-3 rounded-lg border bg-background p-4 sm:grid-cols-[repeat(3,minmax(0,1fr))_auto]" aria-label="Registrar lectura de Resend">

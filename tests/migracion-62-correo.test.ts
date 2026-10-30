@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { PGlite } from '@electric-sql/pglite'
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
@@ -41,6 +41,9 @@ beforeAll(async () => {
   await db.exec(sql('62-correo-suscripciones.sql'))
 }, 90_000)
 afterAll(async () => { await db?.close() })
+// F2: TODO envío en producción (también lo transaccional) exige una lectura vigente del panel de Resend. Cada prueba parte con una lectura sintética en cero;
+// las que prueban la ausencia de lectura la borran a propósito.
+beforeEach(async () => { await db.query("select public.correo_conciliar(0, 0, 'sintetico', null)") })
 
 describe('la migración aplica y se puede reaplicar', () => {
   it('es idempotente y deja las 4 tablas con RLS activado y SIN políticas', async () => {
@@ -552,7 +555,8 @@ describe('F1 · LÍMITE AGREGADO: el correo OPCIONAL en producción exige una le
   it('sin lectura, o con una de más de 8 días, lo opcional NO sale; lo transaccional sí', async () => {
     await db.exec('delete from public.correo_envios; delete from public.correo_conciliacion')
     expect(await reservar('conc/1', 'servicio', 'c1@ejemplo.test')).toMatchObject({ accion: 'sin_presupuesto', motivo: 'sin_conciliacion' })
-    expect((await reservar('conc/t', 'transaccional', 'c1@ejemplo.test')).accion).toBe('enviar')
+    // F2: sin lectura vigente NADA sale en producción, tampoco lo transaccional (falla cerrada: no se puede probar el consumo total de la cuenta).
+    expect(await reservar('conc/t', 'transaccional', 'c1@ejemplo.test')).toMatchObject({ accion: 'sin_presupuesto', motivo: 'sin_conciliacion' })
     await db.exec(`insert into public.correo_conciliacion (leido_en, resend_dia_usado, resend_mes_usado, actor) values (now() - interval '9 days', 0, 0, 'sintetico')`)
     expect(await reservar('conc/2', 'servicio', 'c2@ejemplo.test')).toMatchObject({ motivo: 'sin_conciliacion' })
     await conciliar(0, 0)

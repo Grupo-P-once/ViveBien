@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from 'node:crypto'
 import { NEGOCIO } from '../config/negocio'
-import { DESTINO_PRUEBAS } from './config'
+import { DESTINO_PRUEBAS, entornoDeCupo } from './config'
 
 /**
  * ÚNICO punto del sitio que llama a la API de Resend (D-80, modo de pruebas).
@@ -126,6 +126,12 @@ export async function llamarResend(l: Llamada): Promise<Response> {
     exigirSoloDestinoDePruebas(cuerpo)
     // El asunto de una prueba SIEMPRE empieza por `[PRUEBA VB · ID]`: sin eso no se manda (no se puede confundir con un correo real).
     if (!/^\[PRUEBA VB · [0-9A-F]{8}\] /.test(String(cuerpo.subject))) throw new Error('fuga_modo_pruebas')
+  }
+  // BARRERA DE SALIDA (servidor, F2): FUERA DE PRODUCCIÓN esta función NO toca la red del proveedor, pase lo que pase (ruta, cron, reintento o lo que sea):
+  // devuelve una respuesta SIMULADA. No depende de ninguna variable visual ni de que haya o no clave; ni siquiera un `fetch` inyectado se llama.
+  // Producción es lo único que puede salir, y sólo si `VERCEL_ENV` lo dice (Preview, desarrollo y pruebas son otra cosa).
+  if (entornoDeCupo() !== 'produccion') {
+    return new Response(JSON.stringify({ id: `simulado_${idDePrueba(l.idempotencia).toLowerCase()}` }), { status: 200, headers: { 'content-type': 'application/json', 'x-vive-bien-simulado': '1' } })
   }
   return (l.fetch ?? fetch)(URL_RESEND, {
     method: 'POST',

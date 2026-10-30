@@ -4,9 +4,11 @@
 -- (era la «36» de D-80; renumerada a 62 porque producción ya aplicó hasta la 61 y la 36/37 de D-80 chocaban con otras.)
 --
 -- ───────────────────────────────────────────────────────────
--- ESTADO: PREPARADA, NO APLICADA (sólo probada en PGlite). ORDEN OBLIGATORIO: esta migración va ANTES del código que la usa.
+-- ESTADO (30-oct-2026): probada en PGlite y en PostgreSQL 17.6 y 17.11 desechables (48/48). Aplicada SOLO en STAGING (vivebien-staging) para el Preview; NO en producción.
+-- ORDEN OBLIGATORIO: esta migración va ANTES del código que la usa.
 -- Con el código de F0, todo correo (citas, invitaciones, avisos de leads y avisos a clientes) reserva cupo aquí antes de salir y NO sale
--- si no puede confirmarlo; sin esta migración aplicada, esos correos se detendrían.
+-- si no puede confirmarlo; sin esta migración aplicada, esos correos se detendrían. En PRODUCCIÓN, además, NADA sale sin una lectura vigente (≤ 8 días) del
+-- panel de Resend (falla cerrada); fuera de producción la salida es SIMULADA en el servidor.
 --
 -- REVISADA el 30-oct-2026 (F1) ANTES de aplicarse en ningún entorno (verificado: ni producción ni staging la tienen): privacidad (huella en vez de
 -- correo en claro en el libro y las supresiones, olvido por cuenta, retención de 2 años), conciliación con Resend como condición del correo opcional.
@@ -16,7 +18,8 @@
 --   · correo_envios         cada correo, con clave de idempotencia ÚNICA (evita duplicados) y su estado
 --   · correo_supresiones    direcciones que NUNCA deben recibir correo (rebote permanente, queja)
 --   · correo_webhook_vistos eventos del proveedor ya procesados (idempotencia de webhooks)
---   · 9 funciones atómicas `correo_*` (sólo service_role)
+--   · correo_secreto (sal de las huellas) y correo_conciliacion (lecturas manuales del panel de Resend)
+--   · 14 funciones `correo_*` (sólo service_role)
 --
 -- Seguridad: RLS activado SIN políticas (nadie con la clave pública lee ni escribe); sólo la ruta del servidor,
 -- con service_role, después de validar. El enlace de baja NO se guarda: es un HMAC firmado con CORREO_SECRETO.
@@ -94,7 +97,7 @@ create table if not exists public.correo_secreto (
 insert into public.correo_secreto (id) values (1) on conflict do nothing;
 
 -- Conciliación MANUAL con el panel de Resend (único medio de ver lo que consumen otros servicios de la misma cuenta). Sin una lectura
--- reciente, el correo OPCIONAL (servicio, marketing) no sale; lo transaccional no depende de ella.
+-- vigente (≤ 8 días) NINGÚN correo sale en producción (ni lo transaccional); fuera de producción no se exige (la salida es simulada).
 create table if not exists public.correo_conciliacion (
   id                 bigint generated always as identity primary key,
   leido_en           timestamptz not null default now(),
@@ -258,7 +261,7 @@ end $$;
 -- (una sola cuenta de Resend sirve a producción y a todo lo demás, pero cada base ve sólo lo suyo):
 --     produccion  80/día  2,400/mes   (reserva transaccional dentro de la rebanada: 30/día, 300/mes)
 --     pruebas     10/día    300/mes   (Preview, staging y local)            →  80 + 10 = 90   y   2,400 + 300 = 2,700
--- Lo opcional (categoria 'servicio' o 'marketing') nunca toca la reserva; lo transaccional puede usar todo el tope.
+-- Lo opcional (categoria 'servicio' o 'marketing') nunca toca la reserva; lo transaccional puede usar todo el tope. Ambos exigen la lectura vigente de Resend en producción.
 -- El día es el día UTC (Resend reinicia a las 23:59:59 UTC); el mes es el ciclo de facturación, que empieza el día 23 (UTC).
 -- Cuentan TODAS las filas salvo las que nunca llegaron a intentarse (suprimido, omitido): un error ambiguo de red cuenta, porque
 -- el proveedor pudo haber enviado el correo; rebotados y quejas también cuentan (se enviaron). Las pruebas cuentan igual.
@@ -335,15 +338,16 @@ begin
     return jsonb_build_object('accion', 'sin_presupuesto', 'hoy', v_hoy, 'mes', v_mes);
   end if;
 
-  -- LÍMITE AGREGADO: este libro sólo ve lo que envía VIVE BIEN. Para lo OPCIONAL en producción se exige una lectura RECIENTE (≤ 8 días) del
-  -- panel de Resend y se suma lo que Resend ya reportaba (incluye a otros servicios) más lo enviado aquí desde esa lectura. Sin lectura: no sale.
-  if p_categoria <> 'transaccional' and p_entorno = 'produccion' then
+  -- LÍMITE AGREGADO: este libro sólo ve lo que envía VIVE BIEN. Para TODO envío en producción (también lo transaccional) se exige una lectura VIGENTE (≤ 8 días)
+  -- del panel de Resend y se suma lo que Resend ya reportaba (incluye a otros servicios) más lo enviado aquí desde esa lectura. Sin lectura: no sale (falla cerrada).
+  if p_entorno = 'produccion' then
     select * into v_conc from public.correo_conciliacion order by id desc limit 1;
     if not found or v_conc.leido_en < now() - interval '8 days' then
       return jsonb_build_object('accion', 'sin_presupuesto', 'motivo', 'sin_conciliacion');
     end if;
+    -- Sólo cuentan los envíos de PRODUCCIÓN: fuera de producción la salida está simulada (resend.ts) y no consume el plan de Resend.
     select count(*) into v_desde from public.correo_envios
-     where estado not in ('suprimido', 'omitido') and creado_en > v_conc.leido_en;
+     where entorno = 'produccion' and estado not in ('suprimido', 'omitido') and creado_en >= v_conc.leido_en; -- «>=» a propósito: un envío del MISMO instante que la lectura cuenta (conservador; con «>» una coincidencia de reloj lo dejaba fuera)
     v_est_mes := v_conc.resend_mes_usado + v_desde;
     v_est_dia := case when v_conc.leido_en >= v_inicio_dia then v_conc.resend_dia_usado + v_desde else v_desde end;
     if v_est_mes >= v_tope_mes or v_est_dia >= v_tope_dia then
@@ -404,7 +408,11 @@ begin
   return jsonb_build_object('envios_borrados', v_envios, 'suscripciones_borradas', v_susc);
 end $$;
 
--- ── 5e · Retención: 2 años (Aviso de Privacidad). Sin parámetros: el plazo no se configura. Se llama desde el cron diario que ya existe ──
+-- ── 5e · Retención: 2 años (Aviso de Privacidad: «dos años desde la última actividad o interacción relacionada; después, bloqueo y supresión»). ──
+-- Alineación con esa decisión del dueño: (a) un ENVÍO es en sí una actividad y se borra a los 2 años de su fecha (nunca más tiempo que lo prometido);
+-- (b) una SUSCRIPCIÓN terminada (baja, rebote, queja) se borra a los 2 años de su última actividad (baja_en / actualizado_en); una activa no se purga;
+-- (c) se BORRA en vez de solo bloquear, salvo la supresión (huella), que se conserva para no volver a escribir a esa dirección.
+-- Sin parámetros: el plazo no se configura. Se llama desde el cron diario que ya existe.
 create or replace function public.correo_purgar() returns jsonb
 language plpgsql security definer set search_path = public as $$
 declare v_envios int; v_vistos int; v_susc int; v_pend int; v_conc int;

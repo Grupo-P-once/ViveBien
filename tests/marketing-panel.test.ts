@@ -151,7 +151,10 @@ describe('el resumen: agregados, sin datos personales, con las promociones apaga
     const texto = await (await resumen(req('/api/admin/marketing/resumen'))).text()
     expect(texto).not.toMatch(/@/)
     expect(texto).not.toMatch(/actor/)
-    expect(JSON.parse(texto).conciliacion).toEqual({ leido_en: '2026-10-30T00:00:00Z', resend_dia_usado: 2, resend_mes_usado: 5 })
+    const c = JSON.parse(texto).conciliacion
+    expect(c).toMatchObject({ leido_en: '2026-10-30T00:00:00Z', resend_dia_usado: 2, resend_mes_usado: 5 })
+    expect(typeof c.vigente).toBe('boolean')
+    expect(Object.keys(c).sort()).toEqual(['leido_en', 'periodo', 'resend_dia_usado', 'resend_mes_usado', 'vence_en', 'vigente'])
   })
 
   it('si la migración del libro no está aplicada lo dice (no inventa cifras)', async () => {
@@ -219,5 +222,43 @@ describe('retención y olvido: nunca bloquean ni exponen datos', () => {
   it('purgar: devuelve el resumen numérico o ok:false, nunca lanza', async () => {
     expect(await purgarCorreo(dbCon(() => ({ data: { envios: 2, webhook_vistos: 1, texto: 'ignorado' }, error: null })))).toEqual({ ok: true, resumen: { envios: 2, webhook_vistos: 1 } })
     expect(await purgarCorreo(dbCon(() => ({ data: null, error: { message: 'no existe la función' } })))).toEqual({ ok: false })
+  })
+})
+
+describe('F2 · el panel explica POR QUÉ el envío está bloqueado (falla cerrada)', () => {
+  const estado = async () => (await (await resumen(req('/api/admin/marketing/resumen'))).json()).estadoDeEnvio as { bloqueado: boolean; motivo: string | null; explicacion: string }
+
+  it('producción sin lectura vigente de Resend → bloqueado, con el motivo', async () => {
+    como('admin')
+    const e = await estado()
+    expect(e).toMatchObject({ bloqueado: true, motivo: 'sin_lectura_vigente_de_resend' })
+    expect(e.explicacion).toMatch(/lectura vigente/)
+  })
+
+  it('producción con lectura vigente y libro → permitido; con la lectura caducada (>8 días) → bloqueado otra vez', async () => {
+    como('admin')
+    mundo.conciliacion = { leido_en: new Date().toISOString(), resend_dia_usado: 1, resend_mes_usado: 4 }
+    expect(await estado()).toMatchObject({ bloqueado: false, motivo: null })
+    mundo.conciliacion = { leido_en: new Date(Date.now() - 9 * 86_400_000).toISOString(), resend_dia_usado: 1, resend_mes_usado: 4 }
+    expect(await estado()).toMatchObject({ bloqueado: true, motivo: 'sin_lectura_vigente_de_resend' })
+  })
+
+  it('sin la migración del libro → bloqueado por no poder confirmar el cupo', async () => {
+    como('admin')
+    mundo.cupo = null
+    mundo.conciliacion = { leido_en: new Date().toISOString(), resend_dia_usado: 0, resend_mes_usado: 0 }
+    expect(await estado()).toMatchObject({ bloqueado: true, motivo: 'libro_sin_migracion' })
+  })
+
+  it('Preview/local → bloqueado: la salida es SIMULADA', async () => {
+    como('admin')
+    vi.stubEnv('VERCEL_ENV', 'preview')
+    try { expect(await estado()).toMatchObject({ bloqueado: true, motivo: 'fuera_de_produccion_simulado' }) } finally { vi.unstubAllEnvs(); process.env.VERCEL_ENV = 'production' }
+  })
+
+  it('la respuesta nunca incluye claves ni valores de variables', async () => {
+    como('admin')
+    const texto = await (await resumen(req('/api/admin/marketing/resumen'))).text()
+    expect(texto).not.toMatch(/re_[A-Za-z0-9]{8,}|Bearer|RESEND_API_KEY|CORREO_SECRETO|service_role/)
   })
 })

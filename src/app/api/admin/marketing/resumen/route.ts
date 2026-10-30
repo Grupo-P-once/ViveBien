@@ -10,6 +10,8 @@ import { CUPO_POR_ENTORNO, CUPO_TOTAL, entornoCorreo, entornoDeCupo, MARKETING_A
 export const dynamic = 'force-dynamic'
 
 const MIN_CELDA = 5
+/** La lectura del panel de Resend caduca a los 8 días (debe coincidir con la migración 62, `correo_reservar_envio`). */
+const VIGENCIA_LECTURA_DIAS = 8
 const celda = (n: number | null): number | string | null => (n === null ? null : n > 0 && n < MIN_CELDA ? `<${MIN_CELDA}` : n)
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -47,6 +49,10 @@ export async function GET(req: Request) {
     conciliacion = null
   }
 
+  const leidoMs = typeof conciliacion?.leido_en === 'string' ? Date.parse(conciliacion.leido_en) : NaN
+  const venceMs = Number.isFinite(leidoMs) ? leidoMs + VIGENCIA_LECTURA_DIAS * 86_400_000 : NaN
+  const lecturaVigente = Number.isFinite(venceMs) && Date.now() < venceMs
+
   const [cupoProd, cupoPruebas] = await Promise.all([rpcJson('correo_cupo_estado', { p_entorno: 'produccion' }), rpcJson('correo_cupo_estado', { p_entorno: 'pruebas' })])
   const [conAlertas, conPrecio, conLegal, susActivas] = await Promise.all([
     contar('preferencias_notificacion', (q) => q.eq('correo_alertas', true)),
@@ -55,9 +61,22 @@ export async function GET(req: Request) {
     contar('correo_suscriptores', (q) => q.eq('estado', 'activa')),
   ])
 
+  // ¿Puede salir un correo AHORA? Es lo que decide la base en cada envío; aquí sólo se explica el motivo. Fuera de producción la salida es SIMULADA.
+  const enProduccion = entornoDeCupo() === 'produccion'
+  const motivoDeBloqueo = !enProduccion ? 'fuera_de_produccion_simulado' : cupoProd === null ? 'libro_sin_migracion' : !lecturaVigente ? 'sin_lectura_vigente_de_resend' : null
+
   return NextResponse.json(
     {
       generado: new Date().toISOString(),
+      estadoDeEnvio: {
+        bloqueado: motivoDeBloqueo !== null,
+        motivo: motivoDeBloqueo,
+        explicacion:
+          motivoDeBloqueo === 'fuera_de_produccion_simulado' ? 'Este despliegue no es producción: todo envío es SIMULADO y no llama a Resend.'
+            : motivoDeBloqueo === 'libro_sin_migracion' ? 'La migración del libro de correo no está aplicada en esta base: no se puede confirmar el cupo, por eso no sale ningún correo.'
+              : motivoDeBloqueo === 'sin_lectura_vigente_de_resend' ? 'No hay una lectura vigente (de los últimos 8 días) del panel de Resend: no se puede probar el consumo total de la cuenta, por eso no sale ningún correo. El Super Admin debe registrar una lectura.'
+                : 'Hay libro de cupo y una lectura vigente de Resend: los envíos pueden salir mientras haya cupo.',
+      },
       banderas: { entorno: entornoDeCupo(), transaccionalEncendido: env.transaccional, marketingAutorizado: MARKETING_AUTORIZADO, marketingEncendido: env.marketing, modoPruebas: env.modoPruebas === true },
       cupo: {
         total: CUPO_TOTAL,
@@ -67,7 +86,7 @@ export async function GET(req: Request) {
         migracionAplicada: cupoProd !== null,
         limite: 'NO demostrado como global: cada base cuenta lo suyo y otros servicios de la cuenta de Resend no se ven. El correo opcional exige una lectura reciente del panel de Resend.',
       },
-      conciliacion,
+      conciliacion: conciliacion ? { ...conciliacion, vence_en: Number.isFinite(venceMs) ? new Date(venceMs).toISOString() : null, vigente: lecturaVigente, periodo: 'uso del día UTC y del ciclo mensual (desde el día 23)' } : null,
       audiencia: {
         nota: 'Conteos de consentimientos de ESTA base, agregados. Las promociones están apagadas hasta tener texto legal aprobado; no se usa ningún contacto para promociones.',
         avisosDeBusqueda: celda(conAlertas),
