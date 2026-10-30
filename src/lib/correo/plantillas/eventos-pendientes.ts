@@ -1,6 +1,6 @@
 import { AZUL, filaHero, filaTexto, FUENTE, marcoCorreo, TEXTO } from './bloques'
 import { rejillaPropiedades, tarjetaDestacada } from './campana'
-import { botonContorno, botonLleno, corto, fila, hola, nombreSaludo, tarjetaHorizontal, texto1 } from './eventos'
+import { botonContorno, botonLleno, corto, fila, hola, tarjetaHorizontal, texto1 } from './eventos'
 import { COLORES, escapar, pieTexto, urlSegura, type Correo, type TarjetaCorreo } from './marca'
 
 /**

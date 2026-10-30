@@ -201,8 +201,6 @@ export type EntradaDeCatalogo = {
 
 const E2 = (id: string, nombre: string, grupo: GrupoDeCatalogo, categoria: string, existencia: Existencia, disparador: string, rastro: string | null, motivoSinVista: string | null = null): EntradaDeCatalogo =>
   ({ id, nombre, grupo, categoria, existencia, disparador, rastro, conVista: motivoSinVista === null, motivoSinVista })
-const PENDIENTE = 'Pendiente de implementación: no hay plantilla ni evento en el código que lo envíe.'
-const FIREBASE = 'Lo manda Firebase Auth con su propia plantilla (fuera de este código): aquí no se puede previsualizar.'
 
 const PARA_BIBLIOTECA: Record<string, string> = {
   alertas: 'La persona con cuenta que pidió el aviso', baja_de_precio: 'La persona con cuenta que guardó la propiedad', legal: 'Quien aceptó una versión anterior de los textos legales',
