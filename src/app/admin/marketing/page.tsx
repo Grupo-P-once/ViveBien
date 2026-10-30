@@ -37,7 +37,7 @@ export default function PanelMarketing() {
   const [error, setError] = useState('')
   const [tipo, setTipo] = useState('')
   const [formato, setFormato] = useState<'escritorio' | 'movil' | 'texto'>('escritorio')
-  const [vista, setVista] = useState<Vista | null>(null)
+  const [vistas, setVistas] = useState<Record<string, Vista>>({})
   const [dia, setDia] = useState('')
   const [mes, setMes] = useState('')
   const [nota, setNota] = useState('')
@@ -51,13 +51,14 @@ export default function PanelMarketing() {
   useEffect(() => {
     pedir<Catalogo>('/api/admin/marketing/vista-previa').then((c) => { setCatalogo(c); if (c.tipos[0]) setTipo(c.tipos[0].id) }).catch((e) => setError(e instanceof Error ? e.message : 'No se pudo cargar la biblioteca.'))
   }, [pedir])
+  // Las vistas ya pedidas se guardan por tipo: cambiar de correo no re-pide y no hay setState síncrono dentro del efecto.
   useEffect(() => {
-    if (!tipo) return
+    if (!tipo || vistas[tipo]) return
     let vivo = true
-    setVista(null)
-    pedir<Vista>(`/api/admin/marketing/vista-previa?tipo=${encodeURIComponent(tipo)}`).then((v) => { if (vivo) setVista(v) }).catch(() => { if (vivo) setVista(null) })
+    pedir<Vista>(`/api/admin/marketing/vista-previa?tipo=${encodeURIComponent(tipo)}`).then((v) => { if (vivo) setVistas((previas) => ({ ...previas, [tipo]: v })) }).catch(() => undefined)
     return () => { vivo = false }
-  }, [tipo, pedir])
+  }, [tipo, pedir, vistas])
+  const vista = vistas[tipo] ?? null
 
   async function conciliar(e: React.FormEvent) {
     e.preventDefault()
