@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { exigir, supabaseAdmin, type PerfilUsuario } from '@/lib/auth-server'
 import { frenarAsync, TOPES } from '@/lib/limites'
 import { registrar } from '@/lib/auditoria'
+import { olvidarCorreoDeCuenta } from '@/lib/correo/retencion'
+import type { DbCorreo } from '@/lib/correo/enviar'
 import { borrarIdentidad, revocarSesiones } from '@/lib/firebase-admin'
 import {
   ANTERIORES, ejecutarBaja, reautenticacionReciente,
@@ -119,6 +121,8 @@ export function dependencias(perfil: PerfilUsuario): DependenciasBaja {
   const db = supabaseAdmin()
   return {
     cerrarEnLaBase: async (uid, authTime, motivo) => {
+      // Privacidad (F1): ANTES de cerrar (después el correo del perfil vale null) se borra el rastro de correo de la persona. Nunca bloquea la baja.
+      await olvidarCorreoDeCuenta(db as unknown as DbCorreo, uid, perfil.email)
       const { data, error } = await db.rpc('baja_de_cuenta', {
         p_uid: uid,
         p_solicitada_por: 'titular',

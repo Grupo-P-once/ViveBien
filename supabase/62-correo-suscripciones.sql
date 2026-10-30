@@ -8,6 +8,9 @@
 -- Con el código de F0, todo correo (citas, invitaciones, avisos de leads y avisos a clientes) reserva cupo aquí antes de salir y NO sale
 -- si no puede confirmarlo; sin esta migración aplicada, esos correos se detendrían.
 --
+-- REVISADA el 30-oct-2026 (F1) ANTES de aplicarse en ningún entorno (verificado: ni producción ni staging la tienen): privacidad (huella en vez de
+-- correo en claro en el libro y las supresiones, olvido por cuenta, retención de 2 años), conciliación con Resend como condición del correo opcional.
+--
 -- Qué crea (todo NUEVO; no toca ninguna tabla existente):
 --   · correo_suscriptores   quién aceptó recibir recomendaciones comerciales, con prueba del consentimiento
 --   · correo_envios         cada correo, con clave de idempotencia ÚNICA (evita duplicados) y su estado
@@ -55,7 +58,9 @@ create table if not exists public.correo_envios (
   clave            text not null,
   categoria        text not null check (categoria in ('transaccional', 'servicio', 'marketing')),
   tipo             text not null,
-  email_norm       text not null,
+  -- PRIVACIDAD (F1): NO se guarda el correo del destinatario; sólo su huella con sal (ver correo_huella). Sirve para suprimir, para borrar
+  -- lo de una persona (correo_olvidar_cuenta) y para el cupo; no permite leer ni listar direcciones.
+  email_hash       text not null,
   suscriptor_id    uuid references public.correo_suscriptores (id) on delete set null,
   estado           text not null default 'pendiente'
                    check (estado in ('pendiente', 'enviado', 'error', 'suprimido', 'omitido', 'entregado', 'rebotado', 'queja')),
@@ -75,9 +80,28 @@ create index if not exists correo_envios_resend_idx on public.correo_envios (res
 create index if not exists correo_envios_suscriptor_idx on public.correo_envios (suscriptor_id, creado_en desc);
 
 create table if not exists public.correo_supresiones (
-  email_norm text primary key,
+  -- Sólo la huella: una supresión se conserva para no volver a escribirle a esa dirección, sin conservar la dirección.
+  email_hash text primary key,
   motivo     text not null check (motivo in ('rebote', 'queja', 'manual')),
   creado_en  timestamptz not null default now()
+);
+
+-- Sal de las huellas: una fila, generada al aplicar la migración (distinta en cada base). Nadie con la clave pública la lee (RLS sin políticas).
+create table if not exists public.correo_secreto (
+  id     int primary key default 1 check (id = 1),
+  sal    text not null default (gen_random_uuid()::text || gen_random_uuid()::text)
+);
+insert into public.correo_secreto (id) values (1) on conflict do nothing;
+
+-- Conciliación MANUAL con el panel de Resend (único medio de ver lo que consumen otros servicios de la misma cuenta). Sin una lectura
+-- reciente, el correo OPCIONAL (servicio, marketing) no sale; lo transaccional no depende de ella.
+create table if not exists public.correo_conciliacion (
+  id                 bigint generated always as identity primary key,
+  leido_en           timestamptz not null default now(),
+  resend_dia_usado   int not null check (resend_dia_usado >= 0),
+  resend_mes_usado   int not null check (resend_mes_usado >= 0),
+  actor              text not null check (length(actor) between 1 and 120),
+  nota               text check (nota is null or length(nota) <= 300)
 );
 
 create table if not exists public.correo_webhook_vistos (
@@ -89,6 +113,17 @@ alter table public.correo_suscriptores   enable row level security;
 alter table public.correo_envios         enable row level security;
 alter table public.correo_supresiones    enable row level security;
 alter table public.correo_webhook_vistos enable row level security;
+alter table public.correo_secreto        enable row level security;
+alter table public.correo_conciliacion   enable row level security;
+-- Los privilegios por defecto de Supabase abren las tablas nuevas a anon/authenticated (E-47): se cierran explícitamente.
+revoke all on public.correo_suscriptores, public.correo_envios, public.correo_supresiones, public.correo_webhook_vistos,
+              public.correo_secreto, public.correo_conciliacion from public, anon, authenticated;
+
+-- ── 0 · Huella de un correo (con la sal de esta base): lo único que se guarda de un destinatario en el libro y en las supresiones ──
+create or replace function public.correo_huella(p_email text) returns text
+language sql stable security definer set search_path = public as $$
+  select encode(sha256(convert_to((select sal from public.correo_secreto where id = 1) || ':' || lower(btrim(coalesce(p_email, ''))), 'UTF8')), 'hex')
+$$;
 
 -- ── 1 · Suscribir a un visitante (siempre «pendiente» hasta que confirme por correo) ─────────────
 -- Nunca devuelve si el correo ya existía a quien llama la ruta pública (anti-enumeración): la ruta responde igual.
@@ -106,7 +141,7 @@ begin
   if p_version is null or length(btrim(p_version)) = 0 then
     return jsonb_build_object('accion', 'sin_consentimiento');
   end if;
-  if exists (select 1 from public.correo_supresiones where email_norm = v_norm) then
+  if exists (select 1 from public.correo_supresiones where email_hash = public.correo_huella(v_norm)) then
     return jsonb_build_object('accion', 'bloqueada');
   end if;
 
@@ -144,7 +179,7 @@ declare v_fila public.correo_suscriptores%rowtype;
 begin
   select * into v_fila from public.correo_suscriptores where id = p_id for update;
   if not found then return jsonb_build_object('estado', 'desconocida'); end if;
-  if exists (select 1 from public.correo_supresiones where email_norm = v_fila.email_norm) or v_fila.estado in ('rebotada', 'queja') then
+  if exists (select 1 from public.correo_supresiones where email_hash = public.correo_huella(v_fila.email_norm)) or v_fila.estado in ('rebotada', 'queja') then
     return jsonb_build_object('estado', 'bloqueada');
   end if;
   if v_fila.estado = 'activa' then return jsonb_build_object('estado', 'activa', 'cambio', false); end if;
@@ -197,7 +232,7 @@ begin
   end if;
 
   if p_version is null or length(btrim(p_version)) = 0 then return jsonb_build_object('estado', 'sin_consentimiento'); end if;
-  if exists (select 1 from public.correo_supresiones where email_norm = v_norm) then return jsonb_build_object('estado', 'bloqueada'); end if;
+  if exists (select 1 from public.correo_supresiones where email_hash = public.correo_huella(v_norm)) then return jsonb_build_object('estado', 'bloqueada'); end if;
   if found and v_fila.estado in ('rebotada', 'queja') then return jsonb_build_object('estado', 'bloqueada'); end if;
 
   if not found then
@@ -236,6 +271,7 @@ declare
   v_previo public.correo_envios%rowtype;
   v_hoy int; v_mes int; v_tope_dia int; v_tope_mes int; v_reserva_dia int; v_reserva_mes int;
   v_id bigint;
+  v_conc public.correo_conciliacion%rowtype; v_desde int; v_est_dia int; v_est_mes int;
   v_ahora_utc timestamp := now() at time zone 'utc';
   v_inicio_dia timestamptz := (date_trunc('day', now() at time zone 'utc')) at time zone 'utc';
   v_inicio_ciclo timestamptz;
@@ -259,17 +295,17 @@ begin
 
   if exists (
     select 1 from public.correo_supresiones s
-     where s.email_norm = v_norm and (s.motivo = 'rebote' or (p_categoria in ('marketing', 'servicio') and s.motivo in ('queja', 'manual')))
-  ) or (p_categoria = 'marketing' and exists (select 1 from public.correo_supresiones s where s.email_norm = v_norm)) then
-    insert into public.correo_envios (clave, categoria, tipo, email_norm, suscriptor_id, estado, error, propiedades, entorno)
-    values (p_clave, p_categoria, p_tipo, v_norm, p_suscriptor, 'suprimido', 'direccion suprimida', p_props, p_entorno) returning id into v_id;
+     where s.email_hash = public.correo_huella(v_norm) and (s.motivo = 'rebote' or (p_categoria in ('marketing', 'servicio') and s.motivo in ('queja', 'manual')))
+  ) or (p_categoria = 'marketing' and exists (select 1 from public.correo_supresiones s where s.email_hash = public.correo_huella(v_norm))) then
+    insert into public.correo_envios (clave, categoria, tipo, email_hash, suscriptor_id, estado, error, propiedades, entorno)
+    values (p_clave, p_categoria, p_tipo, public.correo_huella(v_norm), p_suscriptor, 'suprimido', 'direccion suprimida', p_props, p_entorno) returning id into v_id;
     return jsonb_build_object('accion', 'suprimido', 'id', v_id);
   end if;
 
   if p_categoria = 'marketing' then
     if not exists (select 1 from public.correo_suscriptores where id = p_suscriptor and estado = 'activa') then
-      insert into public.correo_envios (clave, categoria, tipo, email_norm, suscriptor_id, estado, error, propiedades, entorno)
-      values (p_clave, p_categoria, p_tipo, v_norm, p_suscriptor, 'suprimido', 'sin suscripcion activa', p_props, p_entorno) returning id into v_id;
+      insert into public.correo_envios (clave, categoria, tipo, email_hash, suscriptor_id, estado, error, propiedades, entorno)
+      values (p_clave, p_categoria, p_tipo, public.correo_huella(v_norm), p_suscriptor, 'suprimido', 'sin suscripcion activa', p_props, p_entorno) returning id into v_id;
       return jsonb_build_object('accion', 'suprimido', 'id', v_id);
     end if;
   end if;
@@ -299,8 +335,24 @@ begin
     return jsonb_build_object('accion', 'sin_presupuesto', 'hoy', v_hoy, 'mes', v_mes);
   end if;
 
-  insert into public.correo_envios (clave, categoria, tipo, email_norm, suscriptor_id, estado, propiedades, entorno)
-  values (p_clave, p_categoria, p_tipo, v_norm, p_suscriptor, 'pendiente', p_props, p_entorno) returning id into v_id;
+  -- LÍMITE AGREGADO: este libro sólo ve lo que envía VIVE BIEN. Para lo OPCIONAL en producción se exige una lectura RECIENTE (≤ 8 días) del
+  -- panel de Resend y se suma lo que Resend ya reportaba (incluye a otros servicios) más lo enviado aquí desde esa lectura. Sin lectura: no sale.
+  if p_categoria <> 'transaccional' and p_entorno = 'produccion' then
+    select * into v_conc from public.correo_conciliacion order by id desc limit 1;
+    if not found or v_conc.leido_en < now() - interval '8 days' then
+      return jsonb_build_object('accion', 'sin_presupuesto', 'motivo', 'sin_conciliacion');
+    end if;
+    select count(*) into v_desde from public.correo_envios
+     where estado not in ('suprimido', 'omitido') and creado_en > v_conc.leido_en;
+    v_est_mes := v_conc.resend_mes_usado + v_desde;
+    v_est_dia := case when v_conc.leido_en >= v_inicio_dia then v_conc.resend_dia_usado + v_desde else v_desde end;
+    if v_est_mes >= v_tope_mes or v_est_dia >= v_tope_dia then
+      return jsonb_build_object('accion', 'sin_presupuesto', 'motivo', 'conciliacion', 'estimado_dia', v_est_dia, 'estimado_mes', v_est_mes);
+    end if;
+  end if;
+
+  insert into public.correo_envios (clave, categoria, tipo, email_hash, suscriptor_id, estado, propiedades, entorno)
+  values (p_clave, p_categoria, p_tipo, public.correo_huella(v_norm), p_suscriptor, 'pendiente', p_props, p_entorno) returning id into v_id;
   return jsonb_build_object('accion', 'enviar', 'id', v_id, 'hoy', v_hoy + 1, 'mes', v_mes + 1);
 end $$;
 
@@ -323,6 +375,54 @@ begin
   select count(*) into v_hoy from public.correo_envios where entorno = p_entorno and estado not in ('suprimido', 'omitido') and creado_en >= v_inicio_dia;
   select count(*) into v_mes from public.correo_envios where entorno = p_entorno and estado not in ('suprimido', 'omitido') and creado_en >= v_inicio_ciclo;
   return jsonb_build_object('entorno', p_entorno, 'hoy', v_hoy, 'tope_dia', v_dia, 'mes', v_mes, 'tope_mes', v_mesmax, 'inicio_ciclo', v_inicio_ciclo);
+end $$;
+
+-- ── 5c · Conciliar con el panel de Resend (lectura manual; el actor queda registrado) ──
+create or replace function public.correo_conciliar(p_dia int, p_mes int, p_actor text, p_nota text default null) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare v_id bigint;
+begin
+  if p_dia is null or p_mes is null or p_dia < 0 or p_mes < 0 or p_dia > 100000 or p_mes > 1000000 then raise exception 'lectura invalida'; end if;
+  if p_actor is null or length(btrim(p_actor)) = 0 then raise exception 'actor requerido'; end if;
+  insert into public.correo_conciliacion (resend_dia_usado, resend_mes_usado, actor, nota)
+  values (p_dia, p_mes, left(btrim(p_actor), 120), nullif(left(coalesce(p_nota, ''), 300), '')) returning id into v_id;
+  return jsonb_build_object('id', v_id, 'dia', p_dia, 'mes', p_mes);
+end $$;
+
+-- ── 5d · Olvidar a una persona (baja de cuenta): borra su rastro en el libro y su suscripción; CONSERVA la supresión (sólo huella) ──
+-- Idempotente. No registra el correo en ningún lado. Las supresiones por rebote/queja se conservan a propósito: sin ellas se le volvería a escribir
+-- a una dirección que rebotó o se quejó; guardan sólo la huella (no se puede leer la dirección).
+create or replace function public.correo_olvidar_cuenta(p_uid text, p_email text) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare v_envios int := 0; v_susc int := 0; v_h text := public.correo_huella(p_email);
+begin
+  delete from public.correo_envios where email_hash = v_h;
+  get diagnostics v_envios = row_count;
+  delete from public.correo_suscriptores
+   where (p_uid is not null and uid = p_uid) or (p_email is not null and email_norm = lower(btrim(p_email)));
+  get diagnostics v_susc = row_count;
+  return jsonb_build_object('envios_borrados', v_envios, 'suscripciones_borradas', v_susc);
+end $$;
+
+-- ── 5e · Retención: 2 años (Aviso de Privacidad). Sin parámetros: el plazo no se configura. Se llama desde el cron diario que ya existe ──
+create or replace function public.correo_purgar() returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare v_envios int; v_vistos int; v_susc int; v_pend int; v_conc int;
+begin
+  delete from public.correo_envios where creado_en < now() - interval '730 days';
+  get diagnostics v_envios = row_count;
+  delete from public.correo_webhook_vistos where creado_en < now() - interval '90 days';
+  get diagnostics v_vistos = row_count;
+  -- Suscripciones terminadas hace más de 2 años (baja, rebote, queja): se borran con su correo; la supresión (huella) queda.
+  delete from public.correo_suscriptores
+   where estado in ('baja', 'rebotada', 'queja') and coalesce(baja_en, actualizado_en) < now() - interval '730 days';
+  get diagnostics v_susc = row_count;
+  -- Solicitudes nunca confirmadas: el enlace vence a los 7 días; a los 30 ya no hacen falta.
+  delete from public.correo_suscriptores where estado = 'pendiente' and creado_en < now() - interval '30 days';
+  get diagnostics v_pend = row_count;
+  delete from public.correo_conciliacion where leido_en < now() - interval '730 days';
+  get diagnostics v_conc = row_count;
+  return jsonb_build_object('envios', v_envios, 'webhook_vistos', v_vistos, 'suscripciones', v_susc, 'pendientes', v_pend, 'conciliaciones', v_conc);
 end $$;
 
 -- ── 6 · Resultado de un envío ───────────────────────────────────────────────────────────────────
@@ -352,7 +452,7 @@ begin
 
   if p_tipo = 'email.bounced' and p_rebote_permanente then
     if v_norm <> '' then
-      insert into public.correo_supresiones (email_norm, motivo) values (v_norm, 'rebote') on conflict (email_norm) do nothing;
+      insert into public.correo_supresiones (email_hash, motivo) values (public.correo_huella(v_norm), 'rebote') on conflict (email_hash) do nothing;
       update public.correo_suscriptores set estado = 'rebotada', proximo_envio_en = null, actualizado_en = now() where email_norm = v_norm and estado <> 'baja';
     end if;
     update public.correo_envios set estado = 'rebotado' where resend_id = p_resend_id and p_resend_id is not null;
@@ -360,13 +460,13 @@ begin
     update public.correo_envios set error = 'rebote temporal' where resend_id = p_resend_id and p_resend_id is not null;
   elsif p_tipo = 'email.complained' then
     if v_norm <> '' then
-      insert into public.correo_supresiones (email_norm, motivo) values (v_norm, 'queja') on conflict (email_norm) do update set motivo = 'queja';
+      insert into public.correo_supresiones (email_hash, motivo) values (public.correo_huella(v_norm), 'queja') on conflict (email_hash) do update set motivo = 'queja';
       update public.correo_suscriptores set estado = 'queja', proximo_envio_en = null, baja_en = coalesce(baja_en, now()), actualizado_en = now() where email_norm = v_norm;
     end if;
     update public.correo_envios set estado = 'queja' where resend_id = p_resend_id and p_resend_id is not null;
   elsif p_tipo = 'email.suppressed' then
     if v_norm <> '' then
-      insert into public.correo_supresiones (email_norm, motivo) values (v_norm, 'rebote') on conflict (email_norm) do nothing;
+      insert into public.correo_supresiones (email_hash, motivo) values (public.correo_huella(v_norm), 'rebote') on conflict (email_hash) do nothing;
       update public.correo_suscriptores set estado = 'rebotada', proximo_envio_en = null, actualizado_en = now() where email_norm = v_norm and estado <> 'baja';
     end if;
   elsif p_tipo = 'email.delivered' then
@@ -410,6 +510,14 @@ grant execute on function public.correo_reservar_envio(text, text, text, text, u
 grant execute on function public.correo_cupo_estado(text) to service_role;
 grant execute on function public.correo_marcar_envio(bigint, text, text, text) to service_role;
 grant execute on function public.correo_evento(text, text, text, text, boolean) to service_role;
+revoke all on function public.correo_huella(text) from public, anon, authenticated;
+revoke all on function public.correo_conciliar(int, int, text, text) from public, anon, authenticated;
+revoke all on function public.correo_olvidar_cuenta(text, text) from public, anon, authenticated;
+revoke all on function public.correo_purgar() from public, anon, authenticated;
+grant execute on function public.correo_huella(text) to service_role;
+grant execute on function public.correo_conciliar(int, int, text, text) to service_role;
+grant execute on function public.correo_olvidar_cuenta(text, text) to service_role;
+grant execute on function public.correo_purgar() to service_role;
 revoke all on function public.correo_vincular_cuenta(text, text) from public, anon, authenticated;
 grant execute on function public.correo_vincular_cuenta(text, text) to service_role;
 revoke all on function public.correo_salud() from public, anon, authenticated;

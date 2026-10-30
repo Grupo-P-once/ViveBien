@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { clienteServidor } from '@/lib/supabase-servidor'
 import { avisar } from '@/lib/alertas'
 import { avisosDeClientes, type ResumenDeAvisos } from '@/lib/avisos-cliente-servidor'
+import { purgarCorreo } from '@/lib/correo/retencion'
+import type { DbCorreo } from '@/lib/correo/enviar'
 
 /**
  * El parte diario al grupo de alertas.
@@ -117,5 +119,9 @@ export async function GET(req: Request) {
     avisos = { error: 'fallo' }
   }
 
-  return NextResponse.json({ ok: true, leads, contactos, publicadas, propiedades, avisos })
+  // Retención de 2 años del correo (Aviso de Privacidad): cuelga de esta misma tarea diaria (no hay cron nuevo) y es idempotente. Un fallo no tumba el parte.
+  let retencion: { ok: boolean; resumen?: Record<string, number> } = { ok: false }
+  try { retencion = await purgarCorreo(db() as unknown as DbCorreo) } catch { /* ya se anotó, sin datos personales */ }
+
+  return NextResponse.json({ ok: true, leads, contactos, publicadas, propiedades, avisos, retencion })
 }

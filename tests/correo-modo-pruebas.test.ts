@@ -68,7 +68,7 @@ describe('en modo de pruebas TODO sale al destino de pruebas', () => {
   it('transaccional: destinatario sustituido, asunto marcado, cabecera de modo y respuesta institucional', async () => {
     expect((await enviar({ responderA: 'asesor.real@empresa-real.test' })).estado).toBe('enviado')
     expect(peticiones).toHaveLength(1)
-    expect(peticiones[0].cuerpo).toMatchObject({ to: [DESTINO_PRUEBAS], subject: expect.stringMatching(/^\[PRUEBA VB · [0-9A-F]{8}\] Hola$/), reply_to: 'informes@vivebienn.com' })
+    expect(peticiones[0].cuerpo).toMatchObject({ to: [DESTINO_PRUEBAS], subject: expect.stringMatching(/^\[PRUEBA VB · [0-9A-F]{8}\] bienvenida$/), reply_to: 'informes@vivebienn.com' })
     expect((peticiones[0].cuerpo.headers as Record<string, string>)['X-Vive-Bien-Modo']).toBe('pruebas')
   })
 
@@ -78,7 +78,9 @@ describe('en modo de pruebas TODO sale al destino de pruebas', () => {
     const cab = peticiones[0].cuerpo.headers as Record<string, string>
     expect(Object.keys(cab)).toEqual(['X-Vive-Bien-Modo'])
     expect(todoElTrafico()).not.toContain('TOKENREAL')
-    expect(peticiones[0].cuerpo.html).toContain(ENLACE_INERTE)
+    expect(String(peticiones[0].cuerpo.html)).toContain('contenido sintético') // F1: el contenido real se descarta, no solo se neutraliza
+    expect(String(peticiones[0].cuerpo.html) + String(peticiones[0].cuerpo.text)).not.toMatch(/https?:/)
+    expect(ENLACE_INERTE).toMatch(/deshabilitado-en-pruebas/)
   })
 
   it('el destinatario ORIGINAL no aparece en ninguna parte del tráfico: ni en la petición, ni en la base (la reserva usa el destino de pruebas)', async () => {
@@ -170,12 +172,15 @@ describe('varios destinatarios, CC y CCO: ninguno puede salir', () => {
 })
 
 describe('el cuerpo que ve el proveedor, en modo de pruebas, respecto del modo real', () => {
-  it('sólo cambian destinatario, asunto, respuesta y la cabecera de modo: el contenido (html/texto) es el mismo', async () => {
+  it('F1 · en modo de pruebas el contenido real NO viaja: html y texto son sintéticos (solo el tipo); cambian destinatario, asunto, respuesta y la cabecera de modo', async () => {
     await enviar({}, ENV)
     await enviar({ clave: 'bienvenida/uid-2' }, ENV_PRUEBAS)
     const [real, prueba] = peticiones.map((p) => p.cuerpo)
-    expect(prueba.html).toBe(real.html)
-    expect(prueba.text).toBe(real.text)
+    expect(real.html).toBe('<p>hola</p>')
+    expect(prueba.html).not.toBe(real.html)
+    expect(String(prueba.html)).toContain('contenido sintético')
+    expect(String(prueba.text)).toContain('Tipo de mensaje: bienvenida')
+    expect(prueba.text).not.toContain('hola')
     expect(prueba.from).toBe(real.from)
     expect(real.to).toEqual([REAL])
     expect(prueba.to).toEqual([DESTINO_PRUEBAS])

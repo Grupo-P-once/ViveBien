@@ -22,8 +22,9 @@ const reservar = (clave: string, cat: string, email: string, sus: string | null 
   fn('public.correo_reservar_envio($1, $2, $3, $4, $5::uuid, $6::text[], $7)', [clave, cat, 'prueba', email, sus, null, entorno])
 /** Llena el libro con `n` envíos de hoy (para probar los topes sin repetir cien llamadas). */
 const llenar = (n: number, categoria: string, entorno: string, estado = 'enviado') =>
-  db.query(`insert into public.correo_envios (clave, categoria, tipo, email_norm, estado, entorno)
+  db.query(`insert into public.correo_envios (clave, categoria, tipo, email_hash, estado, entorno)
             select 'lleno/' || $1 || '/' || $2 || '/' || $3 || '/' || g || '/' || clock_timestamp()::text, $1, 'x', 'lleno@ejemplo.test', $2, $3 from generate_series(1, $4) g`, [categoria, estado, entorno, n])
+const conciliar = (dia: number, mes: number, actor = 'prueba-sintetica') => fn('public.correo_conciliar($1, $2, $3, null)', [dia, mes, actor])
 const evento = (id: string, tipo: string, email: string, resend: string | null = null, permanente = false) =>
   fn('public.correo_evento($1, $2, $3, $4, $5)', [id, tipo, email, resend, permanente])
 
@@ -46,7 +47,7 @@ describe('la migración aplica y se puede reaplicar', () => {
     await db.exec(sql('62-correo-suscripciones.sql'))
     const t = await q<{ relname: string; relrowsecurity: boolean }>(
       `select relname, relrowsecurity from pg_class where relnamespace = 'public'::regnamespace and relname like 'correo\\_%' and relkind = 'r' order by 1`)
-    expect(t.map((x) => x.relname)).toEqual(['correo_envios', 'correo_supresiones', 'correo_suscriptores', 'correo_webhook_vistos'])
+    expect(t.map((x) => x.relname)).toEqual(['correo_conciliacion', 'correo_envios', 'correo_secreto', 'correo_supresiones', 'correo_suscriptores', 'correo_webhook_vistos'])
     expect(t.every((x) => x.relrowsecurity)).toBe(true)
     expect(await q(`select 1 from pg_policies where schemaname = 'public' and tablename like 'correo\\_%'`)).toEqual([])
   })
@@ -148,7 +149,7 @@ describe('eventos del proveedor: idempotentes y con supresión', () => {
     expect(await evento('msg_rb_1', 'email.bounced', 'rebota@ejemplo.test', 're_1', true)).toMatchObject({ resultado: 'aplicado' })
     expect(await evento('msg_rb_1', 'email.bounced', 'rebota@ejemplo.test', 're_1', true)).toMatchObject({ resultado: 'duplicado' })
     expect((await q<{ estado: string }>(`select estado from public.correo_suscriptores where id = $1`, [id]))[0].estado).toBe('rebotada')
-    expect(await q(`select motivo from public.correo_supresiones where email_norm = 'rebota@ejemplo.test'`)).toEqual([{ motivo: 'rebote' }])
+    expect(await q(`select motivo from public.correo_supresiones where email_hash = public.correo_huella('rebota@ejemplo.test')`)).toEqual([{ motivo: 'rebote' }])
     expect((await suscribir('rebota@ejemplo.test')).accion).toBe('bloqueada')
     expect(await fn('public.correo_confirmar($1::uuid)', [id])).toMatchObject({ estado: 'bloqueada' })
   })
@@ -157,7 +158,7 @@ describe('eventos del proveedor: idempotentes y con supresión', () => {
     const id = await activar('temporal@ejemplo.test')
     await evento('msg_tmp_1', 'email.bounced', 'temporal@ejemplo.test', 're_tmp', false)
     expect((await q<{ estado: string }>(`select estado from public.correo_suscriptores where id = $1`, [id]))[0].estado).toBe('activa')
-    expect(await q(`select 1 from public.correo_supresiones where email_norm = 'temporal@ejemplo.test'`)).toEqual([])
+    expect(await q(`select 1 from public.correo_supresiones where email_hash = public.correo_huella('temporal@ejemplo.test')`)).toEqual([])
   })
 
   it('queja de spam: suprime, da de baja y bloquea el marketing futuro', async () => {
@@ -211,14 +212,15 @@ describe('reservar un envío: idempotencia, supresión y presupuesto (todo en un
   })
 
   it('una queja bloquea marketing pero NO el aviso transaccional; un rebote permanente bloquea ambos', async () => {
-    await db.exec(`insert into public.correo_supresiones values ('solo.queja@ejemplo.test', 'queja'), ('solo.rebote@ejemplo.test', 'rebote')`)
+    await db.exec(`insert into public.correo_supresiones values (public.correo_huella('solo.queja@ejemplo.test'), 'queja'), (public.correo_huella('solo.rebote@ejemplo.test'), 'rebote')`)
     expect((await reservar('tx/q/1', 'transaccional', 'solo.queja@ejemplo.test')).accion).toBe('enviar')
     expect((await reservar('tx/r/1', 'transaccional', 'solo.rebote@ejemplo.test')).accion).toBe('suprimido')
   })
 
   // ── CUPO DURO (F0): 90/día y 2,700/mes en total; 30/día de reserva transaccional. Cifras fijas dentro de la función. ──
   it('PRODUCCIÓN: lo opcional se detiene en 50/día (deja la reserva de 30); lo transaccional llega hasta 80', async () => {
-    await db.exec('delete from public.correo_envios')
+    await db.exec('delete from public.correo_envios; delete from public.correo_conciliacion')
+    await conciliar(0, 0)
     await llenar(49, 'servicio', 'produccion')
     expect((await reservar('srv/p/50', 'servicio', 'a@ejemplo.test')).accion).toBe('enviar')       // la 50.ª
     expect((await reservar('srv/p/51', 'servicio', 'b@ejemplo.test')).accion).toBe('sin_presupuesto')
@@ -281,9 +283,9 @@ describe('reservar un envío: idempotencia, supresión y presupuesto (todo en un
     const inicio = ahora.getUTCDate() >= 23 ? Date.UTC(y, m, 23) : Date.UTC(y, m - 1, 23)
     const estado = await fn(`public.correo_cupo_estado($1)`, ['produccion'])
     expect(new Date(String(estado.inicio_ciclo)).getTime()).toBe(inicio)
-    await db.query(`insert into public.correo_envios (clave, categoria, tipo, email_norm, estado, entorno, creado_en)
+    await db.query(`insert into public.correo_envios (clave, categoria, tipo, email_hash, estado, entorno, creado_en)
                     select 'antes/' || g, 'transaccional', 'x', 'a@b.cc', 'enviado', 'produccion', $1::timestamptz - interval '1 second' from generate_series(1, 7) g`, [new Date(inicio).toISOString()])
-    await db.query(`insert into public.correo_envios (clave, categoria, tipo, email_norm, estado, entorno, creado_en)
+    await db.query(`insert into public.correo_envios (clave, categoria, tipo, email_hash, estado, entorno, creado_en)
                     select 'dentro/' || g, 'transaccional', 'x', 'a@b.cc', 'enviado', 'produccion', $1::timestamptz + interval '1 second' from generate_series(1, 3) g`, [new Date(inicio).toISOString()])
     expect(await fn(`public.correo_cupo_estado($1)`, ['produccion'])).toMatchObject({ mes: 3, tope_mes: 2400 })
   })
@@ -296,7 +298,7 @@ describe('reservar un envío: idempotencia, supresión y presupuesto (todo en un
     // El día 23 el ciclo y «hoy» empiezan a la vez y no hay un instante que cuente para el mes sin contar para el día: ese día se prueba el cálculo (arriba), no este tope.
     if (inicio >= hoy0) return
     const ayer = new Date(hoy0 - 1000).toISOString()
-    await db.query(`insert into public.correo_envios (clave, categoria, tipo, email_norm, estado, entorno, creado_en)
+    await db.query(`insert into public.correo_envios (clave, categoria, tipo, email_hash, estado, entorno, creado_en)
                     select 'mes/' || g, 'transaccional', 'x', 'a@b.cc', 'enviado', 'pruebas', $1::timestamptz from generate_series(1, 300) g`, [ayer])
     expect(await fn(`public.correo_cupo_estado($1)`, ['pruebas'])).toMatchObject({ hoy: 0, mes: 300, tope_mes: 300 })
     expect((await reservar('mes/siguiente', 'transaccional', 'm@ejemplo.test', null, 'pruebas')).accion).toBe('sin_presupuesto')
@@ -304,7 +306,7 @@ describe('reservar un envío: idempotencia, supresión y presupuesto (todo en un
 
   it('lo suprimido y lo duplicado NO gastan cupo', async () => {
     await db.exec('delete from public.correo_envios; delete from public.correo_supresiones')
-    await db.exec(`insert into public.correo_supresiones values ('nogasta@ejemplo.test', 'rebote')`)
+    await db.exec(`insert into public.correo_supresiones values (public.correo_huella('nogasta@ejemplo.test'), 'rebote')`)
     for (let i = 0; i < 20; i++) await reservar(`tx/g/${i}`, 'transaccional', 'nogasta@ejemplo.test', null, 'pruebas')
     expect(await reservar('tx/g/ok1', 'transaccional', 'bien@ejemplo.test', null, 'pruebas')).toMatchObject({ accion: 'enviar' })
     await reservar('tx/g/ok1', 'transaccional', 'bien@ejemplo.test', null, 'pruebas')
@@ -359,10 +361,10 @@ describe('reservar un envío: idempotencia, supresión y presupuesto (todo en un
 describe('salud del marketing (la tarea diaria se pausa con esto)', () => {
   it('cuenta enviados, rebotes y quejas de los últimos 7 días, sólo de marketing', async () => {
     await db.exec('delete from public.correo_envios')
-    await db.exec(`insert into public.correo_envios (clave, categoria, tipo, email_norm, estado) values
+    await db.exec(`insert into public.correo_envios (clave, categoria, tipo, email_hash, estado) values
       ('s/1','marketing','reco','a@x.test','entregado'), ('s/2','marketing','reco','b@x.test','rebotado'), ('s/3','marketing','reco','c@x.test','queja'),
       ('s/4','transaccional','tx','d@x.test','rebotado')`)
-    await db.exec(`insert into public.correo_envios (clave, categoria, tipo, email_norm, estado, creado_en) values ('s/5','marketing','reco','e@x.test','queja', now() - interval '9 days')`)
+    await db.exec(`insert into public.correo_envios (clave, categoria, tipo, email_hash, estado, creado_en) values ('s/5','marketing','reco','e@x.test','queja', now() - interval '9 days')`)
     expect(await fn('public.correo_salud()', [])).toEqual({ enviados7: 3, rebotados7: 1, quejas7: 1 })
   })
 })
@@ -383,7 +385,7 @@ describe('cuenta con sesión: el marketing es una decisión aparte de crear la c
 
   it('exige la versión del texto aceptado; no revive una queja ni un rebote', async () => {
     expect(await cuenta('uid-b', 'cuenta.b@ejemplo.test', true, null)).toMatchObject({ estado: 'sin_consentimiento' })
-    await db.exec(`insert into public.correo_supresiones values ('cuenta.c@ejemplo.test', 'queja')`)
+    await db.exec(`insert into public.correo_supresiones values (public.correo_huella('cuenta.c@ejemplo.test'), 'queja')`)
     expect(await cuenta('uid-c', 'cuenta.c@ejemplo.test', true)).toMatchObject({ estado: 'bloqueada' })
   })
 
@@ -427,7 +429,7 @@ describe('auditoría del cupo: zona horaria, supresiones por categoría y reinte
     expect(new Date(String(jp.inicio_ciclo)).getTime()).toBe(new Date(String(utc.inicio_ciclo)).getTime())
     // Un envío justo antes de las 00:00 UTC de hoy NO cuenta hoy; uno justo después, sí.
     const hoy0 = new Date(); hoy0.setUTCHours(0, 0, 0, 0)
-    await db.query(`insert into public.correo_envios (clave, categoria, tipo, email_norm, estado, entorno, creado_en) values
+    await db.query(`insert into public.correo_envios (clave, categoria, tipo, email_hash, estado, entorno, creado_en) values
       ('zh/antes', 'transaccional', 'x', 'a@b.cc', 'enviado', 'produccion', $1::timestamptz - interval '1 second'),
       ('zh/despues', 'transaccional', 'x', 'a@b.cc', 'enviado', 'produccion', $1::timestamptz + interval '1 second')`, [hoy0.toISOString()])
     await db.exec(`set time zone 'America/Mexico_City'`)
@@ -440,7 +442,7 @@ describe('auditoría del cupo: zona horaria, supresiones por categoría y reinte
 
   it('una queja bloquea los avisos de servicio y el marketing, pero no lo transaccional; un rebote bloquea todo', async () => {
     await db.exec('delete from public.correo_envios; delete from public.correo_supresiones')
-    await db.exec(`insert into public.correo_supresiones values ('quejosa@ejemplo.test', 'queja'), ('rebotada2@ejemplo.test', 'rebote')`)
+    await db.exec(`insert into public.correo_supresiones values (public.correo_huella('quejosa@ejemplo.test'), 'queja'), (public.correo_huella('rebotada2@ejemplo.test'), 'rebote')`)
     expect((await reservar('aud/q1', 'servicio', 'quejosa@ejemplo.test')).accion).toBe('suprimido')
     expect((await reservar('aud/q2', 'transaccional', 'quejosa@ejemplo.test')).accion).toBe('enviar')
     expect((await reservar('aud/r1', 'servicio', 'rebotada2@ejemplo.test')).accion).toBe('suprimido')
@@ -464,5 +466,124 @@ describe('auditoría del cupo: zona horaria, supresiones por categoría y reinte
     expect((await reservar('aud/amb/1', 'transaccional', 'amb@ejemplo.test')).accion).toBe('enviar')
     expect((await reservar('aud/amb/1', 'transaccional', 'amb@ejemplo.test')).accion).toBe('duplicado')
     expect(await fn(`public.correo_cupo_estado($1)`, ['produccion'])).toMatchObject({ hoy: 1 })
+  })
+})
+
+describe('F1 · PRIVACIDAD: el libro guarda una huella, no el correo; olvido por cuenta; retención de 2 años; supresión sin datos personales', () => {
+  const CORREO_SINTETICO = 'persona.sintetica@ejemplo.test'
+
+  it('el libro y las supresiones NO contienen el correo en claro (ni en ninguna columna ni en el volcado)', async () => {
+    await db.exec('delete from public.correo_envios; delete from public.correo_supresiones')
+    await reservar('priv/1', 'transaccional', CORREO_SINTETICO)
+    await evento('svix-priv-1', 'email.bounced', CORREO_SINTETICO, 're_priv', true)
+    const volcado = JSON.stringify(await q('select * from public.correo_envios')) + JSON.stringify(await q('select * from public.correo_supresiones')) + JSON.stringify(await q('select * from public.correo_webhook_vistos'))
+    expect(volcado).not.toContain('persona.sintetica')
+    expect(volcado).not.toContain('ejemplo.test')
+    const h = (await q<{ h: string }>(`select public.correo_huella($1) h`, [CORREO_SINTETICO]))[0].h
+    expect(h).toMatch(/^[0-9a-f]{64}$/)
+    expect((await q('select 1 from public.correo_envios where email_hash = $1', [h])).length).toBe(1)
+    expect((await q('select 1 from public.correo_supresiones where email_hash = $1', [h])).length).toBe(1)
+  })
+
+  it('la huella no distingue mayúsculas ni espacios, y cambia con otra dirección', async () => {
+    const h = async (c: string) => (await q<{ h: string }>(`select public.correo_huella($1) h`, [c]))[0].h
+    expect(await h('  Persona.Sintetica@Ejemplo.TEST ')).toBe(await h(CORREO_SINTETICO))
+    expect(await h('otra.sintetica@ejemplo.test')).not.toBe(await h(CORREO_SINTETICO))
+  })
+
+  it('olvidar la cuenta borra su rastro en el libro y su suscripción, es idempotente, y CONSERVA la supresión sin reintroducir el correo', async () => {
+    await db.exec('delete from public.correo_envios; delete from public.correo_supresiones; delete from public.correo_suscriptores')
+    const id = await activar('olvidar.sintetica@ejemplo.test')
+    await db.exec(`update public.correo_suscriptores set uid = 'uid-olvidar' where id = '${id}'`)
+    await reservar('olv/1', 'transaccional', 'olvidar.sintetica@ejemplo.test')
+    await reservar('olv/2', 'transaccional', 'olvidar.sintetica@ejemplo.test')
+    await reservar('otro/1', 'transaccional', 'otra.persona@ejemplo.test')
+    await evento('svix-olv-1', 'email.complained', 'olvidar.sintetica@ejemplo.test', null)
+    const r1 = await fn('public.correo_olvidar_cuenta($1, $2)', ['uid-olvidar', 'Olvidar.Sintetica@ejemplo.test'])
+    expect(r1).toMatchObject({ envios_borrados: 2, suscripciones_borradas: 1 })
+    const r2 = await fn('public.correo_olvidar_cuenta($1, $2)', ['uid-olvidar', 'olvidar.sintetica@ejemplo.test'])
+    expect(r2).toMatchObject({ envios_borrados: 0, suscripciones_borradas: 0 })
+    // La otra persona no se toca; la supresión por queja se conserva y sigue bloqueando el correo opcional…
+    expect((await q('select 1 from public.correo_envios')).length).toBe(1)
+    expect((await reservar('olv/3', 'servicio', 'olvidar.sintetica@ejemplo.test')).accion).toBe('suprimido')
+    // …sin que quede ningún correo en claro en ninguna tabla.
+    const todo = JSON.stringify(await q('select * from public.correo_supresiones')) + JSON.stringify(await q('select * from public.correo_envios')) + JSON.stringify(await q('select * from public.correo_suscriptores'))
+    expect(todo).not.toContain('olvidar.sintetica')
+  })
+
+  it('la retención es de 2 años: borra envíos de más de 730 días (no los de 729), vistos de webhook > 90 días, suscripciones terminadas > 2 años y pendientes > 30 días; conserva supresiones', async () => {
+    await db.exec('delete from public.correo_envios; delete from public.correo_supresiones; delete from public.correo_suscriptores; delete from public.correo_webhook_vistos; delete from public.correo_conciliacion')
+    await db.exec(`insert into public.correo_envios (clave, categoria, tipo, email_hash, estado, entorno, creado_en) values
+      ('ret/viejo', 'transaccional', 'x', 'h1', 'enviado', 'produccion', now() - interval '731 days'),
+      ('ret/limite', 'transaccional', 'x', 'h2', 'enviado', 'produccion', now() - interval '729 days'),
+      ('ret/nuevo', 'transaccional', 'x', 'h3', 'enviado', 'produccion', now())`)
+    await db.exec(`insert into public.correo_webhook_vistos (svix_id, creado_en) values ('v-viejo', now() - interval '91 days'), ('v-nuevo', now())`)
+    await db.exec(`insert into public.correo_supresiones (email_hash, motivo, creado_en) values ('hs', 'queja', now() - interval '900 days')`)
+    await db.exec(`insert into public.correo_suscriptores (email, email_norm, estado, baja_en, creado_en) values
+      ('a@x.test', 'a@x.test', 'baja', now() - interval '800 days', now() - interval '900 days'),
+      ('b@x.test', 'b@x.test', 'baja', now() - interval '10 days', now() - interval '900 days'),
+      ('c@x.test', 'c@x.test', 'pendiente', null, now() - interval '31 days'),
+      ('d@x.test', 'd@x.test', 'pendiente', null, now() - interval '2 days')`)
+    const r = await fn('public.correo_purgar()', [])
+    expect(r).toMatchObject({ envios: 1, webhook_vistos: 1, suscripciones: 1, pendientes: 1 })
+    expect((await q<{ clave: string }>('select clave from public.correo_envios order by clave')).map((x) => x.clave)).toEqual(['ret/limite', 'ret/nuevo'])
+    expect((await q('select 1 from public.correo_supresiones')).length).toBe(1)
+    expect((await q<{ email_norm: string }>('select email_norm from public.correo_suscriptores order by 1')).map((x) => x.email_norm)).toEqual(['b@x.test', 'd@x.test'])
+    expect(await fn('public.correo_purgar()', [])).toMatchObject({ envios: 0, webhook_vistos: 0, suscripciones: 0, pendientes: 0 })
+  })
+
+  it('el plazo no es configurable (correo_purgar no recibe parámetros) y las nuevas funciones sólo las ejecuta service_role', async () => {
+    const firma = await q<{ args: string }>(`select pg_get_function_identity_arguments(oid) args from pg_proc where proname = 'correo_purgar' and pronamespace = 'public'::regnamespace`)
+    expect(firma).toEqual([{ args: '' }])
+    for (const rol of ['anon', 'authenticated']) {
+      for (const llamada of ['public.correo_purgar()', `public.correo_olvidar_cuenta('u', 'a@b.cc')`, `public.correo_conciliar(1, 1, 'x', null)`, `public.correo_huella('a@b.cc')`]) {
+        await db.exec(`set role ${rol}`)
+        await expect(db.query(`select ${llamada}`), `${rol} ${llamada}`).rejects.toThrow(/permission denied/)
+        await db.exec('reset role')
+      }
+      await db.exec(`set role ${rol}`)
+      await expect(db.query('select * from public.correo_secreto')).rejects.toThrow(/permission denied/)
+      await db.exec('reset role')
+    }
+  })
+})
+
+describe('F1 · LÍMITE AGREGADO: el correo OPCIONAL en producción exige una lectura reciente del panel de Resend', () => {
+  it('sin lectura, o con una de más de 8 días, lo opcional NO sale; lo transaccional sí', async () => {
+    await db.exec('delete from public.correo_envios; delete from public.correo_conciliacion')
+    expect(await reservar('conc/1', 'servicio', 'c1@ejemplo.test')).toMatchObject({ accion: 'sin_presupuesto', motivo: 'sin_conciliacion' })
+    expect((await reservar('conc/t', 'transaccional', 'c1@ejemplo.test')).accion).toBe('enviar')
+    await db.exec(`insert into public.correo_conciliacion (leido_en, resend_dia_usado, resend_mes_usado, actor) values (now() - interval '9 days', 0, 0, 'sintetico')`)
+    expect(await reservar('conc/2', 'servicio', 'c2@ejemplo.test')).toMatchObject({ motivo: 'sin_conciliacion' })
+    await conciliar(0, 0)
+    expect((await reservar('conc/3', 'servicio', 'c3@ejemplo.test')).accion).toBe('enviar')
+  })
+
+  it('suma lo que Resend ya reportaba (otros servicios incluidos) más lo enviado aquí desde esa lectura: si no cabe, NO sale', async () => {
+    await db.exec('delete from public.correo_envios; delete from public.correo_conciliacion')
+    await conciliar(0, 2095) // Resend dice que el ciclo ya lleva 2,095; el tope opcional del mes es 2,100
+    for (let i = 0; i < 5; i++) expect((await reservar(`conc/m/${i}`, 'servicio', `m${i}@ejemplo.test`)).accion).toBe('enviar')
+    expect(await reservar('conc/m/5', 'servicio', 'm5@ejemplo.test')).toMatchObject({ accion: 'sin_presupuesto', motivo: 'conciliacion' })
+    expect((await reservar('conc/m/t', 'transaccional', 'm5@ejemplo.test')).accion).toBe('enviar') // lo transaccional conserva su reserva
+  })
+
+  it('un consumo externo del día (según la lectura) reduce el cupo opcional del día', async () => {
+    await db.exec('delete from public.correo_envios; delete from public.correo_conciliacion')
+    await conciliar(48, 100) // otros servicios gastaron 48 hoy; tope opcional diario 50
+    expect((await reservar('conc/d/1', 'servicio', 'd1@ejemplo.test')).accion).toBe('enviar')
+    expect((await reservar('conc/d/2', 'servicio', 'd2@ejemplo.test')).accion).toBe('enviar')
+    expect(await reservar('conc/d/3', 'servicio', 'd3@ejemplo.test')).toMatchObject({ accion: 'sin_presupuesto', motivo: 'conciliacion' })
+  })
+
+  it('fuera de producción la conciliación no se exige (esas rebanadas sólo envían en modo de pruebas)', async () => {
+    await db.exec('delete from public.correo_envios; delete from public.correo_conciliacion')
+    expect((await reservar('conc/p/1', 'servicio', 'p1@ejemplo.test', null, 'pruebas')).accion).toBe('enviar')
+  })
+
+  it('una lectura inválida o sin actor se rechaza, y la lectura queda con su actor', async () => {
+    await expect(conciliar(-1, 0)).rejects.toThrow(/lectura invalida/)
+    await expect(conciliar(0, 0, '  ')).rejects.toThrow(/actor requerido/)
+    await conciliar(3, 7, 'super-admin-sintetico')
+    expect((await q<{ actor: string }>('select actor from public.correo_conciliacion order by id desc limit 1'))[0].actor).toBe('super-admin-sintetico')
   })
 })

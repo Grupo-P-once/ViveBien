@@ -7,6 +7,10 @@
 
 begin;
 
+drop function if exists public.correo_purgar();
+drop function if exists public.correo_olvidar_cuenta(text, text);
+drop function if exists public.correo_conciliar(int, int, text, text);
+drop function if exists public.correo_huella(text);
 drop function if exists public.correo_salud();
 drop function if exists public.correo_vincular_cuenta(text, text);
 drop function if exists public.correo_evento(text, text, text, text, boolean);
@@ -18,6 +22,8 @@ drop function if exists public.correo_baja(uuid, text);
 drop function if exists public.correo_confirmar(uuid);
 drop function if exists public.correo_suscribir(text, text, jsonb, text, text);
 
+drop table if exists public.correo_conciliacion;
+drop table if exists public.correo_secreto;
 drop table if exists public.correo_webhook_vistos;
 drop table if exists public.correo_envios;
 drop table if exists public.correo_supresiones;

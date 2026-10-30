@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { BarChart3, ChevronRight, History, House, LayoutDashboard, Mail, SearchCheck, ToggleLeft, Users, type LucideIcon, Receipt } from 'lucide-react'
+import { BarChart3, ChevronRight, History, House, LayoutDashboard, Mail, Megaphone, SearchCheck, ToggleLeft, Users, type LucideIcon, Receipt } from 'lucide-react'
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
   SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem, useSidebar,
@@ -41,6 +41,7 @@ const MENU: Entrada[] = [
   { titulo: 'Usuarios', icono: Users, hijos: [{ titulo: 'Todos los usuarios', enlace: '/admin/usuarios' }] },
   { titulo: 'Comisiones', icono: Receipt, enlace: '/admin/comisiones' },
   { titulo: 'Actividad', icono: History, enlace: '/admin/actividad' },
+  { titulo: 'Marketing y correos', icono: Megaphone, enlace: '/admin/marketing' },
 ]
 
 /** «Comisiones» para Super Admin: los cierres y, debajo, la contabilidad de lo que entra y lo que sale (25-oct-2026). */

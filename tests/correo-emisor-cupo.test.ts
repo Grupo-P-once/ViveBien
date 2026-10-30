@@ -55,13 +55,13 @@ describe('cada correo cuenta contra el cupo ANTES de salir', () => {
   it('el libro no guarda el cuerpo del correo: sólo clave, categoría, tipo, estado y el correo normalizado', async () => {
     await avisarDeLead(LEAD)
     const cols = Object.keys((await libro.pg.query('select * from public.correo_envios')).fields.reduce((o, f) => ({ ...o, [f.name]: 1 }), {}))
-    expect(cols.sort()).toEqual(['categoria', 'clave', 'creado_en', 'email_norm', 'entorno', 'enviado_en', 'error', 'estado', 'id', 'propiedades', 'resend_id', 'suscriptor_id', 'tipo'].sort())
+    expect(cols.sort()).toEqual(['categoria', 'clave', 'creado_en', 'email_hash', 'entorno', 'enviado_en', 'error', 'estado', 'id', 'propiedades', 'resend_id', 'suscriptor_id', 'tipo'].sort())
   })
 })
 
 describe('SIN CUPO NO SE ENVÍA', () => {
   async function llenarHoy(n: number) {
-    await libro.pg.query(`insert into public.correo_envios (clave, categoria, tipo, email_norm, estado, entorno)
+    await libro.pg.query(`insert into public.correo_envios (clave, categoria, tipo, email_hash, estado, entorno)
                           select 'lleno/' || g, 'transaccional', 'x', 'lleno@ejemplo.test', 'enviado', 'produccion' from generate_series(1, $1::int) g`, [n])
   }
 
@@ -104,7 +104,7 @@ describe('SIN CUPO NO SE ENVÍA', () => {
   })
 
   it('lo opcional («servicio») respeta la reserva transaccional en producción: se detiene en 50 y lo transaccional sigue hasta 80', async () => {
-    await libro.pg.query(`insert into public.correo_envios (clave, categoria, tipo, email_norm, estado, entorno)
+    await libro.pg.query(`insert into public.correo_envios (clave, categoria, tipo, email_hash, estado, entorno)
                           select 'prev/' || g, 'transaccional', 'x', 'p@ejemplo.test', 'enviado', 'produccion' from generate_series(1, 50) g`)
     const pedido = (clave: string, categoria: 'transaccional' | 'servicio') => enviarPorEmisorUnico({
       apiKey: 'k', clave, categoria, tipo: 'x', para: 'a@ejemplo.test', cuerpo: { from: 'a', to: ['a@ejemplo.test'], subject: 's', html: 'h', text: 't' }, db: libro.db, entornoCupo: 'produccion',
@@ -130,13 +130,14 @@ describe('MODO DE PRUEBAS cuenta igual y marca el asunto con un ID', () => {
     expect(peticiones).toHaveLength(1)
     expect(peticiones[0].cuerpo.to).toEqual([DESTINO_PRUEBAS])
     expect(DESTINO_PRUEBAS).toBe('informes@vivebienn.com')
-    expect(String(peticiones[0].cuerpo.subject)).toMatch(/^\[PRUEBA VB · [0-9A-F]{8}\] Te invitaron/)
+    expect(String(peticiones[0].cuerpo.subject)).toMatch(/^\[PRUEBA VB · [0-9A-F]{8}\] invitacion$/)
     expect(await libro.usados('pruebas')).toBe(1)
     const filas = await libro.filas()
-    expect(filas[0].email_norm).toBe(DESTINO_PRUEBAS) // ni el libro guarda la dirección real
-    // El TEXTO de una invitación menciona a quien se invita (es su contenido); lo que no puede aparecer es en un campo de destinatario, de respuesta, en cabeceras ni en el libro.
-    const c = peticiones[0].cuerpo
-    expect(JSON.stringify({ to: c.to, reply_to: c.reply_to, headers: c.headers }) + JSON.stringify(filas)).not.toContain('cliente-real')
+    expect(filas[0].email_hash).toBe(await libro.huella(DESTINO_PRUEBAS)) // ni el libro guarda la dirección real: sólo la huella del destino de pruebas
+    expect(JSON.stringify(filas)).not.toContain(DESTINO_PRUEBAS)
+    // F1: el contenido real (que mencionaba al invitado) se descarta: la dirección real no aparece en NINGÚN campo ni en el libro.
+    expect(JSON.stringify(peticiones) + JSON.stringify(filas)).not.toContain('cliente-real')
+    expect(String(peticiones[0].cuerpo.text)).toContain('contenido sintético')
   })
 
   it('el ID del asunto es estable para la misma clave y distinto entre correos', async () => {
@@ -167,7 +168,7 @@ describe('duplicados', () => {
   })
 
   it('una dirección con rebote permanente suprimida no recibe más correo (y no gasta cupo)', async () => {
-    await libro.pg.query(`insert into public.correo_supresiones values ('rebotada@ejemplo.test', 'rebote')`)
+    await libro.pg.query(`insert into public.correo_supresiones values (public.correo_huella('rebotada@ejemplo.test'), 'rebote')`)
     const r = await enviarPorEmisorUnico({ apiKey: 'k', clave: 'sup/1', categoria: 'transaccional', tipo: 'x', para: 'Rebotada@Ejemplo.test', cuerpo: { from: 'a', to: ['rebotada@ejemplo.test'], subject: 's', html: 'h', text: 't' }, db: libro.db })
     expect(r.estado).toBe('suprimido')
     expect(peticiones).toEqual([])

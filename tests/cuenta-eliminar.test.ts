@@ -165,7 +165,16 @@ describe('la puerta', () => {
   it('el uid que llega a la función SQL es SIEMPRE el del token', async () => {
     sesionBuena({ uid: 'u-del-token' })
     await POST(pet({ motivo: 'ya no lo uso' }))
-    expect(mundo.llamadasRpc[0]).toMatchObject({ nombre: 'baja_de_cuenta', p_uid: 'u-del-token' })
+    expect(mundo.llamadasRpc.find((l) => l.nombre === 'baja_de_cuenta')).toMatchObject({ nombre: 'baja_de_cuenta', p_uid: 'u-del-token' })
+  })
+
+  it('F1 · PRIVACIDAD: ANTES de cerrar la cuenta se borra el rastro de correo de ESA persona (uid del token), y la baja sigue aunque eso falle', async () => {
+    sesionBuena({ uid: 'u-olvidar' })
+    await POST(pet({ motivo: 'ya no lo uso' }))
+    const nombres = mundo.llamadasRpc.map((l) => l.nombre)
+    expect(nombres.indexOf('correo_olvidar_cuenta')).toBeGreaterThanOrEqual(0)
+    expect(nombres.indexOf('correo_olvidar_cuenta')).toBeLessThan(nombres.indexOf('baja_de_cuenta'))
+    expect(mundo.llamadasRpc.find((l) => l.nombre === 'correo_olvidar_cuenta')).toMatchObject({ p_uid: 'u-olvidar' })
   })
 })
 

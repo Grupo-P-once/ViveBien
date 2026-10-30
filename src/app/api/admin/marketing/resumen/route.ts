@@ -1,0 +1,81 @@
+import { NextResponse } from 'next/server'
+import { exigir, supabaseAdmin } from '@/lib/auth-server'
+import { frenarAsync, TOPES } from '@/lib/limites'
+import { CUPO_POR_ENTORNO, CUPO_TOTAL, entornoCorreo, entornoDeCupo, MARKETING_AUTORIZADO } from '@/lib/correo/config'
+
+/**
+ * Resumen del panel «Marketing y correos» (F1). SOLO LECTURA y SOLO AGREGADOS: cupo, última conciliación con Resend, banderas y conteos de consentimiento.
+ * Nunca devuelve direcciones, nombres ni listas de personas; una celda con menos de 5 personas se oculta («<5») para no identificar a nadie.
+ */
+export const dynamic = 'force-dynamic'
+
+const MIN_CELDA = 5
+const celda = (n: number | null): number | string | null => (n === null ? null : n > 0 && n < MIN_CELDA ? `<${MIN_CELDA}` : n)
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function contar(tabla: string, filtro?: (q: any) => any): Promise<number | null> {
+  try {
+    const q = supabaseAdmin().from(tabla).select('*', { count: 'exact', head: true })
+    const r = await (filtro ? filtro(q) : q)
+    return r.error || typeof r.count !== 'number' ? null : r.count
+  } catch {
+    return null
+  }
+}
+
+async function rpcJson(fn: string, args: Record<string, unknown>): Promise<Record<string, unknown> | null> {
+  try {
+    const { data, error } = await supabaseAdmin().rpc(fn, args)
+    return error || !data || typeof data !== 'object' ? null : (data as Record<string, unknown>)
+  } catch {
+    return null
+  }
+}
+
+export async function GET(req: Request) {
+  const auth = await exigir(req, 'correo.ver')
+  if (auth.error) return auth.error
+  const frenado = await frenarAsync(`marketing-lectura:${auth.perfil.uid}`, TOPES.marketingPanel)
+  if (frenado) return frenado
+
+  const env = entornoCorreo()
+  let conciliacion: Record<string, unknown> | null = null
+  try {
+    const { data } = await supabaseAdmin().from('correo_conciliacion').select('leido_en, resend_dia_usado, resend_mes_usado').order('id', { ascending: false }).limit(1).maybeSingle()
+    conciliacion = (data as Record<string, unknown> | null) ?? null
+  } catch {
+    conciliacion = null
+  }
+
+  const [cupoProd, cupoPruebas] = await Promise.all([rpcJson('correo_cupo_estado', { p_entorno: 'produccion' }), rpcJson('correo_cupo_estado', { p_entorno: 'pruebas' })])
+  const [conAlertas, conPrecio, conLegal, susActivas] = await Promise.all([
+    contar('preferencias_notificacion', (q) => q.eq('correo_alertas', true)),
+    contar('preferencias_notificacion', (q) => q.eq('correo_precio', true)),
+    contar('preferencias_notificacion', (q) => q.eq('correo_legal', true)),
+    contar('correo_suscriptores', (q) => q.eq('estado', 'activa')),
+  ])
+
+  return NextResponse.json(
+    {
+      generado: new Date().toISOString(),
+      banderas: { entorno: entornoDeCupo(), transaccionalEncendido: env.transaccional, marketingAutorizado: MARKETING_AUTORIZADO, marketingEncendido: env.marketing, modoPruebas: env.modoPruebas === true },
+      cupo: {
+        total: CUPO_TOTAL,
+        rebanadas: CUPO_POR_ENTORNO,
+        libroProduccion: cupoProd,
+        libroPruebas: cupoPruebas,
+        migracionAplicada: cupoProd !== null,
+        limite: 'NO demostrado como global: cada base cuenta lo suyo y otros servicios de la cuenta de Resend no se ven. El correo opcional exige una lectura reciente del panel de Resend.',
+      },
+      conciliacion,
+      audiencia: {
+        nota: 'Conteos de consentimientos de ESTA base, agregados. Las promociones están apagadas hasta tener texto legal aprobado; no se usa ningún contacto para promociones.',
+        avisosDeBusqueda: celda(conAlertas),
+        bajaDePrecio: celda(conPrecio),
+        avisosLegales: celda(conLegal),
+        promocionesConConsentimiento: MARKETING_AUTORIZADO ? celda(susActivas) : 0,
+      },
+    },
+    { headers: { 'Cache-Control': 'private, no-store' } },
+  )
+}

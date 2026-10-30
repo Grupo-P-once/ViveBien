@@ -98,11 +98,20 @@ describe('con CORREO_MODO_PRUEBAS=1 cada emisor entrega SOLO al destino de prueb
     await citaMandar()
     const c = peticiones[0].cuerpo
     expect(JSON.stringify(c)).not.toContain(TOKEN)
-    expect(String(c.html)).toContain(ENLACE_INERTE)
-    expect(String(c.text)).toContain(ENLACE_INERTE)
-    expect(String(c.html)).toContain('https://vivebienn.com/portal') // un enlace sin efecto se conserva
+    // F1: el contenido real se DESCARTA por completo (solo queda el tipo); no hay ningún enlace, ni siquiera inerte.
+    expect(String(c.html)).toContain('contenido sintético')
+    expect(String(c.text)).toContain('Tipo de mensaje: cita')
+    expect(String(c.html) + String(c.text) + String(c.subject)).not.toMatch(/https?:|vivebienn\.com\/portal|Tu visita/)
     expect('attachments' in c).toBe(false)
-    expect(JSON.stringify(c)).not.toContain('asesor.real')
+    expect(JSON.stringify(c)).not.toMatch(/asesor\.real|cliente\.cita/)
+  })
+
+  it('F1 · con contenido declarado sintético (vista previa del diseñador) se conserva, pero los enlaces con token se neutralizan', () => {
+    const c = cuerpoDePruebas({ from: 'a', to: ['x@y.test'], subject: 'Vista previa', html: '<a href="https://vivebienn.com/correo/baja#t=T0KEN">baja</a> <a href="https://vivebienn.com/portal">ver</a>', text: 'https://vivebienn.com/correo/baja#t=T0KEN' }, '0A1B2C3D', { sintetico: true, tipo: 'vista_previa' })
+    expect(String(c.subject)).toBe('[PRUEBA VB · 0A1B2C3D] Vista previa')
+    expect(JSON.stringify(c)).not.toContain('T0KEN')
+    expect(String(c.html)).toContain(ENLACE_INERTE)
+    expect(String(c.html)).toContain('https://vivebienn.com/portal')
   })
 
   it('sin clave del proveedor nadie envía nada, tampoco en modo de pruebas', async () => {
@@ -141,14 +150,14 @@ describe('el módulo central', () => {
       attachments: [{ filename: 'a.ics', content: 'eA==' }],
       headers: { Bcc: 'h@x.test', CC: 'h2@x.test', To: 'h3@x.test', 'Reply-To': 'h4@x.test', 'List-Unsubscribe': '<https://vivebienn.com/api/correo/baja?t=T>', 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click', 'X-Ok': 'bien', 'X-Mal': 'a' + CRLF + 'Bcc: q@x.test' },
     }
-    const c = cuerpoDePruebas(hostil)
+    const c = cuerpoDePruebas(hostil, '0A1B2C3D')
     expect(() => exigirSoloDestinoDePruebas(c)).not.toThrow()
     expect(c.to).toEqual([DESTINO_PRUEBAS])
     expect(Object.keys(c).sort()).toEqual(['from', 'headers', 'html', 'reply_to', 'subject', 'text', 'to'])
     expect(c.headers).toEqual({ 'X-Ok': 'bien', 'X-Vive-Bien-Modo': 'pruebas' })
     expect(String(c.subject)).not.toMatch(/[\r\n]/)
     expect(JSON.stringify({ ...c, subject: "" })).not.toMatch(/@x.test/) // el asunto es texto de una sola línea: no puede abrir una cabecera
-    expect(cuerpoDePruebas(c).subject).toBe(c.subject) // idempotente: no duplica el prefijo
+    expect(cuerpoDePruebas(c, '0A1B2C3D').subject).toBe(c.subject) // idempotente: no duplica el prefijo
   })
 
   it('llamarResend: en modo de pruebas el proveedor recibe el cuerpo reconstruido, nunca el original', async () => {

@@ -137,7 +137,7 @@ describe('la migración 62 (era la 36 de D-80)', () => {
   const sql = leer('supabase/62-correo-suscripciones.sql')
   it('todas las tablas nuevas activan RLS y NO crean ninguna política (sólo service_role)', () => {
     const tablas = [...sql.matchAll(/create table if not exists public\.(correo_[a-z_]+)/g)].map((m) => m[1])
-    expect(tablas.sort()).toEqual(['correo_envios', 'correo_supresiones', 'correo_suscriptores', 'correo_webhook_vistos'])
+    expect(tablas.sort()).toEqual(['correo_conciliacion', 'correo_envios', 'correo_secreto', 'correo_supresiones', 'correo_suscriptores', 'correo_webhook_vistos'])
     for (const t of tablas) expect(sql, t).toMatch(new RegExp(`alter table public\\.${t}\\s+enable row level security`))
     expect(sql).not.toMatch(/create policy/i)
   })
@@ -150,7 +150,7 @@ describe('la migración 62 (era la 36 de D-80)', () => {
 
   it('toda función revoca el acceso público y concede sólo a service_role', () => {
     const funciones = [...sql.matchAll(/create or replace function public\.(correo_[a-z_]+)\(/g)].map((m) => m[1])
-    expect(funciones).toHaveLength(10)
+    expect(funciones).toHaveLength(14)
     for (const fn of funciones) {
       expect(sql, fn).toMatch(new RegExp(`revoke all on function public\\.${fn}\\([^)]*\\) from public, anon, authenticated`))
       expect(sql, fn).toMatch(new RegExp(`grant execute on function public\\.${fn}\\([^)]*\\) to service_role`))
@@ -232,7 +232,7 @@ describe('MODO DE PRUEBAS y CUPO: todo emisor de correo del código pasa por un 
 
   it('el punto central reconstruye el cuerpo y lo revisa ANTES de llamar al proveedor, con el destino como constante de código', () => {
     const t = codigo(leer(CENTRAL))
-    expect(t.indexOf('cuerpoDePruebas(l.cuerpo, idDePrueba(l.idempotencia))')).toBeGreaterThan(0)
+    expect(t.indexOf('cuerpoDePruebas(l.cuerpo, idDePrueba(l.idempotencia), { tipo: l.tipo, sintetico: l.sintetico })')).toBeGreaterThan(0)
     expect(t.indexOf('exigirSoloDestinoDePruebas(cuerpo)')).toBeGreaterThan(t.indexOf('cuerpoDePruebas(l.cuerpo'))
     expect(t.indexOf('exigirSoloDestinoDePruebas(cuerpo)')).toBeLessThan(t.indexOf('URL_RESEND, {'))
     expect(t).toMatch(/body: JSON\.stringify\(cuerpo\)/)
@@ -244,8 +244,67 @@ describe('MODO DE PRUEBAS y CUPO: todo emisor de correo del código pasa por un 
 
   it('el emisor de D-80 (`enviar.ts`) también revisa su cuerpo antes de llamar y deja el envío en error si algo no cuadra', () => {
     const t = codigo(leer(D80))
-    expect(t).toMatch(/cuerpoDePruebas\(base, idDePrueba\(s\.clave\)\)/)
+    expect(t).toMatch(/cuerpoDePruebas\(base, idDePrueba\(s\.clave\), \{ tipo: s\.tipo, sintetico: s\.sintetico \}\)/)
     expect(t.indexOf('exigirSoloDestinoDePruebas(cuerpo)')).toBeLessThan(t.indexOf('llamarResend({'))
     expect(t).toMatch(/fuga_modo_pruebas/)
+  })
+})
+
+describe('F1 · privacidad, retención y panel (guardias estáticas)', () => {
+  it('cerrar una cuenta olvida su rastro de correo ANTES de llamar a baja_de_cuenta', () => {
+    const t = codigo(leer('src/app/api/cuenta/eliminar/route.ts'))
+    expect(t.indexOf('olvidarCorreoDeCuenta(')).toBeGreaterThan(0)
+    expect(t.indexOf('olvidarCorreoDeCuenta(')).toBeLessThan(t.indexOf("rpc('baja_de_cuenta'"))
+  })
+
+  it('la retención de 2 años cuelga del cron diario que ya existe (sin cron nuevo) y no lanza', () => {
+    const t = codigo(leer('src/app/api/alertas/resumen/route.ts'))
+    expect(t).toMatch(/purgarCorreo\(/)
+    expect(t.indexOf('purgarCorreo(')).toBeGreaterThan(t.indexOf('avisosDeClientes()'))
+    const v = JSON.parse(leer('vercel.json')) as { crons: Array<{ path: string }> }
+    expect(v.crons.map((c) => c.path)).toEqual(['/api/alertas/resumen', '/api/alertas/contabilidad-quincenal'])
+  })
+
+  it('el modo de pruebas DESCARTA el contenido real salvo que quien llama garantice que es sintético', () => {
+    const t = codigo(leer('src/lib/correo/resend.ts'))
+    expect(t).toContain('const real = o.sintetico === true')
+    expect(t).toContain('html: real ? neutralizarEnlaces(c.html)')
+    expect(t).toContain('text: real ? neutralizarEnlaces(c.text)')
+    // Ningún emisor del sitio declara su contenido como sintético (solo lo haría la vista previa del diseñador, que no existe todavía).
+    for (const f of TODOS) {
+      const c = codigo(readFileSync(f, 'utf8'))
+      const envia = /\b(enviarPorEmisorUnico|enviarCorreo|llamarResend)\(/.test(c)
+      if (envia && !['src/lib/correo/resend.ts', 'src/lib/correo/emisor.ts', 'src/lib/correo/enviar.ts'].includes(rel(f))) expect(c, rel(f)).not.toMatch(/sintetico:\s*true/)
+    }
+  })
+
+  it('el libro y las supresiones no guardan el correo en claro (migración 62)', () => {
+    const sql = leer('supabase/62-correo-suscripciones.sql')
+    expect(sql).toMatch(/email_hash\s+text not null/)
+    expect(sql).not.toMatch(/create table if not exists public\.correo_envios[\s\S]*?email_norm[\s\S]*?\);\s*create index/)
+    expect(sql).toMatch(/create table if not exists public\.correo_supresiones \(\s*--[^\n]*\n\s*email_hash text primary key/)
+    expect(sql).toMatch(/revoke all on public\.correo_suscriptores[\s\S]*?from public, anon, authenticated/)
+  })
+
+  it('las rutas del panel de Marketing exigen su permiso y NO escriben (solo la conciliación escribe, por función SQL y auditada)', () => {
+    for (const r of ['resumen', 'vista-previa']) {
+      const t = codigo(leer(`src/app/api/admin/marketing/${r}/route.ts`))
+      expect(t, r).toMatch(/exigir\(req, 'correo\.ver'\)/)
+      expect(t, r).not.toMatch(/\.(insert|update|upsert|delete)\(/)
+    }
+    const c = codigo(leer('src/app/api/admin/marketing/conciliacion/route.ts'))
+    expect(c).toMatch(/exigir\(req, 'correo\.conciliar'\)/)
+    expect(c).toMatch(/rpc\('correo_conciliar'/)
+    expect(c).toMatch(/registrar\(/)
+    expect(c).not.toMatch(/\.(insert|update|upsert|delete)\(/)
+    expect(leer('src/lib/acceso/permisos.ts')).toMatch(/'correo\.conciliar': \['super_admin'\]/)
+  })
+
+  it('no hay botones de envío en el panel (solo lectura): ninguna llamada de envío ni POST fuera de la conciliación', () => {
+    const t = codigo(leer('src/app/admin/marketing/page.tsx'))
+    expect(t).not.toMatch(/enviarCorreo|enviarPorEmisorUnico|llamarResend|\/api\/correo\//)
+    expect([...t.matchAll(/method: 'POST'/g)]).toHaveLength(1)
+    expect(t).toContain("pedir('/api/admin/marketing/conciliacion'")
+    expect(t).toContain('sandbox=""')
   })
 })

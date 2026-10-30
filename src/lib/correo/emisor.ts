@@ -35,6 +35,8 @@ export type PedidoEmisor = {
   db?: DbCorreo
   entornoCupo?: EntornoDeCupo
   modoPruebas?: boolean
+  /** `true` sólo si el cuerpo ya es sintético; en modo de pruebas, de lo contrario, el contenido real se descarta (solo se conserva el tipo). */
+  sintetico?: boolean
 }
 
 export type EstadoEmisor = 'bloqueado' | 'enviado' | 'duplicado' | 'suprimido' | 'sin_cupo' | 'sin_confirmar' | 'sin_clave' | 'invalido' | 'rechazado' | 'error'
@@ -87,7 +89,7 @@ export async function enviarPorEmisorUnico(p: PedidoEmisor): Promise<ResultadoEm
   if (r.accion === 'duplicado') return { ok: YA_SALIO.has(r.estadoPrevio ?? ''), estado: 'duplicado' }
 
   try {
-    const res = await llamarResend({ apiKey: p.apiKey, cuerpo: p.cuerpo, idempotencia: p.clave, fetch: p.fetch, modoPruebas: pruebas })
+    const res = await llamarResend({ apiKey: p.apiKey, cuerpo: p.cuerpo, idempotencia: p.clave, fetch: p.fetch, modoPruebas: pruebas, tipo: p.tipo, sintetico: p.sintetico })
     const texto = await res.text().catch(() => '')
     if (!res.ok) {
       await marcarEnvio(db, r.id, 'error', null, `http ${res.status}`)

@@ -82,7 +82,9 @@ beforeAll(async () => {
 afterAll(async () => { await pg?.close() })
 beforeEach(async () => {
   peticiones = []
-  await pg.exec('delete from public.correo_envios; delete from public.correo_suscriptores; delete from public.correo_supresiones; delete from public.correo_webhook_vistos; delete from public.propiedades')
+  await pg.exec('delete from public.correo_envios; delete from public.correo_suscriptores; delete from public.correo_supresiones; delete from public.correo_webhook_vistos; delete from public.propiedades; delete from public.correo_conciliacion')
+  // El correo opcional en producción exige una lectura reciente del panel de Resend (conciliación): aquí, una sintética en cero.
+  await pg.query("select public.correo_conciliar(0, 0, 'prueba-sintetica')")
   vi.spyOn(console, 'error').mockImplementation(() => undefined)
 })
 
@@ -186,7 +188,7 @@ describe('visitante sin cuenta → confirmar → recomendaciones → baja', () =
   })
 
   it('la respuesta es igual para una dirección suprimida o ya activa (no sirve para averiguar quién está en la lista)', async () => {
-    await pg.exec(`insert into public.correo_supresiones values ('suprimida@ejemplo.test', 'queja')`)
+    await pg.exec(`insert into public.correo_supresiones values (public.correo_huella('suprimida@ejemplo.test'), 'queja')`)
     await suscriptoraActiva('activa@ejemplo.test')
     for (const correo of ['suprimida@ejemplo.test', 'activa@ejemplo.test', 'nueva@ejemplo.test']) {
       expect(await suscribirVisitante(db, { correo, acepto: true }, { entorno: ENV, fetch: fetchFalso })).toEqual({ ok: true })
@@ -232,7 +234,7 @@ describe('proveedor: rebotes, quejas y presupuesto', () => {
   it('UNA queja pausa TODO el marketing de la tarea (y se reporta como pausada)', async () => {
     await insertarPropiedad(NAVE('uno'))
     await suscriptoraActiva('ok@ejemplo.test')
-    await pg.exec(`insert into public.correo_envios (clave, categoria, tipo, email_norm, estado) values ('q/1','marketing','reco','otra@ejemplo.test','queja')`)
+    await pg.exec(`insert into public.correo_envios (clave, categoria, tipo, email_hash, estado) values ('q/1','marketing','reco','otra@ejemplo.test','queja')`)
     expect(await ejecutarTareaMarketing(db, { entorno: ENV, fetch: fetchFalso, ahora: ahoraBase })).toMatchObject({ estado: 'pausada', motivo: 'quejas', enviadas: 0 })
     expect(peticiones).toEqual([])
   })
@@ -241,7 +243,7 @@ describe('proveedor: rebotes, quejas y presupuesto', () => {
     await insertarPropiedad(NAVE('uno'))
     for (let i = 0; i < 5; i++) await suscriptoraActiva(`p${i}@ejemplo.test`)
     // 48 envíos ya hechos hoy: quedan 2 lugares para lo opcional (50 - 48).
-    await pg.query(`insert into public.correo_envios (clave, categoria, tipo, email_norm, estado, entorno)
+    await pg.query(`insert into public.correo_envios (clave, categoria, tipo, email_hash, estado, entorno)
                     select 'previo/' || g, 'transaccional', 'x', 'previo@ejemplo.test', 'enviado', 'produccion' from generate_series(1, 48) g`)
     const r = await ejecutarTareaMarketing(db, { entorno: ENV, fetch: fetchFalso, ahora: ahoraBase, entornoCupo: 'produccion' })
     expect(r).toMatchObject({ enviadas: 2, presupuestoAgotado: true })
@@ -349,7 +351,7 @@ describe('MODO DE PRUEBAS de punta a punta: nada sale a nadie más que al destin
     expect(peticiones).toHaveLength(1)
     soloDestino()
     expect(JSON.stringify(peticiones.map((p) => p.cuerpo.to))).not.toContain('empresa-real')
-    expect((await q<{ email_norm: string }>(`select email_norm from public.correo_envios`)).map((r) => r.email_norm)).toEqual([DESTINO])
+    expect((await q<{ email_hash: string; h: string }>(`select email_hash, public.correo_huella($1) h from public.correo_envios`, [DESTINO])).map((r) => r.email_hash === r.h)).toEqual([true])
   })
 
   it('transaccionales (bienvenida y confirmación a publicador): ambos van al destino de pruebas', async () => {
@@ -358,7 +360,7 @@ describe('MODO DE PRUEBAS de punta a punta: nada sale a nadie más que al destin
     expect((await enviarConfirmacionPublicador(db, 41, c, { entorno: PRUEBAS, fetch: fetchFalso })).estado).toBe('enviado')
     expect(peticiones).toHaveLength(2)
     soloDestino()
-    expect((await q<{ email_norm: string }>(`select distinct email_norm from public.correo_envios`)).map((r) => r.email_norm)).toEqual([DESTINO])
+    expect((await q<{ email_hash: string; h: string }>(`select distinct email_hash, public.correo_huella($1) h from public.correo_envios`, [DESTINO])).map((r) => r.email_hash === r.h)).toEqual([true])
   })
 
   it('tarea de recomendaciones: con varias suscriptoras reales sólo salen al destino de pruebas y nunca más de 3 personas por ejecución', async () => {

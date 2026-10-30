@@ -35,6 +35,8 @@ export type SolicitudCorreo = {
   propiedades?: string[]
   /** Enlace de baja (sólo marketing): va en el pie Y en las cabeceras `List-Unsubscribe`. */
   urlBaja?: string
+  /** `true` sólo si html/texto ya son sintéticos (vista previa del diseñador); en modo de pruebas, de lo contrario, el contenido real se descarta. */
+  sintetico?: boolean
   /** Dirección de respuesta distinta de la institucional (por defecto, `NEGOCIO.email`). */
   responderA?: string
 }
@@ -148,7 +150,7 @@ export async function enviarCorreo(db: DbCorreo, s: SolicitudCorreo, o: Opciones
     ...(Object.keys(cabeceras).length ? { headers: cabeceras } : {}),
   }
   // Modo de pruebas: el cuerpo se reconstruye (destino fijo, sin copias, sin baja ni enlaces con token) y se revisa ANTES de llamar al proveedor.
-  const cuerpo = env.modoPruebas ? cuerpoDePruebas(base, idDePrueba(s.clave)) : base
+  const cuerpo = env.modoPruebas ? cuerpoDePruebas(base, idDePrueba(s.clave), { tipo: s.tipo, sintetico: s.sintetico }) : base
   if (env.modoPruebas) {
     try {
       exigirSoloDestinoDePruebas(cuerpo)
@@ -160,7 +162,7 @@ export async function enviarCorreo(db: DbCorreo, s: SolicitudCorreo, o: Opciones
   }
 
   try {
-    const res = await llamarResend({ apiKey: env.resendKey, cuerpo, idempotencia: s.clave, fetch: o.fetch, modoPruebas: env.modoPruebas === true })
+    const res = await llamarResend({ apiKey: env.resendKey, cuerpo, idempotencia: s.clave, fetch: o.fetch, modoPruebas: env.modoPruebas === true, tipo: s.tipo, sintetico: s.sintetico })
     if (res.ok) {
       const cuerpo = (await res.json().catch(() => null)) as { id?: unknown } | null
       await marcar('enviado', typeof cuerpo?.id === 'string' ? cuerpo.id : null, null)

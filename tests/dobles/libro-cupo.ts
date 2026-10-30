@@ -20,7 +20,9 @@ export type Libro = {
   vaciar: () => Promise<void>
   /** Cuántos envíos cuentan hoy en la rebanada (`pruebas` por defecto: así corren las pruebas). */
   usados: (entorno?: 'pruebas' | 'produccion') => Promise<number>
-  filas: () => Promise<Array<{ clave: string; categoria: string; tipo: string; estado: string; email_norm: string; entorno: string }>>
+  filas: () => Promise<Array<{ clave: string; categoria: string; tipo: string; estado: string; email_hash: string; entorno: string }>>
+  /** Huella (con la sal de ESTA base) de un correo: lo único que el libro guarda de un destinatario. */
+  huella: (correo: string) => Promise<string>
   cerrar: () => Promise<void>
 }
 
@@ -32,12 +34,17 @@ export async function crearLibro(): Promise<Libro> {
   return {
     db,
     pg,
-    vaciar: async () => { await pg.exec('delete from public.correo_envios; delete from public.correo_supresiones;') },
+    // Deja el libro vacío CON una lectura sintética del panel de Resend (0/0): el correo opcional en producción la exige (conciliación).
+    vaciar: async () => {
+      await pg.exec('delete from public.correo_envios; delete from public.correo_supresiones; delete from public.correo_conciliacion;')
+      await pg.query("select public.correo_conciliar(0, 0, 'prueba-sintetica', null)")
+    },
     usados: async (entorno = 'produccion') => {
       const r = await pg.query<{ n: number }>(`select count(*)::int n from public.correo_envios where entorno = $1 and estado not in ('suprimido', 'omitido')`, [entorno])
       return r.rows[0].n
     },
-    filas: async () => (await pg.query<{ clave: string; categoria: string; tipo: string; estado: string; email_norm: string; entorno: string }>('select clave, categoria, tipo, estado, email_norm, entorno from public.correo_envios order by id')).rows,
+    filas: async () => (await pg.query<{ clave: string; categoria: string; tipo: string; estado: string; email_hash: string; entorno: string }>('select clave, categoria, tipo, estado, email_hash, entorno from public.correo_envios order by id')).rows,
+    huella: async (correo) => (await pg.query<{ h: string }>('select public.correo_huella($1) h', [correo])).rows[0].h,
     cerrar: async () => { await pg.close() },
   }
 }

@@ -15,11 +15,11 @@ Q() { docker exec -i $C psql -U postgres -d t62 -v ON_ERROR_STOP=1 -X -q -At "$@
 # 1 · base vacía y repetición
 Q -f /tmp/62.sql >/dev/null 2>&1; ver "aplica en base vacía" $? 0
 Q -f /tmp/62.sql >/dev/null 2>&1; ver "se puede aplicar una 2.ª vez" $? 0
-ver "4 tablas correo_*" "$(Q -c "select count(*) from pg_class where relnamespace='public'::regnamespace and relkind='r' and relname like 'correo\_%'")" 4
-ver "10 funciones correo_*" "$(Q -c "select count(*) from pg_proc where pronamespace='public'::regnamespace and proname like 'correo\_%'")" 10
-ver "RLS activo en las 4 tablas" "$(Q -c "select count(*) from pg_class where relnamespace='public'::regnamespace and relkind='r' and relname like 'correo\_%' and relrowsecurity")" 4
+ver "6 tablas correo_*" "$(Q -c "select count(*) from pg_class where relnamespace='public'::regnamespace and relkind='r' and relname like 'correo\_%'")" 6
+ver "14 funciones correo_*" "$(Q -c "select count(*) from pg_proc where pronamespace='public'::regnamespace and proname like 'correo\_%'")" 14
+ver "RLS activo en las 6 tablas" "$(Q -c "select count(*) from pg_class where relnamespace='public'::regnamespace and relkind='r' and relname like 'correo\_%' and relrowsecurity")" 6
 ver "0 políticas" "$(Q -c "select count(*) from pg_policies where schemaname='public' and tablename like 'correo\_%'")" 0
-ver "funciones SECURITY DEFINER con search_path fijo" "$(Q -c "select count(*) from pg_proc where pronamespace='public'::regnamespace and proname like 'correo\_%' and prosecdef and proconfig::text like '%search_path=public%'")" 10
+ver "funciones SECURITY DEFINER con search_path fijo" "$(Q -c "select count(*) from pg_proc where pronamespace='public'::regnamespace and proname like 'correo\_%' and prosecdef and proconfig::text like '%search_path=public%'")" 14
 ver "índices (clave única, etc.)" "$(Q -c "select count(*) from pg_indexes where schemaname='public' and tablename='correo_envios'")" 6
 ver "columna entorno con CHECK" "$(Q -c "select count(*) from pg_constraint where conrelid='public.correo_envios'::regclass and pg_get_constraintdef(oid) like '%produccion%'")" 1
 
@@ -43,6 +43,9 @@ a=$(Q -c "select public.correo_reservar_envio('dup/1','transaccional','t','d@eje
 b=$(Q -c "select public.correo_reservar_envio('dup/1','transaccional','t','d@ejemplo.test',null,null,'produccion')->>'accion'")
 ver "duplicado: 1.ª enviar" $a enviar; ver "duplicado: 2.ª duplicado" $b duplicado
 
+# 4b · lectura sintética del panel de Resend (el correo OPCIONAL en producción la exige)
+Q -c "select public.correo_conciliar(0, 0, 'sintetico', null)" >/dev/null
+
 # 5 · CONCURRENCIA REAL: 80 conexiones simultáneas contra el tope de pruebas (10) y 120 contra produccion (80, 50 si es opcional)
 Q -c "truncate public.correo_envios" >/dev/null
 seq 1 80 | xargs -P 40 -I{} docker exec -i $C psql -U postgres -d t62 -X -At -c "select public.correo_reservar_envio('par/{}','transaccional','t','p{}@ejemplo.test',null,null,'pruebas')->>'accion'" > /tmp/par.txt 2>&1
@@ -57,10 +60,35 @@ ver "libro producción = 80" "$(Q -c "select count(*) from public.correo_envios 
 
 # 6 · reintento al cambiar de día y error ambiguo
 Q -c "truncate public.correo_envios" >/dev/null
-Q -c "insert into public.correo_envios (clave,categoria,tipo,email_norm,estado,entorno,creado_en) values ('ayer/1','transaccional','t','a@b.cc','error','produccion', now() - interval '1 day')" >/dev/null
+Q -c "insert into public.correo_envios (clave,categoria,tipo,email_hash,estado,entorno,creado_en) values ('ayer/1','transaccional','t','a@b.cc','error','produccion', now() - interval '1 day')" >/dev/null
 ver "reintento de ayer: enviar" "$(Q -c "select public.correo_reservar_envio('ayer/1','transaccional','t','a@b.cc',null,null,'produccion')->>'accion'")" enviar
 ver "el reintento cuenta HOY" "$(Q -c "select (public.correo_cupo_estado('produccion')->>'hoy')")" 1
 ver "un 2.º reintento inmediato = duplicado" "$(Q -c "select public.correo_reservar_envio('ayer/1','transaccional','t','a@b.cc',null,null,'produccion')->>'accion'")" duplicado
+
+# 6b · PRIVACIDAD, RETENCIÓN Y CONCILIACIÓN (F1)
+Q -c "truncate public.correo_envios; truncate public.correo_supresiones; delete from public.correo_suscriptores" >/dev/null
+Q -c "select public.correo_reservar_envio('priv/1','transaccional','t','Persona.Sintetica@ejemplo.test',null,null,'produccion')->>'accion'" >/dev/null
+Q -c "select public.correo_evento('svix-1','email.bounced','Persona.Sintetica@ejemplo.test','re_1',true)->>'resultado'" >/dev/null
+ver "el libro y las supresiones NO contienen el correo en claro" "$(Q -c "select count(*) from (select row_to_json(e)::text t from public.correo_envios e union all select row_to_json(s)::text from public.correo_supresiones s) x where t ilike '%persona%' or t ilike '%ejemplo.test%'")" 0
+ver "la huella tiene 64 hex y coincide mayúsculas/espacios" "$(Q -c "select (public.correo_huella(' PERSONA.sintetica@Ejemplo.TEST ') = public.correo_huella('persona.sintetica@ejemplo.test') and length(public.correo_huella('a@b.cc')) = 64)")" t
+ver "la supresión por rebote bloquea transaccional" "$(Q -c "select public.correo_reservar_envio('priv/2','transaccional','t','persona.sintetica@ejemplo.test',null,null,'produccion')->>'accion'")" suprimido
+Q -c "insert into public.correo_suscriptores (email,email_norm,uid,estado) values ('olv@ejemplo.test','olv@ejemplo.test','uid-olv','baja')" >/dev/null
+Q -c "select public.correo_reservar_envio('olv/1','transaccional','t','olv@ejemplo.test',null,null,'produccion')->>'accion'" >/dev/null
+ver "olvidar la cuenta borra envíos y suscripción" "$(Q -c "select (public.correo_olvidar_cuenta('uid-olv','OLV@ejemplo.test')->>'envios_borrados') || ',' || (public.correo_olvidar_cuenta('uid-olv','olv@ejemplo.test')->>'suscripciones_borradas')")" "1,0"
+ver "olvidar conserva la supresión (solo huella)" "$(Q -c "select count(*) from public.correo_supresiones")" 1
+Q -c "insert into public.correo_envios (clave,categoria,tipo,email_hash,estado,entorno,creado_en) values ('ret/viejo','transaccional','x','h1','enviado','produccion', now() - interval '731 days'), ('ret/ok','transaccional','x','h2','enviado','produccion', now() - interval '729 days')" >/dev/null
+ver "la purga borra >730 días (1 fila)" "$(Q -c "select public.correo_purgar()->>'envios'")" 1
+ver "y conserva la de 729 días (la consulta va en otra sentencia: ve el estado ya purgado)" "$(Q -c "select count(*) from public.correo_envios where clave like 'ret/%'")" 1
+ver "purgar dos veces no borra más (idempotente)" "$(Q -c "select public.correo_purgar()->>'envios'")" 0
+ver "correo_purgar no admite parámetros (plazo fijo)" "$(Q -c "select count(*) from pg_proc where proname='correo_purgar' and pronargs = 0")" 1
+Q -c "delete from public.correo_conciliacion" >/dev/null
+ver "sin lectura reciente: lo opcional NO sale en producción" "$(Q -c "select public.correo_reservar_envio('conc/1','servicio','t','c1@ejemplo.test',null,null,'produccion')->>'motivo'")" sin_conciliacion
+Q -c "select public.correo_conciliar(0, 2099, 'sintetico', null)" >/dev/null
+ver "con lectura del ciclo en 2099 caben 1 opcional y el siguiente NO" "$(Q -c "select (public.correo_reservar_envio('conc/2','servicio','t','c2@ejemplo.test',null,null,'produccion')->>'accion') || ',' || (public.correo_reservar_envio('conc/3','servicio','t','c3@ejemplo.test',null,null,'produccion')->>'accion')")" "enviar,sin_presupuesto"
+for rol in anon authenticated; do
+  r=$(docker exec -i $C psql -U postgres -d t62 -X -At -c "set role $rol; select * from public.correo_secreto" 2>&1 | grep -c "permission denied"); ver "$rol NO lee la sal (correo_secreto)" $r 1
+  r=$(docker exec -i $C psql -U postgres -d t62 -X -At -c "set role $rol; select public.correo_purgar()" 2>&1 | grep -c "permission denied"); ver "$rol NO ejecuta correo_purgar" $r 1
+done
 
 # 7 · reversa y reaplicación
 Q -f /tmp/62r.sql >/dev/null 2>&1; ver "reversa aplica" $? 0

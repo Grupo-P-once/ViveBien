@@ -118,6 +118,10 @@ export const TOPES = {
   seoRastreo: { maximo: 4, ventanaMs: 10 * 60 * 1000 },
   /** Panel SEO: lecturas ligeras (robots y sitemap). */
   seoLectura: { maximo: 30, ventanaMs: 10 * 60 * 1000 },
+  /** Panel de Marketing y correos: lecturas (resumen, biblioteca, vista previa). */
+  marketingPanel: { maximo: 60, ventanaMs: 10 * 60 * 1000 },
+  /** Registrar una lectura de Resend: un gesto manual de una persona. */
+  marketingConciliar: { maximo: 10, ventanaMs: 10 * 60 * 1000 },
   /** Panel SEO (Fase C): crear tareas, registrar prompts y guardar fotos del historial. */
   seoEscritura: { maximo: 60, ventanaMs: 10 * 60 * 1000 },
   /** Métricas de las propiedades propias (publicador y asociado): una pantalla que se abre y se refresca, no un panel de monitoreo. */

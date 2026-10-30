@@ -47,6 +47,10 @@ export const PERMISOS = {
   'contabilidad.ver': ['super_admin'],
   /** Contabilidad de comisiones: registrar gastos, devoluciones, anulaciones y cuentas de gasto. Solo Super Admin; lo registrado no se edita ni se borra. */
   'contabilidad.registrar': ['super_admin'],
+  /** Marketing y correos: ver el panel (biblioteca con vista previa sintética, cupo, consentimientos agregados, matriz de eventos). Solo lectura. */
+  'correo.ver': ['admin', 'super_admin'],
+  /** Marketing y correos: registrar una lectura del panel de Resend (conciliación del límite). Solo Super Admin; queda auditado. */
+  'correo.conciliar': ['super_admin'],
   /** Centro de Ayuda: escribir y editar borradores (3c-3). */
   'ayuda.redactar': ['admin', 'super_admin'],
   /**

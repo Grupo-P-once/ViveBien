@@ -47,8 +47,23 @@ const CABECERA_PROHIBIDA = /^(to|cc|bcc|cco|reply-to|list-unsubscribe|list-unsub
  * respuesta fijos; cabeceras seguras; enlaces sensibles neutralizados; sin adjuntos (un .ics lleva organizador y asistentes, y aceptarlo
  * enviaría una respuesta a una dirección real).
  */
-export function cuerpoDePruebas(c: Record<string, unknown>, id: string = idDePrueba()): Record<string, unknown> {
-  const asunto = typeof c.subject === 'string' ? c.subject : ''
+export type OpcionesPrueba = {
+  /** Tipo del mensaje (p. ej. `cita`): es lo único que se conserva del mensaje original. */
+  tipo?: string
+  /** `true` SOLO si quien llama garantiza que html/texto ya son sintéticos (p. ej. la vista previa del diseñador). Por omisión el contenido real se DESCARTA. */
+  sintetico?: boolean
+}
+const etiquetaTipo = (t?: string) => (t ?? '').replace(/[^a-zA-Z0-9_ -]/g, '').slice(0, 40) || 'desconocido'
+
+/** Contenido de reemplazo del modo de pruebas: sin nombres, teléfonos, mensajes, búsquedas, tokens ni enlaces. Depende SOLO del tipo. */
+export function textoSinteticoDePrueba(tipo?: string): string {
+  return `Correo de PRUEBA (contenido sintético). Tipo de mensaje: ${etiquetaTipo(tipo)}. En modo de pruebas el contenido real del mensaje (nombres, teléfonos, mensajes, búsquedas y enlaces) NO se envía.`
+}
+
+export function cuerpoDePruebas(c: Record<string, unknown>, id: string = idDePrueba(), o: OpcionesPrueba = {}): Record<string, unknown> {
+  // PRIVACIDAD (F1): salvo que se garantice contenido sintético, el asunto y el cuerpo originales —que pueden traer datos reales— se descartan.
+  const real = o.sintetico === true
+  const asunto = real ? (typeof c.subject === 'string' ? c.subject : '') : etiquetaTipo(o.tipo)
   const cab: Record<string, string> = {}
   if (c.headers && typeof c.headers === 'object') {
     for (const [k, v] of Object.entries(c.headers as Record<string, unknown>)) {
@@ -61,8 +76,8 @@ export function cuerpoDePruebas(c: Record<string, unknown>, id: string = idDePru
     to: [DESTINO_PRUEBAS],
     reply_to: NEGOCIO.email,
     subject: asunto.startsWith(MARCA_PRUEBA) ? asunto : `${prefijoDePrueba(id)}${asunto.replace(/[\r\n]+/g, ' ')}`,
-    html: neutralizarEnlaces(c.html),
-    text: neutralizarEnlaces(c.text),
+    html: real ? neutralizarEnlaces(c.html) : `<p>${textoSinteticoDePrueba(o.tipo)}</p>`,
+    text: real ? neutralizarEnlaces(c.text) : textoSinteticoDePrueba(o.tipo),
     headers: cab,
   }
 }
@@ -97,6 +112,9 @@ type Llamada = {
   fetch?: typeof fetch
   /** Para pruebas; por defecto se lee `CORREO_MODO_PRUEBAS`. */
   modoPruebas?: boolean
+  /** Tipo del mensaje y si su contenido ya es sintético (ver `OpcionesPrueba`). Sólo se usan en modo de pruebas. */
+  tipo?: string
+  sintetico?: boolean
 }
 
 /** Llama a Resend. En modo de pruebas redirige y revisa el cuerpo; si algo no cuadra lanza `fuga_modo_pruebas` SIN llamar al proveedor. */
@@ -104,7 +122,7 @@ export async function llamarResend(l: Llamada): Promise<Response> {
   const pruebas = l.modoPruebas ?? modoPruebasActivo()
   let cuerpo = l.cuerpo
   if (pruebas) {
-    cuerpo = cuerpoDePruebas(l.cuerpo, idDePrueba(l.idempotencia))
+    cuerpo = cuerpoDePruebas(l.cuerpo, idDePrueba(l.idempotencia), { tipo: l.tipo, sintetico: l.sintetico })
     exigirSoloDestinoDePruebas(cuerpo)
     // El asunto de una prueba SIEMPRE empieza por `[PRUEBA VB · ID]`: sin eso no se manda (no se puede confundir con un correo real).
     if (!/^\[PRUEBA VB · [0-9A-F]{8}\] /.test(String(cuerpo.subject))) throw new Error('fuga_modo_pruebas')
