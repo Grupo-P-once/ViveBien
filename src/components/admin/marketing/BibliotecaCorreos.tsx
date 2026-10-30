@@ -6,7 +6,7 @@ import { useSesion } from '@/components/admin/sesion'
 /**
  * Biblioteca de correos de VIVE BIEN: todos los tipos, por grupo y por estado, con la vista previa de cómo los recibiría una persona (cabecera de buzón, escritorio,
  * móvil, texto plano y bandeja). La vista usa la MISMA plantilla y el mismo remitente que el envío real; solo los datos son de ejemplo. Lo que no existe en el
- * código aparece como «Pendiente de implementación»: no se muestra una vista inventada. Estructura inspirada en la referencia compartida; la identidad es la de VIVE BIEN.
+ * código aparece como «Pendiente de implementación» (el iframe es sandbox="allow-same-origin" SIN scripts, formularios ni ventanas: el HTML no puede ejecutar nada; allow-same-origin solo deja que las imágenes viajen con las cookies del Preview protegido): no se muestra una vista inventada. Estructura inspirada en la referencia compartida; la identidad es la de VIVE BIEN.
  */
 export type Entrada = { id: string; nombre: string; grupo: string; categoria: string; existencia: string; disparador: string; rastro: string | null; conVista: boolean; motivoSinVista: string | null }
 export type FilaBandeja = { id: string; remitente: string; asunto: string; extracto: string; grupo: string }
@@ -156,7 +156,7 @@ export default function BibliotecaCorreos({ catalogo }: { catalogo: CatalogoBibl
                 </div>
                 {formato === 'texto'
                   ? <pre className="max-h-[560px] overflow-auto whitespace-pre-wrap rounded-lg border bg-background p-4 text-sm">{vista.texto}</pre>
-                  : <iframe title={`Vista previa ${formato}: ${entrada.nombre}`} sandbox="" srcDoc={vista.html} style={{ width: formato === 'movil' ? 375 : '100%', maxWidth: '100%', height: 640 }} className="mx-auto block rounded-lg border bg-white" />}
+                  : <iframe title={`Vista previa ${formato}: ${entrada.nombre}`} sandbox="allow-same-origin" srcDoc={vista.html} style={{ width: formato === 'movil' ? 375 : '100%', maxWidth: '100%', height: 640 }} className="mx-auto block rounded-lg border bg-white" />}
                 <details className="rounded-lg border bg-background p-3 text-sm">
                   <summary className="cursor-pointer font-medium">Enlaces e imágenes de este correo ({vista.enlaces.length} enlaces, {vista.imagenes.length} imágenes)</summary>
                   <ul className="mt-2 list-disc space-y-1 break-all pl-5">{vista.enlaces.map((e) => <li key={e}>{e}</li>)}</ul>

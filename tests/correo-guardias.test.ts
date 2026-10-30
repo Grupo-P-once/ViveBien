@@ -306,6 +306,7 @@ describe('F1 · privacidad, retención y panel (guardias estáticas)', () => {
     expect(t).not.toMatch(/enviarCorreo|enviarPorEmisorUnico|llamarResend|\/api\/correo\//)
     expect([...t.matchAll(/method: 'POST'/g)]).toHaveLength(1)
     expect(t).toContain("pedir('/api/admin/marketing/conciliacion'")
-    expect(codigo(leer('src/components/admin/marketing/BibliotecaCorreos.tsx'))).toContain('sandbox=""')
+    const sandbox = codigo(leer('src/components/admin/marketing/BibliotecaCorreos.tsx')).match(/sandbox="([^"]*)"/)?.[1]
+    expect(sandbox).toBe('allow-same-origin') // sin scripts, formularios, ventanas ni navegación: el correo no puede ejecutar nada
   })
 })

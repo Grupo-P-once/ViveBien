@@ -11,6 +11,12 @@ export const metadata: Metadata = paginaSeo({
   descripcion: 'Cómo trata Vive Bien Grupo Inmobiliario tus datos personales, conforme a la LFPDPPP. León, Guanajuato.',
 })
 
+/*
+ * BORRADOR 30-oct-2026 — correos electrónicos (servicio y promocionales, bajas, registro de envíos, Resend).
+ * Describe lo que el sistema de correo YA hace en el código (rama f0-correo-d80); NO está validado por asesoría legal y NO está publicado.
+ * Antes de publicarlo: revisión legal, subir `VERSIONES.privacidad` en src/lib/aceptacion-legal.ts y la fecha de arriba (subir la versión
+ * dispara el aviso legal por correo a quien aceptó la anterior). Ver MKT-34 en Pendientes de Obsidian.
+ */
 export default function PrivacidadPage() {
   const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
     <div style={{ marginBottom: '2.5rem' }}>
@@ -60,10 +66,11 @@ export default function PrivacidadPage() {
           <Section title="3. Finalidades">
             <h3 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 700, color: 'var(--azul)', fontSize: '1rem', margin: '1.25rem 0 .5rem' }}>Finalidades necesarias para atender el servicio</h3>
             <p style={{ marginBottom: '1rem' }}>Utilizamos los datos para crear y administrar cuentas; recibir y responder consultas o solicitudes de visita; dar seguimiento a la propiedad seleccionada; administrar propiedades y anuncios; proporcionar el resultado orientativo del valuador; mantener la seguridad y resolver incidencias; y atender solicitudes de derechos ARCO u obligaciones legales.</p>
+            <p style={{ marginBottom: '1rem' }}><strong>Correos de servicio y seguridad.</strong> Utilizamos su correo electrónico para enviarle los mensajes necesarios para usar su cuenta o que usted solicitó: bienvenida, confirmación de solicitudes, avisos de visitas, alertas de búsquedas guardadas y de baja de precio, y avisos de cambios a los Términos o a este Aviso. Estos correos no son publicidad. Las alertas y los avisos de precio pueden activarse o apagarse en la configuración de su portal.</p>
             <h3 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 700, color: 'var(--azul)', fontSize: '1rem', margin: '1.25rem 0 .5rem' }}>Finalidades que se informan y autorizan por separado</h3>
             <ul style={{ paddingLeft: '1.5rem', marginTop: '.5rem', marginBottom: '1rem' }}>
               <li><strong>Transferencia al anunciante:</strong> solo compartiremos los datos necesarios para responder por la propiedad consultada cuando la persona marque por separado la autorización de transferencia descrita en la sección 4. La autorización no se combina con aceptar este Aviso ni con recibir publicidad.</li>
-              <li><strong>Promociones:</strong> solo enviaremos promociones o información sobre otras propiedades si la persona elige recibirlas. Puede retirar esa elección escribiendo a {CORREO_CONTACTO}.</li>
+              <li><strong>Promociones:</strong> solo enviaremos promociones o información sobre otras propiedades si la persona elige recibirlas, con un consentimiento expreso y separado. Hoy no enviamos correos promocionales. Cuando existan, cada correo incluirá un enlace para darse de baja con un clic; la baja deja una supresión (una huella derivada del correo, no el correo mismo) que impide futuros envíos promocionales y no afecta a los correos de servicio necesarios. Si la persona desea volver a recibirlos, deberá solicitarlo y confirmarlo de nuevo. También puede retirar esa elección escribiendo a {CORREO_CONTACTO}.</li>
               <li><strong>Medición y mejora:</strong> cuando se habiliten tecnologías no esenciales para medir el uso del sitio, se informará su finalidad y se ofrecerán los controles correspondientes antes de activarlas, conforme a la configuración que esté operativa.</li>
             </ul>
             <p style={{ marginBottom: '1rem' }}>Negarse a una finalidad secundaria no impide navegar el catálogo ni contactar a VIVE BIEN. Si no se autoriza la transferencia de una consulta al anunciante, los datos no se le entregarán y VIVE BIEN no podrá canalizarle esa solicitud.</p>
@@ -84,7 +91,7 @@ export default function PrivacidadPage() {
               <li><strong>Supabase:</strong> almacenamiento y consulta de cuentas, propiedades y solicitudes.</li>
               <li><strong>Vercel:</strong> alojamiento del sitio y operación técnica.</li>
               <li><strong>Cloudinary:</strong> almacenamiento y entrega de imágenes.</li>
-              <li><strong>Resend:</strong> envío de notificaciones por correo a VIVE BIEN.</li>
+              <li><strong>Resend:</strong> envío de los correos de VIVE BIEN (a su equipo y a las personas usuarias) y recepción de los avisos de entrega, rebote y queja de cada envío.</li>
               <li><strong>WhatsApp/Meta:</strong> comunicaciones o notificaciones de atención relacionadas con solicitudes.</li>
               <li><strong>Google Analytics:</strong> medición de uso cuando esté habilitada.</li>
               <li><strong>Google Maps, OpenStreetMap, Google Fonts y servicios de distribución de iconos:</strong> recursos que pueden solicitarse directamente desde el navegador.</li>
@@ -104,6 +111,7 @@ export default function PrivacidadPage() {
 
           <Section title="7. Conservación y eliminación">
             <p style={{ marginBottom: '1rem' }}>Conservaremos los datos de cuentas, formularios y consultas <strong>hasta por dos años desde la última actividad o interacción relacionada</strong>. Al cumplirse ese plazo, los datos se bloquearán cuando corresponda y después se suprimirán, salvo que una obligación legal, la atención de una controversia o la defensa de derechos exija conservarlos durante un plazo mayor. Los datos de respaldos técnicos pueden permanecer hasta que concluya el ciclo de reemplazo del respaldo y no se utilizarán para nuevas finalidades.</p>
+            <p style={{ marginBottom: '1rem' }}><strong>Registro de correos.</strong> De cada correo que enviamos guardamos la fecha, el tipo y el resultado (enviado, entregado, rebotado, omitido o fallido), asociados a una huella derivada de su correo y no a su dirección, hasta por dos años desde el envío. Los registros técnicos de avisos del proveedor se conservan hasta noventa días, las suscripciones terminadas hasta dos años desde la baja y las solicitudes de suscripción sin confirmar hasta treinta días. Al eliminar su cuenta borramos sus suscripciones y los registros de envío asociados; solo conservamos la supresión de baja o rebote para no volver a escribirle. No registramos si usted abre un correo ni si hace clic en sus enlaces.</p>
             <p style={{ marginBottom: '1rem' }}>Usted también puede solicitar la cancelación de sus datos. La cancelación puede dar lugar a un periodo de bloqueo antes de su supresión cuando la ley así lo requiera.</p>
           </Section>
 

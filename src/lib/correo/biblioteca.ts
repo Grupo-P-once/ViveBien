@@ -1,6 +1,7 @@
 import { SITIO } from '../sitio'
 import { NEGOCIO } from '../config/negocio'
 import { remitenteDe } from './enviar'
+import { LOGO_URL } from './plantillas/marca'
 import { plantilla as plantillaDeCita, type DatosPlantilla as DatosDeCita, type Para as ParaDeCita, type TipoCorreo as TipoDeCita } from '../citas/correos'
 import { correoDeAlertas, correoDeBajaDePrecio, correoLegal, type NotificacionNueva } from '../avisos-cliente'
 import { plantillaBienvenida, plantillaPrimerasPropiedades, plantillaRecomendaciones, plantillaSolicitudPublicador, type TarjetaCorreo } from './plantillas'
@@ -135,6 +136,8 @@ function renderizar(id: string, m: Muestra): { categoria: Categoria; para: strin
 export function vistaPrevia(id: string, muestra: Muestra = MUESTRA_POR_OMISION): VistaDeCorreo | null {
   const r = renderizar(id, muestra)
   if (!r) return null
+  // Sólo el ORIGEN de los recursos cambia: en un Preview el sitio configurado apunta a otro despliegue y el logotipo se vería roto; la plantilla y el texto son los reales.
+  if (muestra.origenImagenes) r.c = { ...r.c, html: r.c.html.split(LOGO_URL).join(`${muestra.origenImagenes}/logo_transparent.png`) }
   const pre = r.c.html.match(/<div style="display:none[^>]*>([\s\S]*?)<\/div>/)
   const preencabezado = pre && pre[1].trim() ? pre[1].replace(/&amp;/g, '&').replace(/&#39;/g, "'").replace(/&quot;/g, '"').trim() : null
   return {
@@ -248,6 +251,9 @@ export const MATRIZ_DE_EVENTOS: EventoDeCorreo[] = [
   E('Propiedades', 'Rechazada o con cambios solicitados', 'El anunciante', 'campana y correo', 'transaccional', 'sin preferencia', 'por evento', 'por crear', 'en_revision → rechazada / cambios', 'propiedad/<id>/<estado>/<v>', 'no_existe'),
   E('Propiedades', 'Pausa, vencimiento, reactivación o venta', 'El anunciante', 'campana (correo por decidir)', 'transaccional', 'por decidir (evitar ruido)', 'por evento', 'por crear', 'Cambio de estatus', 'propiedad/<id>/<estatus>/<v>', 'no_existe'),
   E('Consultas y citas', 'Aviso interno de nuevo contacto', 'El equipo (buzón institucional)', 'correo y Telegram', 'transaccional', 'n/a', 'por evento', 'inline en aviso-lead.ts', 'Formularios de contacto', 'lead/<uuid>', 'envia_hoy'),
+  E('Consultas y citas', 'Contacto por WhatsApp: resumen del aviso y datos del anunciante', 'La persona', 'correo', 'transaccional', 'sin preferencia', 'por evento', 'por crear', 'La persona toca el botón de WhatsApp de una propiedad', 'whatsapp/<id>', 'no_existe'),
+  E('Consultas y citas', 'Evaluación de la atención recibida', 'La persona', 'correo', 'servicio (provisional)', 'por decidir', 'una vez, días después de la consulta', 'por crear', 'Días después de una consulta', 'evaluacion/<consulta>', 'no_existe'),
+  E('Propiedades', 'Confirmación al subir una propiedad', 'El anunciante', 'campana y correo', 'transaccional', 'sin preferencia', 'por evento', 'por crear', 'La propiedad se sube como borrador', 'propiedad/<id>/recibida', 'no_existe'),
   E('Consultas y citas', 'Confirmación a quien consulta', 'La persona', 'correo', 'transaccional', 'sin preferencia', 'por evento', 'por crear', 'Formulario de contacto', 'consulta/<id>', 'no_existe'),
   E('Consultas y citas', 'Aviso al anunciante de una consulta nueva', 'El anunciante (según permisos)', 'campana y correo', 'transaccional', 'sin preferencia', 'por evento', 'por crear', 'Consulta sobre su propiedad', 'consulta/<id>/anunciante', 'no_existe'),
   E('Consultas y citas', 'Citas (solicitud, confirmación, cambio, cancelación, recordatorios)', 'Cliente y asesor', 'correo', 'transaccional', 'sin preferencia', 'por evento y recordatorios 24 h / 2 h', 'citas/correos.ts (14 tipos)', 'Citas en línea (apagadas: flag citasEnLinea)', 'cita/<id>/<tipo>/v<n>/<para>', 'codigo_apagado'),

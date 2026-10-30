@@ -107,6 +107,13 @@ describe('imágenes de ejemplo', () => {
     const sin = vistaPrevia('recomendaciones', { ...MUESTRA_POR_OMISION, imagenes: false })!
     expect(sin.imagenes.some((i) => i.includes('correo-ejemplo'))).toBe(false)
   })
+  it('con un origen de despliegue, el logotipo apunta a ese origen (el Preview no muestra el logo roto) y sin origen queda el del sitio', () => {
+    const con = vistaPrevia('bienvenida', { ...MUESTRA_POR_OMISION, origenImagenes: 'https://vista.ejemplo.vercel.app' })!
+    expect(con.imagenes).toContain('https://vista.ejemplo.vercel.app/logo_transparent.png')
+    const sin = vistaPrevia('bienvenida', MUESTRA_POR_OMISION)!
+    expect(sin.imagenes.some((i) => i.endsWith('/logo_transparent.png') && !i.includes('vista.ejemplo'))).toBe(true)
+    expect(existsSync(path.join(raiz, 'public/logo_transparent.png'))).toBe(true)
+  })
   it('las imágenes existen en el repositorio y dicen «FOTO DE EJEMPLO»', () => {
     for (const x of ['a', 'b', 'c']) {
       const rel = `public/correo-ejemplo/propiedad-${x}.svg`
