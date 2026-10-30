@@ -1,0 +1,9 @@
+390px /                                      HTTP 200 TTFB 23 FCP 1256 LCP 1296 CLS 0.000 total 8273 req 41 KB 1499 errJS 0 redFallos 1
+390px /propiedades                           HTTP 200 TTFB 14 FCP 784 LCP 3416 CLS 0.054 total 6813 req 35 KB 1145 errJS 0 redFallos 1
+768px /                                      HTTP 200 TTFB 15 FCP 1240 LCP 1532 CLS 0.000 total 8615 req 43 KB 1569 errJS 0 redFallos 1
+768px /propiedades                           HTTP 200 TTFB 13 FCP 808 LCP 3524 CLS 0.001 total 7157 req 36 KB 1217 errJS 0 redFallos 1
+1024px /                                      HTTP 200 TTFB 16 FCP 692 LCP 692 CLS 0.011 total 2659 req 55 KB 1746 errJS 0 redFallos 2
+1024px /propiedades                           HTTP 200 TTFB 15 FCP 384 LCP 988 CLS 0.007 total 2449 req 53 KB 1450 errJS 0 redFallos 2
+1440px /                                      HTTP 200 TTFB 16 FCP 680 LCP 760 CLS 0.007 total 2987 req 55 KB 1846 errJS 0 redFallos 2
+1440px /propiedades                           HTTP 200 TTFB 13 FCP 476 LCP 1116 CLS 0.005 total 2585 req 54 KB 1525 errJS 0 redFallos 2
+guardia de producción: 0 peticiones de telemetría/escritura abortadas antes de salir

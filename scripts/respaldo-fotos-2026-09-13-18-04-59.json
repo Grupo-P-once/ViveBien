@@ -1,0 +1,308 @@
+{
+  "propiedades": [
+    {
+      "id": "tzula-castillos",
+      "tipo": "casa",
+      "fotos": [
+        "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322419/vivebien/nbpnc0gp7twgpngpspsr.jpg",
+        "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322421/vivebien/koykpudcaianjnjlfl3d.jpg",
+        "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322422/vivebien/dubmjifxur1jdgknxq8c.jpg",
+        "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322423/vivebien/xeqrbpna7vnuvx5zg0ve.jpg",
+        "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322424/vivebien/sn0oja9r2od0y6xlyoxc.jpg",
+        "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322425/vivebien/d0vzgzkkc5ckmedunklo.jpg",
+        "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322426/vivebien/vkphcczq1o3yzogpgmsz.jpg",
+        "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322427/vivebien/fywszsv8zhnss48asf0s.jpg",
+        "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322428/vivebien/m8ybyh4kxobra1nb9xai.jpg",
+        "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322429/vivebien/ccai9z5eyoh53i8bqm5c.jpg",
+        "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322430/vivebien/gz7vruynwhinys6ijzi3.jpg",
+        "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322431/vivebien/llun3pyez3bzisv5hcps.jpg",
+        "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322432/vivebien/d1zbx8hrnumeukcunoym.jpg",
+        "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322433/vivebien/sv7mfzklrfk8ciau7ydw.jpg",
+        "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322434/vivebien/gmqhyy5m0nwzmr3uw5mf.jpg",
+        "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322435/vivebien/go5mhzdvb4is8fxxdwza.jpg",
+        "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322437/vivebien/lxvtcnhlxevgnicz9ycb.jpg",
+        "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322438/vivebien/uslezk1ninituuczzzua.jpg",
+        "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322440/vivebien/uusinox5r6tdnketkpci.jpg",
+        "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322441/vivebien/mpcdys9wgbsdpuumazx3.jpg",
+        "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322442/vivebien/ufzco4bwlut1wobzgrde.jpg",
+        "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322443/vivebien/y0ghlp7dzzmjujfe4geu.jpg",
+        "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322446/vivebien/aifns3vxaaywhbm8tnjm.jpg",
+        "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322447/vivebien/dmb7eedcm02vppvylwq1.jpg",
+        "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322448/vivebien/p7dvafcsylyct01zj45r.jpg",
+        "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322450/vivebien/qfwbyrr2udoyqkkn1bzf.jpg"
+      ],
+      "planos": []
+    },
+    {
+      "id": "sanjuan",
+      "tipo": "nave",
+      "fotos": [
+        "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322451/vivebien/lfdqtuuehdjhjgtlisdi.jpg",
+        "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322453/vivebien/pipntar1fzn8l43xrdii.jpg",
+        "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322454/vivebien/kfp1davsz7izr0ygkcuj.jpg",
+        "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322456/vivebien/ixbaypzgtq13ugik0az2.jpg",
+        "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322458/vivebien/vnpftapup696aykom246.jpg",
+        "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322458/vivebien/uxllata0zntxzuxgr4e9.jpg"
+      ],
+      "planos": []
+    }
+  ],
+  "fotos": [
+    {
+      "id": "c2653508-9f4d-49d0-8a8e-6d84039f3537",
+      "propiedad_id": "tzula-castillos",
+      "url": "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322429/vivebien/ccai9z5eyoh53i8bqm5c.jpg",
+      "pie": null,
+      "orden": 9,
+      "es_principal": false
+    },
+    {
+      "id": "1e23b85a-172b-4061-acd4-e9cf1f6f6eb5",
+      "propiedad_id": "tzula-castillos",
+      "url": "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322430/vivebien/gz7vruynwhinys6ijzi3.jpg",
+      "pie": null,
+      "orden": 10,
+      "es_principal": false
+    },
+    {
+      "id": "a8b48f1f-dbf7-4f32-a23e-e99e584eadc4",
+      "propiedad_id": "tzula-castillos",
+      "url": "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322431/vivebien/llun3pyez3bzisv5hcps.jpg",
+      "pie": null,
+      "orden": 11,
+      "es_principal": false
+    },
+    {
+      "id": "2795dee9-d173-4cff-b05c-38d148795005",
+      "propiedad_id": "tzula-castillos",
+      "url": "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322432/vivebien/d1zbx8hrnumeukcunoym.jpg",
+      "pie": null,
+      "orden": 12,
+      "es_principal": false
+    },
+    {
+      "id": "2e09e0ca-871b-408a-a66b-bfea19278eff",
+      "propiedad_id": "tzula-castillos",
+      "url": "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322433/vivebien/sv7mfzklrfk8ciau7ydw.jpg",
+      "pie": null,
+      "orden": 13,
+      "es_principal": false
+    },
+    {
+      "id": "c708d0c9-1cea-46d6-8d57-6a455e3a999f",
+      "propiedad_id": "tzula-castillos",
+      "url": "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322434/vivebien/gmqhyy5m0nwzmr3uw5mf.jpg",
+      "pie": null,
+      "orden": 14,
+      "es_principal": false
+    },
+    {
+      "id": "6ed45827-cd60-4e41-b5d5-34100707bc0d",
+      "propiedad_id": "tzula-castillos",
+      "url": "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322435/vivebien/go5mhzdvb4is8fxxdwza.jpg",
+      "pie": null,
+      "orden": 15,
+      "es_principal": false
+    },
+    {
+      "id": "8ec129ad-31ac-4c16-a2cf-b6e3bb893ba6",
+      "propiedad_id": "tzula-castillos",
+      "url": "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322437/vivebien/lxvtcnhlxevgnicz9ycb.jpg",
+      "pie": null,
+      "orden": 16,
+      "es_principal": false
+    },
+    {
+      "id": "16b6d9eb-f933-4c22-9018-226933a191a6",
+      "propiedad_id": "tzula-castillos",
+      "url": "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322438/vivebien/uslezk1ninituuczzzua.jpg",
+      "pie": null,
+      "orden": 17,
+      "es_principal": false
+    },
+    {
+      "id": "4e578611-5092-4673-8411-ed8a823e32de",
+      "propiedad_id": "tzula-castillos",
+      "url": "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322442/vivebien/ufzco4bwlut1wobzgrde.jpg",
+      "pie": null,
+      "orden": 20,
+      "es_principal": false
+    },
+    {
+      "id": "784ccd98-2b64-4561-8469-f1c90d0ed6c0",
+      "propiedad_id": "tzula-castillos",
+      "url": "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322443/vivebien/y0ghlp7dzzmjujfe4geu.jpg",
+      "pie": null,
+      "orden": 21,
+      "es_principal": false
+    },
+    {
+      "id": "feb53f1d-2f28-4680-b241-4d960d236be7",
+      "propiedad_id": "tzula-castillos",
+      "url": "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322446/vivebien/aifns3vxaaywhbm8tnjm.jpg",
+      "pie": null,
+      "orden": 22,
+      "es_principal": false
+    },
+    {
+      "id": "17a57601-13d7-43e8-a367-a4c02e228897",
+      "propiedad_id": "tzula-castillos",
+      "url": "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322447/vivebien/dmb7eedcm02vppvylwq1.jpg",
+      "pie": null,
+      "orden": 23,
+      "es_principal": false
+    },
+    {
+      "id": "a415ee0a-9b45-426e-9a63-2af05c68bc0d",
+      "propiedad_id": "tzula-castillos",
+      "url": "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322448/vivebien/p7dvafcsylyct01zj45r.jpg",
+      "pie": null,
+      "orden": 24,
+      "es_principal": false
+    },
+    {
+      "id": "14ab810f-0b60-4ff4-a0c7-271e3cd310ff",
+      "propiedad_id": "tzula-castillos",
+      "url": "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322450/vivebien/qfwbyrr2udoyqkkn1bzf.jpg",
+      "pie": null,
+      "orden": 25,
+      "es_principal": false
+    },
+    {
+      "id": "bdfbb475-0cd9-4dc9-b112-d8c744a8372e",
+      "propiedad_id": "sanjuan",
+      "url": "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322451/vivebien/lfdqtuuehdjhjgtlisdi.jpg",
+      "pie": null,
+      "orden": 0,
+      "es_principal": true
+    },
+    {
+      "id": "741fab99-7fc0-4d62-a706-96ce027db386",
+      "propiedad_id": "sanjuan",
+      "url": "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322453/vivebien/pipntar1fzn8l43xrdii.jpg",
+      "pie": null,
+      "orden": 1,
+      "es_principal": false
+    },
+    {
+      "id": "f4cfc07e-26c3-42bd-83d8-bd00fd042bd9",
+      "propiedad_id": "sanjuan",
+      "url": "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322454/vivebien/kfp1davsz7izr0ygkcuj.jpg",
+      "pie": null,
+      "orden": 2,
+      "es_principal": false
+    },
+    {
+      "id": "c77afd7b-23dc-4784-9b2e-6ee6fd806bad",
+      "propiedad_id": "sanjuan",
+      "url": "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322456/vivebien/ixbaypzgtq13ugik0az2.jpg",
+      "pie": null,
+      "orden": 3,
+      "es_principal": false
+    },
+    {
+      "id": "12913926-c216-42eb-8746-5aa8e606e2b5",
+      "propiedad_id": "sanjuan",
+      "url": "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322458/vivebien/vnpftapup696aykom246.jpg",
+      "pie": null,
+      "orden": 4,
+      "es_principal": false
+    },
+    {
+      "id": "f691034a-0a6a-46c5-8850-b5a81b402446",
+      "propiedad_id": "sanjuan",
+      "url": "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322458/vivebien/uxllata0zntxzuxgr4e9.jpg",
+      "pie": null,
+      "orden": 5,
+      "es_principal": false
+    },
+    {
+      "id": "a7a9cc5f-289a-4c29-a7f1-fff20f19c45c",
+      "propiedad_id": "tzula-castillos",
+      "url": "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322419/vivebien/nbpnc0gp7twgpngpspsr.jpg",
+      "pie": null,
+      "orden": 0,
+      "es_principal": true
+    },
+    {
+      "id": "5d89ff6b-6b40-4f51-8314-522b49f3eebc",
+      "propiedad_id": "tzula-castillos",
+      "url": "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322421/vivebien/koykpudcaianjnjlfl3d.jpg",
+      "pie": null,
+      "orden": 1,
+      "es_principal": false
+    },
+    {
+      "id": "18f7e000-edf5-4ab0-a02a-d9326e93c6ce",
+      "propiedad_id": "tzula-castillos",
+      "url": "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322422/vivebien/dubmjifxur1jdgknxq8c.jpg",
+      "pie": null,
+      "orden": 2,
+      "es_principal": false
+    },
+    {
+      "id": "7aa73639-fa20-4561-8864-8e9e1350e6ff",
+      "propiedad_id": "tzula-castillos",
+      "url": "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322423/vivebien/xeqrbpna7vnuvx5zg0ve.jpg",
+      "pie": null,
+      "orden": 3,
+      "es_principal": false
+    },
+    {
+      "id": "c4d91198-c36a-4c67-8272-51a25467f062",
+      "propiedad_id": "tzula-castillos",
+      "url": "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322424/vivebien/sn0oja9r2od0y6xlyoxc.jpg",
+      "pie": null,
+      "orden": 4,
+      "es_principal": false
+    },
+    {
+      "id": "6a120b0c-099a-4963-a58d-150345eb8b7d",
+      "propiedad_id": "tzula-castillos",
+      "url": "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322425/vivebien/d0vzgzkkc5ckmedunklo.jpg",
+      "pie": null,
+      "orden": 5,
+      "es_principal": false
+    },
+    {
+      "id": "e4b80e59-c299-4957-abec-f75787f230e2",
+      "propiedad_id": "tzula-castillos",
+      "url": "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322426/vivebien/vkphcczq1o3yzogpgmsz.jpg",
+      "pie": null,
+      "orden": 6,
+      "es_principal": false
+    },
+    {
+      "id": "d65898f4-0f66-4037-8f8d-4d4d37ce6f5a",
+      "propiedad_id": "tzula-castillos",
+      "url": "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322427/vivebien/fywszsv8zhnss48asf0s.jpg",
+      "pie": null,
+      "orden": 7,
+      "es_principal": false
+    },
+    {
+      "id": "ab12d7a9-4af4-4c29-86f7-cd4355582918",
+      "propiedad_id": "tzula-castillos",
+      "url": "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322428/vivebien/m8ybyh4kxobra1nb9xai.jpg",
+      "pie": null,
+      "orden": 8,
+      "es_principal": false
+    },
+    {
+      "id": "c042f64a-027d-4877-8f7d-ace356b08dfc",
+      "propiedad_id": "tzula-castillos",
+      "url": "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322440/vivebien/uusinox5r6tdnketkpci.jpg",
+      "pie": null,
+      "orden": 18,
+      "es_principal": false
+    },
+    {
+      "id": "4377844d-3953-4f33-83ee-bdf1af58c7e2",
+      "propiedad_id": "tzula-castillos",
+      "url": "https://res.cloudinary.com/zwsi9aar/image/upload/v1789322441/vivebien/mpcdys9wgbsdpuumazx3.jpg",
+      "pie": null,
+      "orden": 19,
+      "es_principal": false
+    }
+  ]
+}

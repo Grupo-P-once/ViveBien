@@ -1,0 +1,144 @@
+import { CORREO_CONTACTO } from '@/lib/contacto'
+import type { Metadata } from 'next'
+import { paginaSeo } from '@/lib/seo'
+import Header from '@/components/Header'
+import Footer from '@/components/Footer'
+import { NEGOCIO } from '@/lib/config/negocio'
+
+export const metadata: Metadata = paginaSeo({
+  ruta: '/privacidad',
+  titulo: 'Aviso de Privacidad | Vive Bien',
+  descripcion: 'Cómo trata Vive Bien Grupo Inmobiliario tus datos personales, conforme a la LFPDPPP. León, Guanajuato.',
+})
+
+export default function PrivacidadPage() {
+  const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
+    <div style={{ marginBottom: '2.5rem' }}>
+      <h2 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, color: 'var(--azul)', fontSize: '1.15rem', marginBottom: '1rem', borderBottom: '2px solid var(--superficie)', paddingBottom: '.5rem' }}>
+        {title}
+      </h2>
+      <div style={{ color: '#555', lineHeight: 1.8, fontSize: '.95rem' }}>{children}</div>
+    </div>
+  )
+
+  return (
+    <>
+      <Header />
+
+      <section style={{ background: 'linear-gradient(135deg,var(--rojo) 0%,#5a0f0f 100%)', padding: '3rem 2rem', textAlign: 'center', color: '#fff' }}>
+        <h1 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: 'clamp(1.6rem,3vw,2.4rem)', marginBottom: '.6rem' }}>
+          Aviso de Privacidad Integral
+        </h1>
+        <p style={{ opacity: .75, fontSize: '.95rem' }}>Última actualización: 22 de octubre de 2026</p>
+      </section>
+
+      <main style={{ background: '#fff', padding: '3rem 2rem' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+
+          <div style={{ color: '#555', lineHeight: 1.8, fontSize: '.95rem', marginBottom: '2.5rem' }}>
+            <p style={{ marginBottom: '1rem' }}><strong>Aplicable a:</strong> vivebienn.com y las funciones digitales de VIVE BIEN.</p>
+          </div>
+
+          <Section title="1. Responsable">
+            <p style={{ marginBottom: '1rem' }}><strong>VIVE BIEN GRUPO INMOBILIARIO Y CONSTRUCTOR, S.A. de C.V.</strong>, que utiliza el nombre comercial <strong>VIVE BIEN</strong>, es responsable del tratamiento de los datos personales recabados a través de vivebienn.com.</p>
+            <p style={{ marginBottom: '1rem' }}><strong>Domicilio fiscal registrado:</strong> Blvd. J. A. Torres 2319, colonia Panorama, C.P. 37160, León, Guanajuato, México.<br /><strong>Correo para privacidad y derechos ARCO:</strong> {CORREO_CONTACTO}<br /><strong>WhatsApp de contacto:</strong> {NEGOCIO.telefonoInternacional}</p>
+          </Section>
+
+          <Section title="2. Datos personales que podemos tratar">
+            <p style={{ marginBottom: '1rem' }}>Según la función que utilice, podemos tratar:</p>
+            <ul style={{ paddingLeft: '1.5rem', marginTop: '.5rem', marginBottom: '1rem' }}>
+              <li><strong>Identificación y contacto:</strong> nombre, correo electrónico y teléfono.</li>
+              <li><strong>Cuenta y autenticación:</strong> correo, nombre visible e identificadores necesarios para iniciar sesión y mantener su cuenta.</li>
+              <li><strong>Solicitudes:</strong> propiedad consultada, tipo de solicitud, mensaje, preferencia de visita y seguimiento de la atención.</li>
+              <li><strong>Preferencias e interacción:</strong> propiedades guardadas, búsquedas, filtros, páginas o fichas consultadas y ajustes de la cuenta.</li>
+              <li><strong>Datos de valuación:</strong> características y ubicación aproximada del inmueble que usted introduzca en el valuador.</li>
+              <li><strong>Datos técnicos:</strong> dirección IP y datos del navegador o dispositivo que intervengan en la seguridad y operación del sitio, así como identificadores técnicos o de sesión.</li>
+            </ul>
+            <p style={{ marginBottom: '1rem' }}>No solicitamos intencionalmente datos personales sensibles. No incluya datos de salud, financieros, biométricos u otros datos sensibles en mensajes o campos libres.</p>
+          </Section>
+
+          <Section title="3. Finalidades">
+            <h3 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 700, color: 'var(--azul)', fontSize: '1rem', margin: '1.25rem 0 .5rem' }}>Finalidades necesarias para atender el servicio</h3>
+            <p style={{ marginBottom: '1rem' }}>Utilizamos los datos para crear y administrar cuentas; recibir y responder consultas o solicitudes de visita; dar seguimiento a la propiedad seleccionada; administrar propiedades y anuncios; proporcionar el resultado orientativo del valuador; mantener la seguridad y resolver incidencias; y atender solicitudes de derechos ARCO u obligaciones legales.</p>
+            <h3 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 700, color: 'var(--azul)', fontSize: '1rem', margin: '1.25rem 0 .5rem' }}>Finalidades que se informan y autorizan por separado</h3>
+            <ul style={{ paddingLeft: '1.5rem', marginTop: '.5rem', marginBottom: '1rem' }}>
+              <li><strong>Transferencia al anunciante:</strong> solo compartiremos los datos necesarios para responder por la propiedad consultada cuando la persona marque por separado la autorización de transferencia descrita en la sección 4. La autorización no se combina con aceptar este Aviso ni con recibir publicidad.</li>
+              <li><strong>Promociones:</strong> solo enviaremos promociones o información sobre otras propiedades si la persona elige recibirlas. Puede retirar esa elección escribiendo a {CORREO_CONTACTO}.</li>
+              <li><strong>Medición y mejora:</strong> cuando se habiliten tecnologías no esenciales para medir el uso del sitio, se informará su finalidad y se ofrecerán los controles correspondientes antes de activarlas, conforme a la configuración que esté operativa.</li>
+            </ul>
+            <p style={{ marginBottom: '1rem' }}>Negarse a una finalidad secundaria no impide navegar el catálogo ni contactar a VIVE BIEN. Si no se autoriza la transferencia de una consulta al anunciante, los datos no se le entregarán y VIVE BIEN no podrá canalizarle esa solicitud.</p>
+          </Section>
+
+          <Section title="4. Transferencia de datos al anunciante">
+            <p style={{ marginBottom: '1rem' }}>Cuando una persona consulte por una propiedad, VIVE BIEN recibirá primero la solicitud. Si antes de enviarla la persona acepta expresamente la transferencia, el equipo de VIVE BIEN compartirá manualmente con el anunciante responsable de esa propiedad únicamente los datos necesarios para atenderla: nombre, teléfono, correo, inmueble de interés, mensaje y, cuando corresponda, preferencia de visita.</p>
+            <p style={{ marginBottom: '1rem' }}>La autorización se presentará separada de la aceptación del Aviso y de cualquier opción de publicidad. La casilla no debe venir marcada. El formulario debe identificar al anunciante receptor —o mostrarlo con claridad antes del envío— y explicar que recibirá los datos para responder esa solicitud. Si no se acepta la transferencia, la solicitud no se enviará al anunciante. El equipo no debe transferirla por otro medio sin la autorización correspondiente o una excepción legal aplicable.</p>
+            <p style={{ marginBottom: '1rem' }}>VIVE BIEN comunicará al anunciante receptor el Aviso y las finalidades aplicables. El anunciante deberá tratar los datos conforme a ellas y asumir las obligaciones de protección de datos que correspondan. La transferencia no le da acceso general a la cuenta, búsquedas ni otras consultas de la persona.</p>
+            <p style={{ marginBottom: '1rem' }}>La persona puede retirar su consentimiento para transferencias futuras en {CORREO_CONTACTO}. La revocación no deshace una transferencia ya realizada; la persona puede solicitar a VIVE BIEN y al anunciante que cesen los usos que ya no sean necesarios, sujeto a las obligaciones legales aplicables.</p>
+            <p style={{ marginBottom: '1rem' }}>Fuera de las transferencias descritas en este Aviso, VIVE BIEN no vende datos personales. Solo los comunica cuando exista consentimiento o se actualice una excepción prevista por la legislación aplicable.</p>
+          </Section>
+
+          <Section title="5. Proveedores y servicios tecnológicos">
+            <p style={{ marginBottom: '1rem' }}>Para operar el sitio podemos utilizar proveedores tecnológicos que tratan datos por cuenta de VIVE BIEN o que reciben solicitudes técnicas del navegador, de acuerdo con la función usada:</p>
+            <ul style={{ paddingLeft: '1.5rem', marginTop: '.5rem', marginBottom: '1rem' }}>
+              <li><strong>Firebase y Google:</strong> autenticación y acceso mediante cuenta.</li>
+              <li><strong>Supabase:</strong> almacenamiento y consulta de cuentas, propiedades y solicitudes.</li>
+              <li><strong>Vercel:</strong> alojamiento del sitio y operación técnica.</li>
+              <li><strong>Cloudinary:</strong> almacenamiento y entrega de imágenes.</li>
+              <li><strong>Resend:</strong> envío de notificaciones por correo a VIVE BIEN.</li>
+              <li><strong>WhatsApp/Meta:</strong> comunicaciones o notificaciones de atención relacionadas con solicitudes.</li>
+              <li><strong>Google Analytics:</strong> medición de uso cuando esté habilitada.</li>
+              <li><strong>Google Maps, OpenStreetMap, Google Fonts y servicios de distribución de iconos:</strong> recursos que pueden solicitarse directamente desde el navegador.</li>
+              <li><strong>Open-Meteo:</strong> consulta del clima mediante coordenadas aproximadas, cuando esa función esté habilitada.</li>
+              <li><strong>YouTube:</strong> reproducción de videos incrustados cuando la persona elige reproducirlos.</li>
+            </ul>
+            <p style={{ marginBottom: '1rem' }}>Algunos servicios pueden recibir datos técnicos como la dirección IP, el navegador o la solicitud de contenido cuando el dispositivo se conecta a ellos. Cada proveedor puede tratar esos datos conforme a sus propios términos y avisos. La relación de proveedores debe mantenerse actualizada si cambia la tecnología del sitio.</p>
+          </Section>
+
+          <Section title="6. Ubicación, almacenamiento local y analítica">
+            <p style={{ marginBottom: '1rem' }}>Si la portada muestra una ciudad o el clima aproximado, la ubicación puede estimarse a partir de información técnica de la conexión o de coordenadas aproximadas. El sitio puede guardar en el navegador preferencias, sesión o elementos que usted haya decidido guardar. Las herramientas de medición pueden registrar interacciones para analizar el funcionamiento del sitio, cuando estén habilitadas.</p>
+            <p style={{ marginBottom: '1rem' }}>Puede borrar o bloquear cookies y almacenamiento local desde la configuración del navegador. Si bloquea tecnologías necesarias para iniciar sesión, proteger la cuenta o recordar una preferencia solicitada, ciertas funciones pueden dejar de trabajar correctamente.</p>
+            <h3 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 700, color: 'var(--azul)', fontSize: '1rem', margin: '1.25rem 0 .5rem' }}>Cookies y tecnologías similares</h3>
+            <p style={{ marginBottom: '1rem' }}>VIVE BIEN puede utilizar cookies, almacenamiento local, identificadores de sesión y tecnologías equivalentes para mantener la sesión, proteger el sitio, recordar preferencias solicitadas por la persona y, cuando esté habilitado, medir el uso de la plataforma. Al cargar contenido externo —por ejemplo mapas o videos— el navegador puede comunicarse directamente con el proveedor correspondiente y transmitirle datos técnicos como la dirección IP y el tipo de navegador.</p>
+            <p style={{ marginBottom: '1rem' }}>Las tecnologías no esenciales de analítica o promoción deben permanecer desactivadas hasta que se informe su finalidad y se ofrezca la opción de aceptarlas o rechazarlas cuando así corresponda. La lista de nombres, proveedores, duración y controles debe coincidir con el inventario técnico vigente del sitio; no se afirmará que existe un panel de preferencias si no está implementado.</p>
+          </Section>
+
+          <Section title="7. Conservación y eliminación">
+            <p style={{ marginBottom: '1rem' }}>Conservaremos los datos de cuentas, formularios y consultas <strong>hasta por dos años desde la última actividad o interacción relacionada</strong>. Al cumplirse ese plazo, los datos se bloquearán cuando corresponda y después se suprimirán, salvo que una obligación legal, la atención de una controversia o la defensa de derechos exija conservarlos durante un plazo mayor. Los datos de respaldos técnicos pueden permanecer hasta que concluya el ciclo de reemplazo del respaldo y no se utilizarán para nuevas finalidades.</p>
+            <p style={{ marginBottom: '1rem' }}>Usted también puede solicitar la cancelación de sus datos. La cancelación puede dar lugar a un periodo de bloqueo antes de su supresión cuando la ley así lo requiera.</p>
+          </Section>
+
+          <Section title="8. Derechos ARCO, revocación y límites de uso">
+            <p style={{ marginBottom: '1rem' }}>Usted puede solicitar <strong>Acceso, Rectificación, Cancelación u Oposición (ARCO)</strong>, revocar su consentimiento o pedir que limitemos el uso o divulgación de sus datos mediante:</p>
+            <ul style={{ paddingLeft: '1.5rem', marginTop: '.5rem', marginBottom: '1rem' }}>
+              <li><strong>Correo:</strong> {CORREO_CONTACTO}</li>
+              <li><strong>WhatsApp:</strong> {NEGOCIO.telefonoInternacional}</li>
+              <li><strong>Domicilio:</strong> Blvd. J. A. Torres 2319, colonia Panorama, C.P. 37160, León, Guanajuato, México.</li>
+            </ul>
+            <p style={{ marginBottom: '1rem' }}>Indique su nombre, un medio para recibir respuesta, el derecho que desea ejercer, una descripción clara de los datos involucrados y elementos para acreditar su identidad o representación. Para solicitudes de rectificación, indique los cambios y aporte la información que los sustente. VIVE BIEN podrá pedir aclaraciones o documentación adicional cuando la ley lo permita y sea necesaria para verificar identidad o localizar los datos.</p>
+            <p style={{ marginBottom: '1rem' }}>Comunicaremos la determinación en un plazo máximo de veinte días hábiles desde que recibamos la solicitud; si resulta procedente, la haremos efectiva dentro de los quince días hábiles siguientes. Estos plazos pueden ampliarse una sola vez por un periodo igual cuando las circunstancias lo justifiquen. El ejercicio de derechos ARCO es gratuito; solo podrán cobrarse, en su caso, los costos permitidos por la ley para reproducción, copias o envío.</p>
+            <p style={{ marginBottom: '1rem' }}>Si considera vulnerado su derecho a la protección de datos personales, puede acudir a la Secretaría Anticorrupción y Buen Gobierno o a la autoridad garante competente conforme a la LFPDPPP vigente.</p>
+          </Section>
+
+          <Section title="9. Seguridad">
+            <p style={{ marginBottom: '1rem' }}>VIVE BIEN aplica medidas administrativas, técnicas y físicas razonables para proteger los datos contra pérdida, uso o acceso no autorizado. Ningún sistema de transmisión o almacenamiento puede garantizar seguridad absoluta. Si ocurre un incidente que afecte significativamente sus derechos patrimoniales o morales, se comunicará conforme a la legislación aplicable.</p>
+          </Section>
+
+          <Section title="10. Cambios al Aviso">
+            <p style={{ marginBottom: '1rem' }}>La versión vigente estará disponible en vivebienn.com/privacidad e indicará su fecha de actualización. Los cambios relevantes se comunicarán en el sitio o por correo cuando corresponda. Si una nueva finalidad requiere consentimiento, se solicitará antes de realizar ese tratamiento.</p>
+          </Section>
+
+          <Section title="11. Autoridad y legislación aplicable">
+            <p style={{ marginBottom: '1rem' }}>Este Aviso se interpreta conforme a la Ley Federal de Protección de Datos Personales en Posesión de los Particulares y demás disposiciones mexicanas aplicables. La Secretaría Anticorrupción y Buen Gobierno y las autoridades garantes ejercerán las atribuciones que les correspondan conforme al marco vigente.</p>
+          </Section>
+
+          <Section title="12. Aviso simplificado y textos para formularios">
+            <h3 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 700, color: 'var(--azul)', fontSize: '1rem', margin: '1.25rem 0 .5rem' }}>Aviso simplificado para formularios digitales</h3>
+            <p style={{ marginBottom: '1rem' }}><strong>VIVE BIEN GRUPO INMOBILIARIO Y CONSTRUCTOR, S.A. de C.V.</strong>, con domicilio en Blvd. J. A. Torres 2319, colonia Panorama, C.P. 37160, León, Guanajuato, México, tratará tu nombre y datos de contacto, así como la información de la propiedad y el mensaje que envíes, para recibir, responder y dar seguimiento a tu solicitud. Si marcas la autorización independiente, VIVE BIEN compartirá manualmente los datos necesarios con el anunciante de esa propiedad para que pueda responderte. Las promociones y la medición no esencial son finalidades separadas y opcionales; puedes limitar el uso o divulgación de tus datos escribiendo a <strong>{CORREO_CONTACTO}</strong>. Consulta el <a href="/privacidad" style={{ color: 'var(--azul)', textDecoration: 'underline' }}>Aviso de Privacidad Integral</a>.</p>
+          </Section>
+        </div>
+      </main>
+
+      <Footer />
+    </>
+  )
+}

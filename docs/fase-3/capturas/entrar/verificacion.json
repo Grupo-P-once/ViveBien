@@ -1,0 +1,175 @@
+{
+  "filas": [
+    {
+      "vista": "01-escritorio-ancho",
+      "viewport": "1920×1080",
+      "disposicion": "amplia",
+      "esperada": "amplia",
+      "medido": "si",
+      "columnas": "1119.98px 800px",
+      "filas": "1080px",
+      "cruzaBisagra": 0,
+      "desborda": false,
+      "axe": {
+        "criticas": 0,
+        "serias": 0,
+        "moderadas": 0,
+        "menores": 1
+      }
+    },
+    {
+      "vista": "02-escritorio-medio",
+      "viewport": "1366×768",
+      "disposicion": "amplia",
+      "esperada": "amplia",
+      "medido": "si",
+      "columnas": "796.828px 569.156px",
+      "filas": "829.672px",
+      "cruzaBisagra": 0,
+      "desborda": false,
+      "axe": {
+        "criticas": 0,
+        "serias": 0,
+        "moderadas": 0,
+        "menores": 1
+      }
+    },
+    {
+      "vista": "03-movil-vertical",
+      "viewport": "390×844",
+      "disposicion": "compacta",
+      "esperada": "compacta",
+      "medido": "si",
+      "columnas": "390px",
+      "filas": "319.844px 745.672px",
+      "cruzaBisagra": 0,
+      "desborda": false,
+      "axe": {
+        "criticas": 0,
+        "serias": 0,
+        "moderadas": 0,
+        "menores": 1
+      }
+    },
+    {
+      "vista": "04-movil-horizontal",
+      "viewport": "844×390",
+      "disposicion": "amplia",
+      "esperada": "amplia",
+      "medido": "si",
+      "columnas": "492.328px 351.656px",
+      "filas": "821.219px",
+      "cruzaBisagra": 0,
+      "desborda": false,
+      "axe": {
+        "criticas": 0,
+        "serias": 0,
+        "moderadas": 0,
+        "menores": 1
+      }
+    },
+    {
+      "vista": "05-estrecho",
+      "viewport": "320×720",
+      "disposicion": "compacta",
+      "esperada": "compacta",
+      "medido": "si",
+      "columnas": "320px",
+      "filas": "344.328px 769.219px",
+      "cruzaBisagra": 0,
+      "desborda": false,
+      "axe": {
+        "criticas": 0,
+        "serias": 0,
+        "moderadas": 0,
+        "menores": 1
+      }
+    },
+    {
+      "vista": "06-alto",
+      "viewport": "500×1200",
+      "disposicion": "compacta",
+      "esperada": "compacta",
+      "medido": "si",
+      "columnas": "500px",
+      "filas": "395.828px 804.172px",
+      "cruzaBisagra": 0,
+      "desborda": false,
+      "axe": {
+        "criticas": 0,
+        "serias": 0,
+        "moderadas": 0,
+        "menores": 1
+      }
+    },
+    {
+      "vista": "07-plegable-cerrado",
+      "viewport": "416×657",
+      "disposicion": "compacta",
+      "esperada": "compacta",
+      "medido": "si",
+      "columnas": "416px",
+      "filas": "323.969px 745.672px",
+      "cruzaBisagra": 0,
+      "desborda": false,
+      "axe": {
+        "criticas": 0,
+        "serias": 0,
+        "moderadas": 0,
+        "menores": 1
+      }
+    },
+    {
+      "vista": "08-plegable-abierto-ancho",
+      "viewport": "884×1104",
+      "disposicion": "dos-zonas",
+      "esperada": "dos-zonas",
+      "medido": "si",
+      "columnas": "430px 24px 430px",
+      "filas": "1104px",
+      "cruzaBisagra": 0,
+      "desborda": false,
+      "axe": {
+        "criticas": 0,
+        "serias": 0,
+        "moderadas": 0,
+        "menores": 1
+      }
+    },
+    {
+      "vista": "09-plegable-estrecho",
+      "viewport": "620×900",
+      "disposicion": "una-zona-de-dos",
+      "esperada": "una-zona-de-dos",
+      "medido": "si",
+      "columnas": "300px 20px 300px",
+      "filas": "1196.62px",
+      "cruzaBisagra": 0,
+      "desborda": false,
+      "axe": {
+        "criticas": 0,
+        "serias": 0,
+        "moderadas": 0,
+        "menores": 1
+      }
+    },
+    {
+      "vista": "10-plegable-vertical",
+      "viewport": "820×1100",
+      "disposicion": "apilada",
+      "esperada": "apilada",
+      "medido": "si",
+      "columnas": "820px",
+      "filas": "540px 20px 540px",
+      "cruzaBisagra": 0,
+      "desborda": false,
+      "axe": {
+        "criticas": 0,
+        "serias": 0,
+        "moderadas": 0,
+        "menores": 1
+      }
+    }
+  ],
+  "problemas": []
+}

@@ -1,0 +1,11 @@
+{
+  "nota": "Línea base de E-34 (A/B válido del 7-oct-2026, 2 repeticiones con orden invertido, portátil enchufado, réplica local, un proceso next start). Fuente: tests/performance/k6/reports/escalones-cap-e34.tsv y escalones-cap-e34-r2.tsv. NO es una promesa de capacidad.",
+  "escalones": {
+    "100": { "rps": [100.0, 100.0], "p50": [3, 3], "p95": [18, 20], "p99": [28, 31], "error": [0, 0] },
+    "200": { "rps": [200.0, 200.0], "p50": [4, 5], "p95": [35, 40], "p99": [72, 75], "error": [0, 0] },
+    "300": { "rps": [299.8, 300.0], "p50": [17, 11], "p95": [293, 115], "p99": [687, 258], "error": [0, 0] },
+    "450": { "rps": [432.0, 431.2], "p50": [462, 413], "p95": [2244, 2177], "p99": [3106, 2882], "error": [0, 0] }
+  },
+  "rssMB": [572, 566],
+  "e33_referencia": { "450": { "rps": [376.7, 376.0], "p95": [6966, 8021], "error": [1.5, 9.6] }, "rssMB": [1975, 1855] }
+}

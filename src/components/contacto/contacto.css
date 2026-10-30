@@ -1,0 +1,93 @@
+/* ── Contacto: mismo patrón que «Nosotros» (ver nosotros.css): etiqueta con filete rojo → titular Playfair con cursiva roja → tarjetas blancas ───── */
+.cto { background: var(--nos-papel, #fbfaf8); }
+.cto .nos-wrap { width: min(100% - 2.5rem, 1180px); }
+
+/* Hero */
+.cto-hero { position: relative; overflow: hidden; isolation: isolate; background: #0b0b0c; color: #fff; padding: 5.5rem 0 3.4rem; }
+.cto-hero-foto { position: absolute; inset: 0; z-index: -2; }
+.cto-hero-foto img { width: 100%; height: 100%; object-fit: cover; object-position: 68% 50%; display: block; animation: nos-zoom 2.4s cubic-bezier(.2,.7,.3,1) both; }
+.cto-hero::before { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, rgba(8,10,16,.94) 0%, rgba(8,10,16,.8) 40%, rgba(8,10,16,.25) 75%, rgba(8,10,16,.1) 100%); }
+.cto-hero::after { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: linear-gradient(90deg, var(--nos-rojo), transparent 70%); }
+.cto-hero .nos-eyebrow { color: rgba(255,255,255,.85); }
+.cto-h1 { margin: 0 0 1rem; font: 800 clamp(2.3rem, 5.4vw, 4rem)/1.04 'Montserrat', system-ui, sans-serif; letter-spacing: -.02em; color: #fff; }
+.cto-h1 em { display: block; margin-top: .15em; font: italic 700 clamp(1.8rem, 4vw, 3rem)/1.1 'Playfair Display', Georgia, serif; letter-spacing: 0; color: #e11d3c; }
+.cto-hero-p { margin: 0; max-width: 44ch; font-size: 1.05rem; line-height: 1.65; color: rgba(255,255,255,.9); }
+
+/* Cuerpo */
+.cto-cuerpo { position: relative; overflow: hidden; padding: 3.2rem 0 4.5rem; }
+.cto-cuerpo::before { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(115deg, transparent 0 60%, rgba(15,39,71,.035) 60% 76%, transparent 76%), linear-gradient(115deg, transparent 0 4%, rgba(200,16,46,.03) 4% 10%, transparent 10%); }
+.cto-cuerpo::after { content: ''; position: absolute; right: -7%; bottom: -10%; width: 22%; height: 46%; background: var(--nos-rojo); clip-path: polygon(100% 0, 100% 100%, 0 100%); pointer-events: none; }
+.cto-grid { display: grid; gap: 2.2rem; align-items: start; }
+.cto-info { min-width: 0; }
+.cto-h2 { font-size: clamp(1.9rem, 3.4vw, 2.7rem); margin-bottom: 1rem; }
+.cto-h3 { margin: .2rem 0 .8rem; font: 800 1.4rem/1.2 'Montserrat', system-ui, sans-serif; color: var(--nos-azul); }
+
+/* Datos de contacto */
+.cto-datos { list-style: none; margin: 1.4rem 0 1.8rem; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.1rem 1.6rem; }
+.cto-dato { display: flex; gap: .9rem; align-items: flex-start; min-width: 0; }
+.nos .cto-ico { width: 46px; height: 46px; border-radius: 12px; color: #fff; }
+.nos .cto-ico-azul { background: #0f2747; } .nos .cto-ico-verde { background: #17803d; } .nos .cto-ico-rojo { background: #a80d24; }
+.nos .cto-ico-naranja { background: #b45f06; } .nos .cto-ico-morado { background: #5b4fcf; }
+.cto-dato-t { display: block; font: 600 .74rem 'Montserrat', system-ui, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: #4b5563; }
+.cto-dato-v { display: block; margin-top: .15rem; font: 700 .96rem/1.35 'Montserrat', system-ui, sans-serif; color: var(--nos-azul); text-decoration: none; overflow-wrap: anywhere; }
+html body a.cto-dato-v:hover { color: var(--nos-rojo); text-decoration: underline; }
+
+/* Visítanos */
+.cto-visita { display: grid; gap: 1.2rem; padding: 1.4rem; border-radius: 20px; background: #fff; box-shadow: 0 14px 40px rgba(15,39,71,.1); border: 1px solid rgba(15,39,71,.05); }
+.cto-direccion { font-style: normal; margin: 0 0 1.1rem; font-size: .95rem; line-height: 1.6; color: #4b5563; }
+html body a.cto-como-llegar { background: var(--nos-azul); color: #fff; min-height: 44px; padding: .65rem 1.3rem; }
+.cto-mapa { min-width: 0; }
+.cto-mapa .ini-mapa-lienzo { height: 230px; border-radius: 14px; }
+
+/* Garantías */
+.cto-garantias { list-style: none; margin: 1.2rem 0 0; padding: 1.1rem 1.2rem; display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; border-radius: 16px; background: rgba(255,255,255,.92); box-shadow: 0 8px 26px rgba(15,39,71,.08); }
+.cto-garantias li { display: flex; align-items: center; gap: .8rem; }
+.cto-garantias .nos-icono { width: 46px; height: 46px; border-radius: 50%; }
+.cto-garantias strong { display: block; font: 800 .88rem 'Montserrat', system-ui, sans-serif; color: var(--nos-azul); }
+.cto-garantias div > span { display: block; font-size: .8rem; color: #4b5563; }
+
+/* Formulario */
+.cto-form-caja { position: relative; z-index: 1; padding: 2rem 1.6rem 1.6rem; border-radius: 20px; background: #fff; border-top: 4px solid var(--nos-rojo); box-shadow: 0 24px 60px rgba(15,39,71,.16); }
+.cto-form-t { margin: 0 0 1.2rem; font: 800 1.45rem/1.2 'Montserrat', system-ui, sans-serif; color: var(--nos-azul); }
+.cto-form-t em { font: italic 700 1.55rem 'Playfair Display', Georgia, serif; color: var(--nos-rojo); }
+.cto-form { display: flex; flex-direction: column; gap: .95rem; }
+.cto-campo label { display: block; margin-bottom: .3rem; font: 700 .74rem 'Montserrat', system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: #4b5563; }
+.cto-input { display: flex; align-items: center; gap: .6rem; padding: 0 .9rem; border: 1.5px solid #dfe3ea; border-radius: 10px; background: #fff; color: #6b7280; transition: border-color .2s, box-shadow .2s; }
+.cto-input:focus-within { border-color: var(--nos-rojo); box-shadow: 0 0 0 3px rgba(200,16,46,.15); }
+.cto-input svg { flex: 0 0 auto; }
+.cto-input input, .cto-input textarea { flex: 1 1 auto; min-width: 0; padding: .8rem 0; border: 0; outline: 0; background: transparent; font: 400 .95rem 'Montserrat', system-ui, sans-serif; color: #1f2937; resize: vertical; }
+.cto-input input::placeholder, .cto-input textarea::placeholder { color: #6b7280; opacity: .85; }
+.cto-input-area { align-items: flex-start; padding-top: .8rem; }
+.cto-input-area textarea { padding: 0 0 .7rem; min-height: 96px; }
+.cto-contexto { display: flex; align-items: center; gap: .5rem; margin: 0; padding: .6rem .8rem; border-radius: 8px; background: var(--superficie, #f4f6f8); font-size: .85rem; color: var(--nos-azul); }
+.cto-error { margin: 0; padding: .6rem .8rem; border-radius: 8px; background: var(--error-fondo, #fef2f2); color: var(--error, #991b1b); font-size: .85rem; font-weight: 600; }
+.cto-enviar { display: inline-flex; align-items: center; justify-content: center; gap: .6rem; min-height: 50px; padding: .9rem 1.2rem; border: 0; border-radius: 10px; cursor: pointer; font: 800 .95rem 'Montserrat', system-ui, sans-serif; letter-spacing: .04em; color: #fff; background: linear-gradient(180deg, #a01022, #7d0b19); box-shadow: 0 10px 24px rgba(125,11,25,.3); transition: transform .2s, opacity .2s; }
+.cto-enviar:hover:not(:disabled) { transform: translateY(-2px); }
+.cto-enviar:disabled { opacity: .55; cursor: not-allowed; }
+.cto-enviar:focus-visible, .cto-input input:focus-visible { outline: 3px solid #fff; outline-offset: 2px; box-shadow: 0 0 0 5px var(--nos-rojo); }
+.cto-cita { margin: 1rem 0 0; display: flex; align-items: center; justify-content: center; gap: .45rem; font-size: .84rem; color: #4b5563; text-align: center; flex-wrap: wrap; }
+.cto-cita a { color: var(--nos-azul); font-weight: 700; text-decoration: underline; }
+.cto-enviado { text-align: center; padding: 1.6rem 0; color: #279546; }
+.cto-enviado h2 { margin: .8rem 0 .4rem; font: 800 1.4rem 'Montserrat', system-ui, sans-serif; color: var(--nos-azul); }
+.cto-enviado p { margin: 0 0 1.2rem; color: #4b5563; line-height: 1.6; }
+
+@media (min-width: 640px) {
+  .cto-datos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cto-garantias { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; }
+  .cto-garantias li + li { padding-left: 1rem; border-left: 1px solid rgba(15,39,71,.14); }
+  .cto-visita { grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); align-items: stretch; padding: 1.5rem 1.5rem 1.5rem 1.8rem; }
+  .cto-mapa .ini-mapa-lienzo { height: 100%; min-height: 230px; }
+}
+@media (min-width: 1000px) {
+  .cto-grid { grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 2.6rem; }
+  .cto-form-caja { position: sticky; top: 96px; padding: 2.2rem 2rem 1.8rem; }
+  .cto-hero { padding: 7rem 0 4.4rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cto-hero-foto img { animation: none; }
+  .cto-enviar, .cto-input { transition: none; }
+  .cto-enviar:hover:not(:disabled) { transform: none; }
+}
+.cto-form-t { font-size: 1.3rem; }
+.cto-form-t em { display: inline-block; white-space: nowrap; font-size: 1.4rem; }
+.cto-cita a { white-space: nowrap; display: inline-flex; align-items: center; gap: .2rem; }

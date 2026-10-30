@@ -1,0 +1,201 @@
+{
+  "filas": [
+    {
+      "vista": "01-escritorio-ancho",
+      "viewport": "1920×1080",
+      "disposicion": "amplia",
+      "esperada": "amplia",
+      "cruzaBisagra": 0,
+      "enUnSegmento": null,
+      "desborda": false,
+      "axeSerias": 1,
+      "axeTotal": 2
+    },
+    {
+      "vista": "02-escritorio-medio",
+      "viewport": "1366×768",
+      "disposicion": "amplia",
+      "esperada": "amplia",
+      "cruzaBisagra": 0,
+      "enUnSegmento": null,
+      "desborda": false,
+      "axeSerias": 1,
+      "axeTotal": 2
+    },
+    {
+      "vista": "03-movil-vertical",
+      "viewport": "390×844",
+      "disposicion": "compacta",
+      "esperada": "compacta",
+      "cruzaBisagra": 0,
+      "enUnSegmento": null,
+      "desborda": false,
+      "axeSerias": 1,
+      "axeTotal": 2
+    },
+    {
+      "vista": "04-movil-horizontal",
+      "viewport": "844×390",
+      "disposicion": "amplia",
+      "esperada": "amplia",
+      "cruzaBisagra": 0,
+      "enUnSegmento": null,
+      "desborda": false,
+      "axeSerias": 1,
+      "axeTotal": 2
+    },
+    {
+      "vista": "05-estrecho",
+      "viewport": "320×720",
+      "disposicion": "compacta",
+      "esperada": "compacta",
+      "cruzaBisagra": 0,
+      "enUnSegmento": null,
+      "desborda": false,
+      "axeSerias": 1,
+      "axeTotal": 2
+    },
+    {
+      "vista": "06-alto",
+      "viewport": "500×1200",
+      "disposicion": "compacta",
+      "esperada": "compacta",
+      "cruzaBisagra": 0,
+      "enUnSegmento": null,
+      "desborda": false,
+      "axeSerias": 1,
+      "axeTotal": 2
+    },
+    {
+      "vista": "07-plegable-cerrado",
+      "viewport": "416×657",
+      "disposicion": "compacta",
+      "esperada": "compacta",
+      "cruzaBisagra": 0,
+      "enUnSegmento": null,
+      "desborda": false,
+      "axeSerias": 1,
+      "axeTotal": 2
+    },
+    {
+      "vista": "08-plegable-abierto-ancho",
+      "viewport": "884×1104",
+      "disposicion": "amplia",
+      "esperada": "dos-zonas",
+      "cruzaBisagra": 10,
+      "enUnSegmento": null,
+      "desborda": false,
+      "axeSerias": 1,
+      "axeTotal": 2
+    },
+    {
+      "vista": "09-plegable-estrecho",
+      "viewport": "620×900",
+      "disposicion": "una-zona-de-dos",
+      "esperada": "una-zona-de-dos",
+      "cruzaBisagra": 10,
+      "enUnSegmento": "no (x 90–530)",
+      "desborda": false,
+      "axeSerias": 1,
+      "axeTotal": 2
+    },
+    {
+      "vista": "10-plegable-vertical",
+      "viewport": "820×1100",
+      "disposicion": "apilada",
+      "esperada": "apilada",
+      "cruzaBisagra": 1,
+      "enUnSegmento": null,
+      "desborda": false,
+      "axeSerias": 1,
+      "axeTotal": 2
+    }
+  ],
+  "flujo": [
+    {
+      "paso": "A · /entrar sin sesión",
+      "resultado": "Bienvenido"
+    },
+    {
+      "paso": "D · contraseña incorrecta",
+      "resultado": "(sin mensaje)"
+    },
+    {
+      "paso": "F · correo no registrado",
+      "resultado": "(sin mensaje)"
+    },
+    {
+      "paso": "E · olvidé la contraseña, sin correo",
+      "resultado": "(sin mensaje)"
+    },
+    {
+      "paso": "E · olvidé la contraseña, con correo",
+      "resultado": "Te mandamos un correo para cambiar tu contraseña. Revisa también el correo no deseado."
+    },
+    {
+      "paso": "G · crear cuenta",
+      "resultado": "campo nombre: sí · (sin mensaje)"
+    },
+    {
+      "paso": "I · refresco",
+      "resultado": "correo «memoria@ejemplo.invalid» · pestaña activa: true"
+    },
+    {
+      "paso": "I · lo guardado",
+      "resultado": "{\"correo\":\"memoria@ejemplo.invalid\",\"pestana\":\"crear\"}"
+    },
+    {
+      "paso": "J · siguiente=/portal/",
+      "resultado": "la pantalla lo toma como: /portal/"
+    },
+    {
+      "paso": "K · siguiente=/admin/",
+      "resultado": "la pantalla lo toma como: /admin/"
+    },
+    {
+      "paso": "L · siguiente=/dashboard?clasico=1",
+      "resultado": "la pantalla lo toma como: /dashboard?clasico=1"
+    },
+    {
+      "paso": "M · siguiente=https://otro.com/roban-sesion",
+      "resultado": "la pantalla lo toma como: NADA (descartado)"
+    },
+    {
+      "paso": "M · siguiente=//otro.com",
+      "resultado": "la pantalla lo toma como: NADA (descartado)"
+    },
+    {
+      "paso": "Foco con Tab",
+      "resultado": "button:Ingresar → button:Crear cuenta → input:Correo electrónico → input:Contraseña → button:Ver la contraseña → button:¿Olvidaste tu contrase → button:Iniciar sesión → button:Continuar con Google → a:Contactar por WhatsApp"
+    },
+    {
+      "paso": "Dashboard /dashboard",
+      "resultado": "acabó en /entrar?siguiente=%2Fdashboard · LEÓN · GUANAJUATO · MÉXICO | Más que propiedades, mejores historias. | VIVEBIENN.COM | Bie"
+    },
+    {
+      "paso": "Dashboard /dashboard?clasico=1",
+      "resultado": "acabó en /dashboard?clasico=1 · Mi Cuenta | Gestión de Propiedades y Leads | Ingresar | Crear Cuenta | Iniciar Sesión | — "
+    },
+    {
+      "paso": "prefers-reduced-motion",
+      "resultado": "transition: none"
+    }
+  ],
+  "problemas": [
+    "01-escritorio-ancho: axe serious · color-contrast (3)",
+    "02-escritorio-medio: axe serious · color-contrast (3)",
+    "03-movil-vertical: axe serious · color-contrast (4)",
+    "04-movil-horizontal: axe serious · color-contrast (3)",
+    "05-estrecho: axe serious · color-contrast (4)",
+    "06-alto: axe serious · color-contrast (4)",
+    "07-plegable-cerrado: axe serious · color-contrast (4)",
+    "08-plegable-abierto-ancho: disposición amplia, se esperaba dos-zonas",
+    "08-plegable-abierto-ancho: CRUZA LA BISAGRA → img · h1 «Más que propiedades, mej» · img · h2 «Bienvenido» · button «Ingresar» · form «Correo electrónicoContra» · input · input · button «Iniciar sesión» · button «Continuar con Google»",
+    "08-plegable-abierto-ancho: axe serious · color-contrast (3)",
+    "09-plegable-estrecho: CRUZA LA BISAGRA → img · h1 «Más que propiedades, mej» · h2 «Bienvenido» · button «Ingresar» · button «Crear cuenta» · form «Correo electrónicoContra» · input · input · button «Iniciar sesión» · button «Continuar con Google»",
+    "09-plegable-estrecho: la tarjeta NO cabe en un segmento — no (x 90–530)",
+    "09-plegable-estrecho: axe serious · color-contrast (4)",
+    "10-plegable-vertical: CRUZA LA BISAGRA → img",
+    "10-plegable-vertical: axe serious · color-contrast (4)"
+  ]
+}

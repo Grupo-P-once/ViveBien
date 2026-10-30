@@ -1,0 +1,8 @@
+{
+  "chequeos": [
+    { "nombre": "salud", "ruta": "/api/salud", "estado": 200, "contiene": ["\"ok\":true"] },
+    { "nombre": "catálogo sin la pausada", "ruta": "/api/catalogo", "estado": 200, "noContiene": ["\"id\":\"sanjuan\""] },
+    { "nombre": "API protegida sin sesión", "ruta": "/api/publicador/propiedades", "estado": 401 },
+    { "nombre": "la página responde la redirección a producción (no se valida su contenido aquí)", "ruta": "/propiedades", "redireccion": true }
+  ]
+}

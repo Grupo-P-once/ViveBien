@@ -1,0 +1,25 @@
+{
+ "eventos (tope 300 / 10 min)": {
+  "peticiones": 330,
+  "codigos": {
+   "200": 300,
+   "429": 30
+  },
+  "primer_429_en": 301
+ },
+ "registro-lead (tope 6 / hora)": {
+  "peticiones": 10,
+  "codigos": {
+   "200": 6,
+   "429": 4
+  },
+  "primer_429_en": 7
+ },
+ "ayuda/feedback (sin tope declarado)": {
+  "peticiones": 400,
+  "codigos": {
+   "200": 400
+  },
+  "primer_429_en": null
+ }
+}

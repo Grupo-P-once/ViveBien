@@ -1,0 +1,10 @@
+== [despues] heap vivo tras GC forzado (MB)
+A (calentado): {"heapUsedMB":42.1,"rssMB":141,"externalMB":4.6}
+tras ~1500 peticiones a ficha: {"heapUsedMB":63.7,"rssMB":432,"externalMB":5.5}
+tras ~1500 peticiones a ayuda_buscar: {"heapUsedMB":62.3,"rssMB":425,"externalMB":4.6}
+tras ~1500 peticiones a salud: {"heapUsedMB":67,"rssMB":429,"externalMB":4.6}
+tras escalones: {"heapUsedMB":49.3,"rssMB":655,"externalMB":4.6}
+soak: 27900 peticiones · 76.3 req/s · p50 9 · p95 71 · p99 142 ms · errores 0.00 %
+tras soak: {"heapUsedMB":52.3,"rssMB":699,"externalMB":4.7}
+RSS final: 720 MB privada
+AB despues TERMINADO

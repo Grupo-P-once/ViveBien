@@ -1,0 +1,31 @@
+{
+ "nota": "Generado por scripts/qa/lint-comparar.cjs --escribir",
+ "errores": 64,
+ "avisos": 40,
+ "porArchivo": {
+  "src/app/admin/usuarios/[uid]/page.tsx": 1,
+  "src/app/comparar/page-client.tsx": 1,
+  "src/app/dashboard/page.tsx": 16,
+  "src/app/page-client.tsx": 3,
+  "src/app/privacidad/page.tsx": 9,
+  "src/app/propiedades/[id]/page-client.tsx": 3,
+  "src/app/propiedades/[id]/page.tsx": 1,
+  "src/app/propiedades/page-client.tsx": 2,
+  "src/app/publicador/propiedades/[id]/editar/page.tsx": 1,
+  "src/app/terminos/page.tsx": 10,
+  "src/components/AvisoConfiguracion.tsx": 1,
+  "src/components/BarraComparar.tsx": 1,
+  "src/components/GradientText.tsx": 1,
+  "src/components/Header.tsx": 1,
+  "src/components/Metricas.tsx": 1,
+  "src/components/MetricasCliente.tsx": 1,
+  "src/components/MisBusquedas.tsx": 1,
+  "src/components/MisFavoritos.tsx": 1,
+  "src/components/PropertyCard.tsx": 2,
+  "src/components/Registros.tsx": 1,
+  "src/components/ScrollReveal.tsx": 1,
+  "src/components/ShinyText.tsx": 1,
+  "src/components/Usuarios.tsx": 1,
+  "src/components/VistaPreviaAnuncio.tsx": 3
+ }
+}

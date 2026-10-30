@@ -1,0 +1,128 @@
+{
+  "filas": [
+    {
+      "perfil": "cliente",
+      "tamano": "escritorio",
+      "destino": "/portal",
+      "esperado": "/portal",
+      "muestras": 16,
+      "conPanelAntiguo": 2,
+      "primeraEnPanelCorrecto": 1300
+    },
+    {
+      "perfil": "cliente",
+      "tamano": "tableta",
+      "destino": "/portal",
+      "esperado": "/portal",
+      "muestras": 16,
+      "conPanelAntiguo": 2,
+      "primeraEnPanelCorrecto": 800
+    },
+    {
+      "perfil": "cliente",
+      "tamano": "movil",
+      "destino": "/portal",
+      "esperado": "/portal",
+      "muestras": 16,
+      "conPanelAntiguo": 4,
+      "primeraEnPanelCorrecto": 800
+    },
+    {
+      "perfil": "publicador",
+      "tamano": "escritorio",
+      "destino": "/portal",
+      "esperado": "/portal",
+      "muestras": 16,
+      "conPanelAntiguo": 2,
+      "primeraEnPanelCorrecto": 800
+    },
+    {
+      "perfil": "publicador",
+      "tamano": "tableta",
+      "destino": "/portal",
+      "esperado": "/portal",
+      "muestras": 16,
+      "conPanelAntiguo": 3,
+      "primeraEnPanelCorrecto": 700
+    },
+    {
+      "perfil": "publicador",
+      "tamano": "movil",
+      "destino": "/portal",
+      "esperado": "/portal",
+      "muestras": 16,
+      "conPanelAntiguo": 3,
+      "primeraEnPanelCorrecto": 800
+    },
+    {
+      "perfil": "admin",
+      "tamano": "escritorio",
+      "destino": "/admin",
+      "esperado": "/admin",
+      "muestras": 16,
+      "conPanelAntiguo": 4,
+      "primeraEnPanelCorrecto": 800
+    },
+    {
+      "perfil": "admin",
+      "tamano": "tableta",
+      "destino": "/admin",
+      "esperado": "/admin",
+      "muestras": 16,
+      "conPanelAntiguo": 2,
+      "primeraEnPanelCorrecto": 900
+    },
+    {
+      "perfil": "admin",
+      "tamano": "movil",
+      "destino": "/admin",
+      "esperado": "/admin",
+      "muestras": 16,
+      "conPanelAntiguo": 4,
+      "primeraEnPanelCorrecto": 1100
+    },
+    {
+      "perfil": "super_admin",
+      "tamano": "escritorio",
+      "destino": "/admin",
+      "esperado": "/admin",
+      "muestras": 16,
+      "conPanelAntiguo": 3,
+      "primeraEnPanelCorrecto": 700
+    },
+    {
+      "perfil": "super_admin",
+      "tamano": "tableta",
+      "destino": "/admin",
+      "esperado": "/admin",
+      "muestras": 16,
+      "conPanelAntiguo": 3,
+      "primeraEnPanelCorrecto": 800
+    },
+    {
+      "perfil": "super_admin",
+      "tamano": "movil",
+      "destino": "/admin",
+      "esperado": "/admin",
+      "muestras": 16,
+      "conPanelAntiguo": 3,
+      "primeraEnPanelCorrecto": 800
+    }
+  ],
+  "problemas": [
+    "cliente/escritorio: el panel antiguo se vio en 400ms, 500ms",
+    "cliente/tableta: el panel antiguo se vio en 400ms, 500ms",
+    "cliente/movil: el panel antiguo se vio en 300ms, 400ms, 500ms, 600ms",
+    "publicador/escritorio: el panel antiguo se vio en 400ms, 500ms",
+    "publicador/tableta: el panel antiguo se vio en 300ms, 400ms, 500ms",
+    "publicador/movil: el panel antiguo se vio en 300ms, 400ms, 500ms",
+    "admin/escritorio: el panel antiguo se vio en 200ms, 300ms, 400ms, 500ms",
+    "admin/tableta: el panel antiguo se vio en 400ms, 500ms",
+    "admin/movil: el panel antiguo se vio en 400ms, 500ms, 600ms, 700ms",
+    "super_admin/escritorio: el panel antiguo se vio en 300ms, 400ms, 500ms",
+    "super_admin/tableta: el panel antiguo se vio en 300ms, 400ms, 500ms",
+    "super_admin/movil: el panel antiguo se vio en 300ms, 400ms, 500ms"
+  ],
+  "retrasoMs": 600,
+  "cadaMs": 100
+}

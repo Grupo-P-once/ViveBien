@@ -1,0 +1,1566 @@
+[
+ {
+  "tipo": "API",
+  "ruta": "/api/acceso/registro",
+  "metodos": [
+   "POST"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [
+   "audit_logs"
+  ],
+  "externos": [
+   "Firebase",
+   "Google"
+  ],
+  "archivo": "src/app/api/acceso/registro/route.ts",
+  "lineas": 39
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/admin/actividad",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [
+   "ADMIN"
+  ],
+  "flags": [],
+  "tablas": [
+   "audit_logs",
+   "contactos",
+   "invitaciones",
+   "leads",
+   "propiedades",
+   "solicitudes_contacto",
+   "usuarios"
+  ],
+  "externos": [],
+  "archivo": "src/app/api/admin/actividad/route.ts",
+  "lineas": 60
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/admin/analitica",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [
+   "ADMIN"
+  ],
+  "flags": [],
+  "tablas": [
+   "eventos",
+   "favoritos",
+   "leads",
+   "propiedades",
+   "solicitudes_contacto"
+  ],
+  "externos": [],
+  "archivo": "src/app/api/admin/analitica/route.ts",
+  "lineas": 69
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/admin/bajas",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [
+   "CAPACIDAD"
+  ],
+  "flags": [],
+  "tablas": [
+   "bajas_de_cuenta"
+  ],
+  "externos": [
+   "Firebase"
+  ],
+  "archivo": "src/app/api/admin/bajas/route.ts",
+  "lineas": 49
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/admin/bajas/[uid]/reintentar",
+  "metodos": [
+   "POST"
+  ],
+  "guardas": [
+   "CAPACIDAD"
+  ],
+  "flags": [],
+  "tablas": [
+   "bajas_de_cuenta",
+   "usuarios"
+  ],
+  "externos": [
+   "Firebase"
+  ],
+  "archivo": "src/app/api/admin/bajas/[uid]/reintentar/route.ts",
+  "lineas": 156
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/admin/buscar",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [
+   "ADMIN"
+  ],
+  "flags": [],
+  "tablas": [
+   "contactos",
+   "leads",
+   "propiedades",
+   "solicitudes_contacto",
+   "usuarios"
+  ],
+  "externos": [],
+  "archivo": "src/app/api/admin/buscar/route.ts",
+  "lineas": 79
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/admin/contactos",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [
+   "ADMIN"
+  ],
+  "flags": [],
+  "tablas": [
+   "contactos"
+  ],
+  "externos": [],
+  "archivo": "src/app/api/admin/contactos/route.ts",
+  "lineas": 21
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/admin/flags",
+  "metodos": [
+   "GET",
+   "POST"
+  ],
+  "guardas": [
+   "CAPACIDAD"
+  ],
+  "flags": [],
+  "tablas": [
+   "audit_logs",
+   "configuracion"
+  ],
+  "externos": [],
+  "archivo": "src/app/api/admin/flags/route.ts",
+  "lineas": 115
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/admin/invitaciones",
+  "metodos": [
+   "GET",
+   "PATCH",
+   "POST"
+  ],
+  "guardas": [
+   "ADMIN"
+  ],
+  "flags": [],
+  "tablas": [
+   "invitaciones",
+   "usuarios"
+  ],
+  "externos": [
+   "Firebase",
+   "Google"
+  ],
+  "archivo": "src/app/api/admin/invitaciones/route.ts",
+  "lineas": 156
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/admin/notificaciones",
+  "metodos": [
+   "GET",
+   "POST"
+  ],
+  "guardas": [
+   "ADMIN"
+  ],
+  "flags": [],
+  "tablas": [
+   "contactos",
+   "invitaciones",
+   "leads",
+   "propiedades",
+   "solicitudes_contacto",
+   "usuarios"
+  ],
+  "externos": [],
+  "archivo": "src/app/api/admin/notificaciones/route.ts",
+  "lineas": 94
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/admin/propiedades",
+  "metodos": [
+   "GET",
+   "POST"
+  ],
+  "guardas": [
+   "ADMIN"
+  ],
+  "flags": [],
+  "tablas": [
+   "propiedades"
+  ],
+  "externos": [
+   "Cloudinary"
+  ],
+  "archivo": "src/app/api/admin/propiedades/route.ts",
+  "lineas": 161
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/admin/propiedades/[id]",
+  "metodos": [
+   "DELETE",
+   "GET",
+   "PATCH"
+  ],
+  "guardas": [
+   "CAPACIDAD"
+  ],
+  "flags": [],
+  "tablas": [
+   "fotos",
+   "propiedades"
+  ],
+  "externos": [
+   "Cloudinary"
+  ],
+  "archivo": "src/app/api/admin/propiedades/[id]/route.ts",
+  "lineas": 259
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/admin/registros",
+  "metodos": [
+   "GET",
+   "POST"
+  ],
+  "guardas": [
+   "ADMIN"
+  ],
+  "flags": [],
+  "tablas": [
+   "leads",
+   "propiedades"
+  ],
+  "externos": [
+   "WhatsApp"
+  ],
+  "archivo": "src/app/api/admin/registros/route.ts",
+  "lineas": 289
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/admin/resumen",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [
+   "ADMIN"
+  ],
+  "flags": [],
+  "tablas": [
+   "contactos",
+   "eventos",
+   "favoritos",
+   "leads",
+   "propiedades",
+   "solicitudes_contacto"
+  ],
+  "externos": [],
+  "archivo": "src/app/api/admin/resumen/route.ts",
+  "lineas": 83
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/admin/usuarios",
+  "metodos": [
+   "GET",
+   "PATCH"
+  ],
+  "guardas": [
+   "ADMIN"
+  ],
+  "flags": [],
+  "tablas": [
+   "usuarios"
+  ],
+  "externos": [
+   "WhatsApp"
+  ],
+  "archivo": "src/app/api/admin/usuarios/route.ts",
+  "lineas": 292
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/admin/usuarios/[uid]",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [
+   "ADMIN"
+  ],
+  "flags": [
+   "citasEnLinea"
+  ],
+  "tablas": [
+   "usuarios"
+  ],
+  "externos": [
+   "WhatsApp"
+  ],
+  "archivo": "src/app/api/admin/usuarios/[uid]/route.ts",
+  "lineas": 59
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/alertas/resumen",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [
+   "Correo"
+  ],
+  "archivo": "src/app/api/alertas/resumen/route.ts",
+  "lineas": 107
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/ayuda/buscar",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/api/ayuda/buscar/route.ts",
+  "lineas": 23
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/ayuda/categorias",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/api/ayuda/categorias/route.ts",
+  "lineas": 15
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/ayuda/feedback",
+  "metodos": [
+   "POST"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [
+   "knowledge_feedback"
+  ],
+  "externos": [],
+  "archivo": "src/app/api/ayuda/feedback/route.ts",
+  "lineas": 37
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/busquedas",
+  "metodos": [
+   "DELETE",
+   "GET",
+   "POST"
+  ],
+  "guardas": [
+   "CAPACIDAD"
+  ],
+  "flags": [],
+  "tablas": [
+   "busquedas_guardadas"
+  ],
+  "externos": [],
+  "archivo": "src/app/api/busquedas/route.ts",
+  "lineas": 98
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/catalogo",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [
+   "propiedades"
+  ],
+  "externos": [
+   "WhatsApp"
+  ],
+  "archivo": "src/app/api/catalogo/route.ts",
+  "lineas": 124
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/citas",
+  "metodos": [
+   "GET",
+   "POST"
+  ],
+  "guardas": [
+   "CAPACIDAD"
+  ],
+  "flags": [
+   "citasEnLinea"
+  ],
+  "tablas": [],
+  "externos": [
+   "WhatsApp"
+  ],
+  "archivo": "src/app/api/citas/route.ts",
+  "lineas": 125
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/citas/[id]",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [
+   "CAPACIDAD"
+  ],
+  "flags": [],
+  "tablas": [
+   "citas_eventos"
+  ],
+  "externos": [],
+  "archivo": "src/app/api/citas/[id]/route.ts",
+  "lineas": 57
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/citas/[id]/transicion",
+  "metodos": [
+   "POST"
+  ],
+  "guardas": [
+   "CAPACIDAD"
+  ],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/api/citas/[id]/transicion/route.ts",
+  "lineas": 68
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/citas/accion",
+  "metodos": [
+   "POST"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/api/citas/accion/route.ts",
+  "lineas": 31
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/citas/accion/ver",
+  "metodos": [
+   "POST"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/api/citas/accion/ver/route.ts",
+  "lineas": 25
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/citas/disponibilidad",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [
+   "CAPACIDAD"
+  ],
+  "flags": [],
+  "tablas": [
+   "citas"
+  ],
+  "externos": [],
+  "archivo": "src/app/api/citas/disponibilidad/route.ts",
+  "lineas": 55
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/contacto",
+  "metodos": [
+   "GET",
+   "POST"
+  ],
+  "guardas": [
+   "CAPACIDAD",
+   "SESION"
+  ],
+  "flags": [],
+  "tablas": [
+   "propiedades",
+   "solicitudes_contacto"
+  ],
+  "externos": [
+   "WhatsApp"
+  ],
+  "archivo": "src/app/api/contacto/route.ts",
+  "lineas": 208
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/cuenta/eliminar",
+  "metodos": [
+   "POST"
+  ],
+  "guardas": [
+   "CAPACIDAD",
+   "CLIENTE(portal)",
+   "SESION"
+  ],
+  "flags": [],
+  "tablas": [
+   "bajas_de_cuenta"
+  ],
+  "externos": [
+   "Firebase"
+  ],
+  "archivo": "src/app/api/cuenta/eliminar/route.ts",
+  "lineas": 176
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/cuenta/eliminar/estado",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [
+   "CAPACIDAD"
+  ],
+  "flags": [],
+  "tablas": [
+   "bajas_de_cuenta"
+  ],
+  "externos": [
+   "Firebase"
+  ],
+  "archivo": "src/app/api/cuenta/eliminar/estado/route.ts",
+  "lineas": 59
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/diagnostico/firebase",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [
+   "CAPACIDAD"
+  ],
+  "flags": [],
+  "tablas": [],
+  "externos": [
+   "Firebase",
+   "Google"
+  ],
+  "archivo": "src/app/api/diagnostico/firebase/route.ts",
+  "lineas": 77
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/eventos",
+  "metodos": [
+   "GET",
+   "POST"
+  ],
+  "guardas": [
+   "ADMIN",
+   "SESION"
+  ],
+  "flags": [],
+  "tablas": [
+   "eventos"
+  ],
+  "externos": [],
+  "archivo": "src/app/api/eventos/route.ts",
+  "lineas": 137
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/favoritos",
+  "metodos": [
+   "GET",
+   "POST"
+  ],
+  "guardas": [
+   "CAPACIDAD"
+  ],
+  "flags": [],
+  "tablas": [
+   "favoritos"
+  ],
+  "externos": [],
+  "archivo": "src/app/api/favoritos/route.ts",
+  "lineas": 72
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/leads",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [
+   "CAPACIDAD"
+  ],
+  "flags": [],
+  "tablas": [
+   "leads"
+  ],
+  "externos": [],
+  "archivo": "src/app/api/leads/route.ts",
+  "lineas": 46
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/medios/firma",
+  "metodos": [
+   "POST"
+  ],
+  "guardas": [
+   "CAPACIDAD"
+  ],
+  "flags": [],
+  "tablas": [
+   "propiedades"
+  ],
+  "externos": [
+   "Cloudinary"
+  ],
+  "archivo": "src/app/api/medios/firma/route.ts",
+  "lineas": 56
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/portal/acceso",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [
+   "CLIENTE(portal)"
+  ],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/api/portal/acceso/route.ts",
+  "lineas": 17
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/portal/alertas",
+  "metodos": [
+   "GET",
+   "POST"
+  ],
+  "guardas": [
+   "CLIENTE(portal)"
+  ],
+  "flags": [],
+  "tablas": [
+   "busquedas_guardadas",
+   "propiedades"
+  ],
+  "externos": [],
+  "archivo": "src/app/api/portal/alertas/route.ts",
+  "lineas": 68
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/portal/busquedas",
+  "metodos": [
+   "GET",
+   "PATCH"
+  ],
+  "guardas": [
+   "CLIENTE(portal)"
+  ],
+  "flags": [],
+  "tablas": [
+   "busquedas_guardadas",
+   "propiedades"
+  ],
+  "externos": [],
+  "archivo": "src/app/api/portal/busquedas/route.ts",
+  "lineas": 80
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/portal/consultas",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [
+   "CLIENTE(portal)"
+  ],
+  "flags": [],
+  "tablas": [
+   "propiedades",
+   "solicitudes_contacto"
+  ],
+  "externos": [
+   "WhatsApp"
+  ],
+  "archivo": "src/app/api/portal/consultas/route.ts",
+  "lineas": 42
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/portal/guardadas",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [
+   "CLIENTE(portal)"
+  ],
+  "flags": [],
+  "tablas": [
+   "favoritos",
+   "propiedades"
+  ],
+  "externos": [],
+  "archivo": "src/app/api/portal/guardadas/route.ts",
+  "lineas": 41
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/portal/me-interesan",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [
+   "CLIENTE(portal)"
+  ],
+  "flags": [],
+  "tablas": [
+   "citas",
+   "propiedades",
+   "solicitudes_contacto"
+  ],
+  "externos": [],
+  "archivo": "src/app/api/portal/me-interesan/route.ts",
+  "lineas": 55
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/portal/resumen",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [
+   "CLIENTE(portal)"
+  ],
+  "flags": [
+   "citasEnLinea"
+  ],
+  "tablas": [
+   "busquedas_guardadas",
+   "favoritos",
+   "propiedades",
+   "solicitudes_contacto",
+   "usuarios"
+  ],
+  "externos": [],
+  "archivo": "src/app/api/portal/resumen/route.ts",
+  "lineas": 55
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/portal/visitas",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [
+   "CLIENTE(portal)"
+  ],
+  "flags": [
+   "citasEnLinea"
+  ],
+  "tablas": [],
+  "externos": [
+   "Google"
+  ],
+  "archivo": "src/app/api/portal/visitas/route.ts",
+  "lineas": 46
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/propiedades/[id]/estado",
+  "metodos": [
+   "POST"
+  ],
+  "guardas": [
+   "CAPACIDAD"
+  ],
+  "flags": [],
+  "tablas": [
+   "propiedades",
+   "usuarios"
+  ],
+  "externos": [
+   "WhatsApp"
+  ],
+  "archivo": "src/app/api/propiedades/[id]/estado/route.ts",
+  "lineas": 175
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/publicador/propiedades",
+  "metodos": [
+   "GET",
+   "POST"
+  ],
+  "guardas": [
+   "CAPACIDAD"
+  ],
+  "flags": [],
+  "tablas": [
+   "propiedades"
+  ],
+  "externos": [
+   "Cloudinary"
+  ],
+  "archivo": "src/app/api/publicador/propiedades/route.ts",
+  "lineas": 147
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/registro-lead",
+  "metodos": [
+   "GET",
+   "POST"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [
+   "leads"
+  ],
+  "externos": [
+   "Telegram",
+   "WhatsApp"
+  ],
+  "archivo": "src/app/api/registro-lead/route.ts",
+  "lineas": 201
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/salud",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [
+   "usuarios"
+  ],
+  "externos": [
+   "Cloudinary",
+   "Telegram",
+   "Correo",
+   "WhatsApp"
+  ],
+  "archivo": "src/app/api/salud/route.ts",
+  "lineas": 111
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/telegram/webhook",
+  "metodos": [
+   "GET",
+   "POST"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [
+   "propiedades",
+   "usuarios"
+  ],
+  "externos": [
+   "Cloudinary",
+   "Telegram",
+   "WhatsApp"
+  ],
+  "archivo": "src/app/api/telegram/webhook/route.ts",
+  "lineas": 673
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/usuarios/me",
+  "metodos": [
+   "GET",
+   "PATCH"
+  ],
+  "guardas": [
+   "CAPACIDAD",
+   "SESION"
+  ],
+  "flags": [],
+  "tablas": [
+   "usuarios"
+  ],
+  "externos": [
+   "WhatsApp",
+   "Firebase"
+  ],
+  "archivo": "src/app/api/usuarios/me/route.ts",
+  "lineas": 357
+ },
+ {
+  "tipo": "API",
+  "ruta": "/api/whatsapp/webhook",
+  "metodos": [
+   "GET",
+   "POST"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [
+   "solicitudes_contacto"
+  ],
+  "externos": [
+   "WhatsApp"
+  ],
+  "archivo": "src/app/api/whatsapp/webhook/route.ts",
+  "lineas": 106
+ },
+ {
+  "tipo": "PAGINA",
+  "ruta": "/",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/page.tsx",
+  "lineas": 25,
+  "cliente": false
+ },
+ {
+  "tipo": "PAGINA",
+  "ruta": "/admin",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/admin/page.tsx",
+  "lineas": 190,
+  "cliente": true
+ },
+ {
+  "tipo": "PAGINA",
+  "ruta": "/admin/actividad",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/admin/actividad/page.tsx",
+  "lineas": 42,
+  "cliente": true
+ },
+ {
+  "tipo": "PAGINA",
+  "ruta": "/admin/configuracion",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/admin/configuracion/page.tsx",
+  "lineas": 180,
+  "cliente": true
+ },
+ {
+  "tipo": "PAGINA",
+  "ruta": "/admin/cuenta",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/admin/cuenta/page.tsx",
+  "lineas": 132,
+  "cliente": true
+ },
+ {
+  "tipo": "PAGINA",
+  "ruta": "/admin/metricas",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/admin/metricas/page.tsx",
+  "lineas": 20,
+  "cliente": true
+ },
+ {
+  "tipo": "PAGINA",
+  "ruta": "/admin/propiedades",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/admin/propiedades/page.tsx",
+  "lineas": 394,
+  "cliente": true
+ },
+ {
+  "tipo": "PAGINA",
+  "ruta": "/admin/propiedades/pendientes",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/admin/propiedades/pendientes/page.tsx",
+  "lineas": 178,
+  "cliente": true
+ },
+ {
+  "tipo": "PAGINA",
+  "ruta": "/admin/registros",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/admin/registros/page.tsx",
+  "lineas": 406,
+  "cliente": true
+ },
+ {
+  "tipo": "PAGINA",
+  "ruta": "/admin/seed",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/admin/seed/page.tsx",
+  "lineas": 126,
+  "cliente": true
+ },
+ {
+  "tipo": "PAGINA",
+  "ruta": "/admin/usuarios",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/admin/usuarios/page.tsx",
+  "lineas": 461,
+  "cliente": true
+ },
+ {
+  "tipo": "PAGINA",
+  "ruta": "/admin/usuarios/[uid]",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/admin/usuarios/[uid]/page.tsx",
+  "lineas": 140,
+  "cliente": true
+ },
+ {
+  "tipo": "PAGINA",
+  "ruta": "/ayuda",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/ayuda/page.tsx",
+  "lineas": 136,
+  "cliente": false
+ },
+ {
+  "tipo": "PAGINA",
+  "ruta": "/ayuda/[categoria]",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/ayuda/[categoria]/page.tsx",
+  "lineas": 98,
+  "cliente": false
+ },
+ {
+  "tipo": "PAGINA",
+  "ruta": "/ayuda/[categoria]/[articulo]",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/ayuda/[categoria]/[articulo]/page.tsx",
+  "lineas": 150,
+  "cliente": false
+ },
+ {
+  "tipo": "PAGINA",
+  "ruta": "/ayuda/buscar",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/ayuda/buscar/page.tsx",
+  "lineas": 106,
+  "cliente": false
+ },
+ {
+  "tipo": "PAGINA",
+  "ruta": "/citas/accion",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/citas/accion/page.tsx",
+  "lineas": 20,
+  "cliente": false
+ },
+ {
+  "tipo": "PAGINA",
+  "ruta": "/comparar",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/comparar/page.tsx",
+  "lineas": 21,
+  "cliente": false
+ },
+ {
+  "tipo": "PAGINA",
+  "ruta": "/contacto",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/contacto/page.tsx",
+  "lineas": 22,
+  "cliente": false
+ },
+ {
+  "tipo": "PAGINA",
+  "ruta": "/dashboard",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/dashboard/page.tsx",
+  "lineas": 1423,
+  "cliente": true
+ },
+ {
+  "tipo": "PAGINA",
+  "ruta": "/entrar",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/entrar/page.tsx",
+  "lineas": 29,
+  "cliente": false
+ },
+ {
+  "tipo": "PAGINA",
+  "ruta": "/mi-cuenta",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/mi-cuenta/page.tsx",
+  "lineas": 501,
+  "cliente": true
+ },
+ {
+  "tipo": "PAGINA",
+  "ruta": "/nosotros",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/nosotros/page.tsx",
+  "lineas": 21,
+  "cliente": false
+ },
+ {
+  "tipo": "PAGINA",
+  "ruta": "/portal",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/portal/page.tsx",
+  "lineas": 3,
+  "cliente": false
+ },
+ {
+  "tipo": "PAGINA",
+  "ruta": "/portal/alertas",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/portal/alertas/page.tsx",
+  "lineas": 1,
+  "cliente": false
+ },
+ {
+  "tipo": "PAGINA",
+  "ruta": "/portal/busquedas",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/portal/busquedas/page.tsx",
+  "lineas": 3,
+  "cliente": false
+ },
+ {
+  "tipo": "PAGINA",
+  "ruta": "/portal/configuracion",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/portal/configuracion/page.tsx",
+  "lineas": 1,
+  "cliente": false
+ },
+ {
+  "tipo": "PAGINA",
+  "ruta": "/portal/consultas",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/portal/consultas/page.tsx",
+  "lineas": 1,
+  "cliente": false
+ },
+ {
+  "tipo": "PAGINA",
+  "ruta": "/portal/mi-busqueda",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/portal/mi-busqueda/page.tsx",
+  "lineas": 1,
+  "cliente": false
+ },
+ {
+  "tipo": "PAGINA",
+  "ruta": "/portal/perfil",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/portal/perfil/page.tsx",
+  "lineas": 1,
+  "cliente": false
+ },
+ {
+  "tipo": "PAGINA",
+  "ruta": "/portal/propiedades",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/portal/propiedades/page.tsx",
+  "lineas": 22,
+  "cliente": false
+ },
+ {
+  "tipo": "PAGINA",
+  "ruta": "/portal/visitas",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/portal/visitas/page.tsx",
+  "lineas": 1,
+  "cliente": false
+ },
+ {
+  "tipo": "PAGINA",
+  "ruta": "/privacidad",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/privacidad/page.tsx",
+  "lineas": 135,
+  "cliente": false
+ },
+ {
+  "tipo": "PAGINA",
+  "ruta": "/propiedades",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/propiedades/page.tsx",
+  "lineas": 21,
+  "cliente": false
+ },
+ {
+  "tipo": "PAGINA",
+  "ruta": "/propiedades/[id]",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/propiedades/[id]/page.tsx",
+  "lineas": 179,
+  "cliente": false
+ },
+ {
+  "tipo": "PAGINA",
+  "ruta": "/publicador",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/publicador/page.tsx",
+  "lineas": 264,
+  "cliente": true
+ },
+ {
+  "tipo": "PAGINA",
+  "ruta": "/publicador/citas",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/publicador/citas/page.tsx",
+  "lineas": 266,
+  "cliente": true
+ },
+ {
+  "tipo": "PAGINA",
+  "ruta": "/publicador/propiedades/[id]/editar",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/publicador/propiedades/[id]/editar/page.tsx",
+  "lineas": 1106,
+  "cliente": true
+ },
+ {
+  "tipo": "PAGINA",
+  "ruta": "/terminos",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/terminos/page.tsx",
+  "lineas": 95,
+  "cliente": false
+ },
+ {
+  "tipo": "PAGINA",
+  "ruta": "/valuador",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/valuador/page.tsx",
+  "lineas": 21,
+  "cliente": false
+ },
+ {
+  "tipo": "PAGINA",
+  "ruta": "/vista-previa/admin/usuarios",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/vista-previa/admin/usuarios/page.tsx",
+  "lineas": 18,
+  "cliente": false
+ },
+ {
+  "tipo": "PAGINA",
+  "ruta": "/vista-previa/admin/usuarios/[uid]",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/vista-previa/admin/usuarios/[uid]/page.tsx",
+  "lineas": 18,
+  "cliente": false
+ },
+ {
+  "tipo": "PAGINA",
+  "ruta": "/vista-previa/portal",
+  "metodos": [
+   "GET"
+  ],
+  "guardas": [],
+  "flags": [],
+  "tablas": [],
+  "externos": [],
+  "archivo": "src/app/vista-previa/portal/page.tsx",
+  "lineas": 105,
+  "cliente": false
+ }
+]

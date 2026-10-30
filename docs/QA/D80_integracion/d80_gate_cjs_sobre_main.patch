@@ -1,0 +1,21 @@
+--- a/scripts/qa/gate.cjs
++++ b/scripts/qa/gate.cjs
+@@ -56,7 +56,7 @@
+   for (const k of ['PATH', 'Path', 'SystemRoot', 'SYSTEMROOT', 'TEMP', 'TMP', 'HOME', 'USERPROFILE', 'APPDATA', 'LOCALAPPDATA', 'ComSpec', 'PATHEXT', 'ProgramFiles', 'ProgramData', 'NUMBER_OF_PROCESSORS']) if (process.env[k]) sistema[k] = process.env[k]
+   return { ...sistema, ...VACIAS, ...extra }
+ }
+-const entornoApp = () => entorno({ ...PUBLICO, NEXT_PUBLIC_SUPABASE_URL: `http://localhost:${REPLICA}`, SUPABASE_SERVICE_ROLE_KEY: 'dummy-local-key', QA_SERVIDOR_EXTERNO: '1', QA_PUERTO: PUERTO, QA_TIMEOUT_MS: '60000', QA_REINTENTOS: '2' })
++const entornoApp = () => entorno({ ...PUBLICO, NEXT_PUBLIC_SUPABASE_URL: `http://localhost:${REPLICA}`, SUPABASE_SERVICE_ROLE_KEY: 'dummy-local-key', CORREO_MARKETING: '1', CORREO_SECRETO: 'secreto-falso-solo-para-pruebas-locales-0123456789', QA_SERVIDOR_EXTERNO: '1', QA_PUERTO: PUERTO, QA_TIMEOUT_MS: '60000', QA_REINTENTOS: '2' })
+ 
+ let replica = null, servidor = null, n = 0
+ const resultados = []
+@@ -109,7 +109,8 @@
+   'tests/supabase-timeouts.test.ts', 'tests/visibilidad-publica.test.ts', 'tests/e37-accesibilidad.test.ts', 'tests/e38-observabilidad.test.ts', 'tests/qa021-sql.test.ts',
+   'tests/baselines-visuales.test.ts', 'tests/entrar-medida-inicial.test.ts',
+   'tests/favoritos-guardados.test.ts', 'tests/favoritos-guardias.test.ts',
+-  'tests/negocio.test.ts', 'tests/correo-institucional.test.ts']  // `medios-optimizar` NO va: afirma comportamientos de V-1.1.95 (visor de fotos) que producción no tiene a propósito; sigue en la suite completa
++  'tests/negocio.test.ts', 'tests/correo-institucional.test.ts',
++  'tests/correo-seguridad.test.ts', 'tests/correo-plantillas.test.ts', 'tests/correo-enviar.test.ts', 'tests/correo-integracion.test.ts', 'tests/correo-guardias.test.ts', 'tests/migracion-36-correo.test.ts']  // `medios-optimizar` NO va: afirma comportamientos de V-1.1.95 (visor de fotos) que producción no tiene a propósito; sigue en la suite completa
+ const SEGURIDAD = ['tests/e35-fronteras.test.ts', 'tests/e39-guardias.test.ts', 'tests/e39-webhooks.test.ts', 'tests/guardia-produccion.test.ts', 'tests/entorno-staging.test.ts',
+   'tests/diagnostico-sonda.test.ts', 'tests/cliente-seguridad.test.ts', 'tests/publicador-seguridad.test.ts']
+ const existentes = (l) => l.filter((f) => fs.existsSync(path.join(RAIZ, f)))

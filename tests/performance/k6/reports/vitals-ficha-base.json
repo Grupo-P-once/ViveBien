@@ -1,0 +1,58 @@
+[
+ {
+  "ancho": 390,
+  "ruta": "/propiedades/casa-en-venta-canada-del-regugio-norte-540-m2-leon-n8tl",
+  "estado": 200,
+  "ttfb": 52.60000002384186,
+  "fcp": 824,
+  "lcp": 7948,
+  "cls": 0.00019323965257993036,
+  "carga_total": 9651,
+  "peticiones": 43,
+  "kb": 1743,
+  "errores_js": 0,
+  "fallos_red": 1
+ },
+ {
+  "ancho": 768,
+  "ruta": "/propiedades/casa-en-venta-canada-del-regugio-norte-540-m2-leon-n8tl",
+  "estado": 200,
+  "ttfb": 45.10000002384186,
+  "fcp": 824,
+  "lcp": 8904,
+  "cls": 0.00022509901258680557,
+  "carga_total": 12087,
+  "peticiones": 66,
+  "kb": 2228,
+  "errores_js": 0,
+  "fallos_red": 1
+ },
+ {
+  "ancho": 1024,
+  "ruta": "/propiedades/casa-en-venta-canada-del-regugio-norte-540-m2-leon-n8tl",
+  "estado": 200,
+  "ttfb": 43.89999997615814,
+  "fcp": 440,
+  "lcp": 1752,
+  "cls": 0.004930400186114841,
+  "carga_total": 3778,
+  "peticiones": 78,
+  "kb": 2271,
+  "errores_js": 0,
+  "fallos_red": 1
+ },
+ {
+  "ancho": 1440,
+  "ruta": "/propiedades/casa-en-venta-canada-del-regugio-norte-540-m2-leon-n8tl",
+  "estado": 200,
+  "ttfb": 35.60000002384186,
+  "fcp": 476,
+  "lcp": 1700,
+  "cls": 0.0037854370284636485,
+  "carga_total": 3829,
+  "peticiones": 78,
+  "kb": 2286,
+  "errores_js": 0,
+  "fallos_red": 2
+ }
+]

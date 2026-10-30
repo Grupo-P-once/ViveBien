@@ -1,0 +1,180 @@
+/* Chat del asesor de contabilidad (26-oct-2026): el estilo de Mensajes de Apple con los colores de VIVE BIEN.
+   Todo cuelga de `.imsg` (más especificidad que el reset global sin capa, que si no podría dejar relleno y márgenes en cero).
+   Colores: burbuja propia = rojo de marca #A30D12 con texto blanco (contraste 8:1); burbuja del asesor = gris #E9E9EB con texto #1A1A1A (contraste 14:1);
+   texto secundario #5A626B sobre blanco (contraste 6,2:1). La «cola» de cada grupo se dibuja con dos pseudo-elementos: el color de la burbuja y una máscara del color del fondo. */
+
+.imsg {
+  --imsg-propia: #a30d12;
+  --imsg-ajena: #e9e9eb;
+  --imsg-fondo: #ffffff;
+  --imsg-texto: #1a1a1a;
+  --imsg-gris: #5a626b;
+  --imsg-linea: #e5e5ea;
+  display: flex;
+  flex-direction: column;
+  height: min(72vh, 700px);
+  min-height: 500px;
+  background: var(--imsg-fondo);
+  border: 1px solid var(--imsg-linea);
+  border-radius: 22px;
+  overflow: hidden;
+  color: var(--imsg-texto);
+}
+
+/* ── Cabecera, como el contacto en Mensajes ─────────────────────────────────── */
+.imsg .imsg-cabecera {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(249, 249, 249, 0.92);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+  backdrop-filter: saturate(180%) blur(14px);
+  border-bottom: 1px solid var(--imsg-linea);
+}
+.imsg .imsg-avatar {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--imsg-propia);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.imsg .imsg-quien { flex: 1 1 auto; min-width: 0; }
+.imsg .imsg-nombre { font-size: 15px; font-weight: 600; line-height: 1.2; }
+.imsg .imsg-sub { font-size: 12px; color: var(--imsg-gris); line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.imsg .imsg-nueva {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 0;
+  background: transparent;
+  color: var(--imsg-propia);
+  cursor: pointer;
+}
+.imsg .imsg-nueva:hover { background: #f2f2f7; }
+.imsg .imsg-nueva:focus-visible { outline: 2px solid #1b365d; outline-offset: 2px; }
+
+/* ── El hilo ─────────────────────────────────────────────────────────────────── */
+.imsg .imsg-hilo {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 20px 8px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.imsg .imsg-hilo:focus-visible { outline: 2px solid #1b365d; outline-offset: -2px; }
+.imsg .imsg-sep { align-self: center; margin: 10px 0 10px; font-size: 11px; line-height: 1.2; color: var(--imsg-gris); text-align: center; }
+.imsg .imsg-sep b { font-weight: 600; }
+.imsg .imsg-nota { align-self: center; max-width: 30rem; margin: 2px 0 12px; font-size: 11px; line-height: 1.4; color: var(--imsg-gris); text-align: center; }
+.imsg .imsg-fila { display: flex; margin-top: 2px; }
+.imsg .imsg-fila[data-rol='persona'] { justify-content: flex-end; }
+.imsg .imsg-fila[data-fin='si'] { margin-bottom: 10px; }
+
+.imsg .imsg-burbuja {
+  position: relative;
+  max-width: min(80%, 36rem);
+  padding: 9px 15px;
+  border-radius: 19px;
+  font-size: 15px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  animation: imsg-entra 0.2s ease-out both;
+}
+.imsg .imsg-burbuja[data-rol='persona'] { background: var(--imsg-propia); color: #fff; transform-origin: bottom right; }
+.imsg .imsg-burbuja[data-rol='asesor'] { background: var(--imsg-ajena); color: var(--imsg-texto); transform-origin: bottom left; }
+.imsg .imsg-burbuja[data-tipo='error'] { background: #fff4d6; color: #5c3b00; border: 1px solid #f0d58a; }
+
+/* La cola: solo la última burbuja de cada grupo. */
+.imsg .imsg-burbuja[data-cola='si']::before,
+.imsg .imsg-burbuja[data-cola='si']::after { content: ''; position: absolute; bottom: 0; height: 19px; }
+.imsg .imsg-burbuja[data-rol='persona'][data-cola='si']::before { right: -8px; width: 20px; background: var(--imsg-propia); border-bottom-left-radius: 16px 14px; }
+.imsg .imsg-burbuja[data-rol='persona'][data-cola='si']::after { right: -26px; width: 26px; background: var(--imsg-fondo); border-bottom-left-radius: 10px; }
+.imsg .imsg-burbuja[data-rol='asesor'][data-cola='si']::before { left: -8px; width: 20px; background: var(--imsg-ajena); border-bottom-right-radius: 16px 14px; }
+.imsg .imsg-burbuja[data-rol='asesor'][data-cola='si']::after { left: -26px; width: 26px; background: var(--imsg-fondo); border-bottom-right-radius: 10px; }
+.imsg .imsg-burbuja[data-tipo='error'][data-cola='si']::before,
+.imsg .imsg-burbuja[data-tipo='error'][data-cola='si']::after { display: none; }
+
+/* El texto de una respuesta: títulos, números y viñetas, sin Markdown. */
+.imsg .imsg-p { margin: 0; }
+.imsg .imsg-p + .imsg-p, .imsg .imsg-p + .imsg-item, .imsg .imsg-item + .imsg-p, .imsg .imsg-item + .imsg-item { margin-top: 5px; }
+.imsg .imsg-titulo { margin: 8px 0 3px; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #3b3b40; }
+.imsg .imsg-titulo:first-child { margin-top: 0; }
+.imsg .imsg-item { display: flex; gap: 8px; }
+.imsg .imsg-marca { flex: 0 0 auto; min-width: 1.1em; font-weight: 600; color: #3b3b40; }
+.imsg .imsg-reintentar { margin-top: 8px; border: 0; background: transparent; padding: 0; font: inherit; font-size: 13px; font-weight: 600; text-decoration: underline; color: inherit; cursor: pointer; }
+
+/* Entregado / Leído */
+.imsg .imsg-estado { align-self: flex-end; margin: 0 4px 8px 0; font-size: 11px; line-height: 1.2; color: var(--imsg-gris); }
+.imsg .imsg-estado b { font-weight: 600; }
+
+/* «Escribiendo…» */
+.imsg .imsg-escribiendo { display: inline-flex; gap: 5px; align-items: center; padding: 13px 16px; }
+.imsg .imsg-escribiendo i { width: 8px; height: 8px; border-radius: 50%; background: #8e8e93; animation: imsg-punto 1.2s infinite ease-in-out; }
+.imsg .imsg-escribiendo i:nth-child(2) { animation-delay: 0.15s; }
+.imsg .imsg-escribiendo i:nth-child(3) { animation-delay: 0.3s; }
+
+/* ── Sugerencias y barra de entrada ──────────────────────────────────────────── */
+.imsg .imsg-chips { display: flex; gap: 8px; padding: 8px 16px 4px; overflow-x: auto; scrollbar-width: none; scroll-snap-type: x proximity; }
+.imsg .imsg-chips::-webkit-scrollbar { display: none; }
+.imsg .imsg-chip {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  padding: 7px 14px;
+  border: 1px solid #d1d1d6;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--imsg-texto);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.imsg .imsg-chip:hover:not(:disabled) { background: #f2f2f7; }
+.imsg .imsg-chip:focus-visible { outline: 2px solid #1b365d; outline-offset: 2px; }
+.imsg .imsg-chip:disabled { opacity: 0.55; cursor: default; }
+
+.imsg .imsg-barra { display: flex; align-items: flex-end; gap: 8px; padding: 8px 16px 16px; background: var(--imsg-fondo); }
+.imsg .imsg-campo { flex: 1 1 auto; display: flex; align-items: flex-end; min-width: 0; padding: 7px 7px 7px 16px; border: 1px solid #c7c7cc; border-radius: 22px; background: #fff; }
+.imsg .imsg-campo:focus-within { border-color: #1b365d; box-shadow: 0 0 0 3px rgba(27, 54, 93, 0.14); }
+.imsg .imsg-texto {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-height: 112px;
+  padding: 4px 0;
+  border: 0;
+  outline: 0;
+  resize: none;
+  background: transparent;
+  color: var(--imsg-texto);
+  font: inherit;
+  font-size: 15px;
+  line-height: 1.35;
+}
+.imsg .imsg-texto::placeholder { color: #6b7280; }
+.imsg .imsg-enviar { flex: 0 0 auto; display: grid; place-items: center; width: 30px; height: 30px; margin-left: 8px; border: 0; border-radius: 50%; background: var(--imsg-propia); color: #fff; cursor: pointer; }
+.imsg .imsg-enviar:disabled { background: #c7c7cc; cursor: default; }
+.imsg .imsg-enviar:focus-visible { outline: 2px solid #1b365d; outline-offset: 2px; }
+
+@keyframes imsg-entra { from { opacity: 0; transform: scale(0.88); } to { opacity: 1; transform: scale(1); } }
+@keyframes imsg-punto { 0%, 60%, 100% { opacity: 0.35; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-3px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .imsg .imsg-burbuja { animation: none; }
+  .imsg .imsg-escribiendo i { animation: none; opacity: 0.7; }
+}
+@media (max-width: 520px) {
+  .imsg { height: min(78vh, 720px); border-radius: 18px; }
+  .imsg .imsg-hilo { padding: 14px 16px 6px; }
+  .imsg .imsg-burbuja { max-width: 86%; }
+}

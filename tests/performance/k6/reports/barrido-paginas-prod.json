@@ -1,0 +1,346 @@
+[
+ {
+  "ruta": "/",
+  "probada": "/",
+  "estado": 200,
+  "ms": 617,
+  "bytes": 88259,
+  "location": null
+ },
+ {
+  "ruta": "/admin",
+  "probada": "/admin",
+  "estado": 200,
+  "ms": 313,
+  "bytes": 21732,
+  "location": null
+ },
+ {
+  "ruta": "/admin/actividad",
+  "probada": "/admin/actividad",
+  "estado": 200,
+  "ms": 340,
+  "bytes": 21459,
+  "location": null
+ },
+ {
+  "ruta": "/admin/configuracion",
+  "probada": "/admin/configuracion",
+  "estado": 200,
+  "ms": 407,
+  "bytes": 21467,
+  "location": null
+ },
+ {
+  "ruta": "/admin/cuenta",
+  "probada": "/admin/cuenta",
+  "estado": 200,
+  "ms": 345,
+  "bytes": 21453,
+  "location": null
+ },
+ {
+  "ruta": "/admin/metricas",
+  "probada": "/admin/metricas",
+  "estado": 200,
+  "ms": 347,
+  "bytes": 21989,
+  "location": null
+ },
+ {
+  "ruta": "/admin/propiedades",
+  "probada": "/admin/propiedades",
+  "estado": 200,
+  "ms": 373,
+  "bytes": 21729,
+  "location": null
+ },
+ {
+  "ruta": "/admin/propiedades/pendientes",
+  "probada": "/admin/propiedades/pendientes",
+  "estado": 200,
+  "ms": 316,
+  "bytes": 22245,
+  "location": null
+ },
+ {
+  "ruta": "/admin/registros",
+  "probada": "/admin/registros",
+  "estado": 200,
+  "ms": 328,
+  "bytes": 21991,
+  "location": null
+ },
+ {
+  "ruta": "/admin/seed",
+  "probada": "/admin/seed",
+  "estado": 200,
+  "ms": 319,
+  "bytes": 21449,
+  "location": null
+ },
+ {
+  "ruta": "/admin/usuarios",
+  "probada": "/admin/usuarios",
+  "estado": 200,
+  "ms": 351,
+  "bytes": 21989,
+  "location": null
+ },
+ {
+  "ruta": "/admin/usuarios/[uid]",
+  "probada": "/admin/usuarios/qa-sin-uid",
+  "estado": 200,
+  "ms": 434,
+  "bytes": 22197,
+  "location": null
+ },
+ {
+  "ruta": "/ayuda",
+  "probada": "/ayuda",
+  "estado": 200,
+  "ms": 487,
+  "bytes": 78928,
+  "location": null
+ },
+ {
+  "ruta": "/ayuda/[categoria]",
+  "probada": "/ayuda/buscar-propiedades",
+  "estado": 200,
+  "ms": 1152,
+  "bytes": 125219,
+  "location": null
+ },
+ {
+  "ruta": "/ayuda/[categoria]/[articulo]",
+  "probada": "/ayuda/buscar-propiedades/como-buscar-una-propiedad",
+  "estado": 200,
+  "ms": 1221,
+  "bytes": 122492,
+  "location": null
+ },
+ {
+  "ruta": "/ayuda/buscar",
+  "probada": "/ayuda/buscar",
+  "estado": 200,
+  "ms": 1042,
+  "bytes": 111615,
+  "location": null
+ },
+ {
+  "ruta": "/citas/accion",
+  "probada": "/citas/accion",
+  "estado": 200,
+  "ms": 344,
+  "bytes": 20360,
+  "location": null
+ },
+ {
+  "ruta": "/comparar",
+  "probada": "/comparar",
+  "estado": 200,
+  "ms": 374,
+  "bytes": 19104,
+  "location": null
+ },
+ {
+  "ruta": "/contacto",
+  "probada": "/contacto",
+  "estado": 200,
+  "ms": 514,
+  "bytes": 39400,
+  "location": null
+ },
+ {
+  "ruta": "/dashboard",
+  "probada": "/dashboard",
+  "estado": 200,
+  "ms": 497,
+  "bytes": 19884,
+  "location": null
+ },
+ {
+  "ruta": "/entrar",
+  "probada": "/entrar",
+  "estado": 200,
+  "ms": 488,
+  "bytes": 27749,
+  "location": null
+ },
+ {
+  "ruta": "/mi-cuenta",
+  "probada": "/mi-cuenta",
+  "estado": 200,
+  "ms": 359,
+  "bytes": 18746,
+  "location": null
+ },
+ {
+  "ruta": "/nosotros",
+  "probada": "/nosotros",
+  "estado": 200,
+  "ms": 511,
+  "bytes": 59523,
+  "location": null
+ },
+ {
+  "ruta": "/portal",
+  "probada": "/portal",
+  "estado": 200,
+  "ms": 479,
+  "bytes": 21610,
+  "location": null
+ },
+ {
+  "ruta": "/portal/alertas",
+  "probada": "/portal/alertas",
+  "estado": 200,
+  "ms": 460,
+  "bytes": 22131,
+  "location": null
+ },
+ {
+  "ruta": "/portal/busquedas",
+  "probada": "/portal/busquedas",
+  "estado": 200,
+  "ms": 481,
+  "bytes": 22135,
+  "location": null
+ },
+ {
+  "ruta": "/portal/configuracion",
+  "probada": "/portal/configuracion",
+  "estado": 200,
+  "ms": 548,
+  "bytes": 22143,
+  "location": null
+ },
+ {
+  "ruta": "/portal/consultas",
+  "probada": "/portal/consultas",
+  "estado": 200,
+  "ms": 502,
+  "bytes": 22134,
+  "location": null
+ },
+ {
+  "ruta": "/portal/mi-busqueda",
+  "probada": "/portal/mi-busqueda",
+  "estado": 200,
+  "ms": 513,
+  "bytes": 22139,
+  "location": null
+ },
+ {
+  "ruta": "/portal/perfil",
+  "probada": "/portal/perfil",
+  "estado": 200,
+  "ms": 477,
+  "bytes": 22129,
+  "location": null
+ },
+ {
+  "ruta": "/portal/propiedades",
+  "probada": "/portal/propiedades",
+  "estado": 200,
+  "ms": 480,
+  "bytes": 21966,
+  "location": null
+ },
+ {
+  "ruta": "/portal/visitas",
+  "probada": "/portal/visitas",
+  "estado": 200,
+  "ms": 539,
+  "bytes": 22131,
+  "location": null
+ },
+ {
+  "ruta": "/privacidad",
+  "probada": "/privacidad",
+  "estado": 200,
+  "ms": 593,
+  "bytes": 47819,
+  "location": null
+ },
+ {
+  "ruta": "/propiedades",
+  "probada": "/propiedades",
+  "estado": 200,
+  "ms": 780,
+  "bytes": 20794,
+  "location": null
+ },
+ {
+  "ruta": "/propiedades/[id]",
+  "probada": "/propiedades/tzula-castillos",
+  "estado": 200,
+  "ms": 1291,
+  "bytes": 33293,
+  "location": null
+ },
+ {
+  "ruta": "/publicador",
+  "probada": "/publicador",
+  "estado": 200,
+  "ms": 713,
+  "bytes": 18664,
+  "location": null
+ },
+ {
+  "ruta": "/publicador/citas",
+  "probada": "/publicador/citas",
+  "estado": 200,
+  "ms": 526,
+  "bytes": 19195,
+  "location": null
+ },
+ {
+  "ruta": "/publicador/propiedades/[id]/editar",
+  "probada": "/publicador/propiedades/tzula-castillos/editar",
+  "estado": 200,
+  "ms": 922,
+  "bytes": 20706,
+  "location": null
+ },
+ {
+  "ruta": "/terminos",
+  "probada": "/terminos",
+  "estado": 200,
+  "ms": 824,
+  "bytes": 43924,
+  "location": null
+ },
+ {
+  "ruta": "/valuador",
+  "probada": "/valuador",
+  "estado": 200,
+  "ms": 664,
+  "bytes": 35396,
+  "location": null
+ },
+ {
+  "ruta": "/vista-previa/admin/usuarios",
+  "probada": "/vista-previa/admin/usuarios",
+  "estado": 404,
+  "ms": 507,
+  "bytes": 32760,
+  "location": null
+ },
+ {
+  "ruta": "/vista-previa/admin/usuarios/[uid]",
+  "probada": "/vista-previa/admin/usuarios/qa-sin-uid",
+  "estado": 404,
+  "ms": 484,
+  "bytes": 32760,
+  "location": null
+ },
+ {
+  "ruta": "/vista-previa/portal",
+  "probada": "/vista-previa/portal",
+  "estado": 404,
+  "ms": 462,
+  "bytes": 16056,
+  "location": null
+ }
+]

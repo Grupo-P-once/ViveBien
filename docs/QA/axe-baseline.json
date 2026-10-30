@@ -1,0 +1,20 @@
+{
+ "nota": "Generado por scripts/qa/axe-comparar.cjs --escribir",
+ "mediciones": 24,
+ "totales": {
+  "critical": 8,
+  "serious": 56,
+  "moderate": 76,
+  "minor": 4
+ },
+ "criticas": {
+  "v390 catalogo color-contrast": 14,
+  "v390 catalogo select-name": 2,
+  "v768 catalogo color-contrast": 14,
+  "v768 catalogo select-name": 2,
+  "v1024 catalogo color-contrast": 14,
+  "v1024 catalogo select-name": 2,
+  "v1440 catalogo color-contrast": 14,
+  "v1440 catalogo select-name": 2
+ }
+}

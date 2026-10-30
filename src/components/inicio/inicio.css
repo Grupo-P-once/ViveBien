@@ -1,0 +1,433 @@
+/* ══ Portada (rediseño de la página de inicio) ══════════════════════════════════════════════════════════════
+   Maquetado en CSS plano y FUERA de `@layer`, por dos reglas de la casa:
+   · un estilo en línea le gana a cualquier media query (precedente: `PropositoValores`, que desbordó a 660 px en una pantalla de 360);
+   · el reset sin capa de `globals.css` puede dejar `px-*`/`mx-auto` en cero, así que el contenedor se hace con `width: min()`, que no
+     deja ningún relleno que el reset pueda anular (`references/contenedores.md`).
+   Todo cuelga de clases `ini-*` para no tocar nada de las demás pantallas. Los colores son los tokens del proyecto. */
+
+/* NOTA: `--font-montserrat` solo existe dentro de `.panel-vb` (paneles); en la portada pública NO está definida y un `var()` sin respaldo dentro de la
+   abreviatura `font:` invalida TODA la declaración (el titular salía del tamaño de un párrafo). Aquí se escribe la familia directamente. */
+
+/* ── Hero ─────────────────────────────────────────────────────────────────────────────────────────────── */
+/* Tinte de fondo: negro con un rojo TINTO muy tenue (el `--rojo` de la casa, #8B1A1A = 139,26,26), solo como brillo difuso en una esquina.
+   Se ajusta aquí: es el único valor. */
+.ini-hero, .ini-clientes, .ini-cta { --ini-tinte: 139, 26, 26; }
+.ini-hero { position: relative; background: var(--negro); color: #fff; overflow: hidden; isolation: isolate; }
+.ini-hero::before { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: radial-gradient(75% 65% at 6% 100%, rgba(var(--ini-tinte), .30) 0%, rgba(var(--ini-tinte), .12) 42%, transparent 74%),
+              radial-gradient(45% 40% at 98% 0%, rgba(200, 16, 46, .07) 0%, transparent 70%); }
+.ini-cta { padding: 4.5rem 1.25rem; text-align: center; color: #fff;
+  background: radial-gradient(70% 95% at 50% 125%, rgba(var(--ini-tinte), .30) 0%, transparent 72%), var(--negro); }
+.ini-hero-media { position: absolute; z-index: 0; top: 0; left: 0; right: 0; height: calc(clamp(300px, 100vw, 500px) + 2.5rem); overflow: hidden; background: var(--negro); }
+.ini-hero-media picture, .ini-hero-media img, .ini-hero-media video { position: absolute; inset: 0; width: 100%; height: 100%; }
+.ini-hero-media img, .ini-hero-media video { object-fit: cover; object-position: 50% 60%; display: block; }
+.ini-hero-media video { z-index: 1; }
+.ini-hero-velo { position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  background: linear-gradient(180deg, rgba(11,11,12,.42) 0%, rgba(11,11,12,.16) 20%, rgba(11,11,12,.74) 48%, rgba(11,11,12,.92) 68%, var(--negro) 100%); }
+
+.ini-hero-texto { text-shadow: 0 1px 14px rgba(0,0,0,.45); }
+.ini-sep { display: none; }
+.ini-hero-contenido { position: relative; z-index: 3; width: min(100% - 2.5rem, 1240px); margin-inline: auto;
+  padding-top: clamp(190px, 50vw, 300px); padding-bottom: 2.4rem; }
+.ini-hero-h1 { font-family: "Playfair Display", Georgia, serif; font-size: clamp(2.6rem, 11vw, 3.5rem); line-height: 1.02; letter-spacing: -1px; margin: 0 0 1rem; }
+.ini-hero-cifras { display: none; list-style: none; margin: 0; padding: 0; }
+@media (min-width: 1240px) {
+  .ini-hero-cifras { display: flex; gap: .9rem; position: absolute; right: 0; bottom: clamp(2rem, 5vh, 3.5rem); z-index: 3; }
+}
+
+.ini-tabs { display: inline-flex; border-radius: 10px 10px 0 0; overflow: hidden; border: 1px solid rgba(255,255,255,.2); border-bottom: none; }
+.ini-tab { min-height: 44px; padding: .55rem 1.5rem; border: none; cursor: pointer; font: 700 .78rem 'Montserrat', system-ui, sans-serif; letter-spacing: 2px;
+  text-transform: uppercase; background: rgba(255,255,255,.12); color: rgba(255,255,255,.88); transition: background .2s; }
+.ini-tab[data-activa="true"] { background: var(--rojo-marca); color: #fff; }
+.ini-tab:focus-visible, .ini-buscar:focus-visible, .ini-enlace-hero:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+.ini-buscador { display: flex; flex-wrap: wrap; gap: .6rem; padding: 1rem; background: rgba(11,11,12,.66); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
+  border: 1px solid rgba(255,255,255,.18); border-radius: 0 12px 12px 12px; }
+.ini-buscador > select, .ini-buscador > input { flex: 1 1 100%; min-width: 0; box-sizing: border-box; }
+.ini-buscador input::placeholder { color: rgba(255,255,255,.78) !important; }
+.ini-buscar { flex: 1 1 100%; min-height: 48px; padding: .7rem 1.6rem; background: var(--rojo-marca); color: #fff; border: none; border-radius: 8px; cursor: pointer;
+  font: 800 .8rem 'Montserrat', system-ui, sans-serif; letter-spacing: 2px; text-transform: uppercase; display: inline-flex; align-items: center; justify-content: center; gap: .5rem; white-space: nowrap; }
+.ini-enlace-hero { display: inline-flex; align-items: center; gap: .4rem; min-height: 44px; font: 700 .78rem 'Montserrat', system-ui, sans-serif; letter-spacing: 1.5px; text-transform: uppercase; text-decoration: none; }
+/* «Ver catálogo completo» en el rojo de la marca (#C8102E): sobre el fondo oscuro da ≈ 3,3:1, que solo cumple AA como texto GRANDE (≥ 18,66 px en negrita). */
+.ini-enlace-catalogo { font-size: 1.2rem; font-weight: 800; letter-spacing: 1px; }
+html body a.ini-enlace-catalogo { color: var(--rojo-marca); }
+
+@media (min-width: 640px) {
+  .ini-sep { display: inline; }
+  .ini-buscador > select { flex: 1 1 180px; }
+  .ini-buscador > input { flex: 1 1 200px; }
+  .ini-buscar { flex: 0 0 auto; }
+}
+
+@media (min-width: 900px) {
+  .ini-hero { min-height: clamp(640px, 92vh, 880px); display: flex; align-items: center; }
+  /* La escena a la derecha, a su resolución real (≤ ~1,24×) y fundida con el fondo por el borde izquierdo. */
+  .ini-hero-media { left: auto; right: 0; bottom: 0; height: auto; width: min(62%, 900px);
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 32%); mask-image: linear-gradient(90deg, transparent 0, #000 32%); }
+  .ini-hero-media img, .ini-hero-media video { object-position: 40% 55%; }
+  .ini-hero-velo { background: linear-gradient(90deg, rgba(11,11,12,.88) 0%, rgba(11,11,12,.76) 42%, rgba(11,11,12,.22) 72%, rgba(11,11,12,0) 100%), linear-gradient(180deg, rgba(11,11,12,.25) 0%, rgba(11,11,12,0) 30%, rgba(11,11,12,.5) 100%); }
+  .ini-hero-contenido { width: min(100% - 5rem, 1240px); padding: clamp(7.5rem, 14vh, 9.5rem) 0 clamp(4.5rem, 8vh, 6rem);
+    display: grid; grid-template-columns: minmax(0, 640px) minmax(0, 1fr); gap: 2rem; align-items: center; }
+  .ini-hero-h1 { font-size: clamp(3.4rem, 5.6vw, 6rem); margin-bottom: 1.2rem; }
+  .ini-hero-contenido { grid-template-columns: minmax(0, 640px); }
+  .ini-hero-cifras li { display: grid; gap: .1rem; padding: .85rem 1.1rem; min-width: 138px; background: rgba(11,11,12,.6); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,.18); border-radius: 12px; }
+  .ini-hero-cifras strong { font: 900 1.6rem/1 'Montserrat', system-ui, sans-serif; }
+  .ini-hero-cifras span { font: 700 .66rem 'Montserrat', system-ui, sans-serif; letter-spacing: 1.4px; text-transform: uppercase; color: rgba(255,255,255,.9); }
+  .ini-hero-cifras small { font-size: .68rem; color: rgba(255,255,255,.78); }
+}
+
+/* ── Mosaico: seis categorías (se agregó Oficinas) ─────────────────────────────────────────────────────── */
+.mosaico-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); background: var(--negro); }
+@media (min-width: 700px) { .mosaico-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1200px) { .mosaico-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .mosaico-grid .mosaico-celda { min-height: 210px !important; padding: 1.6rem .75rem !important; } }
+
+/* ── Secciones institucionales (¿Qué es Vive Bien? y PROIN) ───────────────────────────────────────────── */
+.ini-institucional { position: relative; overflow: hidden; background: linear-gradient(180deg, #fff 0%, var(--hueso) 100%); }
+.ini-proin { background: linear-gradient(180deg, var(--hueso) 0%, #fff 100%); }
+.ini-inst-grid { width: min(100% - 2.5rem, 1240px); margin-inline: auto; display: grid; grid-template-columns: minmax(0, 1fr); gap: 2rem; padding-block: 3.5rem; }
+.ini-inst-texto { min-width: 0; }
+.ini-eyebrow { display: flex; align-items: center; gap: .8rem; margin: 0 0 1rem; font: 600 .74rem 'Montserrat', system-ui, sans-serif; letter-spacing: .26em; text-transform: uppercase; color: #3b3b44; }
+.ini-eyebrow-linea { flex: 0 0 44px; height: 1.5px; background: var(--rojo-marca); }
+.ini-logo-vb { display: block; width: min(190px, 60vw); height: auto; margin: .2rem 0 .8rem; }
+.ini-logo-proin { display: block; width: min(230px, 66vw); height: auto; margin: .2rem 0 .6rem; }
+.ini-ver-mas { margin: 1.2rem 0 0; }
+html body a.ini-boton-secundario { color: var(--azul); }
+.ini-solo-lectores { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.ini-lema { font: 400 clamp(1.9rem, 6.2vw, 3rem)/1.16 'Montserrat', system-ui, sans-serif; color: var(--azul); margin: .4rem 0 1.1rem; }
+.ini-lema em { font-style: normal; font-weight: 700; color: var(--rojo-marca); }
+.ini-lema-proin { font-size: clamp(1.7rem, 5.4vw, 2.6rem); }
+.ini-parrafo { max-width: 60ch; margin: 0; line-height: 1.75; color: #3f4650; font-size: 1rem; }
+.ini-relacion { margin: 0 0 1rem; padding: .15rem 0 .15rem .9rem; border-left: 3px solid var(--rojo-marca); font-size: 1.05rem; line-height: 1.5; color: var(--azul); }
+.ini-inst-foto { position: relative; margin: 0; min-width: 0; }
+.ini-inst-foto img { display: block; width: 100%; height: auto; max-height: 560px; object-fit: cover; border-radius: 6px; }
+.ini-triangulo { position: absolute; bottom: 0; width: 34%; aspect-ratio: 1; background: var(--rojo-marca); pointer-events: none; }
+.ini-triangulo-derecha { right: 0; clip-path: polygon(100% 0, 100% 100%, 0 100%); }
+.ini-triangulo-izquierda { left: 0; clip-path: polygon(0 0, 0 100%, 100% 100%); }
+.ini-foto-izquierda img { max-height: 520px; }
+
+.ini-puntos { list-style: none; margin: 1.8rem 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.4rem 1rem; }
+.ini-puntos li { display: flex; flex-direction: column; align-items: center; text-align: center; gap: .45rem; color: var(--rojo-marca); }
+.ini-puntos strong { font: 700 .72rem/1.3 'Montserrat', system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; color: var(--azul); }
+.ini-puntos span { font-size: .82rem; line-height: 1.45; color: #4b5563; }
+@media (min-width: 640px) and (max-width: 899px) {
+  .ini-puntos { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; }
+  .ini-puntos li { padding: .2rem .8rem; border-left: 1px solid rgba(11,11,12,.14); }
+  .ini-puntos li:first-child { border-left: none; }
+}
+@media (min-width: 900px) {
+  .ini-inst-grid { width: min(100% - 5rem, 1240px); grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); gap: 3rem; align-items: center; padding-block: 5rem; }
+  .ini-inst-invertida { grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); }
+  .ini-foto-derecha img { -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 20%); mask-image: linear-gradient(90deg, transparent 0, #000 20%); border-radius: 0; max-height: 600px; }
+  .ini-foto-izquierda img { -webkit-mask-image: linear-gradient(270deg, transparent 0, #000 20%); mask-image: linear-gradient(270deg, transparent 0, #000 20%); border-radius: 0; }
+}
+/* PROIN: los cuatro puntos ocupan todo el ancho bajo foto y texto (como la lámina de referencia). */
+.ini-puntos-ancho { grid-column: 1 / -1; margin-top: .4rem; }
+@media (min-width: 640px) {
+  .ini-puntos-ancho { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; }
+  .ini-puntos-ancho li { padding: .2rem .8rem; border-left: 1px solid rgba(11,11,12,.14); }
+  .ini-puntos-ancho li:first-child { border-left: none; }
+}
+@media (min-width: 1180px) {
+  .ini-puntos { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; }
+  .ini-puntos li { padding: .2rem .8rem; border-left: 1px solid rgba(11,11,12,.14); }
+  .ini-puntos li:first-child { border-left: none; }
+}
+
+/* ── Permítenos guiarte ──────────────────────────────────────────────────────────────────────────────── */
+.ini-guia { background: #fff; padding: 4rem 0; }
+.ini-guia-grid { width: min(100% - 2.5rem, 1240px); margin-inline: auto; display: grid; grid-template-columns: minmax(0, 1fr); gap: 2.4rem; }
+.ini-guia-titulo { margin: 0 0 1rem; font: 800 clamp(1.7rem, 5.2vw, 2.5rem)/1.15 'Montserrat', system-ui, sans-serif; color: var(--azul); }
+.ini-guia-acciones { display: flex; flex-wrap: wrap; gap: .8rem; margin-top: 1.5rem; }
+.ini-boton { min-height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: .5rem; padding: .75rem 1.4rem; border-radius: 8px; font: 700 .88rem 'Montserrat', system-ui, sans-serif; text-decoration: none; cursor: pointer; border: 2px solid transparent; }
+.ini-boton-primario { background: var(--rojo-marca); color: #fff; }
+html body a.ini-boton-primario { color: #fff; }
+.ini-boton-secundario { background: transparent; color: var(--azul); border-color: var(--azul); }
+.ini-boton:focus-visible, .ini-camino-enlace:focus-visible, .ini-canales a:focus-visible { outline: 3px solid var(--azul); outline-offset: 2px; }
+.ini-caminos { list-style: none; margin: 0; padding: 0; display: grid; }
+.ini-caminos li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 1.2rem; padding: 1.6rem 0; border-top: 1px solid rgba(11,11,12,.16); }
+.ini-caminos li:last-child { border-bottom: 1px solid rgba(11,11,12,.16); }
+.ini-camino-n { min-width: 3.2ch; font: 300 clamp(2.2rem, 8vw, 3.6rem)/1 'Montserrat', system-ui, sans-serif; color: var(--rojo-marca); }
+.ini-caminos h3 { margin: 0 0 .4rem; font: 800 1.15rem 'Montserrat', system-ui, sans-serif; color: var(--azul); }
+.ini-caminos p { margin: 0 0 .5rem; line-height: 1.65; color: #3f4650; }
+html body a.ini-camino-enlace { color: var(--rojo); }
+.ini-camino-enlace { display: inline-flex; align-items: center; gap: .4rem; min-height: 44px; font: 700 .88rem 'Montserrat', system-ui, sans-serif; color: var(--rojo); text-decoration: none; }
+@media (min-width: 900px) {
+  .ini-guia { padding: 6rem 0; }
+  .ini-guia-grid { width: min(100% - 5rem, 1240px); grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 4rem; align-items: start; }
+  .ini-guia-intro { position: sticky; top: 7rem; }
+}
+
+/* ── Nuestros clientes (carrusel) ────────────────────────────────────────────────────────────────────── */
+.ini-clientes { position: relative; overflow: hidden; padding: 4.5rem 0 4rem; color: #fff;
+  background: radial-gradient(60% 55% at 0% 100%, rgba(var(--ini-tinte), .24) 0%, transparent 72%), linear-gradient(160deg, #17181C 0%, var(--negro) 100%); }
+.ini-clientes-cab { text-align: center; width: min(100% - 2.5rem, 720px); margin: 0 auto 2.4rem; position: relative; z-index: 1; }
+.ini-clientes-cab h2 { margin: 0; color: #fff; font: 900 clamp(1.8rem, 6vw, 2.6rem) 'Montserrat', system-ui, sans-serif; }
+.ini-clientes-cab p { margin: .5rem 0 0; color: rgba(255,255,255,.82); font-size: 1.02rem; }
+.ini-clientes .ini-eyebrow-linea { display: none; }
+.ini-clientes .ini-eyebrow { justify-content: center; color: var(--rojo-claro); color: #ff8a98; }
+.ini-carrusel { position: relative; z-index: 1; width: min(100% - 2.5rem, 1240px); margin-inline: auto; }
+.ini-carrusel-pista { display: flex; gap: 1.25rem; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; padding: .4rem .15rem 1rem; }
+.ini-carrusel-pista::-webkit-scrollbar { display: none; }
+.ini-carrusel-pista:focus-visible { outline: 3px solid #fff; outline-offset: 4px; border-radius: 12px; }
+.ini-testimonio { flex: 0 0 92%; scroll-snap-align: start; margin: 0; padding: 1.6rem; display: flex; flex-direction: column; justify-content: space-between; gap: 1.4rem; min-height: 250px;
+  border: 1px solid rgba(255,255,255,.16); border-radius: 14px; background: rgba(255,255,255,.07); box-shadow: 0 10px 30px rgba(0,0,0,.28); }
+.ini-testimonio blockquote { margin: 0; }
+.ini-testimonio p { margin: 0; font-size: 1.04rem; line-height: 1.65; font-style: italic; color: rgba(255,255,255,.96); }
+.ini-testimonio figcaption { display: flex; align-items: center; gap: 1rem; padding-top: 1.1rem; border-top: 1px solid rgba(255,255,255,.14); }
+.ini-avatar { width: 50px; height: 50px; border-radius: 50%; flex: 0 0 auto; display: grid; place-items: center; font-weight: 700; color: #fff; }
+.ini-autor { display: grid; gap: .1rem; min-width: 0; }
+.ini-autor strong { font-family: 'Montserrat', system-ui, sans-serif; color: #fff; }
+.ini-autor small { color: rgba(255,255,255,.78); font-weight: 600; }
+.ini-carrusel-controles { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: .7rem; margin-top: 1rem; }
+.ini-ctrl { width: 48px; height: 48px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.6); background: rgba(255,255,255,.06); color: #fff; display: grid; place-items: center; cursor: pointer; transition: background .2s; }
+.ini-ctrl:hover { background: rgba(255,255,255,.18); }
+.ini-ctrl:focus-visible, .ini-punto:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+.ini-puntos-carrusel { display: flex; align-items: center; gap: .1rem; }
+.ini-punto { position: relative; width: 28px; height: 28px; border: none; background: transparent; cursor: pointer; padding: 0; }
+.ini-punto::after { content: ""; position: absolute; inset: 9px; border-radius: 50%; background: rgba(255,255,255,.5); transition: all .2s; }
+.ini-punto[aria-current="true"]::after { inset: 6px; background: #fff; }
+@media (min-width: 700px) { .ini-testimonio { flex-basis: calc((100% - 1.25rem) / 2); } }
+@media (min-width: 1100px) { .ini-clientes { padding: 6rem 0 5rem; } .ini-carrusel { width: min(100% - 5rem, 1240px); } .ini-testimonio { flex-basis: calc((100% - 2.5rem) / 3); } }
+
+/* ── Contáctanos (compacto) ──────────────────────────────────────────────────────────────────────────── */
+.ini-contacto { background: var(--hueso); padding: 3.2rem 0; }
+.ini-contacto-grid { width: min(100% - 2.5rem, 1040px); margin-inline: auto; display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.6rem; }
+.ini-contacto-intro h2 { margin: 0 0 .5rem; font: 800 clamp(1.5rem, 5vw, 2rem) 'Montserrat', system-ui, sans-serif; color: var(--azul); }
+.ini-contacto-intro > p:not(.ini-eyebrow) { margin: 0; color: #3f4650; line-height: 1.6; }
+.ini-canales { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; gap: .2rem; }
+html body .ini-canales a { color: var(--azul); }
+.ini-canales a { display: inline-flex; align-items: center; gap: .6rem; min-height: 44px; color: var(--azul); font-weight: 600; text-decoration: none; overflow-wrap: anywhere; }
+/* Mapita de la tienda */
+.ini-ubicacion { margin-top: 1.4rem; display: grid; gap: .6rem; max-width: 460px; }
+.ini-direccion { display: flex; align-items: flex-start; gap: .55rem; margin: 0; font-size: .92rem; line-height: 1.45; color: #3f4650; }
+.ini-direccion svg { flex: 0 0 auto; margin-top: .1rem; color: var(--rojo-marca); }
+.ini-mapa-lienzo { height: 190px; border-radius: 12px; overflow: hidden; border: 1px solid rgba(11,11,12,.14); background: #e8e4de; position: relative; z-index: 0; }
+.ini-mapa-cargando { background: linear-gradient(90deg, #e8e4de 0%, #f1eee9 50%, #e8e4de 100%); background-size: 200% 100%; animation: ini-brillo 1.6s linear infinite; }
+@keyframes ini-brillo { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+html body a.ini-como-llegar { color: var(--azul); }
+.ini-como-llegar { display: inline-flex; align-items: center; gap: .3rem; min-height: 44px; font: 700 .88rem 'Montserrat', system-ui, sans-serif; text-decoration: none; }
+.ini-como-llegar:focus-visible { outline: 3px solid var(--azul); outline-offset: 2px; }
+.ini-pin { background: none; border: none; }
+.ini-pin span { display: block; width: 28px; height: 28px; margin: 4px 1px 0; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); background: var(--rojo-marca); box-shadow: 0 3px 8px rgba(0,0,0,.35); position: relative; }
+.ini-pin span::after { content: ""; position: absolute; inset: 8px; border-radius: 50%; background: #fff; }
+.ini-mapa-lienzo .leaflet-control-attribution { font-size: .66rem; }
+.ini-mapa-lienzo .leaflet-bar a { width: 32px; height: 32px; line-height: 32px; }
+.ini-contacto-tarjeta { background: #fff; border-radius: 14px; padding: 1.3rem; box-shadow: 0 4px 24px rgba(0,0,0,.07); }
+.ini-form { display: grid; gap: .85rem; }
+.ini-form-fila { display: grid; grid-template-columns: minmax(0, 1fr); gap: .85rem; }
+.ini-campo { min-width: 0; }
+.ini-campo label { display: block; margin-bottom: .3rem; font: 600 .86rem 'Montserrat', system-ui, sans-serif; color: var(--azul); }
+.ini-campo input, .ini-campo select, .ini-campo textarea { width: 100%; box-sizing: border-box; min-height: 48px; padding: .7rem .9rem; border: 1.5px solid #b9bec6; border-radius: 8px; font: inherit; font-size: 1rem; color: var(--texto); background: #fff; }
+.ini-campo textarea { min-height: 92px; resize: vertical; }
+.ini-campo input:focus-visible, .ini-campo select:focus-visible, .ini-campo textarea:focus-visible { outline: 3px solid var(--azul); outline-offset: 1px; border-color: var(--azul); }
+.ini-campo input[aria-invalid="true"] { border-color: var(--rojo); }
+.ini-error-campo { margin: .3rem 0 0; color: var(--rojo); font-size: .84rem; font-weight: 600; }
+.ini-error-envio { margin: .6rem 0 0; color: var(--rojo); text-align: center; font-size: .92rem; font-weight: 600; }
+.ini-enviar { width: 100%; min-height: 50px; display: inline-flex; align-items: center; justify-content: center; gap: .55rem; margin-top: .2rem; padding: .8rem; border: none; border-radius: 10px; cursor: pointer;
+  background: linear-gradient(135deg, var(--rojo), var(--rojo-claro)); color: #fff; font: 700 1rem 'Montserrat', system-ui, sans-serif; }
+.ini-enviar:disabled { opacity: .6; cursor: not-allowed; }
+.ini-enviar:focus-visible { outline: 3px solid var(--azul); outline-offset: 2px; }
+.ini-contacto-ok { text-align: center; padding: 1.6rem 1rem; color: #1f7a3d; }
+.ini-contacto-ok h3 { margin: .6rem 0 .3rem; font-family: 'Montserrat', system-ui, sans-serif; color: var(--azul); }
+.ini-contacto-ok p { margin: 0; color: #3f4650; }
+@media (min-width: 640px) { .ini-form-fila { grid-template-columns: repeat(2, minmax(0, 1fr)); } .ini-contacto-tarjeta { padding: 1.6rem; } }
+@media (min-width: 900px) { .ini-contacto { padding: 4.2rem 0; } .ini-contacto-grid { width: min(100% - 5rem, 1100px); grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 3rem; align-items: start; } }
+
+/* ── WhatsApp flotante: respeta el espacio seguro del teléfono y se aparta de los campos ────────────────── */
+body.inicio-vb .wa-flotante { display: none !important; }   /* el global (layout) se oculta SOLO en la portada: ver `page-client.tsx` */
+.ini-wa { position: fixed; z-index: 900; right: max(16px, env(safe-area-inset-right)); bottom: max(16px, env(safe-area-inset-bottom)); width: 56px; height: 56px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; background: var(--whatsapp); color: #fff; font-size: 1.8rem; text-decoration: none;
+  box-shadow: 0 3px 10px rgba(0,0,0,.35); animation: pulseGreen 2s infinite; transition: opacity .2s, transform .2s; }
+html body a.ini-wa { color: #fff; }
+.ini-wa:focus-visible { outline: 3px solid #fff; outline-offset: 2px; box-shadow: 0 0 0 5px var(--azul); }
+@media (max-width: 899px) {
+  .ini-wa[data-oculto="true"] { opacity: 0; transform: scale(.8); pointer-events: none; }
+}
+@media (max-width: 700px) {
+  .ini-wa { width: 52px; height: 52px; font-size: 1.65rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ini-wa { animation: none; }
+  .ini-tab, .ini-ctrl, .ini-punto::after { transition: none; }
+  .ini-carrusel-pista { scroll-behavior: auto; }
+}
+
+/* ── Fotografías de «¿Qué es Vive Bien?» y PROIN ───────────────────────────────────────────────────────────────────────────────────────────
+   Enteras en su marco: la proporción del marco ES la de la foto (sin recorte). Movimiento sutil: acercamiento lento (Ken Burns). */
+.ini-foto { position: relative; margin: 0; min-width: 0; overflow: hidden; border-radius: 14px; box-shadow: 0 18px 44px rgba(11,11,12,.16); background: #dfe6ea; }
+.ini-foto-casa { aspect-ratio: 1420 / 840; }
+.ini-foto-edificio { aspect-ratio: 4 / 3; }
+.ini-foto img { display: block; width: 100%; height: 100%; max-height: none; object-fit: cover; border-radius: 0; transform-origin: 50% 60%; animation: ini-foto-zoom 26s ease-in-out infinite alternate; }
+.ini-foto-edificio img { transform-origin: 50% 45%; animation-duration: 30s; }
+.ini-foto .ini-triangulo { width: 26%; }
+@keyframes ini-foto-zoom { from { transform: scale(1); } to { transform: scale(1.07); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .ini-foto img, .ini-mapa-cargando { animation: none !important; }
+}
+
+
+/* ══ Pulido de la portada: un solo patrón con «Nosotros» y «Contacto» ═══════════════════════════════════════════════════════════════════════════
+   Titulares en Playfair con la segunda idea en cursiva roja; sección de clientes en claro; foto en «Permítenos guiarte»; cifras del hero también
+   en pantallas medianas (antes sólo ≥ 1240 px y el hero quedaba con un hueco oscuro). */
+.ini-lema, .ini-guia-titulo, .ini-contacto-intro h2, .ini-clientes-cab h2 { font-family: 'Playfair Display', Georgia, serif; font-weight: 700; letter-spacing: -.01em; }
+.ini-lema em, .ini-guia-titulo em, .ini-clientes-cab h2 em { font-style: italic; font-weight: 700; color: var(--rojo-marca); }
+.ini-lema { font-size: clamp(2rem, 5.6vw, 3.2rem); line-height: 1.1; }
+.ini-lema-proin { font-size: clamp(1.9rem, 5vw, 2.8rem); }
+.ini-guia-titulo { font-size: clamp(1.9rem, 5.2vw, 2.9rem); line-height: 1.12; }
+.ini-guia-titulo em { display: block; }
+.ini-contacto-intro h2 { font-size: clamp(1.8rem, 5vw, 2.4rem); }
+.ini-caminos h3 { font-family: 'Playfair Display', Georgia, serif; font-weight: 700; font-size: 1.3rem; }
+.ini-camino-n { font-family: 'Playfair Display', Georgia, serif; font-weight: 400; }
+
+/* Clientes en claro */
+.ini-clientes { color: var(--azul); background: linear-gradient(115deg, transparent 0 62%, rgba(15,39,71,.035) 62% 78%, transparent 78%), linear-gradient(180deg, #fbfaf8 0%, #f1efec 100%); }
+.ini-clientes .ini-eyebrow { color: var(--rojo-marca); }
+.ini-clientes-cab h2 { color: var(--azul); font-size: clamp(2rem, 5.6vw, 3rem); }
+.ini-clientes-cab p { color: #4b5563; }
+.ini-testimonio { border: 1px solid rgba(15,39,71,.08); background: #fff; box-shadow: 0 14px 36px rgba(15,39,71,.1); }
+.ini-testimonio p { color: #1f2937; font-family: 'Playfair Display', Georgia, serif; font-size: 1.08rem; }
+.ini-testimonio figcaption { border-top-color: rgba(15,39,71,.12); }
+.ini-autor strong { color: var(--azul); }
+.ini-autor small { color: #4b5563; }
+.ini-ctrl { border-color: rgba(15,39,71,.45); background: #fff; color: var(--azul); }
+.ini-ctrl:hover { background: rgba(15,39,71,.08); }
+.ini-ctrl:focus-visible, .ini-punto:focus-visible { outline-color: var(--azul); }
+.ini-carrusel-pista:focus-visible { outline-color: var(--azul); }
+.ini-punto::after { background: rgba(15,39,71,.28); }
+.ini-punto[aria-current="true"]::after { background: var(--rojo-marca); }
+
+/* Cifras del hero en pantallas medianas: en fila bajo el buscador */
+@media (min-width: 640px) and (max-width: 1239px) {
+  .ini-hero-cifras { display: flex; flex-wrap: wrap; gap: .7rem; margin-top: 1.6rem; }
+  .ini-hero-cifras li { display: grid; gap: .1rem; padding: .7rem .95rem; min-width: 126px; background: rgba(11,11,12,.6); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,.18); border-radius: 12px; }
+  .ini-hero-cifras strong { font: 900 1.4rem/1 'Montserrat', system-ui, sans-serif; }
+  .ini-hero-cifras span { font: 700 .62rem 'Montserrat', system-ui, sans-serif; letter-spacing: 1.3px; text-transform: uppercase; color: rgba(255,255,255,.9); }
+  .ini-hero-cifras small { font-size: .64rem; color: rgba(255,255,255,.78); }
+}
+
+/* «Explora nuestras propiedades»: el mismo cierre azul noche con esquina roja que usa «Nosotros» */
+.ini-cta { position: relative; overflow: hidden; isolation: isolate; padding: 4.5rem 1.25rem; background: linear-gradient(135deg, #0b1d3a 0%, #0f2747 55%, #1b365d 100%); }
+.ini-cta::after { content: ''; position: absolute; right: -4%; bottom: -10%; width: 26%; height: 60%; background: var(--rojo-marca); opacity: .88; clip-path: polygon(100% 0, 100% 100%, 0 100%); z-index: -1; }
+.ini-cta::before { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(115deg, transparent 0 55%, rgba(255,255,255,.05) 55% 68%, transparent 68%); }
+.ini-cta-t { margin: 0 0 1rem; font: 700 clamp(2rem, 5vw, 3.1rem)/1.1 'Playfair Display', Georgia, serif; color: #fff; }
+.ini-cta-t em { font-style: italic; color: #ff5470; }
+
+/* Testimonios con el formato de una reseña de mapas (sin logotipo): autor arriba, cinco estrellas, comentario en texto llano */
+.ini-testimonio { min-height: 0; justify-content: flex-start; gap: .55rem; padding: 1.2rem 1.3rem 1.4rem; border: 1px solid #dadce0; border-radius: 10px; background: #fff; box-shadow: 0 1px 3px rgba(60,64,67,.15), 0 4px 14px rgba(60,64,67,.08); }
+.ini-resena-cab { order: 0; display: flex; align-items: center; gap: .8rem; padding: 0; border: 0; }
+.ini-estrellas { order: 1; display: flex; gap: 2px; color: #f9ab00; }
+.ini-testimonio blockquote { order: 2; margin-top: .2rem; }
+.ini-testimonio p { font: 400 .98rem/1.6 'Open Sans', system-ui, sans-serif; font-style: normal; color: #3c4043; }
+.ini-resena-cab .ini-autor strong { font: 700 .95rem 'Open Sans', system-ui, sans-serif; color: #202124; }
+.ini-resena-cab .ini-autor small { font: 400 .8rem 'Open Sans', system-ui, sans-serif; color: #5f6368; }
+.ini-avatar { width: 42px; height: 42px; font-size: .9rem; }
+.ini-testimonio .ini-resena-cab { border-top: 0; padding-top: 0; }
+
+/* PROIN (escritorio): todo el bloque de texto —etiqueta, logotipo, titular, relación, párrafo y botón— alineado a la DERECHA y pegado al borde
+   derecho del contenedor, junto con el logotipo (decisión del propietario, 21-oct-2026). En pantallas angostas se queda a la izquierda: un párrafo
+   alineado a la derecha se lee mal en una columna estrecha. */
+/* PROIN (móvil, 22-oct-2026): la foto va DEBAJO del texto y no encima. Arriba parecía una imagen de VIVE BIEN (la sección anterior también abre con foto);
+   así el logotipo y el titular de PROIN dicen primero de quién se trata. El orden del HTML se conserva para escritorio; aquí solo cambia el orden visual. */
+@media (max-width: 899px) {
+  .ini-proin .ini-inst-texto { order: 1; }
+  .ini-proin .ini-inst-foto { order: 2; }
+  .ini-proin .ini-puntos-ancho { order: 3; }
+}
+@media (min-width: 900px) {
+  .ini-proin .ini-inst-texto { text-align: right; justify-self: end; width: 100%; }
+  .ini-proin .ini-eyebrow { flex-direction: row-reverse; justify-content: flex-start; }
+  .ini-proin .ini-logo-proin { margin: .2rem 0 .6rem auto; }
+  .ini-proin .ini-relacion { padding: .15rem .9rem .15rem 0; border-left: 0; border-right: 3px solid var(--rojo-marca); }
+  .ini-proin .ini-parrafo { margin-left: auto; max-width: 56ch; }
+  .ini-proin .ini-ver-mas { margin-left: auto; }
+  .ini-proin .ini-inst-texto { display: flex; flex-direction: column; align-items: flex-end; }
+}
+
+/* ══ Publicaciones de las redes (entre las reseñas y «Contáctanos») ═══════════════════════════════════════════════════════════════════════════
+   Lámina «Modern Real Estate Social Showcase»: fondo hueso con hojas difuminadas, titular Playfair, pestañas Instagram/Facebook, flechas y tarjetas de
+   publicación. Mismo patrón que Nosotros/Contacto. Sin terceros: imágenes locales. */
+.ini-redes { position: relative; overflow: hidden; isolation: isolate; padding: 4.2rem 0 4rem; background: var(--hueso); }
+.ini-redes::before { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(34% 40% at -4% 92%, rgba(70, 95, 52, .20) 0%, transparent 70%), radial-gradient(30% 36% at 104% 6%, rgba(70, 95, 52, .16) 0%, transparent 70%), linear-gradient(115deg, transparent 0 66%, rgba(15,39,71,.03) 66% 80%, transparent 80%); }
+.ini-redes-cab { width: min(100% - 2.5rem, 1240px); margin: 0 auto 2rem; display: grid; gap: 1.4rem; align-items: end; }
+.ini-redes-titulo h2 { margin: 0 0 .8rem; font: 700 clamp(2rem, 5vw, 3.3rem)/1.08 'Playfair Display', Georgia, serif; letter-spacing: -.01em; color: #0f2747; }
+.ini-redes-titulo h2 em { display: block; font-style: italic; color: var(--rojo-marca); }
+.ini-redes-titulo > p:not(.ini-eyebrow) { margin: 0; max-width: 54ch; font-size: 1.02rem; line-height: 1.65; color: #4b5563; }
+.ini-redes-controles { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; }
+.ini-redes-tabs { display: flex; flex-wrap: wrap; gap: .8rem; }
+.ini-redes-tab { display: inline-flex; align-items: center; gap: .6rem; min-height: 52px; padding: 0 1.6rem; border-radius: 8px; border: 1.5px solid #d9d3c9; background: #fff; color: #0f2747; cursor: pointer;
+  font: 700 .95rem 'Montserrat', system-ui, sans-serif; transition: background .2s, color .2s, border-color .2s; }
+.ini-redes-tab[aria-pressed="true"] { background: #b30f27; border-color: #b30f27; color: #fff; box-shadow: 0 4px 0 rgba(200,16,46,.28); }
+.ini-redes-tab:focus-visible, .ini-redes-flecha:focus-visible, .ini-post-ver:focus-visible, .ini-redes-pista:focus-visible, html body a.ini-redes-todas:focus-visible { outline: 3px solid #0f2747; outline-offset: 3px; }
+.ini-redes-flechas { display: flex; gap: .7rem; margin-left: auto; }
+.ini-redes-flecha { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; border: 1.5px solid #cfc8bd; background: #fff; color: #0f2747; cursor: pointer; transition: background .2s, opacity .2s; }
+.ini-redes-flecha:hover:not(:disabled) { background: #f1f4f9; }
+.ini-redes-flecha:disabled { opacity: .4; cursor: not-allowed; }
+.ini-redes-pista { width: min(100% - 2.5rem, 1240px); margin-inline: auto; display: flex; gap: 1.25rem; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; padding: .3rem .2rem 1.4rem; border-radius: 12px; }
+.ini-redes-pista::-webkit-scrollbar { display: none; }
+.ini-post { flex: 0 0 min(78%, 320px); scroll-snap-align: start; display: flex; flex-direction: column; overflow: hidden; border-radius: 14px; background: #fff; border: 1px solid #e6e1d9; box-shadow: 0 10px 28px rgba(15,39,71,.09); }
+.ini-post-cab { display: flex; align-items: center; gap: .7rem; padding: .8rem .9rem; }
+.ini-post-avatar { display: grid; place-items: center; width: 42px; height: 42px; flex: 0 0 auto; border-radius: 50%; border: 2px solid var(--rojo-marca); background: #fff; padding: 4px; }
+.ini-post-avatar img { width: 100%; height: 100%; object-fit: contain; }
+.ini-post-usuario { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 .9rem 'Montserrat', system-ui, sans-serif; color: #0f2747; }
+.ini-post-menu { flex: 0 0 auto; color: #4b5563; }
+.ini-post-img { display: block; aspect-ratio: 4 / 5; overflow: hidden; background: #ece8e1; }
+.ini-post-img img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .6s cubic-bezier(.2,.7,.3,1); }
+.ini-post:hover .ini-post-img img { transform: scale(1.03); }
+.ini-post-iconos { display: flex; align-items: center; justify-content: space-between; padding: .7rem .9rem .2rem; color: #0f2747; }
+.ini-post-iconos span { display: inline-flex; align-items: center; gap: .9rem; }
+.ini-post-corazon { color: #c8102e; }
+.ini-post-texto { margin: 0; padding: .3rem .9rem 0; font-size: .86rem; line-height: 1.5; color: #374151; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.ini-post-texto strong { color: #0f2747; font-weight: 700; }
+html body a.ini-post-ver { display: inline-flex; align-items: center; min-height: 44px; padding: 0 .9rem .3rem; font: 600 .8rem 'Montserrat', system-ui, sans-serif; color: #5b6472; text-decoration: underline; text-underline-offset: 3px; }
+html body a.ini-post-ver:hover { color: #0f2747; }
+.ini-redes-pie { margin: 1.2rem 0 0; text-align: center; }
+html body a.ini-redes-todas { display: inline-flex; align-items: center; gap: .6rem; min-height: 52px; padding: 0 1.9rem; border-radius: 10px; border: 1.5px solid #a80d24; background: rgba(255,255,255,.7); color: #a80d24; font: 700 1rem 'Montserrat', system-ui, sans-serif; text-decoration: none; transition: background .2s, color .2s; }
+html body a.ini-redes-todas:hover { background: #a80d24; color: #fff; }
+.ini-redes-vacio { width: min(100% - 2.5rem, 1240px); margin: 0 auto; padding: 2rem 0; text-align: center; color: #4b5563; }
+@media (min-width: 700px) { .ini-post { flex-basis: calc((100% - 1.25rem) / 2); } }
+@media (min-width: 900px) { .ini-redes { padding: 5.5rem 0 5rem; } .ini-redes-cab { grid-template-columns: minmax(0, 1fr) auto; } .ini-redes-controles { flex-direction: column; align-items: flex-end; gap: 1.1rem; } .ini-redes-flechas { margin-left: 0; } }
+@media (min-width: 1100px) { .ini-post { flex-basis: calc((100% - 3.75rem) / 4); } }
+@media (max-width: 520px) { .ini-redes-tab { flex: 1 1 0; justify-content: center; padding: 0 1rem; } }
+@media (prefers-reduced-motion: reduce) { .ini-post-img img, .ini-redes-tab, .ini-redes-flecha { transition: none; } .ini-post:hover .ini-post-img img { transform: none; } }
+
+/* ── Del blog (inicio): artículos recientes, mismo patrón que «Publicaciones de las redes» ─────────────────────────────────────────────────── */
+.ini-blog { position: relative; padding: 3.2rem 0 3.6rem; background: #fff; font-family: 'Montserrat', system-ui, sans-serif; color: #0f2747; }
+.ini-blog-cab, .ini-blog-rejilla { width: min(100% - 2.5rem, 1240px); margin-inline: auto; }
+.ini-blog-cab { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1.2rem 2rem; margin-bottom: 1.8rem; }
+.ini-blog-cab h2 { margin: 0 0 .6rem; font: 700 clamp(1.9rem, 4vw, 2.8rem)/1.1 'Playfair Display', Georgia, serif; color: #0f2747; }
+.ini-blog-cab h2 em { font-style: italic; color: var(--rojo-marca); }
+.ini-blog-cab p:not(.ini-eyebrow) { margin: 0; max-width: 54ch; font-size: 1rem; line-height: 1.7; color: #4b5563; }
+html body a.ini-blog-todos { display: inline-flex; align-items: center; gap: .6rem; min-height: 48px; padding: 0 1.5rem; border-radius: 10px; border: 1.5px solid #a80d24; background: rgba(255,255,255,.7); color: #a80d24; font: 700 .95rem 'Montserrat', system-ui, sans-serif; text-decoration: none; transition: background .2s, color .2s; }
+html body a.ini-blog-todos:hover { background: #a80d24; color: #fff; }
+.ini-blog-rejilla { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 1.3rem; }
+.ini-blog-tarjeta { display: flex; flex-direction: column; overflow: hidden; border-radius: 14px; background: #fff; border: 1px solid #e6e1d9; box-shadow: 0 10px 28px rgba(15,39,71,.09); transition: transform .25s, box-shadow .25s; }
+.ini-blog-tarjeta:hover { transform: translateY(-4px); box-shadow: 0 16px 36px rgba(15,39,71,.15); }
+.ini-blog-img { position: relative; display: block; aspect-ratio: 16 / 10; overflow: hidden; background: #e5e7eb; }
+.ini-blog-img img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .6s; }
+.ini-blog-tarjeta:hover .ini-blog-img img { transform: scale(1.04); }
+.ini-blog-tag { position: absolute; top: 0; left: 0; padding: .35rem .7rem; background: #0f2747; color: #fff; font: 700 .62rem 'Montserrat', system-ui, sans-serif; letter-spacing: .16em; text-transform: uppercase; }
+.ini-blog-maqueta { position: absolute; left: 0; bottom: 0; padding: .3rem .65rem; background: #fff7ed; color: #7c2d12; font: 700 .6rem 'Montserrat', system-ui, sans-serif; letter-spacing: .14em; text-transform: uppercase; }
+.ini-blog-texto { display: flex; flex-direction: column; flex: 1; padding: 1rem 1.15rem 1.1rem; }
+.ini-blog-texto h3 { margin: 0 0 .5rem; font: 700 1.15rem/1.28 'Playfair Display', Georgia, serif; }
+html body .ini-blog-texto h3 a { color: #0f2747; text-decoration: none; }
+html body .ini-blog-texto h3 a:hover { color: #a80d24; }
+.ini-blog-texto p { margin: 0 0 .8rem; font-size: .9rem; line-height: 1.6; color: #4b5563; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.ini-blog-texto .ini-blog-meta { display: flex; gap: .4rem; margin: auto 0 0; padding-top: .7rem; border-top: 1px solid #edf0f4; font: 600 .62rem 'Montserrat', system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; color: #5b6472; -webkit-line-clamp: unset; display: flex; }
+.ini-blog a:focus-visible { outline: 3px solid #fff; outline-offset: 2px; box-shadow: 0 0 0 5px #0f2747; }
+@media (prefers-reduced-motion: reduce) { .ini-blog-tarjeta, .ini-blog-img img { transition: none; } .ini-blog-tarjeta:hover, .ini-blog-tarjeta:hover .ini-blog-img img { transform: none; } }
+
+/* ── Ubicación y clima del visitante (hero) ───────────────────────────────────────────────────────────────────────────────────────────────── */
+.ini-clima { display: inline-flex; flex: 0 0 auto; white-space: nowrap; max-width: 100%; align-items: center; gap: .5rem; margin: 0; padding: .32rem .8rem .32rem .65rem; border-radius: 999px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.16); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  font: 500 .74rem/1 'Montserrat', system-ui, sans-serif; letter-spacing: .04em; color: rgba(255,255,255,.92); min-height: 30px; }
+.ini-clima-pin { color: var(--rojo-marca); flex: 0 0 auto; }
+.ini-clima-lugar { font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.ini-clima-lugar small { font-size: inherit; font-weight: 500; letter-spacing: .04em; opacity: .85; text-transform: none; }
+.ini-clima-sep { width: 1px; height: 14px; background: rgba(255,255,255,.28); }
+.ini-clima-icono { color: #ffd27a; flex: 0 0 auto; }
+.ini-clima-temp { font-weight: 700; }
+.ini-clima-desc { opacity: .78; font-weight: 400; }
+@media (max-width: 480px) { .ini-clima-desc { display: none; } }

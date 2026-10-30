@@ -1,0 +1,51 @@
+{
+ "modificados": [
+  "next.config.ts",
+  "src/app/api/registro-lead/route.ts",
+  "src/app/api/usuarios/me/route.ts",
+  "src/components/Footer.tsx",
+  "src/components/QuieroPublicar.tsx",
+  "src/components/portal/ConfiguracionPortal.tsx",
+  "src/lib/limites.ts",
+  "vercel.json"
+ ],
+ "nuevos": [
+  "src/app/api/correo/baja/route.ts",
+  "src/app/api/correo/confirmar/route.ts",
+  "src/app/api/correo/preferencias/route.ts",
+  "src/app/api/correo/suscribir/route.ts",
+  "src/app/api/correo/tarea/route.ts",
+  "src/app/api/correo/webhook/route.ts",
+  "src/app/correo/baja/page.tsx",
+  "src/app/correo/confirmar/page.tsx",
+  "src/app/recomendaciones/page.tsx",
+  "src/components/correo/AccionConEnlace.tsx",
+  "src/components/correo/FormularioRecomendaciones.tsx",
+  "src/components/correo/PreferenciaCorreo.tsx",
+  "src/lib/correo/config.ts",
+  "src/lib/correo/constantes.ts",
+  "src/lib/correo/enviar.ts",
+  "src/lib/correo/plantillas/bloques.ts",
+  "src/lib/correo/plantillas/campana.ts",
+  "src/lib/correo/plantillas/index.ts",
+  "src/lib/correo/plantillas/marca.ts",
+  "src/lib/correo/plantillas/portal.ts",
+  "src/lib/correo/recomendaciones.ts",
+  "src/lib/correo/seguridad.ts",
+  "src/lib/correo/suscripcion.ts",
+  "src/lib/correo/tarea.ts",
+  "src/lib/correo/transaccionales.ts"
+ ],
+ "solo_staging": [
+  "tests/correo-enviar.test.ts",
+  "tests/correo-filtros.test.ts",
+  "tests/correo-guardias.test.ts",
+  "tests/correo-integracion.test.ts",
+  "tests/correo-plantillas.test.ts",
+  "tests/correo-portal-datos.test.ts",
+  "tests/correo-seguridad.test.ts",
+  "tests/e39-guardias.test.ts",
+  "tests/migracion-36-correo.test.ts",
+  "tests/migracion-37-ayuda-correo.test.ts"
+ ]
+}

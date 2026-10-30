@@ -1,0 +1,30 @@
+# Validación de migraciones en un PostgreSQL local (D-43).
+#
+# Misma versión mayor y menor que producción: PostgreSQL 17.6.
+# (Producción: "PostgreSQL 17.6 on aarch64-unknown-linux-gnu", Supabase.)
+#
+#   docker compose -f docker/docker-compose.yml up -d
+#   docker compose -f docker/docker-compose.yml down -v
+#
+# NADA de esto toca producción:
+#   · el contenedor sólo escucha en 127.0.0.1;
+#   · la contraseña es de usar y tirar, y no existe en ningún otro sitio;
+#   · los datos son inventados (ver `datos-sinteticos.sql`);
+#   · no se copia ninguna variable de entorno del proyecto.
+
+services:
+  pg:
+    image: postgres:17.6-alpine
+    container_name: vivebien-pruebas-pg
+    environment:
+      POSTGRES_PASSWORD: pruebas-locales-desechable
+      POSTGRES_DB: vivebien_pruebas
+    ports:
+      - '127.0.0.1:55432:5432'
+    tmpfs:
+      - /var/lib/postgresql/data      # en memoria: se va al parar, no deja rastro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d vivebien_pruebas']
+      interval: 2s
+      timeout: 3s
+      retries: 30

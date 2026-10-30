@@ -1,0 +1,1046 @@
+@import "tailwindcss";
+/* Leaflet: sin su CSS las tiles se apilan y los controles quedan sueltos. */
+@import "leaflet/dist/leaflet.css";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* ── Marca ── */
+  --rojo: #8B1A1A;
+  --rojo-claro: #C0392B;
+  --naranja-accion: #FF6B00;
+  --azul: #1B365D;
+  --azul-claro: #3D5A73;
+  --azul-profundo: #0D1A2E;
+  --dorado: #C9A96E;
+  --dorado-oscuro: #C09C28;
+  --blanco: #FFFFFF;
+  --texto: #222831;
+  --sombra: rgba(0, 0, 0, .08);
+
+  /* ── Superficies ──
+     --gris es el fondo cálido del sitio público; --superficie es el frío
+     de los paneles. Son dos grises distintos y llevaban meses conviviendo
+     sin nombre. */
+  --gris: #EDEAE5;
+  --gris-calido: #E0DBD3;
+  --gris-calido-claro: #E8E4DE;
+  --superficie: #F4F6F8;
+  --borde: #E0E0E0;
+  --borde-frio: #CBD5E1;
+
+  /* ── Estado ──
+     Reservados para comunicar estado. No se reutilizan como color de marca
+     ni como serie de una gráfica. */
+  --exito: #279546;
+  --exito-fuerte: #15803D;
+  --exito-medio: #059669;
+  --exito-fondo: #DCFCE7;
+
+  --aviso: #D97706;
+  --aviso-fuerte: #92400E;
+  --aviso-fondo: #FEF9C3;
+  --aviso-fondo-calido: #FFF7ED;
+
+  --error: #991B1B;
+  --error-fuerte: #B91C1C;
+  --error-fondo: #FEF2F2;
+  --error-fondo-fuerte: #FEE2E2;
+
+  --info-fondo: #EFF6FF;
+
+  /* ── Terceros ── */
+  --whatsapp: #25D366;
+  --morado: #5B4FCF;
+
+  /* ── Identidad de marca (lámina de esencia) ──
+     La lámina fija una dirección que el sitio no seguía: negro de alto
+     contraste, rojo más vivo que el granate de los paneles, lavanda para
+     «Grupo inmobiliario», y un blanco cálido —no gris— para las secciones
+     claras. Estos tokens conviven con los de arriba en vez de sustituirlos:
+     el granate --rojo sigue siendo el color de acción de los formularios,
+     donde un rojo saturado cansa. */
+  --negro: #0B0B0C;
+  --negro-suave: #16171A;
+  --negro-carta: #1F2024;
+  --rojo-marca: #C8102E;
+  --lavanda: #A5ABD4;
+  --hueso: #F1EFEC;
+  --hueso-hundido: #E7E4DF;
+
+  /* Reglas finas. En oscuro se ven por transparencia, no por color fijo:
+     así funcionan sobre foto y sobre negro plano. */
+  --linea-clara: rgba(255, 255, 255, .16);
+  --linea-oscura: rgba(11, 11, 12, .12);
+
+  /* Tracking de las etiquetas en versales. */
+  --tracking-etiqueta: .18em;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+/* ══ Piezas de la identidad ══════════════════════════════════════
+   Tres clases, no una librería. Lo que la lámina repite en cada bloque
+   es: una etiqueta pequeña en versales muy espaciadas, un titular de peso
+   alto con interlínea corta, y una regla fina roja debajo. */
+
+.etiqueta {
+  font-family: var(--font-montserrat), system-ui, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-etiqueta);
+  font-size: .72rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.titular {
+  font-family: var(--font-montserrat), system-ui, sans-serif;
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: -.01em;
+  text-transform: uppercase;
+}
+
+/* La regla roja corta bajo la etiqueta, como en la lámina. */
+.regla-marca::after {
+  content: "";
+  display: block;
+  width: 44px;
+  height: 2px;
+  background: var(--rojo-marca);
+  margin-top: .55rem;
+}
+
+/* Superficie oscura de marca: se usa en el hero y en el mosaico. */
+.superficie-negra {
+  background: var(--negro);
+  color: #fff;
+}
+
+/* Sombra de tarjeta de panel. Una sola, para que no haya cinco distintas. */
+.carta {
+  background: #fff;
+  border: 1px solid var(--linea-oscura);
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(11, 11, 12, .04), 0 8px 24px rgba(11, 11, 12, .05);
+}
+
+@theme inline {
+  --color-rojo: var(--rojo);
+  --color-rojo-claro: var(--rojo-claro);
+  --color-naranja: var(--naranja-accion);
+  --color-azul: var(--azul);
+  --color-azul-claro: var(--azul-claro);
+  --color-gris: var(--gris);
+  --color-superficie: var(--superficie);
+  --color-dorado: var(--dorado);
+  --color-texto: var(--texto);
+  --color-exito: var(--exito);
+  --color-aviso: var(--aviso);
+  --color-error: var(--error);
+  --color-negro: var(--negro);
+  --color-rojo-marca: var(--rojo-marca);
+  --color-lavanda: var(--lavanda);
+  --color-hueso: var(--hueso);
+  --font-sans: var(--font-open-sans);
+  --font-heading: var(--font-montserrat);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   EL CERO DE MÁRGENES Y RELLENOS NO ENTRA EN LA PANTALLA DE ACCESO
+
+   Este reset iba SIN capa, y en CSS lo no-capado gana siempre a lo capado sin
+   importar la especificidad. Tailwind v4 emite sus utilidades dentro de
+   `@layer utilities`, así que `p-4`, `mt-6`, `px-[9%]`… se escribían, llegaban
+   al HTML, existían en el CSS compilado y no se aplicaban. Afecta a 49 de los
+   149 componentes (E-20): arreglarlo de raíz es tarea aparte.
+
+   El primer intento fue `margin: revert-layer` acotado a la pantalla de
+   acceso. Funcionaba en desarrollo y **desaparecía en producción**: fuera de
+   una capa, `revert-layer` equivale a `revert` y el minificador lo eliminó por
+   inocuo. Se descubrió con el sitio ya desplegado, midiendo el CSS servido.
+
+   Así que ahora no se deshace el reset: se le impide entrar. Dentro de
+   cualquier elemento con `data-pantalla` manda Tailwind, que pone el cero en
+   su propia capa base y deja que sus utilidades lo pisen, como debe ser.
+
+   Es una EXENCIÓN POR SUSCRIPCIÓN: una pantalla nueva declara
+   `data-pantalla="lo-que-sea"` y sus utilidades funcionan. Las 49 pantallas
+   antiguas no lo declaran, así que no se mueve ni una. Generalizarlo era
+   necesario: sin esto, cada pantalla nueva nacería con el mismo defecto que
+   tuvo `/entrar`.
+   ───────────────────────────────────────────────────────────── */
+*:not([data-pantalla] *),
+*:not([data-pantalla] *)::before,
+*:not([data-pantalla] *)::after {
+  margin: 0;
+  padding: 0;
+}
+
+/* ══ El contenedor del Centro de Ayuda ════════════════════════════
+   ─────────────────────────────────────────────────────────────
+   POR QUÉ ESTO NO SON UTILIDADES DE TAILWIND
+
+   El Centro salió a producción con el contenido pegado al borde: `px-6` y
+   `mx-auto` daban 0, mientras `max-w-[1180px]` sí se aplicaba. Esa mezcla
+   —sólo mueren margen y relleno— es la firma del reset de arriba.
+
+   El 1-oct-2026 producción servía la versión ESTRECHA de ese reset
+   (`[data-pantalla="acceso"]`, que sólo exime a `/entrar`) mientras el código
+   ya traía la generalizada. En local se veía bien y en producción no: el CSS
+   compilado no correspondía a su fuente. Pero la lección no es «invalidar la
+   caché»: es que **la maquetación del Centro no puede depender de que una
+   regla global de una sola línea llegue intacta**. Si no llega, la pantalla
+   entera pierde todos sus márgenes a la vez.
+
+   Así que el contenedor se define aquí, en CSS plano y FUERA de `@layer`:
+   gana al reset por especificidad (0,2,0 contra 0,1,0) y no depende de la
+   exención. Funcione o no el `:not()`, el Centro se ve igual.
+
+   `width: min(100% - 2×gutter, max)` + `margin-inline: auto` en vez de
+   `padding`: el ancho ya descuenta los lados, así que no hay un `padding` que
+   el reset pueda poner a cero. Es a prueba del propio fallo que corrige.
+
+   1240 px y 2,5 rem de lado son los del resto del sitio público —`/propiedades`,
+   `/nosotros`, el pie— para que el Centro no parezca otra aplicación.
+   ───────────────────────────────────────────────────────────── */
+[data-pantalla="ayuda"] .ayuda-contenedor {
+  width: min(100% - 5rem, 1240px);
+  margin-inline: auto;
+  padding-block: 3.5rem;
+}
+
+/* Por debajo de 768 px el aire lateral se reduce: 2,5 rem a cada lado de una
+   pantalla de 390 px se comen el 26 % del ancho. */
+@media (max-width: 768px) {
+  [data-pantalla="ayuda"] .ayuda-contenedor {
+    width: min(100% - 2.5rem, 1240px);
+    padding-block: 2.25rem;
+  }
+}
+
+/* La rejilla de la barra lateral. Mismo motivo: `grid-cols` de Tailwind sí
+   sobrevive —no es margen ni relleno—, pero el `gap` es relleno a efectos del
+   reset, así que se declara aquí junto al resto para no dejarlo a medias. */
+[data-pantalla="ayuda"] .ayuda-con-barra {
+  display: grid;
+  gap: 2.5rem;
+  align-items: start;
+}
+
+@media (min-width: 1024px) {
+  [data-pantalla="ayuda"] .ayuda-con-barra {
+    /* La barra tiene ancho propio y el contenido se queda con el resto:
+       `minmax(0,1fr)` y no un ancho fijo, que es lo que dejaba medio viewport
+       vacío a la derecha. El `0` impide que un hijo largo —una URL, una
+       tabla— empuje la columna y provoque desbordamiento. */
+    grid-template-columns: 260px minmax(0, 1fr);
+  }
+}
+
+/* La columna de lectura. El artículo ocupa su columna completa, pero el texto
+   se corta a una medida cómoda: una línea de 120 caracteres no se lee. */
+[data-pantalla="ayuda"] .ayuda-prosa {
+  max-width: 72ch;
+}
+
+/* El artículo usa un contenedor MÁS ESTRECHO que el resto del Centro.
+   Con los 1240 px generales, el conjunto barra + prosa (260 + 40 + ~66ch)
+   dejaba unos 225 px muertos a la derecha: el texto no puede crecer —se
+   corta en 72ch para poder leerse— así que el hueco no lo llenaba nadie.
+   1040 px ajusta el contenedor a lo que el contenido realmente ocupa, y el
+   bloque queda centrado en vez de escorado. Las demás rutas —portada,
+   categoría, búsqueda— sí llenan los 1240 con tarjetas, y los conservan. */
+[data-pantalla="ayuda"] .ayuda-contenedor--articulo {
+  width: min(100% - 5rem, 1040px);
+}
+
+@media (max-width: 768px) {
+  [data-pantalla="ayuda"] .ayuda-contenedor--articulo {
+    width: min(100% - 2.5rem, 1040px);
+  }
+}
+
+
+html {
+  /* El scroll suave NO va aquí a secas: quien pide «reducir movimiento» no lo quiere (WCAG 2.3.3), y además hace que cada scroll programático
+     (también el de las pruebas E2E) sea una animación y el elemento nunca esté «estable» (E-53, 28-oct-2026). Ver el bloque `no-preference` de abajo. */
+  /* Las animaciones de entrada empiezan desplazadas ±50px en horizontal.
+     Mientras no se disparan, ese desplazamiento asoma fuera del viewport y
+     produce scroll horizontal — en 360px son un 14% del ancho.
+
+     `clip` y no `hidden` a propósito: `hidden` crea un contenedor de scroll y
+     rompe el `position: sticky` de la cabecera. `clip` recorta sin crearlo. */
+  overflow-x: clip;
+}
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
+body {
+  font-family: var(--font-open-sans, 'Open Sans', sans-serif);
+  color: var(--texto);
+  background: var(--blanco);
+  /* `clip` y no `hidden` (igual que en `html`): `hidden` convierte al body en contenedor de scroll y deja INSERVIBLE todo `position: sticky` (el panel de contacto
+     de la ficha se iba con el scroll y dejaba un hueco; 27-oct-2026). `clip` recorta lo que se sale sin crear ese contenedor. */
+  overflow-x: clip;
+  line-height: 1.6;
+}
+
+/* Mismo caso que el reset de márgenes de arriba (E-20): esto va SIN capa y
+   le gana a `.underline` de Tailwind, así que dentro de una pantalla nueva un
+   enlace quedaba distinguido SÓLO por el color. axe lo cazó en el Centro de
+   Ayuda: 1,29:1 entre el enlace y el texto que lo rodea, cuando hace falta 3:1.
+   Fuera de `[data-pantalla]` no cambia nada. */
+a:not([data-pantalla] a, .panel-vb a) {
+  text-decoration: none;
+  color: inherit;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-montserrat, 'Montserrat', sans-serif);
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* ── GlareHover ─────────────────────────────────────────────────────────── */
+.glare-hover {
+  width: var(--gh-width, 100%);
+  height: var(--gh-height, 100%);
+  background: var(--gh-bg, transparent);
+  border-radius: var(--gh-br, 16px);
+  border: 1px solid var(--gh-border, transparent);
+  overflow: hidden;
+  position: relative;
+}
+.glare-hover::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    var(--gh-angle, -45deg),
+    hsla(0,0%,0%,0) 60%,
+    var(--gh-rgba, rgba(255,255,255,.18)) 70%,
+    hsla(0,0%,0%,0),
+    hsla(0,0%,0%,0) 100%
+  );
+  transition: var(--gh-duration, 600ms) ease;
+  background-size: var(--gh-size, 250%) var(--gh-size, 250%), 100% 100%;
+  background-repeat: no-repeat;
+  background-position: -100% -100%, 0 0;
+  pointer-events: none;
+  z-index: 10;
+}
+.glare-hover:hover::before {
+  background-position: 100% 100%, 0 0;
+}
+.glare-hover--play-once::before { transition: none; }
+.glare-hover--play-once:hover::before { transition: var(--gh-duration, 600ms) ease; background-position: 100% 100%, 0 0; }
+
+/* ── Cursor blink ────────────────────────────────────────────────────────── */
+@keyframes cursorBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* ── Hero utilities ──────────────────────────────────────────────────────── */
+.hero-top-line {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #8B1A1A 0%, #C9A96E 45%, transparent 100%);
+}
+
+/* ── Editorial label ─────────────────────────────────────────────────────── */
+.editorial-label {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+  font-size: .68rem;
+  letter-spacing: 3.5px;
+  text-transform: uppercase;
+  color: var(--rojo);
+  margin-bottom: 1rem;
+}
+.editorial-label::before {
+  content: '';
+  display: block;
+  width: 26px;
+  height: 2px;
+  background: var(--rojo);
+  flex-shrink: 0;
+}
+.editorial-label--gold {
+  color: #C9A96E;
+}
+.editorial-label--gold::before {
+  background: #C9A96E;
+}
+
+/* ── Dot pattern background ──────────────────────────────────────────────── */
+.dot-pattern {
+  background-image: radial-gradient(circle, rgba(27,54,93,.1) 1px, transparent 1px);
+  background-size: 26px 26px;
+}
+
+/* ── Section divider line ────────────────────────────────────────────────── */
+.section-line {
+  width: 40px;
+  height: 3px;
+  background: var(--rojo);
+  margin: 0 0 1.2rem;
+}
+
+/* ── Input placeholder ───────────────────────────────────────────────────── */
+input::placeholder,
+textarea::placeholder {
+  color: #aaa;
+  opacity: 1;
+}
+
+/* ── Hero grid / stats responsive ───────────────────────────────────────── */
+@media (max-width: 860px) {
+  .hero-grid { grid-template-columns: 1fr !important; }
+  .hero-stats { display: none !important; }
+}
+
+/* ── Two column responsive ───────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .two-col { grid-template-columns: 1fr !important; }
+  .contact-grid { grid-template-columns: 1fr !important; }
+  .nosotros-two-col { grid-template-columns: 1fr !important; gap: 2rem !important; }
+  .calc-grid { grid-template-columns: 1fr !important; }
+}
+
+/* ══ Mosaico de categorías ═══════════════════════════════════════
+   El zoom lento de la foto y el aclarado del velo son la única señal de
+   que la celda es pulsable: no hay borde ni sombra que lo diga. */
+.mosaico-celda:last-child {
+  border-right: none;
+}
+
+.mosaico-celda img {
+  transition: transform .7s cubic-bezier(.2, .7, .3, 1);
+}
+
+.mosaico-celda:hover img,
+.mosaico-celda:focus-visible img {
+  transform: scale(1.06);
+}
+
+.mosaico-celda:focus-visible {
+  outline: 2px solid var(--rojo-marca);
+  outline-offset: -3px;
+}
+
+/* Cuando las celdas se apilan, la regla pasa de vertical a horizontal:
+   una línea a la derecha de una celda a todo lo ancho no separa nada. */
+/* Mismo motivo: el borde iba en línea y la media query no podía ganarle. */
+.mosaico-celda {
+  border-right: 1px solid var(--linea-clara);
+}
+
+@media (max-width: 980px) {
+  .mosaico-celda {
+    border-right: none;
+    border-bottom: 1px solid var(--linea-clara);
+  }
+}
+
+/* ══ Propósito y valores ═════════════════════════════════════════
+   La maquetación va aquí y NO en atributos `style`. Estaba en línea y el
+   resultado fue scroll horizontal en móvil: **un estilo en línea le gana a
+   cualquier media query**, así que la rejilla de dos columnas no se apilaba
+   nunca y empujaba el documento a 660px en una pantalla de 360.
+
+   Es la trampa de este código, que usa estilos en línea por convención: todo
+   lo que dependa del ancho tiene que vivir en una clase. */
+
+.proposito-grid {
+  max-width: 1240px;
+  margin: 0 auto;
+  display: grid;
+  gap: 3rem;
+  grid-template-columns: minmax(260px, 1fr) minmax(320px, 1.35fr);
+  align-items: start;
+}
+
+.proposito-texto {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: minmax(110px, auto) 1fr;
+  align-items: start;
+}
+
+.valores-bloque {
+  display: grid;
+  gap: 1.75rem;
+  grid-template-columns: minmax(100px, auto) 1fr;
+  align-items: center;
+}
+
+.proposito-parrafo {
+  margin: 0;
+  color: #3A3A3E;
+  font-size: .95rem;
+  line-height: 1.75;
+  border-left: 1px solid rgba(11, 11, 12, .14);
+  padding-left: 1.5rem;
+}
+
+.valores-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 1.75rem;
+  border-left: 1px solid rgba(11, 11, 12, .14);
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+}
+
+@media (max-width: 900px) {
+  .proposito-grid {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+}
+
+/* En móvil la etiqueta deja de ir al lado y pasa encima: dos columnas de
+   110px más el texto no caben en 360px sin romper palabras. */
+@media (max-width: 560px) {
+  .proposito-texto,
+  .valores-bloque {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .proposito-parrafo,
+  .valores-lista {
+    border-left: none;
+    padding-left: 0;
+    border-top: 1px solid rgba(11, 11, 12, .14);
+    padding-top: 1.25rem;
+  }
+
+  .valores-lista {
+    grid-template-columns: repeat(auto-fit, minmax(78px, 1fr));
+    gap: 1.1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mosaico-celda img {
+    transition: none;
+  }
+  .mosaico-celda:hover img,
+  .mosaico-celda:focus-visible img {
+    transform: none;
+  }
+}
+
+/* ══ Cabecera ════════════════════════════════════════════════════
+   La altura iba en línea: 120px fijos en cualquier pantalla. En un
+   teléfono de 780px de alto eso es un 15% comido por una barra pegajosa,
+   antes de ver una sola propiedad. */
+:root {
+  /* La altura real de la cabecera, para lo que tenga que colgar de ella.
+     El menú móvil la tenía copiada a mano (120px) y quedaba despegado en
+     teléfono, donde la cabecera mide 76. */
+  --alto-cabecera: 120px;
+}
+
+.vb-header {
+  height: var(--alto-cabecera);
+  padding: 0 2rem;
+}
+
+.vb-logo img {
+  height: 100px;
+  width: auto;
+  object-fit: contain;
+}
+
+@media (max-width: 900px) {
+  :root { --alto-cabecera: 76px; }
+  .vb-header {
+    padding: 0 1rem;
+  }
+  .vb-logo img {
+    height: 56px;
+  }
+}
+
+/* Zona de arrastre del asistente: el input va encima, invisible, así que el
+   foco se enseña en el contenedor o no se vería nunca. */
+.zona-arrastre:focus-within {
+  outline: 2px solid var(--azul);
+  outline-offset: 2px;
+}
+
+/* ══ Botones: cómo responden al dedo y al cursor ══════════════════
+   Pedido tras revisar el sitio en un Galaxy Fold y en pantallas de 280 px.
+   Dos problemas medidos, no supuestos:
+
+   1. **Nada respondía al pulsar.** Los botones cambiaban de color al pasar el
+      cursor —gesto que en un teléfono no existe— y al tocarlos no pasaba nada
+      hasta que la pantalla siguiente cargaba. En una conexión lenta eso se
+      siente como que el botón no funcionó, y la gente vuelve a tocar.
+   2. **Objetivos de 35 px.** Los chips del listado medían 35×88, los enlaces
+      del pie 18 px de alto. Apple pide 44 y Google 48: por debajo de eso se
+      falla el toque y se abre lo de al lado.
+
+   Se hace con selectores de elemento, no con clases: el sitio tiene los
+   estilos en línea y añadir una clase a cada botón habría sido tocar treinta
+   archivos para lo mismo. */
+
+button,
+[role='button'],
+a[data-boton] {
+  transition:
+    transform .12s cubic-bezier(.2, .7, .3, 1),
+    box-shadow .18s ease,
+    filter .18s ease;
+}
+
+/* El cursor levanta un poco; el dedo hunde. Son gestos distintos y se
+   distinguen: `hover` sólo se aplica donde hay cursor de verdad. */
+@media (hover: hover) and (pointer: fine) {
+  button:not(:disabled):hover,
+  [role='button']:not([aria-disabled='true']):hover,
+  a[data-boton]:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.04);
+  }
+}
+
+button:not(:disabled):active,
+[role='button']:not([aria-disabled='true']):active,
+a[data-boton]:active {
+  transform: translateY(0) scale(.97);
+  filter: brightness(.96);
+}
+
+button:disabled,
+[aria-disabled='true'] {
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* El foco se ve siempre: quien navega con teclado necesita saber dónde está,
+   y el contorno del navegador desaparece sobre fondos oscuros. */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role='button']:focus-visible {
+  outline: 3px solid var(--rojo-marca, #C8102E);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* ── El dedo necesita 44 px ──
+   Sólo donde el puntero es grueso: en escritorio un botón de 32 px está bien
+   y agrandarlos todos desordenaría el panel. */
+@media (pointer: coarse) {
+  button,
+  [role='button'],
+  select,
+  input:not([type='checkbox']):not([type='radio']),
+  textarea {
+    min-height: 44px;
+  }
+
+  /* Un botón que sólo lleva un icono se queda estrecho aunque crezca de alto. */
+  button {
+    min-width: 44px;
+  }
+
+  /* Los enlaces sueltos de un párrafo NO se tocan —partiría el texto—, pero
+     los de listas, pies y rastros de migas sí: ahí cada uno es un destino,
+     y con 19 px de alto se falla el toque. */
+  footer a,
+  nav a,
+  .migas a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+}
+
+/* ══ Pantallas muy estrechas (Galaxy Fold cerrado, 280 px) ════════
+   Ahí no cabe casi nada: el botón flotante de WhatsApp ocupaba el 22 % del
+   ancho y se comía la esquina de las tarjetas. */
+@media (max-width: 360px) {
+  .wa-flotante {
+    width: 52px !important;
+    height: 52px !important;
+    bottom: 16px !important;
+    right: 16px !important;
+    font-size: 1.4rem !important;
+  }
+
+  /* Aire al final de la página para que el flotante no tape el pie. */
+  footer {
+    padding-bottom: 4.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button,
+  [role='button'],
+  a[data-boton] {
+    transition: none;
+  }
+  button:hover,
+  button:active,
+  [role='button']:hover,
+  [role='button']:active,
+  a[data-boton]:hover,
+  a[data-boton]:active {
+    transform: none;
+    filter: none;
+  }
+}
+
+/* ══ Barra de filtros en pantallas estrechas ══════════════════════
+   Medido en un Fold cerrado (280 px): la barra tenía 40 px de margen a cada
+   lado y el selector «Todo · Comprar · Rentar» no podía encoger, así que
+   **«Rentar» se salía de la pantalla**. Quien busca renta no encontraba el
+   botón de renta.
+
+   Abajo de 520 px: menos margen y el selector a lo ancho, con los tres botones
+   repartiéndose el espacio. */
+@media (max-width: 520px) {
+  .barra-filtros {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  .selector-operacion {
+    width: 100%;
+    flex-shrink: 1 !important;
+  }
+
+  .selector-operacion button {
+    flex: 1;
+    padding-inline: .4rem !important;
+    letter-spacing: .5px !important;
+  }
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+/* ══ Estilos base de shadcn/ui, SÓLO dentro del panel ═══════════════
+   La instalación los aplica a `*`, `body` y `html` de todo el sitio: habría
+   cambiado el fondo, el color del texto, el borde por defecto de cada
+   elemento y la fuente del sitio público —e incluso dejó `--font-sans`
+   apuntándose a sí misma—. Aquí quedan acotados a `.panel-vb`, la clase
+   del contenedor del panel de administración. Las pruebas visuales de
+   `tests-visual/sitio-publico.visual.ts` vigilan que no se escapen. */
+@layer base {
+  .panel-vb,
+  .panel-vb * {
+    @apply border-border outline-ring/50;
+  }
+  .panel-vb {
+    @apply bg-background text-foreground font-sans;
+  }
+}
+/* ══ Panel de administración — identidad (V-1.1.71) ══════════════════
+   Todo acotado a `.panel-vb`: el sitio público no ve nada de esto.
+
+   El rojo es el del logo, medido píxel a píxel sobre logo_transparent.png:
+   #971010. No es --rojo (#8B1A1A) ni --rojo-marca (#C8102E): esos son de
+   formularios y de la lámina; el panel lleva la marca del logo.
+
+   Los colores de las gráficas NO se eligieron a ojo: la paleta categórica y
+   la rampa de marca pasaron el validador de daltonismo y contraste de la
+   skill dataviz (17-sep). Si se cambia un color, se vuelve a validar. */
+.panel-vb {
+  --marca: #971010;
+  --marca-hover: #7d0d0d;
+  --marca-tinte: #f7eaea;
+  --marca-tinte-fuerte: #efd3d3;
+
+  --panel-fondo: #f5f4f2;
+  --panel-barra: #1c1c1f;
+  --panel-tinta: #1d1d20;
+  --panel-tinta-2: #5c5b57;
+  --panel-tenue: #8a8882;
+  --panel-linea: #e8e6e2;
+
+  --font-open-sans: 'Open Sans', system-ui, sans-serif;
+  --font-montserrat: 'Montserrat', system-ui, sans-serif;
+  --font-frase: 'Playfair Display', Georgia, serif;
+
+  /* Variables de shadcn/ui con la marca. */
+  --background: var(--panel-fondo);
+  --foreground: var(--panel-tinta);
+  --card: #ffffff;
+  --card-foreground: var(--panel-tinta);
+  --popover: #ffffff;
+  --popover-foreground: var(--panel-tinta);
+  --primary: var(--marca);
+  --primary-foreground: #ffffff;
+  --secondary: #f1efec;
+  --secondary-foreground: var(--panel-tinta);
+  --muted: #f1efec;
+  --muted-foreground: var(--panel-tinta-2);
+  --accent: var(--marca-tinte);
+  --accent-foreground: var(--marca);
+  --destructive: #b42318;
+  --border: var(--panel-linea);
+  --input: #dcd9d4;
+  --ring: rgba(151, 16, 16, .45);
+  --radius: .75rem;
+
+  --sidebar: var(--panel-barra);
+  --sidebar-foreground: #dedcd8;
+  --sidebar-primary: var(--marca);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgba(255, 255, 255, .07);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgba(255, 255, 255, .08);
+  --sidebar-ring: rgba(255, 255, 255, .35);
+
+  /* Gráficas. Categórica: color por entidad, orden fijo. */
+  --serie-1: #971010;
+  --serie-2: #2a78d6;
+  --serie-3: #eda100;
+  --serie-4: #1baf7a;
+  --serie-5: #4a3aa7;
+  --serie-6: #e87ba4;
+  --serie-otros: #a8a59e;
+  /* Rampa ordinal de marca (mapa de calor), de claro a oscuro. */
+  --rampa-1: #e7a3a3;
+  --rampa-2: #c95454;
+  --rampa-3: #971010;
+  --rampa-4: #6b0b0b;
+  /* Tinta de las gráficas: la línea gris es el período anterior. */
+  --grafica-rejilla: #ecebe7;
+  --grafica-eje: #cfccc6;
+  --grafica-anterior: #b9b6af;
+
+  /* Estado: reservados, siempre con icono o texto. */
+  --estado-bien: #067647;
+  --estado-bien-fondo: #e8f5ee;
+  --estado-aviso: #b54708;
+  --estado-aviso-fondo: #fdf1e3;
+  --estado-mal: #b42318;
+  --estado-mal-fondo: #fdeceb;
+}
+
+/* ── El sitio público le ganaba al panel ─────────────────────────────
+   Los estilos de elemento del sitio (`* { margin: 0 }`, `a { color: inherit }`,
+   el contorno de foco, el levantar de los botones) están **sin capa**, y una
+   declaración sin capa gana a cualquiera dentro de `@layer` — por eso le ganaba
+   a TODAS las utilidades de Tailwind: dentro del panel, `mx-auto`, `px-4` o
+   `text-primary-foreground` no hacían nada, y el diseño salía descuadrado.
+
+   Aquí se devuelven a la capa de utilidades con `revert-layer`, sólo dentro del
+   panel. El sitio público no cambia. */
+.panel-vb *,
+.panel-vb *::before,
+.panel-vb *::after {
+  margin: revert-layer;
+  padding: revert-layer;
+}
+
+.panel-vb {
+  color: var(--panel-tinta);
+}
+
+.panel-vb a,
+.panel-vb button,
+.panel-vb input,
+.panel-vb select,
+.panel-vb textarea {
+  color: revert-layer;
+}
+
+/* El foco se sigue viendo fuerte, como en el sitio, pero en el rojo del panel. */
+.panel-vb button:focus-visible,
+.panel-vb a:focus-visible,
+.panel-vb input:focus-visible,
+.panel-vb select:focus-visible,
+.panel-vb textarea:focus-visible,
+.panel-vb [role='button']:focus-visible {
+  outline-color: var(--marca);
+}
+
+/* El «levantar» de los botones del sitio descoloca los renglones de un menú. */
+.panel-vb button:hover,
+.panel-vb button:active,
+.panel-vb [role='button']:hover,
+.panel-vb [role='button']:active,
+.panel-vb a[data-boton]:hover,
+.panel-vb a[data-boton]:active {
+  transform: none;
+  filter: none;
+}
+
+/* ── Portal del cliente ───────────────────────────────────────────
+   Misma casa que el panel admin, con la barra lateral roja de su mockup
+   (design/references/05-portal-inicio.webp). Va en el <body> junto a
+   `panel-vb`, para que el cajón del menú en móvil (un portal) también la vea. */
+.panel-vb.portal-vb {
+  --sidebar: #6f0c0c;
+  --sidebar-foreground: #f8eaea;
+  --sidebar-accent: rgba(255, 255, 255, .10);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgba(255, 255, 255, .12);
+  --sidebar-ring: rgba(255, 255, 255, .45);
+}
+
+.panel-vb .frase-marca {
+  font-family: var(--font-frase);
+  font-style: italic;
+  font-weight: 400;
+}
+
+/* Etiqueta en versales espaciadas, como en las referencias («DASHBOARD»). */
+.panel-vb .versal {
+  font-family: var(--font-montserrat);
+  text-transform: uppercase;
+  letter-spacing: .32em;
+  font-size: .68rem;
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel-vb *,
+  .panel-vb *::before,
+  .panel-vb *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+/* Portal del cliente: el botón flotante de WhatsApp (60 px a 28 px de la esquina = 88 px) tapaba controles al final de cada pantalla a 390 px.
+   Reserva espacio inferior solo en móvil/tableta; en escritorio no ocurre y metería un hueco. Va aquí, no como `pb-*` de Tailwind (E-20 lo deja inerte).
+   Vigilado por tests/wafloat-oclusion.test.ts. */
+@media (max-width: 768px) {
+  [data-portal-contenido] {
+    padding-bottom: 96px;
+  }
+}

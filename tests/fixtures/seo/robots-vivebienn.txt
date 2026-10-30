@@ -1,0 +1,12 @@
+User-Agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /publicador
+Disallow: /mi-cuenta
+Disallow: /portal
+Disallow: /citas
+Disallow: /vista-previa
+Disallow: /api
+
+Sitemap: https://vivebienn.com/sitemap.xml

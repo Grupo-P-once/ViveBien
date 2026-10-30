@@ -1,0 +1,732 @@
+diff --git a/docs/QA/DEFECTOS.md b/docs/QA/DEFECTOS.md
+index bb117f4..c24695b 100644
+--- a/docs/QA/DEFECTOS.md
++++ b/docs/QA/DEFECTOS.md
+@@ -24,7 +24,7 @@ Severidades: P0 crítico · P1 alto · P2 medio · P3 bajo · P4 mejora.
+ | QA-016 | P4 | DB | Índices y RLS | — | Advisors de Supabase (INFO) | 3 llaves foráneas sin índice (`citas_correos`, `knowledge_article_relations`, `knowledge_feedback`); 7 índices sin uso (poco tráfico); 25 tablas con RLS sin política = **denegar todo a anon/authenticated (intencional)** | — | `get_advisors` (performance + security) | Índices de las 3 FK cuando crezcan; documentar el «sin política = cerrada» | **Migración (no aplicada)** | Bajo | **ABIERTO** (P4; requiere migración, no autorizada) |
+ | QA-017 | P3 | OBSERVABILIDAD | Logs y métricas | equipo | — | Plan Hobby: **logs de runtime solo 1 hora**; sin APM ni alertas de latencia/errores 5xx (sí hay aviso a Telegram si la BD cae y auditoría de acciones) | Plan/herramientas | API de logs de Vercel (400 por retención) | Observabilidad (Vercel Pro / OTel `@vercel/otel`), alertas de p95 y 5xx, Web Vitals reales (Speed Insights) | Costo | Bajo | **PARCIAL** (R-11): métricas internas aisladas y `/api/admin/salud`; sin plan de pago ni APM |
+ | QA-018 | P3 | CALIDAD | Suites de regresión | equipo | 100 % | (a) El **baseline visual** (`panel/sitio-publico.visual.ts`) es del 17-sep (V-1.1.74): **33 de 45 fallan por deriva** (0,02–0,65 de píxeles), así que no sirve de compuerta. (b) La suite de cambio de cuenta (`sesion.e2e.ts`) falla en falso (16/92) si el servidor de pruebas **no puede leer los flags** (portal 404 por diseño); con los flags de producción pasa 92/92 | Baselines sin refrescar; dependencia oculta de la BD de flags | `pw_visual.log`, `pw_sesion.log` + repetición 16/16 | Refrescar baselines (o retirarlos) y un script `qa:sesion` que levante la réplica con flags | Ninguna | Bajo | **PASS** baseline (R-16); regresión visual por separado: manifiesto con hash + prueba que falla ante deriva; 45/45 vigentes y suite de sesión 95/95 con réplica |
+-| QA-019 | P3 | RESILIENCIA / UX | Portal y paneles con flags | clientes | 100 % (reproducido sin lectura de flags) | Si la BD de flags no se puede leer, el portal responde **404 «Página no encontrada»** a un cliente con sesión (falla cerrado, correcto para seguridad) en vez de «servicio no disponible» | Diseño fail-closed sin mensaje | `pw_sesion.log` (16 fallos) | Distinguir «cerrado» de «no se pudo leer»: 503 con mensaje | Ninguna | Bajo | **ABIERTO** (fuera de R-01…R-17) |
++| QA-019 | P3 | RESILIENCIA / UX | Portal y paneles con flags | clientes | 100 % (reproducido sin lectura de flags) | Si la BD de flags no se puede leer, el portal responde **404 «Página no encontrada»** a un cliente con sesión (falla cerrado, correcto para seguridad) en vez de «servicio no disponible» | Diseño fail-closed sin mensaje | `pw_sesion.log` (16 fallos) | Distinguir «cerrado» de «no se pudo leer»: 503 con mensaje | Ninguna | Bajo | **CORREGIDO en código (10-oct-2026, sin desplegar)** · ver QA-019_PORTAL_FLAGS_ILEGIBLES.md |
+ | QA-020 | P3 | CONCURRENCIA | RPCs atómicas (roles, flags, invitaciones, estado de propiedad) | admin | — | La atomicidad está probada **en serie** (PGlite, una conexión) y por diseño (`FOR UPDATE`, comparación del «antes», `conflicto`→409); la **carrera real de dos administradores** no se pudo ejercitar: no hay BD de pruebas (Supabase único) ni sesiones QA | — | `tests/migracion-28/31/32/33` | Rama de Supabase (branching) o proyecto de pruebas + dos sesiones QA | Infra | Medio | **PASS** local (R-13) · staging **BLOCKED**: carrera real con Postgres 17 y el trigger real (6/6); falta repetirla en staging |
+ | QA-021 | P4 | PROCESO (de esta campaña) | Mis pruebas en navegador sobre producción | — | 100 % | **Efecto colateral que causé:** al cargar la ficha de VB-2026-00026 en Playwright, el sitio registró **25 eventos `property_view`** (25 sesiones, 04:49–07:28 UTC) y sumó hasta 25 vistas a su contador. No hay otros eventos en ese lapso, así que son todos míos. Solo analítica; no hay PII | La telemetría del sitio se dispara con un navegador real aunque la prueba sea «de lectura» | consulta a `eventos` (solo lectura) | Decisión tuya: borrar esas 25 filas y restar 25 de `vistas` (SQL exacto bajo petición) o dejarlas; a futuro bloquear `/api/eventos` en los scripts de producción (observación 0008) | — | Bajo | **LIMPIADO (8-oct-2026)**: 25 filas `property_view` ids 188–212 eliminadas con autorización explícita (E-35.1); contador `propiedades.vistas` corregido 27 → 2 (E-35.2); eventos y contador sincronizados |
+ | QA-022 | **P3** | RESILIENCIA / CACHÉ | `GET /api/catalogo` (ISR, `revalidate = 300`) | anónimo | observado 1 vez, **solo en `next start` local** (no reproducido en un build limpio ni medido en Vercel) | En `next start`, si la regeneración falla (p. ej. la réplica/BD no responde justo entonces) y no hay `ultimaBuena` en memoria, la ruta devuelve su 503 y **Next lo guarda como entrada de caché (`x-nextjs-cache: HIT`) aunque lleve `Cache-Control: no-store`**, sustituyendo a la copia buena durante la ventana. La página del catálogo reintentaba `/api/catalogo` sin parar (nunca llegaba a «network idle»). | Next cachea la respuesta no-200 de un manejador de ruta con `revalidate`; la copia en memoria no sobrevive a un arranque en frío | `.next` envenenado tras parar la réplica durante una regeneración; un build limpio y 5,5 min después regenera bien (STALE→HIT 200) | Que la ruta **lance** el error (Next conserva la copia anterior) o responda 200 con la última copia del `fetch`; probarlo en un candidato de Vercel antes de decidir. **No se cambió** (fuera del alcance de E-39, no demostrado en producción) | Ninguna | Bajo en Vercel (su ISR conserva la copia ante un 5xx de regeneración, según su documentación: verificar); medio en autohospedaje | **ABIERTO (P3, documentado)**; mitigado en el arnés: `qa:gate` siempre reconstruye antes del navegador |
+diff --git a/docs/QA/QA-019_PORTAL_FLAGS_ILEGIBLES.md b/docs/QA/QA-019_PORTAL_FLAGS_ILEGIBLES.md
+new file mode 100644
+index 0000000..dd403b1
+--- /dev/null
++++ b/docs/QA/QA-019_PORTAL_FLAGS_ILEGIBLES.md
+@@ -0,0 +1,38 @@
++# QA-019 · Portal: «no se pudo leer la configuración» ya no se muestra como 404 (10-oct-2026)
++
++> **Estado: CORREGIDO EN CÓDIGO, SIN DESPLEGAR.** Worktree separado `C:\Users\jemil\vivebien-fix-qa019` con un solo commit en la rama **`fix/qa-019-portal-503`**, creada desde `integracion/d78-base` = `2af9dc1` (la base de producción **sin D-80**); el hash está en `git log` y en el informe de cierre. **Sin push, sin migraciones, sin despliegue, sin cambios en producción**. D-80 no se mezcló. El repositorio principal (`nextjs-migration`, 274 cambios) no se tocó. Parche: `docs/QA/QA-019_portal-flags-ilegibles.patch`.
++
++## Defecto (de `DEFECTOS.md`, QA-019, P3 resiliencia/UX)
++Si la base de flags no se podía leer, el portal respondía **404 «Página no encontrada»** a un cliente con sesión: fingía que la página no existía. Fuente: `docs/QA/DEFECTOS.md`, `PLAN_REPARACION.md` (R-15), `QA_REPARACION_2026-10-07.md`, `CIERRE_E34_2026-10-07.md` (QA-019 seguía ABIERTO).
++
++## Causa
++`leerFlags()` (`src/lib/config/flags-servidor.ts`) tragaba cualquier error y devolvía «todo apagado» — correcto para permisos (falla cerrado) pero indistinguible de «cerrado a propósito». `portal/layout.tsx` hacía `notFound()` en cuanto `aperturaDelPortal(...) === 'nadie'`, así que una base caída = 404. Las APIs `/api/portal/*` (`exigirPortal`) hacían lo mismo.
++
++## Qué se cambió
++| Archivo | Cambio |
++|---|---|
++| `src/lib/config/flags-lectura.ts` (nuevo) | `leerFlagsConEstado()` → `{ flags, legibles }`. `legibles:false` ante error, excepción, tiempo agotado o un `valor` que no es un objeto; en ese caso `flags` viene **todo apagado** (nunca abre). Sin fila de flags = `legibles:true` (todos nacen apagados: sí es una respuesta). Un fallo se memoriza 5 s (antes 60): cuando la base vuelve, el portal vuelve en segundos. Sin `server-only` porque lo importa `proxy.ts`. |
++| `src/lib/config/flags-servidor.ts` | `leerFlags()` y `olvidarFlags()` delegan en lo anterior (mismo contrato: ilegible = todo apagado) y reexporta `leerFlagsConEstado`. Conserva `import 'server-only'`. |
++| `src/lib/portal/no-disponible.ts` (nuevo) | `estadoDelPortal()` puro: `indisponible` / `cerrado` / `abierto`; **sólo `legibles === true` (estricto) puede dar cerrado o abierto**. Mensajes y respuestas 503 (página HTML y API JSON) con `Retry-After: 30`, `Cache-Control: private, no-store`, `X-Robots-Tag: noindex`. |
++| `src/proxy.ts` (nuevo) | Next no permite a un layout devolver un 503 (el código se fija antes de transmitir; sólo existe `notFound()`→404). El 503 real se emite en el proxy, acotado a `/portal` y `/portal/:path*`. No lee sesión ni concede nada: un error sólo puede ser 503, nunca «abierto». |
++| `src/app/portal/layout.tsx` | `cerrado` → `notFound()` (404, **sin cambio**); `indisponible` → `<PortalNoDisponible />` (carrera entre proxy y layout); sólo `abierto` llega a `PortalShell`. |
++| `src/components/portal/PortalNoDisponible.tsx` (nuevo) | Aviso de último recurso. |
++| `src/lib/portal/exigir-portal.ts` | Ilegible → **503 JSON** antes de leer la sesión; cerrado → 404 igual; abierto → sigue pasando por `exigir` y `portalAbiertoPara`. La carcasa del portal ya trata un no-OK como «No se pudo abrir tu portal… Recarga», sin cambios. |
++| `src/app/portal/propiedades/page.tsx` | **Sin cambios**: su `notFound()` es para vistas desconocidas (`?vista=`), no para el cierre del portal. |
++
++## Pruebas
++* **Nuevas** `tests/portal-flags-ilegibles.test.ts` (**33**): lectura legible/ilegible (error, excepción, valor inválido, sin fila, y fallo al CREAR el cliente de Supabase), un error nunca abre aunque antes estuviera abierto, vigencias 60 s / 5 s, `leerFlags` sigue cerrando, `estadoDelPortal` con valores raros, proxy (503 con cabeceras y mensaje; deja pasar si está cerrado o abierto; no toca sesión), `exigirPortal` (503 / 404 / abierto), **el layout EJECUTADO** (cerrado → `notFound`; ilegible → aviso, nunca 404; abierto → carcasa con hijos; el aviso renderizado) y 2 comprobaciones estáticas residuales.
++* **Mutaciones (revisión del 10-oct)**: lectura siempre «legible» (13 fallan), layout vuelto al 404 (5), proxy sobre todo el sitio (1), `exigirPortal` ignorando `legibles` (1), un error que abre (5), `estadoDelPortal` laxo (1). Archivos restaurados idénticos.
++* **Ajustadas** (cambió la frontera simulada, no se relajó nada): `portal-apertura`, `portal-aislamiento` (el doble de `flags-servidor` ahora también ofrece `leerFlagsConEstado` legible), `portal-apertura` y `destino-dashboard` (las regex del layout exigen el nuevo código: `notFound()` sólo si `cerrado`), `frontera-cliente-servidor` (+`flags-lectura` prohibido para el cliente).
++* **Extremo a extremo con `next start` real** (build con `NEXT_PUBLIC_SUPABASE_URL` apuntando a un Supabase FALSO local; script `qa019_e2e.cjs`): base caída → `/portal`, `/portal/propiedades` y `/api/portal/acceso` **503** con `Retry-After`, mensaje, `noindex`; portal cerrado confirmado → **404** (igual que antes); portal abierto → **200** y la API sigue pidiendo sesión (**401**); `/` no se ve afectada.
++* Línea base (antes): 12 archivos / 317 pruebas relacionadas OK, `tsc` 0. Después: **13 archivos / 350 OK**, `tsc` sin errores, `eslint` limpio en lo tocado, `next build` OK con «Proxy (Middleware)» registrado.
++* Suite completa: 115 archivos OK, 6 fallan (9 pruebas): `task-observer`, `medios-optimizar` (2), `migracion-29`, `migracion-30`, `migracion-35`, `wafloat-oclusion` (4). **Las mismas 9 + task-observer fallan idénticas en un checkout limpio de `integracion/d78-base`** → preexistentes, no causadas por este cambio; no se tocaron ni se ocultaron.
++
++## Límites y avisos honestos
++* **Una primera corrida de la prueba e2e** usó la URL de Supabase incrustada en la build (`.env.local`), no la del servidor falso: la app hizo lecturas de flags al Supabase real **con una clave falsa** (rechazadas, sin datos). Se corrigió recompilando con la URL falsa; las corridas válidas no salen de la máquina.
++* El proxy es código nuevo en producción (hoy no existe `proxy.ts`): añade una lectura de flags por petición a `/portal` por instancia (memorizada 60 s; separada de la del layout porque proxy y render no comparten memoria). Se valida en build y en `next start` local, **no en Vercel**; antes de promover conviene el mismo smoke sobre un deployment STAGED.
++* `Retry-After: 30` y el mensaje son decisiones de producto razonables, no medidas.
++* Un `valor` de flags corrupto (no objeto) ahora da 503 en vez de «cerrado»: es «no sé», no «cerrado confirmado».
++
++## Siguiente defecto prioritario del plan existente
++Según `CIERRE_E34`/`QA_REPARACION`: QA-011/012/013 ya están corregidos en el código (E-35); quedan **QA-014** (22 rutas sin prueba de contrato, P3, R-12, esfuerzo L) y **QA-016** (3 llaves foráneas sin índice, P4, R-17, **requiere migración**). Recomendado: **QA-014 por tandas**, empezando por las rutas con escritura o datos personales (`admin/actividad`, `admin/contactos`, `admin/registros`, `citas/accion`), con pruebas de contrato (401/403 sin sesión + forma de la respuesta). QA-016 espera autorización de migración.
+diff --git a/src/app/portal/layout.tsx b/src/app/portal/layout.tsx
+index c9b8a5b..2d14b4f 100644
+--- a/src/app/portal/layout.tsx
++++ b/src/app/portal/layout.tsx
+@@ -1,8 +1,9 @@
+ import type { Metadata } from 'next'
+ import { notFound } from 'next/navigation'
+ import PortalShell from '@/components/portal/PortalShell'
+-import { leerFlags } from '@/lib/config/flags-servidor'
+-import { aperturaDelPortal } from '@/lib/portal/apertura'
++import PortalNoDisponible from '@/components/portal/PortalNoDisponible'
++import { leerFlagsConEstado } from '@/lib/config/flags-servidor'
++import { estadoDelPortal } from '@/lib/portal/no-disponible'
+ 
+ // El portal es de cada cliente: nada aquí debe salir en buscadores.
+ export const metadata: Metadata = {
+@@ -18,8 +19,13 @@ export const dynamic = 'force-dynamic'
+  * V-1.1.82 (D-27.5): abre por etapas. Aquí sólo se cierra del todo cuando no hay
+  * ningún flag; quién entra en la etapa interna lo decide cada API (`exigirPortal`),
+  * porque la sesión vive en el navegador.
++ *
++ * QA-019: «cerrado» (la configuración se leyó y dice que nadie) es 404; «no se pudo leer» NO es un cierre: `proxy.ts` ya contestó 503 antes
++ * de llegar aquí, y si la lectura falla justo entre el proxy y este layout se muestra el aviso de indisponibilidad en vez de un 404 falso.
+  */
+ export default async function PortalLayout({ children }: { children: React.ReactNode }) {
+-  if (aperturaDelPortal(await leerFlags()) === 'nadie') notFound()
++  const estado = estadoDelPortal(await leerFlagsConEstado())
++  if (estado === 'cerrado') notFound()
++  if (estado === 'indisponible') return <PortalNoDisponible />
+   return <PortalShell>{children}</PortalShell>
+ }
+diff --git a/src/components/portal/PortalNoDisponible.tsx b/src/components/portal/PortalNoDisponible.tsx
+new file mode 100644
+index 0000000..9b23a0f
+--- /dev/null
++++ b/src/components/portal/PortalNoDisponible.tsx
+@@ -0,0 +1,17 @@
++import { MENSAJE_NO_DISPONIBLE, TITULO_NO_DISPONIBLE } from '@/lib/portal/no-disponible'
++
++/**
++ * Último recurso del layout del portal cuando la configuración no se pudo leer (QA-019). Normalmente `proxy.ts` ya contestó con un 503
++ * antes de llegar aquí; esto cubre la carrera en la que la lectura falla entre el proxy y el layout. Sin acciones ni datos de la cuenta.
++ */
++export default function PortalNoDisponible() {
++  return (
++    <main className="flex min-h-svh items-center justify-center bg-background p-4">
++      <div role="alert" className="max-w-md">
++        <h1 className="font-heading text-lg font-bold">{TITULO_NO_DISPONIBLE}</h1>
++        <p className="mt-2 text-sm text-muted-foreground">{MENSAJE_NO_DISPONIBLE}</p>
++        <a href="/portal" className="mt-6 inline-flex h-10 items-center rounded-md bg-primary px-5 text-sm font-bold text-primary-foreground">Reintentar</a>
++      </div>
++    </main>
++  )
++}
+diff --git a/src/lib/config/flags-lectura.ts b/src/lib/config/flags-lectura.ts
+new file mode 100644
+index 0000000..b9f99de
+--- /dev/null
++++ b/src/lib/config/flags-lectura.ts
+@@ -0,0 +1,52 @@
++import { supabaseAdmin } from '../auth-server'
++import { FLAGS_APAGADOS, normalizarFlags, type Flags } from './flags'
++
++/**
++ * Lectura de los feature flags CON su estado (QA-019). **Sólo servidor** (usa la service role).
++ *
++ * Por qué existe: `leerFlags` siempre devolvió «todo apagado» cuando la base no respondía. Para los permisos eso es lo correcto (falla
++ * cerrado), pero el portal lo trataba igual que «cerrado a propósito» y respondía 404 a un cliente con sesión mientras la base estaba
++ * caída: fingía que la página no existía. Aquí se distingue:
++ *
++ *   · `legibles: true`  → la base contestó (o no hay fila de flags: todos nacen apagados). Lo que digan `flags` es la verdad.
++ *   · `legibles: false` → hubo error, excepción, tiempo agotado o un valor que no es un objeto. `flags` viene TODO APAGADO (nunca se
++ *                         abre nada por un error), pero quien necesite decir la verdad al usuario sabe que no es una decisión.
++ *
++ * Este archivo NO lleva `import 'server-only'` porque también lo importa `proxy.ts` (que es el único sitio donde se puede emitir un
++ * HTTP 503: un layout ya no puede cambiar el estado una vez que empieza a transmitir). La frontera sigue protegida: una prueba
++ * (`frontera-cliente-servidor`) prohíbe que cualquier componente de cliente lo importe, y `flags-servidor.ts` conserva su marca.
++ */
++export type LecturaFlags = { flags: Flags; legibles: boolean }
++
++const VIGENCIA_MS = 60_000
++/** Un fallo se recuerda poco: cuando la base vuelve, el portal vuelve en segundos, no en un minuto. */
++const VIGENCIA_FALLO_MS = 5_000
++let memoria: { lectura: LecturaFlags; hasta: number } | null = null
++
++export async function leerFlagsConEstado(ahora = Date.now()): Promise<LecturaFlags> {
++  if (memoria && memoria.hasta > ahora) return memoria.lectura
++  let lectura: LecturaFlags = { flags: FLAGS_APAGADOS, legibles: false }
++  try {
++    const { data, error } = await supabaseAdmin()
++      .from('configuracion')
++      .select('valor')
++      .eq('clave', 'flags')
++      .maybeSingle()
++    if (!error) {
++      const valor: unknown = data?.valor
++      // Sin fila (o `null`) = nunca se configuró = todos apagados, y eso SÍ es una respuesta. Un valor que no es un objeto no se puede
++      // interpretar: no es «cerrado», es «no sé».
++      const interpretable = valor === undefined || valor === null || (typeof valor === 'object' && !Array.isArray(valor))
++      lectura = { flags: normalizarFlags(valor), legibles: interpretable }
++    }
++  } catch {
++    // Ilegible: ver arriba. Nunca abre nada.
++  }
++  memoria = { lectura, hasta: ahora + (lectura.legibles ? VIGENCIA_MS : VIGENCIA_FALLO_MS) }
++  return lectura
++}
++
++/** Olvidar lo memorizado (lo llama quien acaba de escribir un flag, para que su propia respuesta ya diga la verdad). */
++export function olvidarLecturaDeFlags(): void {
++  memoria = null
++}
+diff --git a/src/lib/config/flags-servidor.ts b/src/lib/config/flags-servidor.ts
+index 3dcfe37..3fdab65 100644
+--- a/src/lib/config/flags-servidor.ts
++++ b/src/lib/config/flags-servidor.ts
+@@ -1,6 +1,6 @@
+ import 'server-only'
+-import { supabaseAdmin } from '../auth-server'
+-import { FLAGS_APAGADOS, normalizarFlags, type Flag, type Flags } from './flags'
++import type { Flag, Flags } from './flags'
++import { leerFlagsConEstado, olvidarLecturaDeFlags } from './flags-lectura'
+ 
+ /**
+  * Leer los feature flags de la base. **Sólo servidor** (D-42, V-1.1.87).
+@@ -21,27 +21,18 @@ import { FLAGS_APAGADOS, normalizarFlags, type Flag, type Flags } from './flags'
+  *
+  * Reglas de siempre, sin cambios: todos nacen apagados; si la base no responde
+  * o el valor no es válido, el flag cuenta como APAGADO; y se memoriza 60 s para
+- * no preguntar en cada visita.
++ * no preguntar en cada visita (un fallo, sólo 5 s: ver `flags-lectura.ts`).
+  */
+ 
+-const VIGENCIA_MS = 60_000
+-let memoria: { flags: Flags; hasta: number } | null = null
++export type { LecturaFlags } from './flags-lectura'
++export { leerFlagsConEstado } from './flags-lectura'
+ 
++/**
++ * Los flags tal como siempre: ilegible = todo APAGADO (falla cerrado). Quien necesite distinguir «cerrado» de «no se pudo leer»
++ * (el portal, QA-019) usa `leerFlagsConEstado`. La lectura vive en `flags-lectura.ts` porque `proxy.ts` también la necesita.
++ */
+ export async function leerFlags(ahora = Date.now()): Promise<Flags> {
+-  if (memoria && memoria.hasta > ahora) return memoria.flags
+-  let flags = FLAGS_APAGADOS
+-  try {
+-    const { data, error } = await supabaseAdmin()
+-      .from('configuracion')
+-      .select('valor')
+-      .eq('clave', 'flags')
+-      .maybeSingle()
+-    if (!error) flags = normalizarFlags(data?.valor)
+-  } catch {
+-    // Apagado: ver la regla de arriba.
+-  }
+-  memoria = { flags, hasta: ahora + VIGENCIA_MS }
+-  return flags
++  return (await leerFlagsConEstado(ahora)).flags
+ }
+ 
+ export async function flagEncendido(flag: Flag): Promise<boolean> {
+@@ -51,9 +42,9 @@ export async function flagEncendido(flag: Flag): Promise<boolean> {
+ /**
+  * Olvidar lo memorizado. Lo llama quien acaba de escribir un flag, para que su
+  * propia respuesta ya diga la verdad. Otras instancias del servidor pueden
+- * tardar hasta `VIGENCIA_MS` en enterarse: encender el portal no es una
++ * tardar hasta 60 s en enterarse: encender el portal no es una
+  * operación de un segundo, y la pantalla lo avisa.
+  */
+ export function olvidarFlags(): void {
+-  memoria = null
++  olvidarLecturaDeFlags()
+ }
+diff --git a/src/lib/portal/exigir-portal.ts b/src/lib/portal/exigir-portal.ts
+index e328b77..b0a343b 100644
+--- a/src/lib/portal/exigir-portal.ts
++++ b/src/lib/portal/exigir-portal.ts
+@@ -1,7 +1,8 @@
+ import { NextResponse } from 'next/server'
+ import { exigir, type ChequeoRol } from '../auth-server'
+-import { leerFlags } from '../config/flags-servidor'
++import { leerFlagsConEstado } from '../config/flags-servidor'
+ import { aperturaDelPortal, portalAbiertoPara } from './apertura'
++import { respuestaApiPortalNoDisponible } from './no-disponible'
+ 
+ /**
+  * La puerta de TODA `/api/portal/*` (V-1.1.82). Sólo servidor.
+@@ -10,6 +11,7 @@ import { aperturaDelPortal, portalAbiertoPara } from './apertura'
+  * entra: el filtro por persona se hace aquí, en cada API. Sin acceso, 404 —
+  * no se revela que el portal existe.
+  *
++ *  0. Configuración ilegible (base caída…) → 503, no 404 (QA-019): no se finge que el portal no existe. No abre nada.
+  *  1. Portal cerrado para todos → 404 sin leer siquiera la sesión.
+  *  2. Sesión, suspensión y permiso `cuenta.propia` (`exigir`: 401 / 403).
+  *  3. Etapa interna y la cuenta no es admin → 404.
+@@ -17,7 +19,8 @@ import { aperturaDelPortal, portalAbiertoPara } from './apertura'
+ const noEncontrado = (): ChequeoRol => ({ error: NextResponse.json({ error: 'No encontrado.' }, { status: 404 }) })
+ 
+ export async function exigirPortal(req: Request): Promise<ChequeoRol> {
+-  const flags = await leerFlags()
++  const { flags, legibles } = await leerFlagsConEstado()
++  if (legibles !== true) return { error: respuestaApiPortalNoDisponible() }
+   if (aperturaDelPortal(flags) === 'nadie') return noEncontrado()
+ 
+   const auth = await exigir(req, 'cuenta.propia')
+diff --git a/src/lib/portal/no-disponible.ts b/src/lib/portal/no-disponible.ts
+new file mode 100644
+index 0000000..c6243cf
+--- /dev/null
++++ b/src/lib/portal/no-disponible.ts
+@@ -0,0 +1,71 @@
++import { NextResponse } from 'next/server'
++import { aperturaDelPortal } from './apertura'
++import type { LecturaFlags } from '../config/flags-lectura'
++
++/**
++ * El portal, cuando NO SE PUDO LEER su configuración (QA-019).
++ *
++ * Tres estados distintos que antes eran uno solo (404):
++ *   · `cerrado`      → la configuración se leyó y dice que nadie entra. Sigue siendo 404: no se revela que el portal existe.
++ *   · `indisponible` → la configuración NO se pudo leer (base caída, tiempo agotado, valor ilegible). 503: es un fallo temporal y
++ *                      el mensaje lo dice, en vez de fingir que la página no existe.
++ *   · `abierto`      → se leyó y hay alguna etapa abierta; quién entra lo siguen decidiendo las APIs (`exigirPortal`) y la sesión.
++ *
++ * Regla de seguridad: sólo una lectura CONFIRMADA (`legibles === true`) puede producir `cerrado` o `abierto`. Cualquier otra cosa —un
++ * `false`, un `undefined`, un objeto raro— es `indisponible`, y `indisponible` nunca abre nada: no sustituye a la autenticación ni a
++ * los permisos, sólo cambia el mensaje y el código HTTP de una página que de todos modos no se iba a mostrar.
++ */
++export type EstadoPortal = 'indisponible' | 'cerrado' | 'abierto'
++
++export function estadoDelPortal(lectura: LecturaFlags): EstadoPortal {
++  if (!lectura || lectura.legibles !== true) return 'indisponible'
++  return aperturaDelPortal(lectura.flags) === 'nadie' ? 'cerrado' : 'abierto'
++}
++
++/** Segundos que se sugiere esperar antes de reintentar (cabecera `Retry-After`). */
++export const REINTENTAR_EN_S = 30
++
++export const TITULO_NO_DISPONIBLE = 'Tu portal no está disponible por ahora'
++export const MENSAJE_NO_DISPONIBLE =
++  'No pudimos comprobar si tu portal está abierto. Es un problema temporal de nuestro lado, no de tu cuenta. Intenta de nuevo en unos minutos.'
++
++const CABECERAS = {
++  'Retry-After': String(REINTENTAR_EN_S),
++  'Cache-Control': 'private, no-store',
++  'X-Robots-Tag': 'noindex, nofollow',
++} as const
++
++/** Respuesta 503 para una PÁGINA del portal (la emite `proxy.ts`, antes de que el layout empiece a transmitir). */
++export function respuestaPortalNoDisponible(): Response {
++  const html = `<!doctype html>
++<html lang="es">
++<head>
++<meta charset="utf-8">
++<meta name="viewport" content="width=device-width, initial-scale=1">
++<meta name="robots" content="noindex, nofollow">
++<title>${TITULO_NO_DISPONIBLE} — Vive Bien</title>
++<style>
++:root{color-scheme:light dark;--fondo:#faf9f7;--texto:#1f1d1a;--suave:#5c5b57;--rojo:#8b1a1a}
++@media (prefers-color-scheme:dark){:root{--fondo:#16130f;--texto:#f1ede8;--suave:#b8b2a8;--rojo:#e08a8a}}
++body{margin:0;min-height:100svh;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;background:var(--fondo);color:var(--texto);font-family:system-ui,sans-serif}
++main{max-width:28rem}
++h1{font-size:1.25rem;margin:0 0 .5rem}
++p{margin:0 0 1.25rem;line-height:1.6;color:var(--suave)}
++a{display:inline-block;padding:.65rem 1.25rem;border-radius:.5rem;background:var(--rojo);color:var(--fondo);font-weight:700;text-decoration:none}
++</style>
++</head>
++<body>
++<main role="alert">
++<h1>${TITULO_NO_DISPONIBLE}</h1>
++<p>${MENSAJE_NO_DISPONIBLE}</p>
++<a href="/portal">Reintentar</a>
++</main>
++</body>
++</html>`
++  return new Response(html, { status: 503, headers: { ...CABECERAS, 'Content-Type': 'text/html; charset=utf-8' } })
++}
++
++/** Respuesta 503 para las APIs `/api/portal/*` (JSON). */
++export function respuestaApiPortalNoDisponible(): NextResponse {
++  return NextResponse.json({ error: MENSAJE_NO_DISPONIBLE }, { status: 503, headers: { ...CABECERAS } })
++}
+diff --git a/src/proxy.ts b/src/proxy.ts
+new file mode 100644
+index 0000000..ec5034a
+--- /dev/null
++++ b/src/proxy.ts
+@@ -0,0 +1,21 @@
++import { NextResponse } from 'next/server'
++import { leerFlagsConEstado } from '@/lib/config/flags-lectura'
++import { estadoDelPortal, respuestaPortalNoDisponible } from '@/lib/portal/no-disponible'
++
++/**
++ * Proxy de `/portal` (QA-019). Es el ÚNICO sitio donde se puede devolver un HTTP 503 para una página del portal: un layout de Next ya
++ * no puede cambiar el código de estado cuando empieza a transmitir (por eso `notFound()` es 404 y no hay un `unavailable()`).
++ *
++ * Hace una sola cosa: si la configuración del portal NO se pudo leer, responde 503 con un mensaje claro. En cualquier otro caso deja
++ * pasar la petición sin tocarla, y el layout y las APIs deciden como siempre (404 si está cerrado, sesión y permisos en cada API). No lee
++ * la sesión, no concede nada y no cambia ninguna decisión de acceso: un error aquí sólo puede traducirse en 503, nunca en abrir.
++ */
++export async function proxy() {
++  const lectura = await leerFlagsConEstado()
++  if (estadoDelPortal(lectura) === 'indisponible') return respuestaPortalNoDisponible()
++  return NextResponse.next()
++}
++
++export const config = {
++  matcher: ['/portal', '/portal/:path*'],
++}
+diff --git a/tests/destino-dashboard.test.ts b/tests/destino-dashboard.test.ts
+index cdb84a7..77e1188 100644
+--- a/tests/destino-dashboard.test.ts
++++ b/tests/destino-dashboard.test.ts
+@@ -176,7 +176,8 @@ describe('11-13, 15-16 · los refrescos y las dos formas de entrar', () => {
+ 
+     // El portal sigue cerrándose por flag en el SERVIDOR. El redirect no
+     // sustituye a la autorización.
+-    expect(portal).toMatch(/aperturaDelPortal\(await leerFlags\(\)\) === 'nadie'/)
++    expect(portal).toMatch(/estadoDelPortal\(await leerFlagsConEstado\(\)\)/)
++    expect(portal).toMatch(/estado === 'cerrado'\) notFound\(\)/)
+     expect(portal).toMatch(/notFound\(\)/)
+     // Y ninguno devuelve a /dashboard por su cuenta: no hay bucle posible.
+     for (const f of [portal, admin]) {
+diff --git a/tests/frontera-cliente-servidor.test.ts b/tests/frontera-cliente-servidor.test.ts
+index fce517d..46347b7 100644
+--- a/tests/frontera-cliente-servidor.test.ts
++++ b/tests/frontera-cliente-servidor.test.ts
+@@ -24,6 +24,7 @@ const PROHIBIDO = [
+   { patron: /(^|\/)auth-server$/, que: 'auth-server (supabaseAdmin, service role)' },
+   { patron: /(^|\/)firebase-admin$/, que: 'firebase-admin (credencial de servidor)' },
+   { patron: /(^|\/)config\/flags-servidor$/, que: 'flags-servidor (lee la base)' },
++  { patron: /(^|\/)config\/flags-lectura$/, que: 'flags-lectura (lee la base; sin server-only porque lo importa proxy.ts)' },
+ ]
+ 
+ /** Además: nada que declare `server-only`. */
+diff --git a/tests/portal-aislamiento.test.ts b/tests/portal-aislamiento.test.ts
+index faf88de..f0fb6b5 100644
+--- a/tests/portal-aislamiento.test.ts
++++ b/tests/portal-aislamiento.test.ts
+@@ -47,7 +47,7 @@ vi.mock('@/lib/config/flags-servidor', async (original) => {
+   const real = await original<typeof import('../src/lib/config/flags-servidor')>()
+   // `FLAGS_APAGADOS` es puro y, desde D-42, vive en `config/flags`.
+   const { FLAGS_APAGADOS } = await import('../src/lib/config/flags')
+-  return { ...real, leerFlags: async () => ({ ...FLAGS_APAGADOS, ...mundo.flags }) }
++  return { ...real, leerFlags: async () => ({ ...FLAGS_APAGADOS, ...mundo.flags }), leerFlagsConEstado: async () => ({ flags: { ...FLAGS_APAGADOS, ...mundo.flags }, legibles: true }) }
+ })
+ 
+ vi.mock('@/lib/auth-server', async (original) => {
+diff --git a/tests/portal-apertura.test.ts b/tests/portal-apertura.test.ts
+index 1282071..412e94a 100644
+--- a/tests/portal-apertura.test.ts
++++ b/tests/portal-apertura.test.ts
+@@ -16,7 +16,8 @@ vi.mock('@/lib/config/flags-servidor', async (original) => {
+   const real = await original<typeof import('../src/lib/config/flags-servidor')>()
+   // `normalizarFlags` es puro y, desde D-42, vive en `config/flags`.
+   const { normalizarFlags } = await import('../src/lib/config/flags')
+-  return { ...real, leerFlags: async () => normalizarFlags(estado.flags) }
++  // QA-019: la puerta lee los flags CON su estado; aquí la lectura siempre es legible (los casos ilegibles están en portal-flags-ilegibles.test.ts).
++  return { ...real, leerFlags: async () => normalizarFlags(estado.flags), leerFlagsConEstado: async () => ({ flags: normalizarFlags(estado.flags), legibles: true }) }
+ })
+ vi.mock('@/lib/auth-server', async (original) => ({
+   ...(await original<typeof import('../src/lib/auth-server')>()),
+@@ -121,7 +122,9 @@ describe('todo el portal usa la misma puerta', () => {
+ 
+   it('el layout sólo cierra del todo cuando no hay ningún flag', () => {
+     const layout = readFileSync(join(__dirname, '..', 'src/app/portal/layout.tsx'), 'utf8')
+-    expect(layout).toMatch(/if \(aperturaDelPortal\(await leerFlags\(\)\) === 'nadie'\) notFound\(\)/)
++    // QA-019: sigue cerrándose del todo (404) cuando la configuración SE LEYÓ y no hay ningún flag; si no se pudo leer, no es un cierre.
++    expect(layout).toMatch(/estadoDelPortal\(await leerFlagsConEstado\(\)\)/)
++    expect(layout).toMatch(/estado === 'cerrado'\) notFound\(\)/)
+     expect(layout).toMatch(/robots: \{ index: false, follow: false \}/)
+   })
+ })
+diff --git a/tests/portal-flags-ilegibles.test.ts b/tests/portal-flags-ilegibles.test.ts
+new file mode 100644
+index 0000000..1c56f2e
+--- /dev/null
++++ b/tests/portal-flags-ilegibles.test.ts
+@@ -0,0 +1,296 @@
++import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
++import { readFileSync } from 'node:fs'
++import { join } from 'node:path'
++import { NextResponse } from 'next/server'
++
++/**
++ * QA-019 — cuando la configuración del portal NO se puede leer, no se finge un 404: se dice «no disponible por ahora» con un 503. Y un
++ * error NUNCA abre el portal.
++ */
++const bd = vi.hoisted(() => ({
++  modo: 'ok' as 'ok' | 'error' | 'excepcion' | 'sin-fila' | 'invalido' | 'sin-cliente',
++  valor: { portalCliente: false, portalClienteInterno: false } as unknown,
++  lecturas: 0,
++  exigirLlamado: 0,
++}))
++
++// El layout se EJECUTA de verdad: `notFound()` lanza (como en Next) y la carcasa del portal es un marcador.
++vi.mock('next/navigation', () => ({ notFound: () => { throw new Error('NEXT_NOT_FOUND') } }))
++vi.mock('@/components/portal/PortalShell', () => ({ default: function PortalShell() { return null } }))
++vi.mock('@/lib/auth-server', async (original) => ({
++  ...(await original<typeof import('../src/lib/auth-server')>()),
++  supabaseAdmin: () => {
++    // Sin URL o sin clave `createClient` lanza al CREAR el cliente, antes de cualquier consulta.
++    if (bd.modo === 'sin-cliente') throw new Error('supabaseUrl is required.')
++    return {
++    from: () => ({
++      select: () => ({
++        eq: () => ({
++          maybeSingle: async () => {
++            bd.lecturas++
++            if (bd.modo === 'excepcion') throw new Error('base caída')
++            if (bd.modo === 'error') return { data: null, error: { message: 'timeout' } }
++            if (bd.modo === 'sin-fila') return { data: null, error: null }
++            if (bd.modo === 'invalido') return { data: { valor: 'esto no es un objeto' }, error: null }
++            return { data: { valor: bd.valor }, error: null }
++          },
++        }),
++      }),
++    }),
++    }
++  },
++  exigir: async () => {
++    bd.exigirLlamado++
++    return { perfil: { uid: 'u', email: null, emailVerified: true, rol: 'cliente', superAdmin: false, estado: 'activo', nombre: null } }
++  },
++}))
++
++import { leerFlagsConEstado, olvidarLecturaDeFlags } from '../src/lib/config/flags-lectura'
++import { leerFlags, olvidarFlags } from '../src/lib/config/flags-servidor'
++import { FLAGS_APAGADOS } from '../src/lib/config/flags'
++import { estadoDelPortal, respuestaApiPortalNoDisponible, respuestaPortalNoDisponible } from '../src/lib/portal/no-disponible'
++import { exigirPortal } from '../src/lib/portal/exigir-portal'
++import { proxy, config as configProxy } from '../src/proxy'
++import PortalLayout from '../src/app/portal/layout'
++import PortalNoDisponible from '../src/components/portal/PortalNoDisponible'
++import { renderToStaticMarkup } from 'react-dom/server'
++
++const RAIZ = join(__dirname, '..')
++
++beforeEach(() => {
++  bd.modo = 'ok'
++  bd.valor = { portalCliente: false, portalClienteInterno: false }
++  bd.lecturas = 0
++  bd.exigirLlamado = 0
++  olvidarLecturaDeFlags()
++  vi.spyOn(console, 'error').mockImplementation(() => undefined)
++})
++afterEach(() => { vi.restoreAllMocks() })
++
++describe('leerFlagsConEstado: «cerrado» no es «no se pudo leer»', () => {
++  it('la base contesta con todo apagado → legible, cerrado (404 legítimo)', async () => {
++    const l = await leerFlagsConEstado()
++    expect(l.legibles).toBe(true)
++    expect(estadoDelPortal(l)).toBe('cerrado')
++  })
++
++  it('sin fila de flags (nunca configurados) → legible y cerrado: todos nacen apagados', async () => {
++    bd.modo = 'sin-fila'
++    const l = await leerFlagsConEstado()
++    expect(l).toEqual({ flags: FLAGS_APAGADOS, legibles: true })
++    expect(estadoDelPortal(l)).toBe('cerrado')
++  })
++
++  for (const modo of ['error', 'excepcion', 'invalido', 'sin-cliente'] as const) {
++    it(`${modo} → ILEGIBLE: todo apagado (nunca abre) pero NO es «cerrado»`, async () => {
++      bd.modo = modo
++      const l = await leerFlagsConEstado()
++      expect(l.legibles).toBe(false)
++      expect(l.flags).toEqual(FLAGS_APAGADOS)
++      expect(estadoDelPortal(l)).toBe('indisponible')
++    })
++  }
++
++  it('un error NUNCA abre el portal, ni aunque la base ya hubiera dicho «abierto» antes', async () => {
++    bd.valor = { portalCliente: true, portalClienteInterno: true }
++    expect(estadoDelPortal(await leerFlagsConEstado())).toBe('abierto')
++    olvidarLecturaDeFlags()
++    bd.modo = 'error'
++    const l = await leerFlagsConEstado()
++    expect(l.flags.portalCliente).toBe(false)
++    expect(l.flags.portalClienteInterno).toBe(false)
++    expect(estadoDelPortal(l)).toBe('indisponible')
++  })
++
++  it('la lectura abierta se memoriza 60 s; un fallo sólo 5 s (cuando la base vuelve, el portal vuelve en segundos)', async () => {
++    bd.valor = { portalCliente: true, portalClienteInterno: false }
++    await leerFlagsConEstado(1_000)
++    await leerFlagsConEstado(1_000 + 59_000)
++    expect(bd.lecturas).toBe(1)
++    await leerFlagsConEstado(1_000 + 61_000)
++    expect(bd.lecturas).toBe(2)
++
++    olvidarLecturaDeFlags(); bd.lecturas = 0; bd.modo = 'error'
++    await leerFlagsConEstado(10_000)
++    await leerFlagsConEstado(10_000 + 4_000)
++    expect(bd.lecturas).toBe(1)
++    bd.modo = 'ok'; bd.valor = { portalCliente: true, portalClienteInterno: false }
++    expect(estadoDelPortal(await leerFlagsConEstado(10_000 + 6_000))).toBe('abierto')
++  })
++
++  it('`leerFlags` (todos los demás usos) sigue fallando CERRADO: ilegible = todo apagado', async () => {
++    bd.valor = { portalCliente: true, portalClienteInterno: true }
++    bd.modo = 'excepcion'
++    expect(await leerFlags()).toEqual(FLAGS_APAGADOS)
++  })
++
++  it('`olvidarFlags` (la que usa la API de administración) también olvida la lectura con estado', async () => {
++    bd.valor = { portalCliente: true, portalClienteInterno: false }
++    await leerFlagsConEstado()
++    bd.valor = { portalCliente: false, portalClienteInterno: false }
++    olvidarFlags()
++    expect(estadoDelPortal(await leerFlagsConEstado())).toBe('cerrado')
++  })
++})
++
++describe('estadoDelPortal (puro): sólo una lectura CONFIRMADA decide', () => {
++  const ABIERTO = { portalCliente: true, portalClienteInterno: false }
++  it('matriz', () => {
++    expect(estadoDelPortal({ flags: ABIERTO as never, legibles: true })).toBe('abierto')
++    expect(estadoDelPortal({ flags: { portalCliente: false, portalClienteInterno: true } as never, legibles: true })).toBe('abierto')
++    expect(estadoDelPortal({ flags: FLAGS_APAGADOS, legibles: true })).toBe('cerrado')
++  })
++  it('ilegible → indisponible aunque los flags digan «abierto» (un error jamás abre)', () => {
++    expect(estadoDelPortal({ flags: ABIERTO as never, legibles: false })).toBe('indisponible')
++  })
++  it('valores raros en `legibles` no cuentan como confirmados', () => {
++    for (const raro of [undefined, null, 0, 1, 'true', {}, []]) {
++      expect(estadoDelPortal({ flags: ABIERTO as never, legibles: raro as never }), String(raro)).toBe('indisponible')
++    }
++    expect(estadoDelPortal(undefined as never)).toBe('indisponible')
++  })
++})
++
++describe('el proxy de /portal emite el 503 real', () => {
++  it('sólo vigila /portal y sus subrutas', () => {
++    expect(configProxy.matcher).toEqual(['/portal', '/portal/:path*'])
++  })
++
++  it('ilegible → 503 con mensaje claro, Retry-After, sin caché y sin indexar', async () => {
++    bd.modo = 'error'
++    const r = await proxy()
++    expect(r.status).toBe(503)
++    expect(r.headers.get('retry-after')).toBe('30')
++    expect(r.headers.get('cache-control')).toBe('private, no-store')
++    expect(r.headers.get('x-robots-tag')).toContain('noindex')
++    expect(r.headers.get('content-type')).toContain('text/html')
++    const html = await r.text()
++    expect(html).toContain('lang="es"')
++    expect(html).toMatch(/no está disponible por ahora/i)
++    expect(html).toMatch(/temporal/i)
++    expect(html).not.toMatch(/no encontrad|404/i) // no finge que no existe
++  })
++
++  it('cerrado confirmado → el proxy NO contesta (deja pasar: el layout responde el 404 de siempre)', async () => {
++    const r = await proxy()
++    expect(r.status).toBe(200)
++    expect(r.headers.get('x-middleware-next')).toBe('1')
++  })
++
++  it('abierto → deja pasar', async () => {
++    bd.valor = { portalCliente: true, portalClienteInterno: false }
++    const r = await proxy()
++    expect(r.headers.get('x-middleware-next')).toBe('1')
++  })
++
++  it('para todos los errores relevantes del servidor: 503 y nunca un paso libre', async () => {
++    for (const modo of ['error', 'excepcion', 'invalido', 'sin-cliente'] as const) {
++      olvidarLecturaDeFlags()
++      bd.modo = modo
++      bd.valor = { portalCliente: true, portalClienteInterno: true }
++      expect((await proxy()).status, modo).toBe(503)
++    }
++  })
++
++  it('no lee la sesión ni toca permisos', async () => {
++    bd.modo = 'error'
++    await proxy()
++    expect(bd.exigirLlamado).toBe(0)
++    const t = readFileSync(join(RAIZ, 'src', 'proxy.ts'), 'utf8')
++    expect(t).not.toMatch(/exigir|verifyIdToken|authorization|cookies/i)
++  })
++})
++
++describe('exigirPortal (todas las APIs del portal)', () => {
++  const pedir = () => exigirPortal(new Request('https://vivebienn.com/api/portal/acceso'))
++
++  it('ilegible → 503 JSON con mensaje, SIN leer la sesión y sin abrir nada', async () => {
++    bd.modo = 'error'
++    const r = await pedir()
++    expect(r.error).toBeInstanceOf(NextResponse)
++    expect(r.error!.status).toBe(503)
++    expect(r.error!.headers.get('retry-after')).toBe('30')
++    expect((await r.error!.json()).error).toMatch(/temporal/i)
++    expect(bd.exigirLlamado).toBe(0)
++  })
++
++  it('cerrado confirmado → 404 como siempre', async () => {
++    const r = await pedir()
++    expect(r.error!.status).toBe(404)
++    expect(bd.exigirLlamado).toBe(0)
++  })
++
++  it('abierto → sigue pasando por la sesión y los permisos (exigir)', async () => {
++    bd.valor = { portalCliente: true, portalClienteInterno: false }
++    const r = await pedir()
++    expect(r.error).toBeUndefined()
++    expect(bd.exigirLlamado).toBe(1)
++  })
++})
++
++describe('las respuestas 503', () => {
++  it('página y API comparten el mensaje y las cabeceras', async () => {
++    const p = respuestaPortalNoDisponible()
++    const a = respuestaApiPortalNoDisponible()
++    for (const r of [p, a]) {
++      expect(r.status).toBe(503)
++      expect(r.headers.get('retry-after')).toBe('30')
++      expect(r.headers.get('cache-control')).toBe('private, no-store')
++    }
++  })
++})
++
++describe('el layout del portal, EJECUTADO', () => {
++  const hijos = 'contenido'
++  const ejecutar = async () => (await PortalLayout({ children: hijos })) as unknown as { type: unknown; props: { children?: unknown } }
++
++  it('cerrado confirmado → notFound() (el 404 de siempre)', async () => {
++    await expect(ejecutar()).rejects.toThrow('NEXT_NOT_FOUND')
++  })
++
++  it('sin fila de flags → cerrado → notFound()', async () => {
++    bd.modo = 'sin-fila'
++    await expect(ejecutar()).rejects.toThrow('NEXT_NOT_FOUND')
++  })
++
++  for (const modo of ['error', 'excepcion', 'invalido', 'sin-cliente'] as const) {
++    it(`${modo}: NO es notFound(); muestra el aviso de indisponibilidad y no la carcasa del portal`, async () => {
++      bd.modo = modo
++      bd.valor = { portalCliente: true, portalClienteInterno: true }
++      const el = await ejecutar()
++      expect(el.type).toBe(PortalNoDisponible)
++    })
++  }
++
++  it('abierto (a todos o etapa interna) → la carcasa del portal con sus hijos', async () => {
++    for (const valor of [{ portalCliente: true, portalClienteInterno: false }, { portalCliente: false, portalClienteInterno: true }]) {
++      olvidarLecturaDeFlags()
++      bd.valor = valor
++      const el = await ejecutar()
++      expect((el.type as { name: string }).name).toBe('PortalShell')
++      expect(el.props.children).toBe(hijos)
++    }
++  })
++
++  it('el aviso se pinta como alerta, en español, sin datos de la cuenta ni fingir un 404', () => {
++    const html = renderToStaticMarkup(PortalNoDisponible())
++    expect(html).toContain('role="alert"')
++    expect(html).toMatch(/no está disponible por ahora/i)
++    expect(html).toMatch(/temporal/i)
++    expect(html).toContain('href="/portal"')
++    expect(html).not.toMatch(/no encontrad|404/i)
++  })
++})
++
++describe('el layout del portal (estático)', () => {
++  const layout = readFileSync(join(RAIZ, 'src', 'app', 'portal', 'layout.tsx'), 'utf8')
++  it('404 sólo cuando está «cerrado» confirmado; ilegible muestra el aviso, no un 404', () => {
++    expect(layout).toMatch(/estadoDelPortal\(await leerFlagsConEstado\(\)\)/)
++    expect(layout).toMatch(/estado === 'cerrado'\) notFound\(\)/)
++    expect(layout).toMatch(/estado === 'indisponible'\) return <PortalNoDisponible \/>/)
++    expect(layout).not.toMatch(/leerFlags\(\)/)
++  })
++  it('lo demás sigue cerrado por defecto: sólo `abierto` llega al PortalShell', () => {
++    expect(layout).toMatch(/return <PortalShell>\{children\}<\/PortalShell>/)
++  })
++})

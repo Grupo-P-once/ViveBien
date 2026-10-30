@@ -1,0 +1,378 @@
+import type { Bloque } from '../modelo'
+
+/**
+ * Secciones de profundidad de cada artículo (22-oct-2026). Se insertan JUSTO ANTES de las preguntas frecuentes (ver `articulos.ts`), así cada guía queda
+ * como una pieza larga y completa. Mismas reglas: sin cifras ni afirmaciones legales que no se hayan verificado; los ejemplos son ilustrativos y lo dicen.
+ */
+export const AMPLIACIONES: Record<string, readonly Bloque[]> = {
+  'como-comprar-una-casa-en-leon-guanajuato-guia-paso-a-paso': [
+    { tipo: 'h2', texto: 'Preguntas que conviene hacer en cada visita' },
+    { tipo: 'p', texto: 'Una buena visita se parece más a una entrevista que a un paseo. Estas preguntas, hechas con calma, te ahorran meses de arrepentimiento y suelen revelar más que cualquier folleto:' },
+    { tipo: 'lista', items: [
+      '¿Por qué se vende la casa y desde cuándo está en el mercado?',
+      '¿Cuánto se paga de predial, agua, luz y, si aplica, de cuota de mantenimiento?',
+      '¿Ha tenido filtraciones, plagas, inundaciones o reparaciones importantes? ¿Hay facturas?',
+      '¿Qué incluye la venta (cocina integral, clima, boiler, cortinas, closets)?',
+      '¿La escritura está a nombre de quien vende? ¿Hay hipoteca o algún adeudo por liquidar?',
+      '¿Hay planos y permisos de las ampliaciones?',
+      '¿Cuándo podrías entregar la casa y en qué condiciones?',
+    ] },
+    { tipo: 'h2', texto: 'Cómo comparar dos casas que te gustan' },
+    { tipo: 'p', texto: 'Cuando dudas entre dos opciones, la emoción empata y la cabeza tiene que desempatar. Pon en una hoja los mismos datos para las dos y compáralos a la vista:' },
+    { tipo: 'tabla', titulo: 'Comparativo sencillo entre dos opciones', encabezados: ['Aspecto', 'Casa A', 'Casa B'], filas: [
+      ['Precio por metro cuadrado de construcción', 'Calcúlalo dividiendo el precio entre los metros.', 'Hazlo igual para comparar de forma justa.'],
+      ['Estado y reparaciones pendientes', 'Anota lo que viste y cuánto cuesta arreglarlo.', 'Igual para la otra.'],
+      ['Gastos mensuales recurrentes', 'Mantenimiento, predial, servicios.', 'Igual para la otra.'],
+      ['Traslados reales', 'Prueba el trayecto en horas pico.', 'Igual para la otra.'],
+      ['Situación legal', 'Documentos completos o por completar.', 'Igual para la otra.'],
+      ['Margen de negociación', 'Qué fallas te dan argumentos.', 'Igual para la otra.'],
+    ] },
+    { tipo: 'h2', texto: 'Cuándo detenerte y pedir ayuda profesional' },
+    { tipo: 'p', texto: 'Comprar una casa no exige hacerlo todo solo. Pide ayuda cuando aparezcan señales como una escritura con datos que no coinciden, un vendedor que evita mostrar documentos, grietas que se repiten en la misma zona, un precio muy distinto al de casas parecidas o presión para apartar «hoy». Un notario, un abogado o un perito pueden ahorrarte problemas de años; y un asesor inmobiliario serio te ayuda a ordenar el proceso sin sustituir esas revisiones. Cuando quieras revisar tu caso con un equipo local, [contáctanos](/contacto).' },
+  ],
+
+  'credito-infonavit-o-credito-bancario-como-elegir': [
+    { tipo: 'h2', texto: 'Tres perfiles, tres rutas posibles (ejemplos ilustrativos)' },
+    { tipo: 'p', texto: 'Los siguientes casos son ilustrativos, no recomendaciones personalizadas. Sirven para ver cómo cambia la decisión según la situación.' },
+    { tipo: 'tabla', titulo: 'Cómo cambia la decisión según el perfil', encabezados: ['Perfil', 'Qué suele pesar', 'Primer paso sensato'], filas: [
+      ['Persona con empleo formal y aportaciones estables', 'Poder usar su derecho de crédito y sus aportaciones; ver si el monto alcanza para la casa que quiere.', 'Revisar su precalificación en el portal y comparar con una cotización bancaria.'],
+      ['Persona con ingresos variables o independiente', 'Poder demostrar ingresos y capacidad de pago ante un banco.', 'Reunir comprobantes y pedir simulaciones a varias instituciones.'],
+      ['Pareja con dos ingresos', 'Posibilidad de sumar capacidades de pago o combinar esquemas.', 'Preguntar por esquemas conjuntos y comparar el costo total de cada ruta.'],
+    ] },
+    { tipo: 'h2', texto: 'Los documentos que conviene tener listos' },
+    { tipo: 'p', texto: 'Aunque cada institución pide lo suyo, casi todas piden un conjunto parecido. Tenerlo ordenado acelera todo: identificación oficial vigente, comprobante de domicilio, comprobantes de ingresos, estados de cuenta, constancia de situación fiscal si aplica y, para el inmueble, escritura, predial y datos del vendedor. En el caso del Infonavit, además, revisa que tus datos en el portal estén actualizados (Instituto del Fondo Nacional de la Vivienda para los Trabajadores, s. f.).' },
+    { tipo: 'h2', texto: 'Preguntas que debes hacerle a tu asesor de crédito' },
+    { tipo: 'lista', items: [
+      '¿Cuál es el CAT de esta oferta y qué incluye?',
+      '¿Qué seguros incluye y puedo cotizarlos por separado?',
+      '¿Cuánto es el pago total y cuál sería con un plazo más corto?',
+      '¿Qué comisiones hay por apertura, por pago anticipado y por cambiar de institución?',
+      '¿La tasa es fija o variable y bajo qué condiciones cambia?',
+      '¿Qué documentos faltan y cuánto tardará la autorización?',
+      '¿Qué pasa si el avalúo sale por debajo del precio acordado?',
+    ] },
+  ],
+
+  'que-revisar-antes-de-comprar-una-casa-usada': [
+    { tipo: 'h2', texto: 'Diez preguntas para el vendedor' },
+    { tipo: 'lista', items: [
+      '¿Cuántos años tiene la casa y quién la construyó?',
+      '¿Se ha remodelado o ampliado? ¿Con qué permisos?',
+      '¿Ha tenido filtraciones, plagas o inundaciones?',
+      '¿Cuándo se renovó por última vez la instalación eléctrica y la impermeabilización?',
+      '¿Qué reparaciones importantes se han hecho y hay facturas?',
+      '¿Cuánto se paga de servicios al mes, en promedio?',
+      '¿Cómo es la relación con los vecinos y la administración?',
+      '¿Qué incluye exactamente la venta?',
+      '¿Por qué se vende?',
+      '¿Cuándo se podría entregar?',
+    ] },
+    { tipo: 'h2', texto: 'Cómo estimar el costo de las reparaciones sin adivinar' },
+    { tipo: 'p', texto: 'No hace falta dar cifras de memoria: hace falta un método. Haz una lista de cada hallazgo, ordénalos por urgencia (seguridad, humedad y estructura primero; estética al final) y pide cotizaciones por escrito a dos o tres proveedores para lo más importante. Con esos números en la mano, negocias con argumentos y decides si el precio sigue siendo razonable. Si la reparación implica estructura, consulta a un ingeniero antes de comprometer dinero.' },
+    { tipo: 'h2', texto: 'A quién llevar a la segunda visita' },
+    { tipo: 'p', texto: 'Una segunda visita con otra persona de confianza suele revelar lo que a ti se te pasó: un maestro de obra, un familiar con experiencia o un ingeniero para revisar lo estructural. Lleva una lámpara, un cargador para probar contactos, una cinta métrica y una libreta. Si la casa te sigue gustando después de una segunda mirada fría, es una buena señal. Para ordenar los siguientes pasos, consulta [cómo comprar una casa en León](/blog/como-comprar-una-casa-en-leon-guanajuato-guia-paso-a-paso).' },
+  ],
+
+  'como-vender-tu-casa-en-leon-sin-errores': [
+    { tipo: 'h2', texto: 'Visitas seguras: cómo organizarlas' },
+    { tipo: 'pasos', items: [
+      'Agenda por cita; no recibas visitas sorpresa.',
+      'Confirma identidad y nombre de quienes vendrán, y avisa a alguien de confianza.',
+      'Guarda joyas, documentos y objetos de valor antes de cada visita.',
+      'Acompaña siempre a los visitantes por toda la casa; no los dejes solos.',
+      'Después de la visita, pide comentarios: te dirán si el precio y la presentación son correctos.',
+    ] },
+    { tipo: 'h2', texto: 'Cómo comparar ofertas con una tabla' },
+    { tipo: 'tabla', titulo: 'Más allá del precio: qué comparar en cada oferta', encabezados: ['Aspecto', 'Qué preguntar', 'Por qué importa'], filas: [
+      ['Precio ofrecido', 'Monto total y qué incluye.', 'Es la base de la comparación.'],
+      ['Forma de pago', 'Contado, crédito o mixto; apartado y calendario.', 'El crédito agrega tiempos e incertidumbre.'],
+      ['Fecha de firma', 'En cuántos días podría escriturarse.', 'Cada semana extra tiene un costo para ti.'],
+      ['Condiciones', 'Si la oferta depende de que se venda otra casa o de conseguir crédito.', 'Una oferta condicionada puede caerse.'],
+      ['Seriedad del comprador', 'Pre-autorización de crédito, comprobantes y disposición a apartar.', 'Evita perder semanas.'],
+    ] },
+    { tipo: 'h2', texto: 'Después de la firma: entrega y cierre' },
+    { tipo: 'p', texto: 'Con la escritura firmada y el pago confirmado, queda cerrar los pendientes: entrega de llaves y controles, cambio de titular en servicios, cancelación de la hipoteca si la había y archivo de tus documentos. Pregunta también en las oficinas municipales qué trámites te corresponden como vendedor, por ejemplo los relacionados con el predial (Municipio de León, Guanajuato, s. f.). Conserva copia de todo durante varios años: cualquier aclaración posterior será más fácil con tus papeles a la mano.' },
+  ],
+
+  'cuanto-vale-tu-casa-valor-estimado-vs-avaluo': [
+    { tipo: 'h2', texto: 'Un ejemplo de ajuste por comparables (sin cifras)' },
+    { tipo: 'p', texto: 'Imagina que quieres valuar tu casa y encuentras tres parecidas en la misma colonia. La casa A es un poco más grande pero está sin remodelar; la casa B es del mismo tamaño y recién remodelada; la casa C es más chica pero tiene jardín amplio. Tu casa se parece más a B en tamaño y a A en estado. El ejercicio es sencillo: parte del precio por metro cuadrado de cada comparable, súbelo o bájalo por cada diferencia relevante (estado, tamaño, cochera, jardín) y obtén un rango. Si las tres comparables dan rangos parecidos, tienes una referencia sólida; si divergen mucho, necesitas más comparables o una opinión técnica.' },
+    { tipo: 'h2', texto: 'Errores al usar portales de anuncios para valuar' },
+    { tipo: 'lista', items: [
+      '**Tomar el precio publicado como precio real:** son precios de oferta; el cierre suele diferir.',
+      '**Comparar con propiedades que llevan mucho tiempo publicadas:** si no se venden, quizá estén caras.',
+      '**Ignorar las diferencias de estado:** una remodelación completa cambia el valor.',
+      '**Mezclar superficies:** comparar metros de terreno con metros de construcción da conclusiones falsas.',
+      '**Usar una sola comparable:** necesitas varias para ver el patrón.',
+    ] },
+    { tipo: 'h2', texto: 'Cómo leer un rango en lugar de una cifra' },
+    { tipo: 'p', texto: 'Un rango es honesto: reconoce que el valor depende de la negociación, de la urgencia y del momento. Si necesitas vender pronto, ubícate en la parte baja del rango; si puedes esperar y la casa está en excelente estado, en la alta. Y recuerda que el mejor precio es el que hace que la casa genere visitas y ofertas serias. Cuando quieras contrastar tus números con un equipo local, [contáctanos](/contacto).' },
+  ],
+
+  'como-preparar-tu-casa-para-vender-mas-rapido': [
+    { tipo: 'h2', texto: 'Un calendario de preparación de dos semanas' },
+    { tipo: 'tabla', titulo: 'Qué hacer cada día para llegar listo', encabezados: ['Cuándo', 'Qué hacer', 'Resultado'], filas: [
+      ['Primeros dos días', 'Despejar, regalar o guardar lo que no usas; revisar documentos.', 'Casa más amplia y papeles listos.'],
+      ['Días tres a cinco', 'Reparaciones menores: llaves, chapas, apagadores, goteras.', 'Se acaban los «detallitos».'],
+      ['Días seis a ocho', 'Pintura de retoque y limpieza profunda.', 'Casa fresca y limpia.'],
+      ['Días nueve y diez', 'Jardín, fachada y entrada.', 'Primera impresión cuidada.'],
+      ['Días once y doce', 'Acomodo, focos y detalles; prueba de luz a distintas horas.', 'Casa lista para fotos.'],
+      ['Días trece y catorce', 'Sesión de fotos y publicación con ficha completa.', 'Anuncio atractivo y claro.'],
+    ] },
+    { tipo: 'h2', texto: 'Los detalles que no se ven en la foto, pero se sienten en la visita' },
+    { tipo: 'lista', items: [
+      '**Olores:** ventila, elimina fuentes de olor y evita aromatizantes muy fuertes.',
+      '**Ruido:** si hay un sonido molesto (llave que gotea, ventilador), arréglalo.',
+      '**Temperatura:** abre o cierra ventanas para que la casa se sienta agradable.',
+      '**Orden visible:** superficies despejadas y clósets sin desbordarse.',
+      '**Luz:** todas las lámparas funcionando, con el mismo tono de foco.',
+    ] },
+    { tipo: 'h2', texto: 'Cómo decidir en qué gastar y en qué no' },
+    { tipo: 'p', texto: 'Divide los arreglos en tres grupos: los que afectan seguridad o funcionamiento (se hacen siempre), los que mejoran mucho la percepción por poco dinero (se hacen casi siempre) y los que son remodelaciones grandes (se evalúan con un asesor). Una regla útil: si el comprador va a notar un defecto de inmediato y se imaginará una factura grande, conviene arreglarlo o descontarlo. Para fijar el precio con datos antes de invertir, usa el [valuador](/valuador) y compara con [cuánto vale tu casa](/blog/cuanto-vale-tu-casa-valor-estimado-vs-avaluo).' },
+  ],
+
+  'contrato-de-arrendamiento-que-debe-incluir': [
+    { tipo: 'h2', texto: 'Los anexos que conviene firmar junto al contrato' },
+    { tipo: 'lista', items: [
+      '**Inventario y estado del inmueble** con fotos fechadas.',
+      '**Reglamento interno** de la privada o del condominio, si existe.',
+      '**Copia de identificaciones** y, en su caso, de poderes del representante.',
+      '**Relación de llaves y controles** entregados.',
+      '**Lecturas de medidores** (agua, luz, gas) al inicio.',
+      '**Carta de obligado solidario o fiador**, si se pactó.',
+    ] },
+    { tipo: 'h2', texto: 'Al terminar el contrato: entrega y devolución del depósito' },
+    { tipo: 'pasos', items: [
+      'Avisa por escrito con la anticipación que pida el contrato.',
+      'Haz un recorrido conjunto con el inventario inicial en la mano.',
+      'Documenta con fotos el estado final y anota cualquier diferencia.',
+      'Liquida servicios y presenta los recibos al corriente.',
+      'Entrega llaves contra un recibo firmado.',
+      'Acuerda por escrito el monto y la fecha de devolución del depósito.',
+    ] },
+    { tipo: 'h2', texto: 'Cuándo vale la pena pedir ayuda a un abogado' },
+    { tipo: 'p', texto: 'Un contrato de vivienda sencillo puede resolverse con un buen modelo adaptado, pero hay casos en que conviene una revisión profesional: rentas de larga duración, locales y naves con inversión en adecuaciones, contratos con una empresa, depósitos altos, cláusulas de incremento atípicas o cualquier situación con garantías complejas. El costo de una revisión es pequeño frente al de un conflicto. Y si estás por rentar, revisa [cómo evitar fraudes al rentar](/blog/como-evitar-fraudes-al-rentar-una-casa-o-local).' },
+  ],
+
+  'como-evitar-fraudes-al-rentar-una-casa-o-local': [
+    { tipo: 'h2', texto: 'Las modalidades más frecuentes de fraude' },
+    { tipo: 'tabla', titulo: 'Cómo operan y cómo se detectan', encabezados: ['Modalidad', 'Cómo funciona', 'Cómo protegerte'], filas: [
+      ['Falso propietario', 'Alguien se hace pasar por el dueño y cobra apartado sin serlo.', 'Compara identificación con escritura o recibos y confirma con el propietario real.'],
+      ['Anuncio duplicado', 'Copian fotos y descripción de un anuncio real con otro contacto.', 'Busca las fotos en otros anuncios y visita antes de pagar.'],
+      ['Renta fantasma', 'La propiedad no existe o no está disponible.', 'Visita el inmueble y confirma con vecinos o administración.'],
+      ['Depósito en garantía falso', 'Piden depósito «para reservar» y desaparecen.', 'No pagues sin ver, sin contrato y sin recibo.'],
+      ['Falso inquilino', 'Un supuesto inquilino usa comprobantes falsos o subarrienda.', 'Verifica identidad, ingresos y referencias; limita llaves.'],
+      ['Enlaces de pago falsos', 'Mandan un enlace para «proteger» el pago que roba datos.', 'No uses enlaces enviados por desconocidos; paga a cuentas verificadas.'],
+    ] },
+    { tipo: 'h2', texto: 'Cómo verificar un anuncio en seis pasos' },
+    { tipo: 'pasos', items: [
+      'Busca las fotos del anuncio en otros sitios: si aparecen con otra dirección, desconfía.',
+      'Compara el precio con propiedades similares de la zona.',
+      'Pide el nombre completo del propietario y una identificación.',
+      'Solicita escritura, predial o un recibo de servicios para contrastar nombre y dirección.',
+      'Visita el inmueble y habla con vecinos o la administración.',
+      'Firma el contrato por escrito antes de cualquier pago importante.',
+    ] },
+    { tipo: 'h2', texto: 'Para propietarios e inmobiliarias: un protocolo mínimo' },
+    { tipo: 'p', texto: 'Quien da en renta o intermedia también debe cuidarse: pide identificación y comprobantes, verifica referencias, haz el contrato con anexos e inventario, entrega recibos por cada pago y conserva copias. Un proceso claro protege al arrendador y vuelve más difícil que alguien intente aprovecharse. Si quieres publicar o encontrar una propiedad con respaldo, revisa el catálogo de [propiedades](/propiedades) o [habla con nosotros](/contacto).' },
+  ],
+
+  'rentar-o-comprar-como-decidir': [
+    { tipo: 'h2', texto: 'Tres escenarios de vida y cómo cambia la decisión' },
+    { tipo: 'tabla', titulo: 'Ejemplos ilustrativos (no son recomendaciones personalizadas)', encabezados: ['Escenario', 'Qué suele pesar', 'Inclinación razonable'], filas: [
+      ['Profesionista soltero en un trabajo que puede cambiar de ciudad', 'Flexibilidad y liquidez.', 'Rentar suele ser más prudente mientras la situación se aclara.'],
+      ['Pareja con ingresos estables que planea hijos y quedarse en la ciudad', 'Estabilidad y espacio.', 'Comprar puede tener sentido si el costo mensual es sostenible.'],
+      ['Emprendedor que necesita capital para su negocio', 'Liquidez y riesgo.', 'Rentar y mantener el capital disponible puede ser más conveniente.'],
+    ] },
+    { tipo: 'h2', texto: 'Las variables que debe tener tu hoja de cálculo' },
+    { tipo: 'lista', items: [
+      'Precio de la propiedad, enganche y gastos de la operación.',
+      'Costo del crédito: tasa, plazo, comisiones, seguros y CAT.',
+      'Mantenimiento anual, predial, seguros y cuotas.',
+      'Renta mensual actual y posibles incrementos.',
+      'Rendimiento alternativo del enganche si lo invirtieras en otra cosa.',
+      'Tiempo que planeas quedarte.',
+    ] },
+    { tipo: 'h2', texto: 'Los sesgos que pesan más de lo que crees' },
+    { tipo: 'p', texto: 'Hay frases que repetimos sin comprobar: «pagar renta es tirar el dinero», «los bienes raíces nunca bajan», «es mejor esperar a que bajen las tasas». Detrás hay sesgos: aversión a la pérdida, presión social, miedo a quedarte fuera. La mejor defensa es poner números por escrito y revisarlos con calma, idealmente con alguien que no tenga interés en la venta. Y si ya decidiste comprar, ordena el proceso con [cómo comprar una casa en León](/blog/como-comprar-una-casa-en-leon-guanajuato-guia-paso-a-paso).' },
+  ],
+
+  'como-rentar-una-nave-industrial-en-leon': [
+    { tipo: 'h2', texto: 'Seguridad industrial y cumplimiento: lo que no se negocia' },
+    { tipo: 'p', texto: 'Una nave puede ser perfecta en metros y accesos y aun así no ser apta para tu operación si no cumple con la seguridad que tu actividad exige. Pregunta por rutas de evacuación, sistemas contra incendio, señalización, ventilación, iluminación de emergencia y condiciones de almacenamiento de materiales. Averigua, ante las autoridades competentes, qué permisos y avisos corresponden a tu giro y quién los tramita (Gobierno del Estado de Guanajuato, s. f.). Un seguro adecuado y un plan de protección civil bien hecho son parte del costo real de operar.' },
+    { tipo: 'h2', texto: 'Negociación: qué pedir además de la renta' },
+    { tipo: 'lista', items: [
+      '**Periodo de gracia o meses de renta reducida** mientras adecúas la nave.',
+      '**Adecuaciones a cargo del propietario** (portones, piso, instalaciones) por escrito.',
+      '**Tope claro de incrementos** con fórmula o índice.',
+      '**Opción de renovación** con condiciones definidas.',
+      '**Derecho de preferencia** para ampliar o rentar naves contiguas.',
+      '**Condiciones de salida**: aviso previo y penalizaciones razonables.',
+    ] },
+    { tipo: 'h2', texto: 'De la búsqueda a la mudanza: los pasos en orden' },
+    { tipo: 'pasos', items: [
+      'Define tu perfil de operación y tu presupuesto total.',
+      'Selecciona tres o cuatro naves con una ficha técnica por escrito.',
+      'Haz visitas técnicas con quien opera y con mantenimiento o ingeniería.',
+      'Compara costo total, no solo renta.',
+      'Negocia condiciones y adecuaciones.',
+      'Revisa el contrato con un abogado y confirma permisos.',
+      'Firma, documenta el estado de entrega y programa la mudanza.',
+    ] },
+  ],
+
+  'que-verificar-antes-de-comprar-un-terreno-en-leon': [
+    { tipo: 'h2', texto: 'Colindancias y servidumbres a fondo' },
+    { tipo: 'p', texto: 'Las colindancias son los vecinos del terreno: terrenos, calles, canales o instalaciones que lo rodean. Confirma que coincidan con la escritura y con la realidad, y averigua si existe algún conflicto con colindantes. Las servidumbres son derechos de paso o de uso que otros tienen sobre el predio, como una línea de energía o un acceso a otro lote. Una servidumbre inscrita puede limitar tu proyecto; una servidumbre de hecho, sin registro, puede ser fuente de conflictos. Pide al vendedor que declare cualquiera que conozca y verifica con el levantamiento y la escritura.' },
+    { tipo: 'h2', texto: 'Financiamiento y forma de compra' },
+    { tipo: 'p', texto: 'Los terrenos se financian con menos facilidad que una casa: muchas instituciones prefieren inmuebles construidos, y los requisitos varían. Pregunta antes de apartar qué opciones existen para tu caso y qué documentos piden. Una opción frecuente es pagar un enganche y el resto en pagos pactados con el vendedor, siempre con contrato por escrito, calendario claro y garantías; si algo falla, debe estar definido quién conserva qué. Pide a un notario o abogado que revise cualquier esquema de pagos.' },
+    { tipo: 'h2', texto: 'Si vas a construir: tus primeros pasos' },
+    { tipo: 'pasos', items: [
+      'Confirma el uso de suelo y los lineamientos de construcción (altura, ocupación, restricciones).',
+      'Contrata un levantamiento topográfico y un estudio de mecánica de suelos si lo requiere el proyecto.',
+      'Verifica factibilidad y costo de servicios.',
+      'Contrata a un arquitecto o ingeniero para el proyecto y cotizar.',
+      'Tramita las licencias necesarias ante las instancias correspondientes (Municipio de León, Guanajuato, s. f.).',
+      'Define presupuesto con un margen para imprevistos.',
+    ] },
+  ],
+
+  'precio-de-una-nave-industrial-por-metro-cuadrado-de-que-depende': [
+    { tipo: 'h2', texto: 'Un ejemplo de comparación entre dos naves (ilustrativo)' },
+    { tipo: 'p', texto: 'Imagina dos naves del mismo tamaño. La nave 1 está en un parque industrial con vigilancia, mayor altura libre, más muelles y energía suficiente, pero con cuotas de mantenimiento. La nave 2 está fuera de parque, con menor altura, menos muelles y una instalación eléctrica al límite, pero sin cuotas. A primera vista la segunda parece más barata. Al sumar adecuaciones eléctricas, menor capacidad de almacenamiento por la altura y costos de seguridad propia, la diferencia puede reducirse o invertirse. La lección: compara costo total y capacidad operativa, no solo el precio por metro.' },
+    { tipo: 'h2', texto: 'Cómo pedir cotizaciones que sí se puedan comparar' },
+    { tipo: 'lista', items: [
+      'Envía **la misma ficha** a cada propietario o agente.',
+      'Pide el precio **desglosado** por tipo de superficie.',
+      'Solicita **vigencia, moneda y condiciones**.',
+      'Pregunta por **cuotas, servicios y seguros** incluidos o aparte.',
+      'Exige las **especificaciones técnicas por escrito**.',
+      'Solicita **referencias** de otros inquilinos, si es posible.',
+    ] },
+    { tipo: 'h2', texto: 'Estacionalidad y poder de negociación' },
+    { tipo: 'p', texto: 'El mercado industrial responde a la oferta disponible, a la demanda de empresas y a la situación económica general. Si hay muchas naves desocupadas, tu poder de negociación aumenta; si hay poca oferta, disminuye. Observa cuánto tiempo llevan las naves publicadas, pregunta si hay otros interesados y no te dejes presionar por plazos artificiales. Con datos de tu zona y una ficha clara, podrás negociar con seguridad; si quieres apoyo, [escríbenos](/contacto).' },
+  ],
+
+  'gastos-de-escrituracion-al-comprar-una-propiedad': [
+    { tipo: 'h2', texto: 'La firma, paso a paso' },
+    { tipo: 'pasos', items: [
+      'Revisión previa del proyecto de escritura con tu notario.',
+      'Verificación de documentos de ambas partes y del inmueble.',
+      'Cálculo de impuestos, derechos y gastos, con desglose.',
+      'Firma de la escritura ante el notario por comprador y vendedor.',
+      'Pago de impuestos y entrega de la escritura al comprador una vez inscrita.',
+      'Inscripción en el Registro Público de la Propiedad y entrega del testimonio.',
+    ] },
+    { tipo: 'h2', texto: 'Los documentos que suele pedir el notario' },
+    { tipo: 'p', texto: 'Aunque cada caso cambia, es habitual que el notario pida identificaciones oficiales de las partes, comprobante de domicilio, constancia de situación fiscal cuando aplica, la escritura anterior del inmueble, el certificado de libertad de gravamen, constancias de no adeudo de predial y de agua, el avalúo y, si hay crédito, la carta de autorización de la institución. Pregunta por la lista completa al inicio: algunos documentos tardan en tramitarse.' },
+    { tipo: 'h2', texto: 'Errores del día de la firma y cómo evitarlos' },
+    { tipo: 'lista', items: [
+      '**Llegar sin revisar el proyecto** de escritura: pídelo con anticipación y léelo.',
+      '**No confirmar el desglose final** de gastos antes de pagar.',
+      '**Pagar en efectivo sin recibo** o a cuentas que no son del notario o la autoridad.',
+      '**Dejar pendientes** documentos del vendedor para «después».',
+      '**No revisar** que el nombre y los datos del comprador estén correctos.',
+    ] },
+    { tipo: 'p', texto: 'Para continuar con el proceso completo, vuelve a [cómo comprar una casa en León](/blog/como-comprar-una-casa-en-leon-guanajuato-guia-paso-a-paso).' },
+  ],
+
+  'como-leer-el-cat-y-comparar-creditos-hipotecarios': [
+    { tipo: 'h2', texto: 'Cómo leer una tabla de amortización' },
+    { tipo: 'p', texto: 'La tabla de amortización es el calendario de tus pagos: cada fila muestra cuánto pagas en un mes y cómo se divide entre capital (lo que reduce tu deuda) e intereses (el costo del dinero). Al inicio, la mayor parte del pago son intereses; con el tiempo, cada vez va más a capital. Por eso abonar a capital temprano reduce más los intereses que hacerlo hacia el final. Pide siempre la tabla antes de firmar y revisa cuánto pagarás de intereses en total.' },
+    { tipo: 'h2', texto: 'Los tipos de tasa, explicados sin tecnicismos' },
+    { tipo: 'tabla', titulo: 'Tasa fija, variable o mixta', encabezados: ['Tipo', 'Cómo funciona', 'Ventaja', 'Riesgo'], filas: [
+      ['Fija', 'Se mantiene igual durante el plazo o un periodo pactado.', 'Certeza de pago.', 'Si las tasas bajan, no te beneficias automáticamente.'],
+      ['Variable', 'Cambia con una tasa de referencia.', 'Puede bajar si baja la referencia.', 'Puede subir y encarecer tu mensualidad.'],
+      ['Mixta', 'Una parte del plazo es fija y otra variable.', 'Equilibrio entre certeza y flexibilidad.', 'Tras el periodo fijo, puede cambiar.'],
+    ] },
+    { tipo: 'h2', texto: 'Checklist antes de firmar un crédito hipotecario' },
+    { tipo: 'lista', items: [
+      'Tengo por escrito el CAT, la tasa, el plazo, la mensualidad y el pago total.',
+      'Entiendo qué seguros incluye y su costo.',
+      'Conozco las comisiones de apertura, de pago anticipado y de cambio de institución.',
+      'Revisé la tabla de amortización.',
+      'Sé qué pasa si me atraso en un pago.',
+      'Puedo pagar la mensualidad aun si mi ingreso baja un tiempo.',
+      'Comparé al menos tres ofertas con los mismos datos.',
+    ] },
+  ],
+
+  'invertir-en-bienes-raices-guia-para-empezar': [
+    { tipo: 'h2', texto: 'Estrategias comunes y para quién tienen sentido' },
+    { tipo: 'tabla', titulo: 'Cuatro estrategias frecuentes', encabezados: ['Estrategia', 'En qué consiste', 'Ventajas', 'Riesgos'], filas: [
+      ['Renta tradicional', 'Comprar y arrendar a largo plazo.', 'Ingreso relativamente estable y menor rotación.', 'Vacancia, morosidad y mantenimiento.'],
+      ['Renta de corta estancia', 'Rentar por noches o semanas.', 'Potencial de ingresos más altos por noche.', 'Mayor gestión, reglas locales y ocupación variable.'],
+      ['Compra de preventa', 'Comprar antes de que se construya.', 'Precio inicial menor y posible plusvalía.', 'Retrasos, incumplimientos y dependencia del desarrollador.'],
+      ['Comprar, mejorar y vender', 'Remodelar para vender más caro.', 'Ganancia por mejora si se hace bien.', 'Sobrecostos, tiempos y un mercado que cambia.'],
+    ] },
+    { tipo: 'h2', texto: 'Administrar tu propiedad: lo que casi nadie considera' },
+    { tipo: 'p', texto: 'Una inversión inmobiliaria no es pasiva: alguien debe encontrar inquilino, cobrar, atender reparaciones y cumplir obligaciones fiscales. Puedes hacerlo tú o contratar a un administrador, que cobra por ello; en ambos casos, cuenta con ese costo o con tu tiempo. Define desde el inicio un fondo para mantenimiento y vacancia, y mantén registros claros de ingresos y gastos.' },
+    { tipo: 'h2', texto: 'Impuestos y contabilidad básica: qué preguntar a tu contador' },
+    { tipo: 'lista', items: [
+      '¿Cómo tributan mis ingresos por renta y cómo debo facturar?',
+      '¿Qué gastos puedo deducir y con qué comprobantes?',
+      '¿Qué impuestos se generan al comprar y al vender?',
+      '¿Conviene adquirir a mi nombre o a través de una sociedad?',
+      '¿Cuáles son mis obligaciones periódicas ante la autoridad (Servicio de Administración Tributaria, s. f.)?',
+    ] },
+  ],
+
+  'como-elegir-colonia-en-leon-guanajuato': [
+    { tipo: 'h2', texto: 'Un guion para visitar una colonia en tres horarios' },
+    { tipo: 'tabla', titulo: 'Qué observar en cada visita', encabezados: ['Horario', 'Qué observar', 'Qué te dice'], filas: [
+      ['Mañana entre semana', 'Tráfico, salida a escuelas y trabajo, ruido de obras.', 'Qué tan fluido es el traslado diario.'],
+      ['Tarde entre semana', 'Regreso del trabajo, estacionamiento, niños en las calles.', 'La vida cotidiana y la convivencia.'],
+      ['Noche', 'Iluminación, movimiento, vigilancia y ruido.', 'Sensación de seguridad y tranquilidad.'],
+      ['Sábado', 'Comercio, parques, eventos y ambiente familiar.', 'Cómo se vive el fin de semana.'],
+    ] },
+    { tipo: 'h2', texto: 'Preguntas para hacer a los vecinos' },
+    { tipo: 'lista', items: [
+      '¿Qué es lo mejor y lo peor de vivir aquí?',
+      '¿Hay problemas de agua, encharcamientos o cortes de luz?',
+      '¿Cómo es la seguridad y qué medidas toman entre vecinos?',
+      '¿Hay obras o desarrollos nuevos cercanos?',
+      '¿Qué servicios tardan más en llegar (recolección, transporte, reparaciones)?',
+      '¿Cuánto se paga de cuota o mantenimiento, si aplica?',
+    ] },
+    { tipo: 'h2', texto: 'Cómo juntar todo y decidir' },
+    { tipo: 'p', texto: 'Con tu tabla de puntuación, tus visitas y las respuestas de los vecinos, ya tienes lo necesario para decidir. Si dos colonias empatan, desempata con el traslado real: es el costo que pagarás todos los días. Y recuerda que elegir colonia es elegir un estilo de vida; escribe tus razones para volver a ellas si dudas. Para pasar a la compra, sigue [cómo comprar una casa en León](/blog/como-comprar-una-casa-en-leon-guanajuato-guia-paso-a-paso).' },
+  ],
+
+  'silao-o-leon-donde-conviene-ubicar-tu-negocio-o-tu-nave': [
+    { tipo: 'h2', texto: 'Preguntas de logística según tu tipo de carga' },
+    { tipo: 'lista', items: [
+      '¿Qué tamaño y tipo de vehículos entran y salen cada día?',
+      '¿Necesitas muelles, andenes o carga a nivel de piso?',
+      '¿Tus insumos llegan por carretera, tren o aire?',
+      '¿Cuánto tiempo toma llegar a tus clientes principales y a la aduana, si exportas?',
+      '¿Qué horarios de operación tendrás y cómo afecta al entorno?',
+      '¿Cuál es la ruta alterna si hay cierres o tráfico?',
+    ] },
+    { tipo: 'h2', texto: 'Personal y vivienda: la parte humana de la ubicación' },
+    { tipo: 'p', texto: 'La mejor nave del Bajío no sirve si tu gente no puede llegar o no quiere hacerlo. Pregunta a tu equipo dónde vive, cómo se traslada y cuánto tarda. Evalúa si necesitas transporte de personal y si el entorno ofrece servicios para trabajadores: comercio, alimentos, salud. En operaciones con rotación alta, la facilidad de traslado puede ser tan importante como el costo de la renta.' },
+    { tipo: 'h2', texto: 'Checklist final de decisión' },
+    { tipo: 'pasos', items: [
+      'Define tu ficha técnica y tu perfil logístico.',
+      'Solicita cotizaciones comparables en ambas ciudades.',
+      'Mide tiempos reales hacia clientes, proveedores, aeropuerto y personal.',
+      'Verifica uso de suelo y permisos para tu giro.',
+      'Compara costo total por escrito, con la misma moneda y base temporal.',
+      'Haz una visita técnica a la nave finalista y firma solo con el contrato revisado.',
+    ] },
+  ],
+
+  'como-leer-el-mercado-inmobiliario-de-leon-y-el-bajio': [
+    { tipo: 'h2', texto: 'Cómo llevar tu propio seguimiento del mercado' },
+    { tipo: 'p', texto: 'No necesitas software caro: una hoja con columnas simples basta. Cada mes registra cinco o diez propiedades comparables a la que te interesa: precio publicado, metros, colonia, estado, fecha en que la viste y si sigue disponible. Con el tiempo verás patrones: qué zonas se mueven rápido, cuánto bajan los precios antes de venderse y qué características pesan más. Es un dato propio, local y actual, que ningún informe general puede darte.' },
+    { tipo: 'h2', texto: 'Cómo leer un titular sin dejarte llevar' },
+    { tipo: 'tabla', titulo: 'Preguntas para cualquier noticia sobre vivienda', encabezados: ['Pregunta', 'Por qué importa'], filas: [
+      ['¿Quién publica el dato y cuál es la fuente?', 'Un dato sin fuente no se puede verificar.'],
+      ['¿De qué periodo es?', 'El mercado cambia: un dato viejo puede ser engañoso.'],
+      ['¿A qué ciudad o zona se refiere?', 'Un promedio nacional no describe a León.'],
+      ['¿Habla de precios de oferta o de cierre?', 'No son lo mismo.'],
+      ['¿Qué tipo de vivienda incluye?', 'Casas, departamentos, nuevas o usadas se comportan distinto.'],
+    ] },
+    { tipo: 'h2', texto: 'Los datos que casi nunca están disponibles (y por qué)' },
+    { tipo: 'p', texto: 'Algunos datos clave son difíciles de obtener: los precios de cierre reales, el tiempo que tarda cada propiedad en venderse o los volúmenes exactos de operaciones por colonia. Muchas operaciones no se publican y otras se registran con datos que no reflejan el precio real. Por eso conviene combinar fuentes oficiales con tu propia observación y con la experiencia de asesores locales. Si quieres apoyo para interpretar tu zona, [contáctanos](/contacto).' },
+  ],
+}

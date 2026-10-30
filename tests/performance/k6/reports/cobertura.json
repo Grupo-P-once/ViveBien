@@ -1,0 +1,392 @@
+{
+ "src/app/api/acceso/registro/route.ts": [
+  "tests/acceso-google.test.ts"
+ ],
+ "src/app/api/admin/actividad/route.ts": [],
+ "src/app/api/admin/analitica/route.ts": [],
+ "src/app/api/admin/bajas/route.ts": [
+  "tests/admin-bajas.test.ts",
+  "tests/baja-reintento-admin.test.ts"
+ ],
+ "src/app/api/admin/bajas/[uid]/reintentar/route.ts": [
+  "tests/baja-reintento-admin.test.ts"
+ ],
+ "src/app/api/admin/buscar/route.ts": [],
+ "src/app/api/admin/contactos/route.ts": [],
+ "src/app/api/admin/flags/route.ts": [
+  "tests/flags-3b1.test.ts",
+  "tests/portal-aislamiento.test.ts"
+ ],
+ "src/app/api/admin/invitaciones/route.ts": [
+  "tests/invitaciones-aceptacion.test.ts",
+  "tests/invitaciones-enlace-y-alta.test.ts"
+ ],
+ "src/app/api/admin/notificaciones/route.ts": [],
+ "src/app/api/admin/propiedades/route.ts": [
+  "tests/property-core-gaps-restantes.test.ts",
+  "tests/propiedades-nombre-y-guardado.test.ts",
+  "tests/publicador-completo.test.ts",
+  "tests/visibilidad-publica.test.ts"
+ ],
+ "src/app/api/admin/propiedades/[id]/route.ts": [
+  "tests/acceso-2b.test.ts",
+  "tests/property-core-cierre.test.ts",
+  "tests/property-core-gaps-restantes.test.ts",
+  "tests/propiedades-nombre-y-guardado.test.ts",
+  "tests/publicador-completo.test.ts",
+  "tests/publicador-modalidad.test.ts",
+  "tests/publicador-seguridad.test.ts"
+ ],
+ "src/app/api/admin/registros/route.ts": [],
+ "src/app/api/admin/resumen/route.ts": [],
+ "src/app/api/admin/usuarios/route.ts": [
+  "tests/admin-permisos.test.ts",
+  "tests/cliente-seguridad.test.ts",
+  "tests/migracion-30-ayuda-administracion.test.ts",
+  "tests/publicador-modalidad.test.ts"
+ ],
+ "src/app/api/admin/usuarios/[uid]/route.ts": [
+  "tests/admin-permisos.test.ts"
+ ],
+ "src/app/api/alertas/resumen/route.ts": [],
+ "src/app/api/ayuda/buscar/route.ts": [
+  "tests/ayuda-rutas.test.ts"
+ ],
+ "src/app/api/ayuda/categorias/route.ts": [],
+ "src/app/api/ayuda/feedback/route.ts": [
+  "tests/ayuda-rutas.test.ts"
+ ],
+ "src/app/api/busquedas/route.ts": [
+  "tests/suspension.test.ts"
+ ],
+ "src/app/api/catalogo/route.ts": [
+  "tests/smoke-deployment-barrera.test.ts",
+  "tests/visibilidad-publica.test.ts"
+ ],
+ "src/app/api/citas/route.ts": [
+  "tests/citas-enlaces.test.ts",
+  "tests/publicador-citas.test.ts"
+ ],
+ "src/app/api/citas/[id]/route.ts": [
+  "tests/publicador-citas.test.ts"
+ ],
+ "src/app/api/citas/[id]/transicion/route.ts": [
+  "tests/publicador-citas.test.ts"
+ ],
+ "src/app/api/citas/accion/route.ts": [],
+ "src/app/api/citas/accion/ver/route.ts": [],
+ "src/app/api/citas/disponibilidad/route.ts": [],
+ "src/app/api/contacto/route.ts": [
+  "tests/acceso.test.ts",
+  "tests/consultas-dto.test.ts",
+  "tests/contacto-vive-bien.test.ts"
+ ],
+ "src/app/api/cuenta/eliminar/route.ts": [
+  "tests/baja-reintento-admin.test.ts",
+  "tests/cuenta-eliminar.test.ts",
+  "tests/eliminar-cuenta-ux.test.ts"
+ ],
+ "src/app/api/cuenta/eliminar/estado/route.ts": [
+  "tests/cuenta-eliminar.test.ts"
+ ],
+ "src/app/api/diagnostico/firebase/route.ts": [
+  "tests/diagnostico-sonda.test.ts"
+ ],
+ "src/app/api/eventos/route.ts": [
+  "tests-visual/ayudas-panel.ts"
+ ],
+ "src/app/api/favoritos/route.ts": [
+  "tests/suspension.test.ts"
+ ],
+ "src/app/api/leads/route.ts": [
+  "tests/acceso.test.ts",
+  "tests/cliente-seguridad.test.ts",
+  "tests/estado-de-cuenta.test.ts"
+ ],
+ "src/app/api/medios/firma/route.ts": [
+  "tests/estado-de-cuenta.test.ts",
+  "tests/medios-firma.test.ts"
+ ],
+ "src/app/api/portal/acceso/route.ts": [
+  "tests/portal-apertura.test.ts",
+  "tests-visual/sesion.e2e.ts"
+ ],
+ "src/app/api/portal/alertas/route.ts": [
+  "tests/portal-3b1.test.ts",
+  "tests/portal-aislamiento.test.ts"
+ ],
+ "src/app/api/portal/busquedas/route.ts": [
+  "tests/portal-3b1.test.ts",
+  "tests/portal-aislamiento.test.ts"
+ ],
+ "src/app/api/portal/consultas/route.ts": [
+  "tests/portal-3b1.test.ts",
+  "tests/portal-aislamiento.test.ts"
+ ],
+ "src/app/api/portal/guardadas/route.ts": [
+  "tests/portal-3b1.test.ts",
+  "tests/portal-aislamiento.test.ts"
+ ],
+ "src/app/api/portal/me-interesan/route.ts": [
+  "tests/portal-3b2.test.ts",
+  "tests/portal-aislamiento.test.ts"
+ ],
+ "src/app/api/portal/resumen/route.ts": [
+  "tests/portal-resumen.test.ts"
+ ],
+ "src/app/api/portal/visitas/route.ts": [
+  "tests/portal-3b2.test.ts",
+  "tests/portal-aislamiento.test.ts"
+ ],
+ "src/app/api/propiedades/[id]/estado/route.ts": [
+  "tests/acceso-2b.test.ts",
+  "tests/property-core-cierre.test.ts",
+  "tests/property-core-gaps-restantes.test.ts",
+  "tests/propiedades-nombre-y-guardado.test.ts",
+  "tests/publicador-completo.test.ts",
+  "tests/publicador-modalidad.test.ts",
+  "tests/publicador-seguridad.test.ts"
+ ],
+ "src/app/api/publicador/propiedades/route.ts": [
+  "tests/acceso-2b.test.ts",
+  "tests/cliente-seguridad.test.ts",
+  "tests/property-core-cierre.test.ts",
+  "tests/publicador-completo.test.ts",
+  "tests/publicador-seguridad.test.ts",
+  "tests-visual/publicador.e2e.ts",
+  "tests-visual/revision.e2e.ts"
+ ],
+ "src/app/api/registro-lead/route.ts": [],
+ "src/app/api/salud/route.ts": [
+  "tests/medios-firma.test.ts",
+  "tests/robots.test.ts",
+  "tests/smoke-deployment-barrera.test.ts"
+ ],
+ "src/app/api/telegram/webhook/route.ts": [
+  "tests/property-core-gaps-restantes.test.ts"
+ ],
+ "src/app/api/usuarios/me/route.ts": [
+  "tests/acceso-2b.test.ts",
+  "tests/acceso-google.test.ts",
+  "tests/acceso.test.ts",
+  "tests/admin-permisos.test.ts",
+  "tests/cliente-seguridad.test.ts",
+  "tests/cuenta-por-rol.test.ts",
+  "tests/destino-dashboard.test.ts",
+  "tests/entrar-navega-con-sesion.test.ts",
+  "tests/estado-de-cuenta.test.ts",
+  "tests/invitaciones-aceptacion.test.ts",
+  "tests/perfil-3b2.test.ts",
+  "tests/publicador-modalidad.test.ts",
+  "tests/que-busco.test.ts",
+  "tests-visual/publicador.e2e.ts",
+  "tests-visual/revision.e2e.ts",
+  "tests-visual/sesion.e2e.ts"
+ ],
+ "src/app/api/whatsapp/webhook/route.ts": [],
+ "src/app/page.tsx": [],
+ "src/app/admin/page.tsx": [
+  "tests/acceso-google.test.ts",
+  "tests/cambio-de-sesion.test.ts",
+  "tests/citas-enlaces.test.ts",
+  "tests/cuenta-por-rol.test.ts",
+  "tests/destino-dashboard.test.ts",
+  "tests/entradas-acceso.test.ts",
+  "tests/entrar-disposiciones.test.ts",
+  "tests/entrar-navega-con-sesion.test.ts",
+  "tests/invitaciones-enlace-y-alta.test.ts",
+  "tests/robots.test.ts",
+  "tests/wafloat-oclusion.test.ts",
+  "tests-visual/panel.visual.ts"
+ ],
+ "src/app/admin/actividad/page.tsx": [
+  "tests-visual/panel.visual.ts"
+ ],
+ "src/app/admin/configuracion/page.tsx": [
+  "tests/docs-publicador-consistencia.test.ts"
+ ],
+ "src/app/admin/cuenta/page.tsx": [
+  "tests/cuenta-por-rol.test.ts"
+ ],
+ "src/app/admin/metricas/page.tsx": [],
+ "src/app/admin/propiedades/page.tsx": [
+  "tests-visual/datos-panel.ts",
+  "tests-visual/panel.visual.ts"
+ ],
+ "src/app/admin/propiedades/pendientes/page.tsx": [
+  "tests-visual/datos-panel.ts",
+  "tests-visual/revision.e2e.ts"
+ ],
+ "src/app/admin/registros/page.tsx": [
+  "tests-visual/datos-panel.ts",
+  "tests-visual/panel.visual.ts"
+ ],
+ "src/app/admin/seed/page.tsx": [],
+ "src/app/admin/usuarios/page.tsx": [
+  "tests/cambio-de-sesion.test.ts",
+  "tests/entrar-disposiciones.test.ts",
+  "tests/migracion-30-ayuda-administracion.test.ts",
+  "tests/plegables.test.ts",
+  "tests/robots.test.ts",
+  "tests/wafloat-oclusion.test.ts",
+  "tests-visual/datos-panel.ts",
+  "tests-visual/panel.visual.ts",
+  "tests-visual/publicador.e2e.ts"
+ ],
+ "src/app/admin/usuarios/[uid]/page.tsx": [],
+ "src/app/ayuda/page.tsx": [
+  "tests/ayuda-barra-lateral.test.ts",
+  "tests/ayuda-rutas.test.ts",
+  "tests/cambio-de-sesion.test.ts"
+ ],
+ "src/app/ayuda/[categoria]/page.tsx": [
+  "tests/ayuda-barra-lateral.test.ts",
+  "tests/ayuda-rutas.test.ts"
+ ],
+ "src/app/ayuda/[categoria]/[articulo]/page.tsx": [
+  "tests/ayuda-barra-lateral.test.ts",
+  "tests/ayuda-rutas.test.ts"
+ ],
+ "src/app/ayuda/buscar/page.tsx": [
+  "tests/ayuda-barra-lateral.test.ts",
+  "tests/ayuda-modelo.test.ts",
+  "tests/ayuda-rutas.test.ts"
+ ],
+ "src/app/citas/accion/page.tsx": [
+  "tests/cambio-de-sesion.test.ts",
+  "tests/robots.test.ts"
+ ],
+ "src/app/comparar/page.tsx": [
+  "tests/robots.test.ts",
+  "tests/seo.test.ts"
+ ],
+ "src/app/contacto/page.tsx": [
+  "tests/entrar-disposiciones.test.ts",
+  "tests/robots.test.ts",
+  "tests/seo.test.ts",
+  "tests-visual/sitio-publico.visual.ts"
+ ],
+ "src/app/dashboard/page.tsx": [
+  "tests/cambio-de-sesion.test.ts",
+  "tests/cuenta-por-rol.test.ts",
+  "tests/destino-dashboard.test.ts",
+  "tests/entradas-acceso.test.ts",
+  "tests/entrar-disposiciones.test.ts",
+  "tests/entrar-navega-con-sesion.test.ts",
+  "tests/invitaciones-enlace-y-alta.test.ts",
+  "tests/propiedades-nombre-y-guardado.test.ts",
+  "tests/robots.test.ts"
+ ],
+ "src/app/entrar/page.tsx": [
+  "tests/cambio-de-sesion.test.ts",
+  "tests/destino-dashboard.test.ts",
+  "tests/entradas-acceso.test.ts",
+  "tests/entrar-disposiciones.test.ts",
+  "tests/entrar-navega-con-sesion.test.ts",
+  "tests/wafloat-oclusion.test.ts",
+  "tests-visual/publicador.e2e.ts",
+  "tests-visual/revision.e2e.ts",
+  "tests-visual/sesion.e2e.ts"
+ ],
+ "src/app/mi-cuenta/page.tsx": [
+  "tests/cuenta-por-rol.test.ts",
+  "tests/robots.test.ts"
+ ],
+ "src/app/nosotros/page.tsx": [
+  "tests/robots.test.ts",
+  "tests/seo.test.ts",
+  "tests-visual/sitio-publico.visual.ts"
+ ],
+ "src/app/portal/page.tsx": [
+  "tests/acceso-google.test.ts",
+  "tests/cambio-de-sesion.test.ts",
+  "tests/cuenta-por-rol.test.ts",
+  "tests/destino-dashboard.test.ts",
+  "tests/entradas-acceso.test.ts",
+  "tests/entrar-disposiciones.test.ts",
+  "tests/entrar-navega-con-sesion.test.ts",
+  "tests/plegables.test.ts",
+  "tests/robots.test.ts",
+  "tests/wafloat-oclusion.test.ts",
+  "tests-visual/sesion.e2e.ts"
+ ],
+ "src/app/portal/alertas/page.tsx": [],
+ "src/app/portal/busquedas/page.tsx": [],
+ "src/app/portal/configuracion/page.tsx": [
+  "tests/entradas-acceso.test.ts",
+  "tests/entrar-disposiciones.test.ts"
+ ],
+ "src/app/portal/consultas/page.tsx": [],
+ "src/app/portal/mi-busqueda/page.tsx": [
+  "tests/wafloat-oclusion.test.ts"
+ ],
+ "src/app/portal/perfil/page.tsx": [],
+ "src/app/portal/propiedades/page.tsx": [
+  "tests/portal-3b1.test.ts"
+ ],
+ "src/app/portal/visitas/page.tsx": [
+  "tests/cambio-de-sesion.test.ts",
+  "tests/citas-correos.test.ts",
+  "tests/citas-enlaces.test.ts",
+  "tests/entradas-acceso.test.ts",
+  "tests/entrar-navega-con-sesion.test.ts",
+  "tests/portal-3b2.test.ts",
+  "tests/portal-resumen.test.ts",
+  "tests/robots.test.ts"
+ ],
+ "src/app/privacidad/page.tsx": [
+  "tests/robots.test.ts"
+ ],
+ "src/app/propiedades/page.tsx": [
+  "tests/busquedas.test.ts",
+  "tests/contacto-vive-bien.test.ts",
+  "tests/entradas-acceso.test.ts",
+  "tests/entrar-disposiciones.test.ts",
+  "tests/medios-optimizar.test.ts",
+  "tests/portal-3b1.test.ts",
+  "tests/portal-resumen.test.ts",
+  "tests/robots.test.ts",
+  "tests/seo.test.ts",
+  "tests/smoke-deployment-barrera.test.ts",
+  "tests/wafloat-oclusion.test.ts",
+  "tests-visual/datos-panel.ts",
+  "tests-visual/sitio-publico.visual.ts"
+ ],
+ "src/app/propiedades/[id]/page.tsx": [
+  "tests/contacto-vive-bien.test.ts",
+  "tests/medios-optimizar.test.ts",
+  "tests/visibilidad-publica.test.ts"
+ ],
+ "src/app/publicador/page.tsx": [
+  "tests/cuenta-por-rol.test.ts",
+  "tests/robots.test.ts",
+  "tests-visual/publicador.e2e.ts"
+ ],
+ "src/app/publicador/citas/page.tsx": [
+  "tests/docs-publicador-consistencia.test.ts",
+  "tests/publicador-citas.test.ts"
+ ],
+ "src/app/publicador/propiedades/[id]/editar/page.tsx": [
+  "tests/acceso-2b.test.ts",
+  "tests/contacto-vive-bien.test.ts",
+  "tests/propiedades-nombre-y-guardado.test.ts"
+ ],
+ "src/app/terminos/page.tsx": [
+  "tests/robots.test.ts"
+ ],
+ "src/app/valuador/page.tsx": [
+  "tests/portal-3b2.test.ts",
+  "tests/robots.test.ts",
+  "tests-visual/sitio-publico.visual.ts"
+ ],
+ "src/app/vista-previa/admin/usuarios/page.tsx": [
+  "tests/admin-permisos.test.ts"
+ ],
+ "src/app/vista-previa/admin/usuarios/[uid]/page.tsx": [
+  "tests/admin-permisos.test.ts"
+ ],
+ "src/app/vista-previa/portal/page.tsx": [
+  "tests/robots.test.ts",
+  "tests/vista-previa.test.ts"
+ ]
+}

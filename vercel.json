@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/alertas/resumen",
+      "schedule": "0 15 * * *"
+    },
+    {
+      "path": "/api/alertas/contabilidad-quincenal",
+      "schedule": "0 15 1,2,16,17 * *"
+    }
+  ]
+}

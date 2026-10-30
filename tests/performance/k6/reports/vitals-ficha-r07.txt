@@ -1,0 +1,5 @@
+390px /propiedades/casa-en-venta-canada-del- HTTP 200 TTFB 59 FCP 876 LCP 5736 CLS 0.000 total 6887 req 42 KB 1171 errJS 0 redFallos 1
+768px /propiedades/casa-en-venta-canada-del- HTTP 200 TTFB 40 FCP 824 LCP 6752 CLS 0.000 total 10018 req 65 KB 1695 errJS 0 redFallos 1
+1024px /propiedades/casa-en-venta-canada-del- HTTP 200 TTFB 46 FCP 440 LCP 1600 CLS 0.005 total 3664 req 79 KB 1802 errJS 0 redFallos 2
+1440px /propiedades/casa-en-venta-canada-del- HTTP 200 TTFB 37 FCP 424 LCP 1496 CLS 0.004 total 3437 req 77 KB 1809 errJS 0 redFallos 1
+guardia de producción: 0 peticiones de telemetría/escritura abortadas antes de salir

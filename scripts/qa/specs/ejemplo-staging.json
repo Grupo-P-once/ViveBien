@@ -1,0 +1,8 @@
+{
+  "chequeos": [
+    { "nombre": "salud", "ruta": "/api/salud", "estado": 200, "contiene": ["\"ok\":true"] },
+    { "nombre": "listado", "ruta": "/propiedades", "estado": 200 },
+    { "nombre": "ficha pausada: no existe", "ruta": "/propiedades/sanjuan", "estado": 404 },
+    { "nombre": "sitemap sin la pausada", "ruta": "/sitemap.xml", "estado": 200, "noContiene": ["sanjuan"] }
+  ]
+}

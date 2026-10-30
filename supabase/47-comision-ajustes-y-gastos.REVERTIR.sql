@@ -1,0 +1,100 @@
+-- Reversa de 47-comision-ajustes-y-gastos.sql: devuelve las funciones a como las dejó la migración 46 y quita las columnas.
+-- OJO: se pierden el porcentaje pactado, el reparto, los gastos y el motivo ya capturados. Respalda antes si ya hay operaciones con ellos.
+
+begin;
+
+create or replace function public.comision_operaciones_guardia() returns trigger
+language plpgsql set search_path = public, pg_temp as $f$
+declare
+  via_funcion boolean := coalesce(current_setting('vivebien.operacion', true), '') = 'on';
+begin
+  if tg_op = 'DELETE' then
+    raise exception 'Una operación de comisión no se borra: se anula.' using errcode = '23514';
+  end if;
+  if (new.id, new.propiedad_id, new.tipo, new.base_centavos, new.regla_version, new.total_centavos, new.atribuible, new.atribucion_ref,
+      new.clave_idempotencia, new.creado_por, new.creado_en, new.fecha_cierre, new.propiedad_folio, new.propiedad_titulo, new.precio_lista_centavos)
+     is distinct from
+     (old.id, old.propiedad_id, old.tipo, old.base_centavos, old.regla_version, old.total_centavos, old.atribuible, old.atribucion_ref,
+      old.clave_idempotencia, old.creado_por, old.creado_en, old.fecha_cierre, old.propiedad_folio, old.propiedad_titulo, old.precio_lista_centavos) then
+    raise exception 'Una operación de comisión no se edita: se anula y se registra otra.' using errcode = '23514';
+  end if;
+  if not via_funcion and (new.estado, new.vivebien_centavos, new.colaborador_centavos, new.colaborador_retenido_centavos, new.retencion,
+                          new.reparto_estado, new.estado_por, new.estado_en, new.estado_motivo)
+     is distinct from
+     (old.estado, old.vivebien_centavos, old.colaborador_centavos, old.colaborador_retenido_centavos, old.retencion,
+      old.reparto_estado, old.estado_por, old.estado_en, old.estado_motivo) then
+    raise exception 'El estado y el reparto solo cambian por las funciones de comisión.' using errcode = '23514';
+  end if;
+  if old.estado = 'anulada' and new.estado <> 'anulada' then
+    raise exception 'Una operación anulada no vuelve.' using errcode = '23514';
+  end if;
+  return new;
+end $f$;
+
+create or replace function public.comision_operacion_registrar(p_datos jsonb, p_audit jsonb) returns jsonb
+language plpgsql
+security invoker
+set search_path = ''
+as $fn$
+declare
+  k text; r public.comision_operaciones%rowtype; nuevo_id uuid; cierre date;
+begin
+  if not public.comision_auditoria_valida(p_audit) or jsonb_typeof(p_datos) is distinct from 'object' then
+    raise exception 'auditoria_incompleta' using errcode = '22023';
+  end if;
+  for k in select jsonb_object_keys(p_datos) loop
+    if k not in ('propiedad_id', 'tipo', 'base_centavos', 'regla_version', 'total_centavos', 'vivebien_centavos', 'colaborador_centavos',
+                 'colaborador_retenido_centavos', 'retencion', 'reparto_estado', 'atribuible', 'atribucion_ref', 'clave_idempotencia', 'creado_por',
+                 'fecha_cierre', 'propiedad_folio', 'propiedad_titulo', 'precio_lista_centavos') then
+      raise exception 'cambio_invalido' using errcode = '22023';
+    end if;
+  end loop;
+
+  begin
+    cierre := nullif(p_datos->>'fecha_cierre', '')::date;
+  exception when others then
+    raise exception 'cambio_invalido' using errcode = '22023';
+  end;
+  if cierre is not null and (cierre > current_date + 1 or cierre < date '2000-01-01') then
+    raise exception 'cambio_invalido' using errcode = '22023';
+  end if;
+
+  begin
+    insert into public.comision_operaciones (propiedad_id, tipo, base_centavos, regla_version, total_centavos, vivebien_centavos,
+      colaborador_centavos, colaborador_retenido_centavos, retencion, reparto_estado, atribuible, atribucion_ref, clave_idempotencia, creado_por, fecha_cierre,
+      propiedad_folio, propiedad_titulo, precio_lista_centavos)
+    values (p_datos->>'propiedad_id', p_datos->>'tipo', (p_datos->>'base_centavos')::bigint, p_datos->>'regla_version',
+      (p_datos->>'total_centavos')::bigint, (p_datos->>'vivebien_centavos')::bigint, (p_datos->>'colaborador_centavos')::bigint,
+      (p_datos->>'colaborador_retenido_centavos')::bigint, nullif(p_datos->>'retencion', ''), p_datos->>'reparto_estado',
+      (p_datos->>'atribuible')::boolean, nullif(p_datos->>'atribucion_ref', ''), p_datos->>'clave_idempotencia', p_datos->>'creado_por', cierre,
+      nullif(p_datos->>'propiedad_folio', ''), nullif(p_datos->>'propiedad_titulo', ''), (nullif(p_datos->>'precio_lista_centavos', ''))::bigint)
+    returning id into nuevo_id;
+  exception
+    when unique_violation then
+      select * into r from public.comision_operaciones where clave_idempotencia = p_datos->>'clave_idempotencia';
+      if r.propiedad_id = p_datos->>'propiedad_id' and r.tipo = p_datos->>'tipo' and r.base_centavos = (p_datos->>'base_centavos')::bigint
+         and r.regla_version = p_datos->>'regla_version' then
+        return jsonb_build_object('resultado', 'repetida', 'id', r.id);
+      end if;
+      return jsonb_build_object('resultado', 'clave_en_uso');
+    when foreign_key_violation then
+      return jsonb_build_object('resultado', 'no_existe');
+    when check_violation or invalid_text_representation or numeric_value_out_of_range or not_null_violation then
+      raise exception 'cambio_invalido' using errcode = '22023';
+  end;
+
+  insert into public.audit_logs (actor_uid, actor_email, actor_rol, accion, entidad, entidad_id, antes, despues)
+  values (p_audit->>'actor_uid', p_audit->>'actor_email', p_audit->>'actor_rol', p_audit->>'accion',
+          'comision_operaciones', nuevo_id::text, p_audit->'antes', p_audit->'despues');
+  return jsonb_build_object('resultado', 'ok', 'id', nuevo_id);
+end;
+$fn$;
+
+alter table public.comision_operaciones
+  drop column if exists comision_bp,
+  drop column if exists renta_meses_cent,
+  drop column if exists colaborador_bp,
+  drop column if exists ajuste_motivo,
+  drop column if exists gastos;
+
+commit;

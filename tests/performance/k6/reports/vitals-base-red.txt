@@ -1,0 +1,12 @@
+390px /                                      HTTP 200 TTFB 27 FCP 1236 LCP 5592 CLS 0.000 total 8520 req 40 KB 1548 errJS 0 redFallos 1
+390px /propiedades                           HTTP 200 TTFB 15 FCP 708 LCP 11380 CLS 0.049 total 31175 req 39 KB 6162 errJS 0 redFallos 1
+390px /propiedades/casa-en-venta-canada-del- HTTP 200 TTFB 65 FCP 812 LCP 4096 CLS 0.000 total 6272 req 33 KB 1024 errJS 3 redFallos 2
+768px /                                      HTTP 200 TTFB 20 FCP 1244 LCP 5612 CLS 0.000 total 8538 req 42 KB 1553 errJS 0 redFallos 1
+768px /propiedades                           HTTP 200 TTFB 12 FCP 720 LCP 11108 CLS 0.001 total 31223 req 39 KB 6162 errJS 0 redFallos 1
+768px /propiedades/casa-en-venta-canada-del- HTTP 200 TTFB 48 FCP 812 LCP 4160 CLS 0.001 total 6371 req 37 KB 1034 errJS 3 redFallos 2
+1024px /                                      HTTP 200 TTFB 21 FCP 724 LCP 804 CLS 0.012 total 2969 req 54 KB 1659 errJS 0 redFallos 1
+1024px /propiedades                           HTTP 200 TTFB 13 FCP 364 LCP 1308 CLS 0.008 total 7119 req 56 KB 6279 errJS 0 redFallos 1
+1024px /propiedades/casa-en-venta-canada-del- HTTP 200 TTFB 49 FCP 452 LCP 452 CLS 0.007 total 2376 req 51 KB 1097 errJS 3 redFallos 3
+1440px /                                      HTTP 200 TTFB 20 FCP 704 LCP 788 CLS 0.007 total 3059 req 54 KB 1692 errJS 0 redFallos 2
+1440px /propiedades                           HTTP 200 TTFB 16 FCP 392 LCP 1648 CLS 0.005 total 7482 req 56 KB 6279 errJS 0 redFallos 2
+1440px /propiedades/casa-en-venta-canada-del- HTTP 200 TTFB 48 FCP 448 LCP 932 CLS 0.004 total 2412 req 51 KB 1097 errJS 3 redFallos 2

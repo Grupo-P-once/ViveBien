@@ -1,0 +1,424 @@
+'use client'
+import { precioPorM2, pesosPorM2 } from '@/lib/medidas'
+import { alternarComparar, obtenerComparar, alCambiarComparar } from '@/lib/comparador'
+import { alFallarImagen } from '@/lib/imagen-respaldo'
+import { mailtoDe } from '@/lib/contacto'
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/lib/useAuth'
+import { useFavoritos } from '@/hooks/use-favoritos'
+import { rutaDeEntrada } from '@/lib/pantalla/plegables'
+import RegisterModal from './RegisterModal'
+import { registrarContactoDelCliente } from '@/lib/registrar-contacto-cliente'
+import { textoDeInformes } from '@/lib/whatsapp-propiedad'
+import { rutaDe } from '@/lib/propiedad-publica'
+import { NEGOCIO, enlaceTelefono } from '@/lib/config/negocio'
+import { imgResponsiva } from '@/lib/medios/optimizar'
+import { etiquetasTarjeta, textoBanos } from '@/lib/caracteristicas'
+import AsesorTarjeta from './AsesorTarjeta'
+import type { AsesorPublico } from '@/lib/asesor-publico'
+
+interface Propiedad {
+  id: string
+  titulo: string
+  tipo: string
+  operacion: string
+  precio: number
+  precio_incluye_iva?: boolean
+  ubicacion: string
+  descripcion?: string
+  fotos: string[]
+  estatus?: string
+  estado?: string
+  metros?: number
+  m2?: number | string
+  recamaras?: number
+  banos?: number
+  alturaLibre?: number
+  andenes?: number
+  mantenimiento?: number | string
+  whatsapp?: string
+  amenidades?: string[]
+  features?: string[]
+  /** `extras.caracteristicas` (lib/caracteristicas.ts): de ahí salen las etiquetas cortas de la tarjeta. */
+  extras?: unknown
+  /** «Publicado por»: un asociado, `null` = VIVE BIEN, ausente = no se sabe (no se pinta). Lo calcula /api/catalogo. */
+  asesor?: AsesorPublico | null
+}
+
+interface PropertyCardProps {
+  propiedad: Propiedad
+  onClick?: () => void
+}
+
+const tipoLabel: Record<string, string> = {
+  casa: 'Casa', nave: 'Nave', terreno: 'Terreno',
+  comercial: 'Local', depto: 'Depto.', departamento: 'Depto.', oficina: 'Oficina',
+}
+
+const PLACEHOLDER = 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600&auto=format&fit=crop'
+
+/** El hueco de la tarjeta en CSS (TASK 20.01 / R-07): una columna a móvil, dos a tableta, ~380 px a escritorio. Sin `sizes` el navegador
+ *  supondría el ancho de la ventana y bajaría la foto más grande del `srcset`. */
+const HUECO = '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 380px'
+
+export default function PropertyCard({ propiedad: p }: PropertyCardProps) {
+  const [fotoIdx, setFotoIdx] = useState(0)
+  const [comparando, setComparando] = useState(false)
+  const [avisoComp, setAvisoComp] = useState('')
+  const [regOpen, setRegOpen] = useState(false)
+  const { isLoggedIn } = useAuth()
+  const router = useRouter()
+  // D-75: «guardar» es de la CUENTA (tabla `favoritos`), la misma lista que
+  // enseña «Mis guardadas». Antes se escribía en localStorage y no llegaba a
+  // ningún sitio.
+  const favoritos = useFavoritos()
+  const liked = favoritos.esGuardada(p.id)
+  const [avisoGuardar, setAvisoGuardar] = useState('')
+
+  function alternarGuardada() {
+    if (favoritos.loading) return
+    if (!favoritos.isLoggedIn) {
+      router.push(rutaDeEntrada(`${window.location.pathname}${window.location.search}`))
+      return
+    }
+    setAvisoGuardar('')
+    favoritos.alternar(p.id).catch(e => setAvisoGuardar(e instanceof Error ? e.message : 'No se pudo guardar.'))
+  }
+
+  // El comparador vive en localStorage: se lee tras montar y se escucha, para
+  // que quitar una desde la barra flotante apague el boton de esta tarjeta.
+  useEffect(() => {
+    setComparando(obtenerComparar().includes(p.id))
+    return alCambiarComparar(ids => setComparando(ids.includes(p.id)))
+  }, [p.id])
+
+  function requireAuth(action: () => void) {
+    if (isLoggedIn) { action() } else { setRegOpen(true) }
+  }
+  const fotos = p.fotos?.length ? p.fotos : [PLACEHOLDER]
+  const label = tipoLabel[p.tipo] || p.tipo?.toUpperCase() || 'PROPIEDAD'
+  const superficie = p.metros || (typeof p.m2 === 'number' ? p.m2 : undefined)
+
+  const precioFmt = p.precio
+    ? `$${Number(p.precio).toLocaleString('es-MX')} MXN`
+    : 'Consultar precio'
+
+  const opBadge = p.operacion === 'venta' ? 'En Venta' : 'En Renta'
+  const opColor = p.operacion === 'venta' ? 'var(--rojo)' : '#E07B00'
+
+  // V-1.1.77 (D-02, ADR-0006): contacto siempre de VIVE BIEN, nunca el del anuncio.
+  const wa = NEGOCIO.whatsapp
+  const waMsg = textoDeInformes(p)
+
+  function prev(e: React.MouseEvent) {
+    e.preventDefault(); e.stopPropagation()
+    setFotoIdx(i => (i - 1 + fotos.length) % fotos.length)
+  }
+  function next(e: React.MouseEvent) {
+    e.preventDefault(); e.stopPropagation()
+    setFotoIdx(i => (i + 1) % fotos.length)
+  }
+
+  return (
+    <>
+    <div style={{
+      background: '#fff', borderRadius: '20px', overflow: 'hidden',
+      boxShadow: '0 4px 20px rgba(0,0,0,.09)', display: 'flex',
+      flexDirection: 'column', transition: 'transform .25s, box-shadow .25s',
+      fontFamily: 'Open Sans, sans-serif',
+    }}
+      onMouseEnter={e => {
+        (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-6px)'
+        ;(e.currentTarget as HTMLDivElement).style.boxShadow = '0 12px 36px rgba(0,0,0,.14)'
+      }}
+      onMouseLeave={e => {
+        (e.currentTarget as HTMLDivElement).style.transform = ''
+        ;(e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 20px rgba(0,0,0,.09)'
+      }}
+    >
+      {/* ── Photo ── */}
+      <div style={{ position: 'relative', height: '230px', background: '#e8ecf0', overflow: 'hidden' }}>
+        <img
+          {...imgResponsiva(fotos[fotoIdx] ?? PLACEHOLDER, HUECO, 800)}
+          alt={p.titulo}
+          /* `lazy` + `async`: en el listado hay varias tarjetas y antes todas las fotos se bajaban de golpe, a tamaño original (hasta
+             1,5 MB cada una), compitiendo con el JS que la página necesita para hidratar. */
+          loading="lazy"
+          decoding="async"
+          width={380}
+          height={230}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform .4s' }}
+          // Una sola reserva por imagen (sin bucle si la reserva también falla): ver `imagen-respaldo.ts`.
+          onError={e => { alFallarImagen(e.target as HTMLImageElement, PLACEHOLDER) }}
+        />
+
+        {/* Operación badge */}
+        <span style={{
+          position: 'absolute', top: '14px', left: '14px',
+          background: opColor, color: '#fff',
+          padding: '.3rem .85rem', borderRadius: '30px',
+          fontSize: '.78rem', fontWeight: 700,
+          boxShadow: '0 2px 8px rgba(0,0,0,.25)',
+        }}>
+          {opBadge}
+        </span>
+
+        {/* Comparar. Arriba a la derecha: no compite con el badge de
+            operacion ni con las flechas de la galeria. */}
+        <button
+          aria-pressed={comparando}
+          title={comparando ? 'Quitar de la comparacion' : 'Comparar esta propiedad'}
+          onClick={e => {
+            e.preventDefault(); e.stopPropagation()
+            const r = alternarComparar(p.id)
+            if (!r.ok) { setAvisoComp(r.motivo); setTimeout(() => setAvisoComp(''), 3500) }
+          }}
+          style={{
+            position: 'absolute', top: '14px', right: '14px', zIndex: 3,
+            display: 'flex', alignItems: 'center', gap: '.35rem',
+            background: comparando ? 'var(--rojo-marca, #C8102E)' : 'rgba(255,255,255,.94)',
+            color: comparando ? '#fff' : '#374151',
+            border: 'none', borderRadius: '30px', padding: '.3rem .7rem',
+            fontSize: '.72rem', fontWeight: 700, cursor: 'pointer',
+            boxShadow: '0 2px 8px rgba(0,0,0,.2)', fontFamily: 'inherit',
+          }}>
+          <i className={comparando ? 'fa fa-check' : 'fa fa-scale-balanced'} style={{ fontSize: '.7rem' }} />
+          {comparando ? 'Comparando' : 'Comparar'}
+        </button>
+
+        {avisoComp && (
+          <span style={{
+            position: 'absolute', top: '52px', right: '14px', zIndex: 4,
+            background: 'var(--aviso-fondo-calido)', color: '#7c2d12',
+            padding: '.4rem .7rem', borderRadius: 7, fontSize: '.7rem',
+            maxWidth: 190, lineHeight: 1.4, boxShadow: '0 2px 10px rgba(0,0,0,.15)',
+          }}>
+            {avisoComp}
+          </span>
+        )}
+
+        {/* Foto count badge */}
+        {fotos.length > 1 && (
+          <span style={{
+            position: 'absolute', bottom: '12px', left: '12px',
+            background: 'rgba(0,0,0,.58)', color: '#fff',
+            padding: '3px 9px', borderRadius: '20px',
+            fontSize: '.72rem', fontWeight: 700,
+            display: 'flex', alignItems: 'center', gap: '.3rem',
+            backdropFilter: 'blur(4px)',
+          }}>
+            <i className="fa fa-camera" style={{ fontSize: '.65rem' }} />
+            {fotos.length} fotos
+          </span>
+        )}
+
+        {/* Slider nav */}
+        {fotos.length > 1 && (
+          <>
+            <button onClick={prev} aria-label="Foto anterior" style={{
+              position: 'absolute', top: '50%', left: '10px', transform: 'translateY(-50%)',
+              background: 'rgba(0,0,0,.4)', color: '#fff', border: 'none',
+              borderRadius: '50%', width: '32px', height: '32px',
+              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}><i className="fa fa-chevron-left" style={{ fontSize: '.8rem' }} /></button>
+            <button onClick={next} aria-label="Foto siguiente" style={{
+              position: 'absolute', top: '50%', right: '10px', transform: 'translateY(-50%)',
+              background: 'rgba(0,0,0,.4)', color: '#fff', border: 'none',
+              borderRadius: '50%', width: '32px', height: '32px',
+              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}><i className="fa fa-chevron-right" style={{ fontSize: '.8rem' }} /></button>
+            {/* Dots */}
+            <div style={{ position: 'absolute', bottom: '10px', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '5px' }}>
+              {fotos.map((_, i) => (
+                <span key={i} onClick={e => { e.preventDefault(); e.stopPropagation(); setFotoIdx(i) }} style={{
+                  width: '8px', height: '8px', borderRadius: '50%',
+                  background: i === fotoIdx ? '#fff' : 'rgba(255,255,255,.5)',
+                  cursor: 'pointer', display: 'block', transition: 'background .2s',
+                }} />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* ── Body ── */}
+      <div style={{ padding: '1.1rem 1.2rem 1.3rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '.5rem' }}>
+
+        {/* Title */}
+        <h3 style={{
+          fontFamily: 'Montserrat, sans-serif', fontSize: '1rem',
+          fontWeight: 800, color: '#1a1a2e', lineHeight: 1.3, margin: 0,
+        }}>
+          {p.titulo}{superficie ? ` – ${superficie} m²` : ''}
+        </h3>
+
+        {/* Location */}
+        <p style={{ fontSize: '.82rem', color: '#666', margin: 0, display: 'flex', alignItems: 'flex-start', gap: '.3rem' }}>
+          <i className="fa fa-map-marker-alt" style={{ color: 'var(--azul)', marginTop: '.15rem', flexShrink: 0 }} />
+          {p.ubicacion}
+        </p>
+
+        {/* Tipo badge */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '.4rem' }}>
+          <i className="fa fa-industry" style={{ color: '#555', fontSize: '.8rem' }} />
+          <span style={{ fontSize: '.78rem', fontWeight: 700, color: '#444', textTransform: 'uppercase', letterSpacing: '.04em' }}>
+            {label}
+          </span>
+          {p.alturaLibre && (
+            <span style={{ fontSize: '.75rem', color: '#888', marginLeft: '.5rem' }}>• {p.alturaLibre}m altura</span>
+          )}
+          {p.andenes && (
+            <span style={{ fontSize: '.75rem', color: '#888' }}>• {p.andenes} andenes</span>
+          )}
+        </div>
+
+        {/* Datos clave, pocos: recámaras · baños · estacionamientos y, en renta, amueblado/mascotas */}
+        {(() => {
+          const datos = [p.recamaras ? `${p.recamaras} rec.` : null, textoBanos(p.banos), ...etiquetasTarjeta(p)].filter(Boolean).slice(0, 4)
+          return datos.length > 0 ? (
+            <p data-datos-tarjeta style={{ fontSize: '.78rem', color: '#555', margin: 0, fontWeight: 600 }}>{datos.join(' · ')}</p>
+          ) : null
+        })()}
+
+        {/* Price */}
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '.5rem', flexWrap: 'wrap' }}>
+          <span style={{
+            fontFamily: 'Montserrat, sans-serif', fontWeight: 900,
+            fontSize: '1.25rem', color: 'var(--rojo)',
+          }}>
+            {precioFmt}
+          </span>
+          {p.precio > 0 && (
+            <span style={{
+              fontSize: '.68rem', fontWeight: 800, padding: '2px 7px', borderRadius: '4px',
+              background: p.precio_incluye_iva ? '#ecfdf5' : 'var(--aviso-fondo-calido)',
+              color: p.precio_incluye_iva ? '#065f46' : 'var(--aviso-fuerte)',
+              border: `1px solid ${p.precio_incluye_iva ? '#6ee7b7' : '#fcd34d'}`,
+              letterSpacing: '.04em',
+            }}>
+              {p.precio_incluye_iva ? 'IVA inc.' : '+ IVA'}
+            </span>
+          )}
+          {p.mantenimiento && (
+            <span style={{ fontSize: '.72rem', color: '#999', fontWeight: 600 }}>
+              + ${Number(p.mantenimiento).toLocaleString('es-MX')} manto.
+            </span>
+          )}
+        </div>
+        {/* Precio por m² */}
+        {superficie && p.precio > 0 && (
+          <div style={{ fontSize: '.75rem', color: '#777', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '.3rem', marginTop: '-.2rem' }}>
+            <i className="fa fa-ruler-combined" style={{ fontSize: '.68rem', color: '#999' }} />
+            {pesosPorM2(precioPorM2(p.precio, superficie) ?? 0)} / m²
+          </div>
+        )}
+
+        {/* Ver más button */}
+        <Link
+          href={rutaDe(p)}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: '.4rem',
+            padding: '.6rem 1.2rem', borderRadius: '10px',
+            border: '2px solid var(--azul)', color: 'var(--azul)', fontWeight: 700,
+            fontFamily: 'Montserrat, sans-serif', fontSize: '.85rem',
+            textDecoration: 'none', width: 'fit-content',
+            transition: 'all .2s',
+          }}
+          onMouseEnter={e => {
+            const el = e.currentTarget as HTMLAnchorElement
+            el.style.background = 'var(--azul)'
+            el.style.color = '#fff'
+          }}
+          onMouseLeave={e => {
+            const el = e.currentTarget as HTMLAnchorElement
+            el.style.background = 'transparent'
+            el.style.color = 'var(--azul)'
+          }}
+        >
+          Ver más <i className="fa fa-arrow-right" style={{ fontSize: '.75rem' }} />
+        </Link>
+
+        <AsesorTarjeta asesor={p.asesor} />
+
+        {/* Bottom action bar */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          paddingTop: '.7rem', borderTop: '1px solid #EEF0F3', marginTop: '.2rem',
+        }}>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {/* Phone — requiere sesión */}
+            <button
+              onClick={e => { e.stopPropagation(); requireAuth(() => { void registrarContactoDelCliente(p.id, 'telefono'); window.location.href = enlaceTelefono() }) }}
+              title={isLoggedIn ? 'Llamar' : 'Inicia sesión para contactar'}
+              style={{
+                width: '40px', height: '40px', borderRadius: '12px',
+                background: 'var(--azul)', color: '#fff', display: 'flex',
+                alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer', fontSize: '.95rem',
+              }}>
+              <i className="fa fa-phone" />
+            </button>
+            {/* WhatsApp — requiere sesión */}
+            <button
+              onClick={e => { e.stopPropagation(); requireAuth(() => { void registrarContactoDelCliente(p.id, 'whatsapp'); window.open(`https://wa.me/${wa}?text=${waMsg}`, '_blank') }) }}
+              title={isLoggedIn ? 'WhatsApp' : 'Inicia sesión para contactar'}
+              style={{
+                width: '40px', height: '40px', borderRadius: '12px',
+                background: 'var(--whatsapp)', color: '#fff', display: 'flex',
+                alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer', fontSize: '1.05rem',
+              }}>
+              <i className="fab fa-whatsapp" />
+            </button>
+            {/* Email — requiere sesión */}
+            <button
+              onClick={e => { e.stopPropagation(); requireAuth(() => { void registrarContactoDelCliente(p.id, 'correo'); window.location.href = mailtoDe(`Interesado en: ${p.titulo}`) }) }}
+              title={isLoggedIn ? 'Email' : 'Inicia sesión para contactar'}
+              style={{
+                width: '40px', height: '40px', borderRadius: '12px',
+                background: 'var(--rojo)', color: '#fff', display: 'flex',
+                alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer', fontSize: '.9rem',
+              }}>
+              <i className="fa fa-envelope" />
+            </button>
+          </div>
+
+          {/* Heart / favorite */}
+          <button
+            onClick={e => {
+              e.stopPropagation()
+              alternarGuardada()
+            }}
+            aria-pressed={liked}
+            // Mismo patrón que la tarjeta del portal: el nombre dice QUÉ pasa al pulsar y `aria-pressed` el estado actual.
+            aria-label={liked ? `Quitar ${p.titulo} de guardadas` : `Guardar ${p.titulo}`}
+            title={avisoGuardar || (liked ? 'Quitar de guardadas' : favoritos.isLoggedIn ? 'Guardar' : 'Entra para guardar')}
+            style={{
+              width: '40px', height: '40px', borderRadius: '12px',
+              background: liked ? 'var(--error-fondo-fuerte)' : 'var(--superficie)',
+              color: liked ? 'var(--rojo)' : '#aaa',
+              border: 'none', cursor: 'pointer', display: 'flex',
+              alignItems: 'center', justifyContent: 'center', fontSize: '1rem',
+              transition: 'all .2s',
+            }}>
+            <i className={liked ? 'fas fa-heart' : 'far fa-heart'} />
+          </button>
+        </div>
+
+        {/* Badge de sesión requerida (solo si no está logueado) */}
+        {!isLoggedIn && (
+          <div style={{ marginTop: '.6rem', padding: '.45rem .8rem', background: 'var(--aviso-fondo-calido)', border: '1px solid #FED7AA', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '.4rem', fontSize: '.78rem', color: 'var(--aviso-fuerte)' }}>
+            <i className="fa fa-lock" style={{ fontSize: '.75rem' }} />
+            <span><strong>Inicia sesión</strong> para contactar al asesor</span>
+          </div>
+        )}
+      </div>
+    </div>
+
+    {/* Modal de registro si no hay sesión */}
+    <RegisterModal isOpen={regOpen} onClose={() => setRegOpen(false)} propertyTitle={p.titulo} />
+    </>
+  )
+}

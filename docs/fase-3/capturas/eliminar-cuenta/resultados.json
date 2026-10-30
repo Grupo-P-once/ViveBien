@@ -1,0 +1,77 @@
+{
+  "filas": [
+    {
+      "perfil": "cliente",
+      "tamano": "escritorio",
+      "ancho": 1440,
+      "desbordaCerrado": false,
+      "desbordaAbierto": false,
+      "focoDentro": true,
+      "botonesSinNombre": 0,
+      "confirmarSeActiva": true,
+      "axeSerias": 0,
+      "axeTotal": 4
+    },
+    {
+      "perfil": "cliente",
+      "tamano": "tableta",
+      "ancho": 834,
+      "desbordaCerrado": false,
+      "desbordaAbierto": false,
+      "focoDentro": true,
+      "botonesSinNombre": 0,
+      "confirmarSeActiva": true,
+      "axeSerias": 0,
+      "axeTotal": 4
+    },
+    {
+      "perfil": "cliente",
+      "tamano": "movil",
+      "ancho": 390,
+      "desbordaCerrado": false,
+      "desbordaAbierto": false,
+      "focoDentro": true,
+      "botonesSinNombre": 0,
+      "confirmarSeActiva": true,
+      "axeSerias": 0,
+      "axeTotal": 4
+    },
+    {
+      "perfil": "publicador",
+      "tamano": "escritorio",
+      "ancho": 1440,
+      "desbordaCerrado": false,
+      "desbordaAbierto": false,
+      "focoDentro": true,
+      "botonesSinNombre": 0,
+      "confirmarSeActiva": true,
+      "axeSerias": 0,
+      "axeTotal": 4
+    },
+    {
+      "perfil": "publicador",
+      "tamano": "tableta",
+      "ancho": 834,
+      "desbordaCerrado": false,
+      "desbordaAbierto": false,
+      "focoDentro": true,
+      "botonesSinNombre": 0,
+      "confirmarSeActiva": true,
+      "axeSerias": 0,
+      "axeTotal": 4
+    },
+    {
+      "perfil": "publicador",
+      "tamano": "movil",
+      "ancho": 390,
+      "desbordaCerrado": false,
+      "desbordaAbierto": false,
+      "focoDentro": true,
+      "botonesSinNombre": 0,
+      "confirmarSeActiva": true,
+      "axeSerias": 0,
+      "axeTotal": 4
+    }
+  ],
+  "problemas": []
+}

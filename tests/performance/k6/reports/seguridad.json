@@ -1,0 +1,979 @@
+{
+ "rutas": [
+  {
+   "ruta": "/api/acceso/registro",
+   "metodo": "POST",
+   "estado": 204,
+   "guardas": [],
+   "protegida": false,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": ""
+  },
+  {
+   "ruta": "/api/admin/actividad",
+   "metodo": "GET",
+   "estado": 401,
+   "guardas": [
+    "ADMIN"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Inicia sesión para continuar.\"}"
+  },
+  {
+   "ruta": "/api/admin/analitica",
+   "metodo": "GET",
+   "estado": 401,
+   "guardas": [
+    "ADMIN"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Inicia sesión para continuar.\"}"
+  },
+  {
+   "ruta": "/api/admin/bajas",
+   "metodo": "GET",
+   "estado": 401,
+   "guardas": [
+    "CAPACIDAD"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Inicia sesión para continuar.\"}"
+  },
+  {
+   "ruta": "/api/admin/bajas/[uid]/reintentar",
+   "metodo": "POST",
+   "estado": 401,
+   "guardas": [
+    "CAPACIDAD"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Inicia sesión para continuar.\"}"
+  },
+  {
+   "ruta": "/api/admin/buscar",
+   "metodo": "GET",
+   "estado": 401,
+   "guardas": [
+    "ADMIN"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Inicia sesión para continuar.\"}"
+  },
+  {
+   "ruta": "/api/admin/contactos",
+   "metodo": "GET",
+   "estado": 401,
+   "guardas": [
+    "ADMIN"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Inicia sesión para continuar.\"}"
+  },
+  {
+   "ruta": "/api/admin/flags",
+   "metodo": "GET",
+   "estado": 401,
+   "guardas": [
+    "CAPACIDAD"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Inicia sesión para continuar.\"}"
+  },
+  {
+   "ruta": "/api/admin/flags",
+   "metodo": "POST",
+   "estado": 401,
+   "guardas": [
+    "CAPACIDAD"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Inicia sesión para continuar.\"}"
+  },
+  {
+   "ruta": "/api/admin/invitaciones",
+   "metodo": "GET",
+   "estado": 401,
+   "guardas": [
+    "ADMIN"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Inicia sesión para continuar.\"}"
+  },
+  {
+   "ruta": "/api/admin/invitaciones",
+   "metodo": "PATCH",
+   "estado": 401,
+   "guardas": [
+    "ADMIN"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Inicia sesión para continuar.\"}"
+  },
+  {
+   "ruta": "/api/admin/invitaciones",
+   "metodo": "POST",
+   "estado": 401,
+   "guardas": [
+    "ADMIN"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Inicia sesión para continuar.\"}"
+  },
+  {
+   "ruta": "/api/admin/notificaciones",
+   "metodo": "GET",
+   "estado": 401,
+   "guardas": [
+    "ADMIN"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Inicia sesión para continuar.\"}"
+  },
+  {
+   "ruta": "/api/admin/notificaciones",
+   "metodo": "POST",
+   "estado": 401,
+   "guardas": [
+    "ADMIN"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Inicia sesión para continuar.\"}"
+  },
+  {
+   "ruta": "/api/admin/propiedades",
+   "metodo": "GET",
+   "estado": 200,
+   "guardas": [
+    "ADMIN"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "[{\"id\":\"5243dab0-e301-4ce1-a5de-f5f57037e613\",\"slug\":\"casa-en-venta-canada-del-regugio-norte-540-m2-leon-n8tl\",\"folio\":\"VB-2026-00026\",\"titu"
+  },
+  {
+   "ruta": "/api/admin/propiedades",
+   "metodo": "POST",
+   "estado": 401,
+   "guardas": [
+    "ADMIN"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Inicia sesión para continuar.\"}"
+  },
+  {
+   "ruta": "/api/admin/propiedades/[id]",
+   "metodo": "DELETE",
+   "estado": 401,
+   "guardas": [
+    "CAPACIDAD"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Inicia sesión para continuar.\"}"
+  },
+  {
+   "ruta": "/api/admin/propiedades/[id]",
+   "metodo": "GET",
+   "estado": 401,
+   "guardas": [
+    "CAPACIDAD"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Inicia sesión para continuar.\"}"
+  },
+  {
+   "ruta": "/api/admin/propiedades/[id]",
+   "metodo": "PATCH",
+   "estado": 401,
+   "guardas": [
+    "CAPACIDAD"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Inicia sesión para continuar.\"}"
+  },
+  {
+   "ruta": "/api/admin/registros",
+   "metodo": "GET",
+   "estado": 401,
+   "guardas": [
+    "ADMIN"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Inicia sesión para continuar.\"}"
+  },
+  {
+   "ruta": "/api/admin/registros",
+   "metodo": "POST",
+   "estado": 401,
+   "guardas": [
+    "ADMIN"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Inicia sesión para continuar.\"}"
+  },
+  {
+   "ruta": "/api/admin/resumen",
+   "metodo": "GET",
+   "estado": 401,
+   "guardas": [
+    "ADMIN"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Inicia sesión para continuar.\"}"
+  },
+  {
+   "ruta": "/api/admin/usuarios",
+   "metodo": "GET",
+   "estado": 401,
+   "guardas": [
+    "ADMIN"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Inicia sesión para continuar.\"}"
+  },
+  {
+   "ruta": "/api/admin/usuarios",
+   "metodo": "PATCH",
+   "estado": 401,
+   "guardas": [
+    "ADMIN"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Inicia sesión para continuar.\"}"
+  },
+  {
+   "ruta": "/api/admin/usuarios/[uid]",
+   "metodo": "GET",
+   "estado": 401,
+   "guardas": [
+    "ADMIN"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Inicia sesión para continuar.\"}"
+  },
+  {
+   "ruta": "/api/alertas/resumen",
+   "metodo": "GET",
+   "estado": 401,
+   "guardas": [],
+   "protegida": false,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"No autorizado.\"}"
+  },
+  {
+   "ruta": "/api/ayuda/buscar",
+   "metodo": "GET",
+   "estado": 200,
+   "guardas": [],
+   "protegida": false,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"consulta\":\"\",\"resultados\":[],\"desactualizado\":false}"
+  },
+  {
+   "ruta": "/api/ayuda/categorias",
+   "metodo": "GET",
+   "estado": 200,
+   "guardas": [],
+   "protegida": false,
+   "ms_cache": "s-maxage=300, stale-while-revalidate=31535700",
+   "verboso": false,
+   "cuerpo": "{\"categorias\":[{\"slug\":\"buscar-propiedades\",\"nombre\":\"Buscar propiedades\",\"descripcion\":\"Encontrar casas, departamentos, terrenos, locales y"
+  },
+  {
+   "ruta": "/api/ayuda/feedback",
+   "metodo": "POST",
+   "estado": 400,
+   "guardas": [],
+   "protegida": false,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Falta el artículo o la respuesta.\"}"
+  },
+  {
+   "ruta": "/api/busquedas",
+   "metodo": "DELETE",
+   "estado": 401,
+   "guardas": [
+    "CAPACIDAD"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Inicia sesión para continuar.\"}"
+  },
+  {
+   "ruta": "/api/busquedas",
+   "metodo": "GET",
+   "estado": 401,
+   "guardas": [
+    "CAPACIDAD"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Inicia sesión para continuar.\"}"
+  },
+  {
+   "ruta": "/api/busquedas",
+   "metodo": "POST",
+   "estado": 401,
+   "guardas": [
+    "CAPACIDAD"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Inicia sesión para continuar.\"}"
+  },
+  {
+   "ruta": "/api/catalogo",
+   "metodo": "GET",
+   "estado": 200,
+   "guardas": [],
+   "protegida": false,
+   "ms_cache": "s-maxage=300, stale-while-revalidate=31535700",
+   "verboso": false,
+   "cuerpo": "{\"propiedades\":[{\"id\":\"5243dab0-e301-4ce1-a5de-f5f57037e613\",\"slug\":\"casa-en-venta-canada-del-regugio-norte-540-m2-leon-n8tl\",\"folio\":\"VB-20"
+  },
+  {
+   "ruta": "/api/citas",
+   "metodo": "GET",
+   "estado": 401,
+   "guardas": [
+    "CAPACIDAD"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Inicia sesión para continuar.\"}"
+  },
+  {
+   "ruta": "/api/citas",
+   "metodo": "POST",
+   "estado": 409,
+   "guardas": [
+    "CAPACIDAD"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Todavía no se pueden agendar visitas en línea. Escríbenos por WhatsApp y te ayudamos.\",\"citasEnLinea\":false}"
+  },
+  {
+   "ruta": "/api/citas/[id]",
+   "metodo": "GET",
+   "estado": 401,
+   "guardas": [
+    "CAPACIDAD"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Inicia sesión para continuar.\"}"
+  },
+  {
+   "ruta": "/api/citas/[id]/transicion",
+   "metodo": "POST",
+   "estado": 401,
+   "guardas": [
+    "CAPACIDAD"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Inicia sesión para continuar.\"}"
+  },
+  {
+   "ruta": "/api/citas/accion",
+   "metodo": "POST",
+   "estado": 410,
+   "guardas": [],
+   "protegida": false,
+   "ms_cache": "no-store",
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Este enlace no es válido.\"}"
+  },
+  {
+   "ruta": "/api/citas/accion/ver",
+   "metodo": "POST",
+   "estado": 200,
+   "guardas": [],
+   "protegida": false,
+   "ms_cache": "no-store",
+   "verboso": false,
+   "cuerpo": "{\"valido\":false,\"motivo\":\"no_existe\"}"
+  },
+  {
+   "ruta": "/api/citas/disponibilidad",
+   "metodo": "GET",
+   "estado": 401,
+   "guardas": [
+    "CAPACIDAD"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Inicia sesión para continuar.\"}"
+  },
+  {
+   "ruta": "/api/contacto",
+   "metodo": "GET",
+   "estado": 401,
+   "guardas": [
+    "CAPACIDAD",
+    "SESION"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Inicia sesión para continuar.\"}"
+  },
+  {
+   "ruta": "/api/contacto",
+   "metodo": "POST",
+   "estado": 401,
+   "guardas": [
+    "CAPACIDAD",
+    "SESION"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Inicia sesión para enviar tu solicitud.\",\"requiereSesion\":true}"
+  },
+  {
+   "ruta": "/api/cuenta/eliminar",
+   "metodo": "POST",
+   "estado": 401,
+   "guardas": [
+    "CAPACIDAD",
+    "CLIENTE(portal)",
+    "SESION"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Inicia sesión para continuar.\"}"
+  },
+  {
+   "ruta": "/api/cuenta/eliminar/estado",
+   "metodo": "GET",
+   "estado": 401,
+   "guardas": [
+    "CAPACIDAD"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Inicia sesión para continuar.\"}"
+  },
+  {
+   "ruta": "/api/diagnostico/firebase",
+   "metodo": "GET",
+   "estado": 401,
+   "guardas": [
+    "CAPACIDAD"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Inicia sesión para continuar.\"}"
+  },
+  {
+   "ruta": "/api/eventos",
+   "metodo": "GET",
+   "estado": 401,
+   "guardas": [
+    "ADMIN",
+    "SESION"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Inicia sesión para continuar.\"}"
+  },
+  {
+   "ruta": "/api/eventos",
+   "metodo": "POST",
+   "estado": 400,
+   "guardas": [
+    "ADMIN",
+    "SESION"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Evento no reconocido.\"}"
+  },
+  {
+   "ruta": "/api/favoritos",
+   "metodo": "GET",
+   "estado": 401,
+   "guardas": [
+    "CAPACIDAD"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Inicia sesión para continuar.\"}"
+  },
+  {
+   "ruta": "/api/favoritos",
+   "metodo": "POST",
+   "estado": 401,
+   "guardas": [
+    "CAPACIDAD"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Inicia sesión para continuar.\"}"
+  },
+  {
+   "ruta": "/api/leads",
+   "metodo": "GET",
+   "estado": 401,
+   "guardas": [
+    "CAPACIDAD"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Inicia sesión para continuar.\"}"
+  },
+  {
+   "ruta": "/api/medios/firma",
+   "metodo": "POST",
+   "estado": 401,
+   "guardas": [
+    "CAPACIDAD"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Inicia sesión para continuar.\"}"
+  },
+  {
+   "ruta": "/api/portal/acceso",
+   "metodo": "GET",
+   "estado": 404,
+   "guardas": [
+    "CLIENTE(portal)"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"No encontrado.\"}"
+  },
+  {
+   "ruta": "/api/portal/alertas",
+   "metodo": "GET",
+   "estado": 404,
+   "guardas": [
+    "CLIENTE(portal)"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"No encontrado.\"}"
+  },
+  {
+   "ruta": "/api/portal/alertas",
+   "metodo": "POST",
+   "estado": 404,
+   "guardas": [
+    "CLIENTE(portal)"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"No encontrado.\"}"
+  },
+  {
+   "ruta": "/api/portal/busquedas",
+   "metodo": "GET",
+   "estado": 404,
+   "guardas": [
+    "CLIENTE(portal)"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"No encontrado.\"}"
+  },
+  {
+   "ruta": "/api/portal/busquedas",
+   "metodo": "PATCH",
+   "estado": 404,
+   "guardas": [
+    "CLIENTE(portal)"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"No encontrado.\"}"
+  },
+  {
+   "ruta": "/api/portal/consultas",
+   "metodo": "GET",
+   "estado": 404,
+   "guardas": [
+    "CLIENTE(portal)"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"No encontrado.\"}"
+  },
+  {
+   "ruta": "/api/portal/guardadas",
+   "metodo": "GET",
+   "estado": 404,
+   "guardas": [
+    "CLIENTE(portal)"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"No encontrado.\"}"
+  },
+  {
+   "ruta": "/api/portal/me-interesan",
+   "metodo": "GET",
+   "estado": 404,
+   "guardas": [
+    "CLIENTE(portal)"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"No encontrado.\"}"
+  },
+  {
+   "ruta": "/api/portal/resumen",
+   "metodo": "GET",
+   "estado": 404,
+   "guardas": [
+    "CLIENTE(portal)"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"No encontrado.\"}"
+  },
+  {
+   "ruta": "/api/portal/visitas",
+   "metodo": "GET",
+   "estado": 404,
+   "guardas": [
+    "CLIENTE(portal)"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"No encontrado.\"}"
+  },
+  {
+   "ruta": "/api/propiedades/[id]/estado",
+   "metodo": "POST",
+   "estado": 401,
+   "guardas": [
+    "CAPACIDAD"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Inicia sesión para continuar.\"}"
+  },
+  {
+   "ruta": "/api/publicador/propiedades",
+   "metodo": "GET",
+   "estado": 401,
+   "guardas": [
+    "CAPACIDAD"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Inicia sesión para continuar.\"}"
+  },
+  {
+   "ruta": "/api/publicador/propiedades",
+   "metodo": "POST",
+   "estado": 401,
+   "guardas": [
+    "CAPACIDAD"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Inicia sesión para continuar.\"}"
+  },
+  {
+   "ruta": "/api/registro-lead",
+   "metodo": "GET",
+   "estado": 200,
+   "guardas": [],
+   "protegida": false,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"version\":\"2026-09-16\",\"texto\":\"Acepto el aviso de privacidad. Mis datos se usarán para atender mi solicitud y, si es sobre una propiedad, "
+  },
+  {
+   "ruta": "/api/registro-lead",
+   "metodo": "POST",
+   "estado": 400,
+   "guardas": [],
+   "protegida": false,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Escribe tu nombre.\"}"
+  },
+  {
+   "ruta": "/api/salud",
+   "metodo": "GET",
+   "estado": 200,
+   "guardas": [],
+   "protegida": false,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"puedeAdministrar\":null,\"correo\":false,\"telegram\":false,\"telegramTokenBienFormado\":false,\"telegramTokenCaracteres\":0,\"whatsapp\":false,\"clou"
+  },
+  {
+   "ruta": "/api/telegram/webhook",
+   "metodo": "GET",
+   "estado": 200,
+   "guardas": [],
+   "protegida": false,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"configurado\":false,\"conToken\":false,\"remitentes\":0,\"extraeTexto\":true}"
+  },
+  {
+   "ruta": "/api/telegram/webhook",
+   "metodo": "POST",
+   "estado": 503,
+   "guardas": [],
+   "protegida": false,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"No configurado.\"}"
+  },
+  {
+   "ruta": "/api/usuarios/me",
+   "metodo": "GET",
+   "estado": 401,
+   "guardas": [
+    "CAPACIDAD",
+    "SESION"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Inicia sesión para continuar.\"}"
+  },
+  {
+   "ruta": "/api/usuarios/me",
+   "metodo": "PATCH",
+   "estado": 401,
+   "guardas": [
+    "CAPACIDAD",
+    "SESION"
+   ],
+   "protegida": true,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "{\"error\":\"Inicia sesión para continuar.\"}"
+  },
+  {
+   "ruta": "/api/whatsapp/webhook",
+   "metodo": "GET",
+   "estado": 403,
+   "guardas": [],
+   "protegida": false,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "Forbidden"
+  },
+  {
+   "ruta": "/api/whatsapp/webhook",
+   "metodo": "POST",
+   "estado": 403,
+   "guardas": [],
+   "protegida": false,
+   "ms_cache": null,
+   "verboso": false,
+   "cuerpo": "Forbidden"
+  }
+ ],
+ "abuso": [
+  {
+   "nombre": "JSON malformado en /api/contacto",
+   "estado": 401,
+   "ok": true,
+   "cuerpo": "{\"error\":\"Inicia sesión para enviar tu solicitud.\",\"requiereSesion\":true}"
+  },
+  {
+   "nombre": "cuerpo gigante (1 MB) en /api/contacto",
+   "estado": 401,
+   "ok": true,
+   "cuerpo": "{\"error\":\"Inicia sesión para enviar tu solicitud.\",\"requiereSesion\":true}"
+  },
+  {
+   "nombre": "JSON malformado en /api/eventos",
+   "estado": 400,
+   "ok": true,
+   "cuerpo": "{\"error\":\"Evento no reconocido.\"}"
+  },
+  {
+   "nombre": "JSON malformado en /api/registro-lead",
+   "estado": 400,
+   "ok": true,
+   "cuerpo": "{\"error\":\"Escribe tu nombre.\"}"
+  },
+  {
+   "nombre": "JSON malformado en /api/ayuda/feedback",
+   "estado": 400,
+   "ok": true,
+   "cuerpo": "{\"error\":\"Falta el artículo o la respuesta.\"}"
+  },
+  {
+   "nombre": "webhook Telegram sin secreto",
+   "estado": 503,
+   "ok": false,
+   "cuerpo": "{\"error\":\"No configurado.\"}"
+  },
+  {
+   "nombre": "webhook WhatsApp sin firma",
+   "estado": 403,
+   "ok": true,
+   "cuerpo": "Forbidden"
+  },
+  {
+   "nombre": "XSS en ficha",
+   "estado": 404,
+   "ok": true,
+   "reflejo_sin_escapar": false,
+   "cuerpo": "<!DOCTYPE html><html id=\"__next_error__\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content="
+  },
+  {
+   "nombre": "traversal en ficha",
+   "estado": 404,
+   "ok": true,
+   "reflejo_sin_escapar": false,
+   "cuerpo": "<!DOCTYPE html><html id=\"__next_error__\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content="
+  },
+  {
+   "nombre": "inyección SQL en ficha",
+   "estado": 404,
+   "ok": true,
+   "reflejo_sin_escapar": false,
+   "cuerpo": "<!DOCTYPE html><html id=\"__next_error__\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content="
+  },
+  {
+   "nombre": "búsqueda de ayuda con XSS",
+   "estado": 200,
+   "ok": true,
+   "reflejo_sin_escapar": false,
+   "cuerpo": "{\"consulta\":\"<script>\\\"'\",\"resultados\":[],\"desactualizado\":false}"
+  },
+  {
+   "nombre": "búsqueda de ayuda con SQL",
+   "estado": 200,
+   "ok": true,
+   "reflejo_sin_escapar": false,
+   "cuerpo": "{\"consulta\":\"';drop table x;--\",\"resultados\":[],\"desactualizado\":false}"
+  },
+  {
+   "nombre": "búsqueda de ayuda enorme",
+   "estado": 431,
+   "ok": true,
+   "reflejo_sin_escapar": false,
+   "cuerpo": ""
+  },
+  {
+   "nombre": "segmento de ayuda inexistente",
+   "estado": 404,
+   "ok": true,
+   "reflejo_sin_escapar": false,
+   "cuerpo": "<!DOCTYPE html><html id=\"__next_error__\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content="
+  },
+  {
+   "nombre": "ráfaga 60 POST /api/eventos (anónimo): ¿hay 429?",
+   "estado": [
+    400
+   ],
+   "ok": false,
+   "cuerpo": ""
+  },
+  {
+   "nombre": "ráfaga 40 POST /api/ayuda/feedback (anónimo): ¿hay 429?",
+   "estado": [
+    400
+   ],
+   "ok": false,
+   "cuerpo": ""
+  }
+ ],
+ "cabeceras": {
+  "strict-transport-security": null,
+  "x-content-type-options": "nosniff",
+  "x-frame-options": "SAMEORIGIN",
+  "referrer-policy": "strict-origin-when-cross-origin",
+  "permissions-policy": "camera=(), microphone=(), geolocation=(), interest-cohort=()",
+  "content-security-policy": null,
+  "content-security-policy-report-only": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com https://cdnjs.cloudflare.com; font-src 'self' data: https://fonts.googleapis.com https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: blob: https://res.cloudinary.com https://images.unsplash.com https://i.ytimg.com https://unavatar.io https://*.tile.openstreetmap.org https://maps.gstatic.com https://maps.googleapis.com https://www.googletagmanager.com https://www.google-analytics.com; connect-src 'self' https://*.supabase.co https://api.cloudinary.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://*.googleapis.com https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://nominatim.openstreetmap.org https://*.tile.openstreetmap.org https://api.open-meteo.com https://www.googletagmanager.com https://www.google-analytics.com; frame-src https://www.youtube-nocookie.com https://www.youtube.com https://maps.google.com https://www.google.com https://*.firebaseapp.com https://accounts.google.com https://apis.google.com; media-src 'self' https://res.cloudinary.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self' https://accounts.google.com; frame-ancestors 'self'; upgrade-insecure-requests",
+  "x-powered-by": "Next.js",
+  "server": null,
+  "usuarios_me_cache_control": null
+ }
+}

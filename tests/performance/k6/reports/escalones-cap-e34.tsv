@@ -1,0 +1,5 @@
+tasa_objetivo	rps_logrado	p50_ms	p95_ms	p99_ms	error_pct	descartadas	vus_max
+100	100.0	3	18	28	0	0	100
+200	200.0	4	35	72	0	0	100
+300	299.8	17	293	687	0	5	105
+450	432.0	462	2244	3106	0	386	480

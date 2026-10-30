@@ -1,0 +1,18 @@
+{
+  "chequeos": [
+    { "nombre": "salud pública mínima", "ruta": "/api/salud", "estado": 200, "contiene": ["\"ok\":true"], "noContiene": ["superAdmin", "Telegram", "token"] },
+    { "nombre": "salud detallada protegida", "ruta": "/api/admin/salud", "estado": 401 },
+    { "nombre": "admin/propiedades ya no es público", "ruta": "/api/admin/propiedades", "estado": 401 },
+    { "nombre": "diagnóstico de Telegram protegido", "ruta": "/api/admin/telegram/diagnostico", "estado": 401 },
+    { "nombre": "webhook de Telegram sin GET", "ruta": "/api/telegram/webhook", "estado": 405 },
+    { "nombre": "catálogo público", "ruta": "/api/catalogo", "estado": 200, "noContiene": ["sanjuan"] },
+    { "nombre": "listado", "ruta": "/propiedades", "estado": 200 },
+    { "nombre": "ficha pausada: 404", "ruta": "/propiedades/sanjuan", "estado": 404 },
+    { "nombre": "sitemap sin la pausada", "ruta": "/sitemap.xml", "estado": 200, "noContiene": ["sanjuan"] },
+    { "nombre": "API protegida sin sesión (publicador)", "ruta": "/api/publicador/propiedades", "estado": 401 },
+    { "nombre": "API protegida sin sesión (usuario)", "ruta": "/api/usuarios/me", "estado": 401 },
+    { "nombre": "API protegida sin sesión (admin usuarios)", "ruta": "/api/admin/usuarios", "estado": 401 },
+    { "nombre": "API protegida sin sesión (citas)", "ruta": "/api/citas", "estado": 401 },
+    { "nombre": "404 esperado (API)", "ruta": "/api/no-existe-gate", "estado": 404 }
+  ]
+}

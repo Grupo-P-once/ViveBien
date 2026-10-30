@@ -1,0 +1,885 @@
+### next.config.ts
+diff --git "a/C:\\Users\\jemil\\vivebien-deploy-stage-e34\\next.config.ts" "b/C:\\Users\\jemil\\vivebien-deploy-stage-e35-final\\next.config.ts"
+index 8a5d706..47203da 100644
+--- "a/C:\\Users\\jemil\\vivebien-deploy-stage-e34\\next.config.ts"
++++ "b/C:\\Users\\jemil\\vivebien-deploy-stage-e35-final\\next.config.ts"
+@@ -100,6 +100,18 @@ const redireccionesDeFichas = Object.entries(nombresRetirados).map(([viejo, nuev
+  */
+ const PROYECTO_FIREBASE = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+ 
++/** Rutas de API cuya respuesta depende de la sesión (E-35). `:path*` incluye la raíz sin barra final. */
++const rutasPrivadas = [
++  "/api/usuarios/:path*",
++  "/api/citas/:path*",
++  "/api/publicador/:path*",
++  "/api/admin/:path*",
++];
++const cabecerasPrivadas = [
++  { key: "Cache-Control", value: "private, no-store" },
++  { key: "Vary", value: "Cookie, Authorization" },
++];
++
+ const nextConfig: NextConfig = {
+   /**
+    * `firebase-admin` se carga con el resolvedor de Node, no con el empaquetador.
+@@ -114,7 +126,13 @@ const nextConfig: NextConfig = {
+   serverExternalPackages: ['firebase-admin'],
+ 
+   async headers() {
+-    return [{ source: "/:path*", headers: cabecerasDeSeguridad }];
++    return [
++      { source: "/:path*", headers: cabecerasDeSeguridad },
++      // E-35 / QA-013: lo que depende de QUIÉN pregunta no se guarda en ningún intermediario. Vercel marca las respuestas dinámicas
++      // como `public, max-age=0, must-revalidate`; para identidad, citas, publicador y administración eso es demasiado laxo (un
++      // proxy intermedio podría guardar la identidad de alguien). `Vary` evita mezclar respuestas de distintas sesiones.
++      ...rutasPrivadas.map((source) => ({ source, headers: cabecerasPrivadas })),
++    ];
+   },
+   async redirects() {
+     return [...redireccionesDeDominio, ...redireccionesDeFichas];
+
+### src/app/api/admin/propiedades/route.ts
+diff --git "a/C:\\Users\\jemil\\vivebien-deploy-stage-e34\\src\\app\\api\\admin\\propiedades\\route.ts" "b/C:\\Users\\jemil\\vivebien-deploy-stage-e35-final\\src\\app\\api\\admin\\propiedades\\route.ts"
+index 750df1a..65bc0de 100644
+--- "a/C:\\Users\\jemil\\vivebien-deploy-stage-e34\\src\\app\\api\\admin\\propiedades\\route.ts"
++++ "b/C:\\Users\\jemil\\vivebien-deploy-stage-e35-final\\src\\app\\api\\admin\\propiedades\\route.ts"
+@@ -8,16 +8,9 @@ import { sanearContenido } from '@/lib/sanear-propiedad'
+ import { refrescarCatalogo } from '@/lib/refrescar'
+ import { escribirTolerante } from '@/lib/columnas'
+ import { nombrarSiEstaPublicada } from '@/lib/asignar-slug'
+-import { SELECT_PUBLICO } from '@/lib/propiedad-publica'
+-import { esVisibleAlPublico } from '@/lib/visibilidad-publica'
+ 
+-// Para lecturas: anon key (sujeta a las políticas RLS de lectura pública)
+-function readClient() {
+-  return clienteServidor(
+-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, 'publico',
+-  )
+-}
++/** Respuestas con datos internos: ningún intermediario las guarda. */
++const PRIVADO = { 'Cache-Control': 'private, no-store' }
+ 
+ // Para escrituras: service role key. IGNORA RLS por completo, así que sólo puede
+ // usarse después de que requireAdmin() haya validado la sesión.
+@@ -29,36 +22,29 @@ function adminClient() {
+ }
+ 
+ /**
+- * GET /api/admin/propiedades — listado para el panel.
++ * GET /api/admin/propiedades — listado COMPLETO para el panel. Sólo administradores (E-35 / QA-011).
+  *
+  * ─────────────────────────────────────────────────────────────
+- * POR QUÉ LOS BORRADORES «NO SALÍAN»
++ * POR QUÉ YA NO TIENE LECTURA PÚBLICA
+  *
+- * Esta ruta leía SIEMPRE con la clave pública, y las políticas RLS sólo dejan
+- * leer a la clave pública lo que está **publicado**. Resultado: el panel de
+- * administración nunca vio un borrador ni una propiedad en revisión, aunque
+- * existieran — el administrador creía que no estaban.
++ * Hasta E-34, sin sesión de administrador esta ruta devolvía «lo publicado» como lectura pública. Era una segunda puerta de entrada al
++ * catálogo, con otro nombre, SIN caché y SIN tope: cada llamada anónima consultaba la base, y una ruta «admin» que contesta a cualquiera
++ * confunde a quien revisa la superficie de ataque. La lectura pública es `/api/catalogo` (D-59, con copia de respaldo y caché).
+  *
+- * Ahora, con sesión de administrador, lee con la clave de servicio y devuelve
+- * **todo**. Sin sesión (o sin ser admin) devuelve lo mismo que antes —sólo lo
+- * publicado, que ya es público—, para no romper a nadie que la llame así.
++ * Ahora: 401 sin sesión, 403 si la sesión no es de administrador, y 200 con TODO el inventario (borradores, en revisión, pausadas y
++ * archivadas incluidas) para `admin` y `super_admin`. Los consumidores del portal del cliente pasaron a `/api/catalogo`.
+  * ─────────────────────────────────────────────────────────────
+  */
+ export async function GET(req: Request) {
+-  const tieneSesion = (req.headers.get('authorization') ?? '').startsWith('Bearer ')
+-  const auth = tieneSesion ? await requireAdmin(req) : null
+-  const esAdmin = !!auth && !auth.error
+-  const cliente = esAdmin ? adminClient() : readClient()
++  const auth = await requireAdmin(req)
++  if (auth.error) return auth.error
+ 
+-  // V-1.1.77: sin sesión de admin, sólo columnas públicas (SEC-02).
+-  const { data, error } = await cliente
++  const { data, error } = await adminClient()
+     .from('propiedades')
+-    .select(esAdmin ? '*' : SELECT_PUBLICO)
++    .select('*')
+     .order('created_at', { ascending: false })
+-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+-  // Sin sesión de admin es una lectura pública: misma regla que el catálogo (D-59).
+-  if (!esAdmin) return NextResponse.json((data as unknown as Parameters<typeof esVisibleAlPublico>[0][]).filter(esVisibleAlPublico))
+-  return NextResponse.json(data)
++  if (error) return NextResponse.json({ error: error.message }, { status: 500, headers: PRIVADO })
++  return NextResponse.json(data, { headers: PRIVADO })
+ }
+ 
+ /**
+
+### src/app/api/ayuda/feedback/route.ts
+diff --git "a/C:\\Users\\jemil\\vivebien-deploy-stage-e34\\src\\app\\api\\ayuda\\feedback\\route.ts" "b/C:\\Users\\jemil\\vivebien-deploy-stage-e35-final\\src\\app\\api\\ayuda\\feedback\\route.ts"
+index 32a2890..a528f3e 100644
+--- "a/C:\\Users\\jemil\\vivebien-deploy-stage-e34\\src\\app\\api\\ayuda\\feedback\\route.ts"
++++ "b/C:\\Users\\jemil\\vivebien-deploy-stage-e35-final\\src\\app\\api\\ayuda\\feedback\\route.ts"
+@@ -11,19 +11,63 @@ import { clienteServidor } from '@/lib/supabase-servidor'
+  *
+  * Se escribe con la clave anónima para que el RLS decida: sólo se acepta
+  * sobre un artículo público y publicado.
++ *
++ * ─────────────────────────────────────────────────────────────
++ * DEFENSA EN CAPAS CONTRA EL ABUSO (E-35 / QA-003, D-62)
++ *
++ * Es una escritura anónima: la única frontera real son los topes. Capas, de más barata a más cara:
++ *   1. tope por origen en total (`TOPES.feedback`), ANTES de leer nada;
++ *   2. tamaño del cuerpo acotado (4 KB): se corta la lectura al pasarse, no se carga un cuerpo enorme en memoria;
++ *   3. forma del id del artículo (letras, números, `-` y `_`, hasta 64): nada raro llega a la consulta;
++ *   4. tope por origen Y artículo (`TOPES.feedbackArticulo`): una sola persona no puede inflar la puntuación de UN artículo;
++ *   5. el comentario se recorta a 500 caracteres y el RLS sigue decidiendo qué artículos aceptan opiniones.
++ *
++ * Limitación honesta: los contadores viven en la memoria de cada instancia salvo que se configure un almacén compartido (Upstash, ver
++ * `lib/limites-almacen.ts`). Con varias instancias el tope real puede multiplicarse; por eso las capas 2, 3 y 5 no dependen del contador.
++ * ─────────────────────────────────────────────────────────────
+  */
++const MAX_CUERPO_BYTES = 4096
++const ID_ARTICULO = /^[A-Za-z0-9_-]{1,64}$/
++const SIN_CACHE = { 'Cache-Control': 'no-store' }
++
++/** Lee el cuerpo como texto, pero se rinde (null) en cuanto supera el tope: no se acumula un cuerpo enorme. */
++async function leerAcotado(req: Request): Promise<string | null> {
++  const declarado = Number(req.headers.get('content-length') ?? '0')
++  if (Number.isFinite(declarado) && declarado > MAX_CUERPO_BYTES) return null
++  if (!req.body) return ''
++  const lector = req.body.getReader()
++  const trozos: Uint8Array[] = []
++  let total = 0
++  for (;;) {
++    const { done, value } = await lector.read()
++    if (done) break
++    total += value.byteLength
++    if (total > MAX_CUERPO_BYTES) { await lector.cancel().catch(() => {}); return null }
++    trozos.push(value)
++  }
++  return new TextDecoder().decode(Buffer.concat(trozos))
++}
++
+ export async function POST(req: Request) {
++  const origen = origenDe(req)
+   // R-03 / QA-003 (D-62): antes de leer el cuerpo y antes de escribir. Anónimo + escribe en la base = necesita tope.
+-  const frenado = await frenarAsync(`feedback:${origenDe(req)}`, TOPES.feedback)
++  const frenado = await frenarAsync(`feedback:${origen}`, TOPES.feedback)
+   if (frenado) return frenado
+ 
+-  const cuerpo = (await req.json().catch(() => ({}))) as Record<string, unknown>
+-  const articuloId = typeof cuerpo.articuloId === 'string' ? cuerpo.articuloId : null
++  const texto = await leerAcotado(req)
++  if (texto === null) return NextResponse.json({ error: 'El mensaje es demasiado grande.' }, { status: 413, headers: SIN_CACHE })
++
++  let cuerpo: Record<string, unknown> = {}
++  try { cuerpo = JSON.parse(texto) as Record<string, unknown> } catch { /* cuerpo vacío o roto: cae en el 400 de abajo */ }
++  const articuloId = typeof cuerpo.articuloId === 'string' && ID_ARTICULO.test(cuerpo.articuloId) ? cuerpo.articuloId : null
+   const util = typeof cuerpo.util === 'boolean' ? cuerpo.util : null
+   if (!articuloId || util === null) {
+-    return NextResponse.json({ error: 'Falta el artículo o la respuesta.' }, { status: 400 })
++    return NextResponse.json({ error: 'Falta el artículo o la respuesta.' }, { status: 400, headers: SIN_CACHE })
+   }
+ 
++  const porArticulo = await frenarAsync(`feedback:${origen}:${articuloId}`, TOPES.feedbackArticulo)
++  if (porArticulo) return porArticulo
++
+   const comentario = typeof cuerpo.comentario === 'string'
+     ? cuerpo.comentario.trim().slice(0, 500) || null
+     : null
+@@ -37,6 +81,6 @@ export async function POST(req: Request) {
+ 
+   // Que no se pueda guardar la opinión no es motivo para romperle la página
+   // a nadie: se agradece igual y se sigue.
+-  if (error) return NextResponse.json({ guardado: false }, { status: 200 })
+-  return NextResponse.json({ guardado: true })
++  if (error) return NextResponse.json({ guardado: false }, { status: 200, headers: SIN_CACHE })
++  return NextResponse.json({ guardado: true }, { headers: SIN_CACHE })
+ }
+
+### src/app/api/telegram/webhook/route.ts
+diff --git "a/C:\\Users\\jemil\\vivebien-deploy-stage-e34\\src\\app\\api\\telegram\\webhook\\route.ts" "b/C:\\Users\\jemil\\vivebien-deploy-stage-e35-final\\src\\app\\api\\telegram\\webhook\\route.ts"
+index d7ef634..bc09a75 100644
+--- "a/C:\\Users\\jemil\\vivebien-deploy-stage-e34\\src\\app\\api\\telegram\\webhook\\route.ts"
++++ "b/C:\\Users\\jemil\\vivebien-deploy-stage-e35-final\\src\\app\\api\\telegram\\webhook\\route.ts"
+@@ -10,7 +10,7 @@ import { escribirTolerante } from '@/lib/columnas'
+ import { destinoCloudinary } from '@/lib/fotos'
+ import { textoDePdf, textoDeImagen, pideLectura } from '@/lib/leer-archivo'
+ import { leerFicha, primerHueco } from '@/lib/ficha-texto'
+-import { extraerDeTexto, prefijoDe, pasoDe } from '@/lib/telegram'
++import { prefijoDe, pasoDe } from '@/lib/telegram'
+ import {
+   PREGUNTAS,
+   interpretar,
+@@ -662,12 +662,5 @@ export async function POST(req: Request) {
+   }
+ }
+ 
+-/** Comprobación de configuración, sin exponer nada. */
+-export async function GET() {
+-  return NextResponse.json({
+-    configurado: Boolean(process.env.TELEGRAM_WEBHOOK_SECRET),
+-    conToken: Boolean(token()),
+-    remitentes: chatsPermitidos().length,
+-    extraeTexto: typeof extraerDeTexto === 'function',
+-  })
+-}
++// E-35 / QA-012: aquí hubo un `GET` público de «diagnóstico». Se quitó: el webhook SOLO atiende el POST firmado de Telegram.
++// La comprobación de configuración vive ahora en `/api/admin/telegram/diagnostico` (protegida).
+
+### src/app/dashboard/page.tsx
+diff --git "a/C:\\Users\\jemil\\vivebien-deploy-stage-e34\\src\\app\\dashboard\\page.tsx" "b/C:\\Users\\jemil\\vivebien-deploy-stage-e35-final\\src\\app\\dashboard\\page.tsx"
+index 1ee17e6..cfb1ba7 100644
+--- "a/C:\\Users\\jemil\\vivebien-deploy-stage-e34\\src\\app\\dashboard\\page.tsx"
++++ "b/C:\\Users\\jemil\\vivebien-deploy-stage-e35-final\\src\\app\\dashboard\\page.tsx"
+@@ -226,7 +226,8 @@ export default function DashboardPage() {
+ 
+   async function cargarPropiedades() {
+     try {
+-      const res = await fetch('/api/admin/propiedades')
++      // E-35: la ruta de administración exige sesión (antes devolvía solo lo público a cualquiera).
++      const res = await fetch('/api/admin/propiedades', { headers: await authHeaders() })
+       const data = await res.json()
+       setPropiedades(Array.isArray(data) ? data as Propiedad[] : [])
+     } catch { setPropiedades([]) }
+
+### src/components/MetricasCliente.tsx
+diff --git "a/C:\\Users\\jemil\\vivebien-deploy-stage-e34\\src\\components\\MetricasCliente.tsx" "b/C:\\Users\\jemil\\vivebien-deploy-stage-e35-final\\src\\components\\MetricasCliente.tsx"
+index 2443df0..9aaca55 100644
+--- "a/C:\\Users\\jemil\\vivebien-deploy-stage-e34\\src\\components\\MetricasCliente.tsx"
++++ "b/C:\\Users\\jemil\\vivebien-deploy-stage-e35-final\\src\\components\\MetricasCliente.tsx"
+@@ -109,13 +109,14 @@ export default function MetricasCliente() {
+     try {
+       const h = await cabeceras()
+       const [rp, rf, rm] = await Promise.all([
+-        fetch('/api/admin/propiedades'),
++        fetch('/api/catalogo'), // E-35: la lectura pública es el catálogo, no la ruta de administración
+         fetch('/api/favoritos', { headers: h }),
+         fetch('/api/usuarios/me', { headers: h }),
+       ])
+       if (rp.ok) {
+         const d = await rp.json()
+-        setProps(Array.isArray(d) ? d : [])
++        const lista = Array.isArray(d) ? d : d?.propiedades
++        setProps(Array.isArray(lista) ? lista : [])
+       }
+       if (rf.ok) {
+         const d = await rf.json()
+
+### src/components/MisFavoritos.tsx
+diff --git "a/C:\\Users\\jemil\\vivebien-deploy-stage-e34\\src\\components\\MisFavoritos.tsx" "b/C:\\Users\\jemil\\vivebien-deploy-stage-e35-final\\src\\components\\MisFavoritos.tsx"
+index 2a5f0f1..6619d28 100644
+--- "a/C:\\Users\\jemil\\vivebien-deploy-stage-e34\\src\\components\\MisFavoritos.tsx"
++++ "b/C:\\Users\\jemil\\vivebien-deploy-stage-e35-final\\src\\components\\MisFavoritos.tsx"
+@@ -49,11 +49,12 @@ export default function MisFavoritos() {
+     try {
+       const [rf, rp] = await Promise.all([
+         fetch('/api/favoritos', { headers: await cabeceras() }),
+-        fetch('/api/admin/propiedades'),
++        fetch('/api/catalogo'), // E-35: la lectura pública es el catálogo, no la ruta de administración
+       ])
+       if (!rf.ok) { setFallo(true); setCargando(false); return }
+       const listaIds: string[] = await rf.json()
+-      const todas: Propiedad[] = rp.ok ? await rp.json() : []
++      const cuerpo = rp.ok ? await rp.json() : []
++      const todas: Propiedad[] = Array.isArray(cuerpo) ? cuerpo : (cuerpo?.propiedades ?? [])
+       setIds(Array.isArray(listaIds) ? listaIds : [])
+       setProps(Array.isArray(todas) ? todas : [])
+     } catch {
+
+### src/lib/limites.ts
+diff --git "a/C:\\Users\\jemil\\vivebien-deploy-stage-e34\\src\\lib\\limites.ts" "b/C:\\Users\\jemil\\vivebien-deploy-stage-e35-final\\src\\lib\\limites.ts"
+index 0a3ffef..cbd35e3 100644
+--- "a/C:\\Users\\jemil\\vivebien-deploy-stage-e34\\src\\lib\\limites.ts"
++++ "b/C:\\Users\\jemil\\vivebien-deploy-stage-e35-final\\src\\lib\\limites.ts"
+@@ -97,6 +97,8 @@ export const TOPES = {
+    * «un gesto de vez en cuando») y `contacto`: nadie lee 20 artículos distintos en diez minutos y los valora todos. Antes no tenía tope.
+    */
+   feedback: { maximo: 20, ventanaMs: 10 * 60 * 1000 },
++  /** E-35: misma persona + MISMO artículo. Votar un artículo tres veces en diez minutos ya es corregirse; más es inflar la puntuación. */
++  feedbackArticulo: { maximo: 3, ventanaMs: 10 * 60 * 1000 },
+   /**
+    * Cerrar la cuenta (D-38). Es un acto único: cinco por hora dejan sitio de
+    * sobra a los reintentos legítimos tras un fallo de Firebase, y cortan un
+
+### src/app/api/admin/telegram/diagnostico/route.ts
+diff --git "a/C:\\Users\\jemil\\vivebien-deploy-stage-e35-final\\src\\app\\api\\admin\\telegram\\diagnostico\\route.ts" "b/C:\\Users\\jemil\\vivebien-deploy-stage-e35-final\\src\\app\\api\\admin\\telegram\\diagnostico\\route.ts"
+new file mode 100644
+index 0000000..2bdd5ef
+--- /dev/null
++++ "b/C:\\Users\\jemil\\vivebien-deploy-stage-e35-final\\src\\app\\api\\admin\\telegram\\diagnostico\\route.ts"
+@@ -0,0 +1,24 @@
++import { NextResponse } from 'next/server'
++import { requireAdmin } from '@/lib/auth-server'
++
++/**
++ * GET /api/admin/telegram/diagnostico — ¿está configurado el canal de Telegram? (E-35 / QA-012)
++ *
++ * Antes era un `GET` PÚBLICO en el propio webhook: cualquiera podía preguntar si había secreto, token y cuántos remitentes autorizados.
++ * Poco, pero es reconocimiento gratis. Ahora exige administrador (401 sin sesión, 403 si no lo es) y solo responde SÍ/NO y un conteo:
++ * jamás el valor, el largo ni el prefijo de un secreto, ni nada del webhook.
++ */
++export async function GET(req: Request) {
++  const auth = await requireAdmin(req)
++  if (auth.error) return auth.error
++
++  const remitentes = (process.env.TELEGRAM_CHATS_PERMITIDOS ?? '').split(',').map((s) => s.trim()).filter(Boolean).length
++  return NextResponse.json(
++    {
++      configurado: Boolean(process.env.TELEGRAM_WEBHOOK_SECRET),
++      conToken: Boolean((process.env.TELEGRAM_BOT_TOKEN ?? '').trim()),
++      remitentes,
++    },
++    { headers: { 'Cache-Control': 'private, no-store' } },
++  )
++}
+
+### docs/QA/QA-021-correccion.sql
+diff --git "a/C:\\Users\\jemil\\vivebien-deploy-stage-e35-final\\docs\\QA\\QA-021-correccion.sql" "b/C:\\Users\\jemil\\vivebien-deploy-stage-e35-final\\docs\\QA\\QA-021-correccion.sql"
+new file mode 100644
+index 0000000..6add671
+--- /dev/null
++++ "b/C:\\Users\\jemil\\vivebien-deploy-stage-e35-final\\docs\\QA\\QA-021-correccion.sql"
+@@ -0,0 +1,52 @@
++-- QA-021 · corrección EXACTA de la telemetría generada por las pruebas de navegador sobre producción (D-62 / R-15)
++-- ESTADO: PREPARADO, **NO EJECUTADO**. Espera autorización explícita ("QA-021 listo para corrección exacta; 25 filas identificadas").
++--
++-- EVIDENCIA (lectura, 7-oct-2026):
++--   · propiedad VB-2026-00026 = '5243dab0-e301-4ce1-a5de-f5f57037e613'; `vistas` = 27.
++--   · eventos `property_view` de esa propiedad: 27 filas → ids 179, 180 (5 y 6-oct, ANTERIORES a la campaña: NO se tocan) y ids 188…212 (25 filas
++--     CONSECUTIVAS, 25 sesiones distintas, 2026-10-07 04:49:58 → 07:28:20 UTC, uid NULL, datos NULL) = las ventanas de mis pruebas Playwright en producción.
++--   · 27 = 2 + 25: el contador `vistas` solo subió por esas visitas (sumar_vista suma 1 por evento).
++--   · Sin PII: sin uid, sin datos; la sesión es un identificador aleatorio del navegador.
++--
++-- QUÉ HACE (una transacción; aborta si algo no coincide):
++--   1. comprueba que existen EXACTAMENTE 25 filas con esas condiciones y que `vistas` sigue en 27;
++--   2. borra SOLO esas 25 filas;
++--   3. ajusta SOLO `vistas` de esa propiedad (27 → 2);
++--   4. deja huella en `audit_logs` (actor del sistema de QA, antes/después, motivo).
++-- NO toca: ningún otro evento, ninguna otra propiedad, ningún dato de personas.
++
++begin;
++
++do $$
++declare
++  n int;
++  v int;
++begin
++  select count(*) into n from public.eventos
++   where id between 188 and 212 and nombre = 'property_view'
++     and propiedad_id = '5243dab0-e301-4ce1-a5de-f5f57037e613' and uid is null and datos is null
++     and creado_en >= '2026-10-07 04:45:00+00' and creado_en < '2026-10-07 07:30:00+00';
++  if n <> 25 then raise exception 'QA-021: se esperaban 25 filas y hay % — se aborta sin cambios', n; end if;
++
++  select vistas into v from public.propiedades where id = '5243dab0-e301-4ce1-a5de-f5f57037e613' for update;
++  if v <> 27 then raise exception 'QA-021: vistas = % (se esperaba 27) — alguien más cambió el contador; se aborta sin cambios', v; end if;
++end $$;
++
++delete from public.eventos
++ where id between 188 and 212 and nombre = 'property_view'
++   and propiedad_id = '5243dab0-e301-4ce1-a5de-f5f57037e613' and uid is null and datos is null
++   and creado_en >= '2026-10-07 04:45:00+00' and creado_en < '2026-10-07 07:30:00+00';
++
++update public.propiedades set vistas = vistas - 25
++ where id = '5243dab0-e301-4ce1-a5de-f5f57037e613' and vistas = 27;
++
++insert into public.audit_logs (actor_uid, actor_email, actor_rol, accion, entidad, entidad_id, antes, despues)
++values ('qa-d62-claude', null, 'sistema', 'qa.telemetria_corregida', 'propiedades', '5243dab0-e301-4ce1-a5de-f5f57037e613',
++        jsonb_build_object('vistas', 27, 'eventos_property_view_qa', 25),
++        jsonb_build_object('vistas', 2, 'eventos_property_view_qa', 0, 'motivo', 'QA-021: 25 vistas generadas por pruebas de navegador de la campaña D-62 en producción; ids 188-212; autorizado por el usuario'));
++
++commit;
++
++-- VERIFICACIÓN posterior (solo lectura):
++--   select count(*) from public.eventos where propiedad_id='5243dab0-e301-4ce1-a5de-f5f57037e613' and nombre='property_view';  -- 2
++--   select vistas from public.propiedades where id='5243dab0-e301-4ce1-a5de-f5f57037e613';                                      -- 2
+
+### docs/QA/QA-021-filas.csv
+diff --git "a/C:\\Users\\jemil\\vivebien-deploy-stage-e35-final\\docs\\QA\\QA-021-filas.csv" "b/C:\\Users\\jemil\\vivebien-deploy-stage-e35-final\\docs\\QA\\QA-021-filas.csv"
+new file mode 100644
+index 0000000..6dfa1ae
+--- /dev/null
++++ "b/C:\\Users\\jemil\\vivebien-deploy-stage-e35-final\\docs\\QA\\QA-021-filas.csv"
+@@ -0,0 +1,26 @@
++id,sesion,creado_en_utc
++188,s-muxmpcra-4z26wfgz,2026-10-07 04:49:58.875103+00
++189,s-muxmpkn7-nxx1mqu4,2026-10-07 04:50:09.081043+00
++190,s-muxmpspv-20ng1nq9,2026-10-07 04:50:19.58422+00
++191,s-muxmq14w-qd9z4lik,2026-10-07 04:50:30.511142+00
++192,s-muxmqhpn-8d543924,2026-10-07 04:50:51.866483+00
++193,s-muxmqpd1-33qdlrj6,2026-10-07 04:51:01.764089+00
++194,s-muxmqx2w-uc5esp3o,2026-10-07 04:51:11.777558+00
++195,s-muxmr528-d7cd70o4,2026-10-07 04:51:22.162835+00
++196,s-muxo4h3s-786x2k27,2026-10-07 05:29:43.960717+00
++197,s-muxo4qyy-z39zp4c3,2026-10-07 05:29:56.633604+00
++198,s-muxo50nc-jh873vpm,2026-10-07 05:30:09.182414+00
++199,s-muxo5bn6-kq3szbii,2026-10-07 05:30:23.544172+00
++200,s-muxrjlo2-ugitzjh9,2026-10-07 07:05:29.452597+00
++201,s-muxrk5m6-mxha32op,2026-10-07 07:05:55.058088+00
++202,s-muxrksis-ezsae9ad,2026-10-07 07:06:24.170672+00
++203,s-muxrt9bv-81wx2a45,2026-10-07 07:12:59.358077+00
++204,s-muxrtm6u-lrn78or0,2026-10-07 07:13:16.005894+00
++205,s-muxrtwgh-u6xfktqp,2026-10-07 07:13:29.06726+00
++206,s-muxrzwoj-dtrl54r8,2026-10-07 07:18:09.710181+00
++207,s-muxs0e33-04eyt05d,2026-10-07 07:18:32.509651+00
++208,s-muxs0qoq-nt5szais,2026-10-07 07:18:48.198425+00
++209,s-muxs7p3b-jxa4sbhq,2026-10-07 07:24:13.240743+00
++210,s-muxs82p1-zcjy7l7g,2026-10-07 07:24:30.65974+00
++211,s-muxs8fr5-vrbcmgwh,2026-10-07 07:24:47.325419+00
++212,s-muxsczw2-n69zncdd,2026-10-07 07:28:20.05478+00
+
+### docs/QA/QA-021-rollback.sql
+diff --git "a/C:\\Users\\jemil\\vivebien-deploy-stage-e35-final\\docs\\QA\\QA-021-rollback.sql" "b/C:\\Users\\jemil\\vivebien-deploy-stage-e35-final\\docs\\QA\\QA-021-rollback.sql"
+new file mode 100644
+index 0000000..d3a40d4
+--- /dev/null
++++ "b/C:\\Users\\jemil\\vivebien-deploy-stage-e35-final\\docs\\QA\\QA-021-rollback.sql"
+@@ -0,0 +1,57 @@
++-- QA-021 · ROLLBACK de la corrección (reinserta las 25 filas y devuelve `vistas` a 27).
++-- ESTADO: PREPARADO, **NO EJECUTADO**. Solo tiene sentido DESPUÉS de ejecutar QA-021-correccion.sql y solo si se decide deshacerla.
++-- Generado por scripts/qa/generar-qa021-rollback.py desde docs/QA/QA-021-filas.csv (evidencia de solo lectura). Huella de los ids: 754d2d75ec7437ee.
++
++begin;
++
++do $$
++declare
++  n int;
++  v int;
++begin
++  -- Aborta si alguna de las 25 filas ya existe (la corrección no se aplicó, o ya se deshizo).
++  select count(*) into n from public.eventos where id between 188 and 212;
++  if n <> 0 then raise exception 'QA-021 rollback: ya hay % filas con ids 188-212 — se aborta sin cambios', n; end if;
++  select vistas into v from public.propiedades where id = '5243dab0-e301-4ce1-a5de-f5f57037e613' for update;
++  if v <> 2 then raise exception 'QA-021 rollback: vistas = % (se esperaba 2) — se aborta sin cambios', v; end if;
++end $$;
++
++insert into public.eventos (id, nombre, uid, sesion, propiedad_id, datos, creado_en) overriding system value values
++  (188, 'property_view', null, 's-muxmpcra-4z26wfgz', '5243dab0-e301-4ce1-a5de-f5f57037e613', null, '2026-10-07 04:49:58.875103+00'),
++  (189, 'property_view', null, 's-muxmpkn7-nxx1mqu4', '5243dab0-e301-4ce1-a5de-f5f57037e613', null, '2026-10-07 04:50:09.081043+00'),
++  (190, 'property_view', null, 's-muxmpspv-20ng1nq9', '5243dab0-e301-4ce1-a5de-f5f57037e613', null, '2026-10-07 04:50:19.58422+00'),
++  (191, 'property_view', null, 's-muxmq14w-qd9z4lik', '5243dab0-e301-4ce1-a5de-f5f57037e613', null, '2026-10-07 04:50:30.511142+00'),
++  (192, 'property_view', null, 's-muxmqhpn-8d543924', '5243dab0-e301-4ce1-a5de-f5f57037e613', null, '2026-10-07 04:50:51.866483+00'),
++  (193, 'property_view', null, 's-muxmqpd1-33qdlrj6', '5243dab0-e301-4ce1-a5de-f5f57037e613', null, '2026-10-07 04:51:01.764089+00'),
++  (194, 'property_view', null, 's-muxmqx2w-uc5esp3o', '5243dab0-e301-4ce1-a5de-f5f57037e613', null, '2026-10-07 04:51:11.777558+00'),
++  (195, 'property_view', null, 's-muxmr528-d7cd70o4', '5243dab0-e301-4ce1-a5de-f5f57037e613', null, '2026-10-07 04:51:22.162835+00'),
++  (196, 'property_view', null, 's-muxo4h3s-786x2k27', '5243dab0-e301-4ce1-a5de-f5f57037e613', null, '2026-10-07 05:29:43.960717+00'),
++  (197, 'property_view', null, 's-muxo4qyy-z39zp4c3', '5243dab0-e301-4ce1-a5de-f5f57037e613', null, '2026-10-07 05:29:56.633604+00'),
++  (198, 'property_view', null, 's-muxo50nc-jh873vpm', '5243dab0-e301-4ce1-a5de-f5f57037e613', null, '2026-10-07 05:30:09.182414+00'),
++  (199, 'property_view', null, 's-muxo5bn6-kq3szbii', '5243dab0-e301-4ce1-a5de-f5f57037e613', null, '2026-10-07 05:30:23.544172+00'),
++  (200, 'property_view', null, 's-muxrjlo2-ugitzjh9', '5243dab0-e301-4ce1-a5de-f5f57037e613', null, '2026-10-07 07:05:29.452597+00'),
++  (201, 'property_view', null, 's-muxrk5m6-mxha32op', '5243dab0-e301-4ce1-a5de-f5f57037e613', null, '2026-10-07 07:05:55.058088+00'),
++  (202, 'property_view', null, 's-muxrksis-ezsae9ad', '5243dab0-e301-4ce1-a5de-f5f57037e613', null, '2026-10-07 07:06:24.170672+00'),
++  (203, 'property_view', null, 's-muxrt9bv-81wx2a45', '5243dab0-e301-4ce1-a5de-f5f57037e613', null, '2026-10-07 07:12:59.358077+00'),
++  (204, 'property_view', null, 's-muxrtm6u-lrn78or0', '5243dab0-e301-4ce1-a5de-f5f57037e613', null, '2026-10-07 07:13:16.005894+00'),
++  (205, 'property_view', null, 's-muxrtwgh-u6xfktqp', '5243dab0-e301-4ce1-a5de-f5f57037e613', null, '2026-10-07 07:13:29.06726+00'),
++  (206, 'property_view', null, 's-muxrzwoj-dtrl54r8', '5243dab0-e301-4ce1-a5de-f5f57037e613', null, '2026-10-07 07:18:09.710181+00'),
++  (207, 'property_view', null, 's-muxs0e33-04eyt05d', '5243dab0-e301-4ce1-a5de-f5f57037e613', null, '2026-10-07 07:18:32.509651+00'),
++  (208, 'property_view', null, 's-muxs0qoq-nt5szais', '5243dab0-e301-4ce1-a5de-f5f57037e613', null, '2026-10-07 07:18:48.198425+00'),
++  (209, 'property_view', null, 's-muxs7p3b-jxa4sbhq', '5243dab0-e301-4ce1-a5de-f5f57037e613', null, '2026-10-07 07:24:13.240743+00'),
++  (210, 'property_view', null, 's-muxs82p1-zcjy7l7g', '5243dab0-e301-4ce1-a5de-f5f57037e613', null, '2026-10-07 07:24:30.65974+00'),
++  (211, 'property_view', null, 's-muxs8fr5-vrbcmgwh', '5243dab0-e301-4ce1-a5de-f5f57037e613', null, '2026-10-07 07:24:47.325419+00'),
++  (212, 'property_view', null, 's-muxsczw2-n69zncdd', '5243dab0-e301-4ce1-a5de-f5f57037e613', null, '2026-10-07 07:28:20.05478+00');
++
++update public.propiedades set vistas = vistas + 25 where id = '5243dab0-e301-4ce1-a5de-f5f57037e613' and vistas = 2;
++
++insert into public.audit_logs (actor_uid, actor_email, actor_rol, accion, entidad, entidad_id, antes, despues)
++values ('qa-d62-claude', null, 'sistema', 'qa.telemetria_restaurada', 'propiedades', '5243dab0-e301-4ce1-a5de-f5f57037e613',
++        jsonb_build_object('vistas', 2, 'eventos_property_view_qa', 0),
++        jsonb_build_object('vistas', 27, 'eventos_property_view_qa', 25, 'motivo', 'QA-021: rollback de la corrección; reinserta ids 188-212'));
++
++commit;
++
++-- VERIFICACIÓN posterior (solo lectura):
++--   select count(*) from public.eventos where propiedad_id='5243dab0-e301-4ce1-a5de-f5f57037e613' and nombre='property_view';  -- 27
++--   select vistas from public.propiedades where id='5243dab0-e301-4ce1-a5de-f5f57037e613';                                       -- 27
+
+### tests/e35-fronteras.test.ts
+diff --git "a/C:\\Users\\jemil\\vivebien-deploy-stage-e35-final\\tests\\e35-fronteras.test.ts" "b/C:\\Users\\jemil\\vivebien-deploy-stage-e35-final\\tests\\e35-fronteras.test.ts"
+new file mode 100644
+index 0000000..677d89d
+--- /dev/null
++++ "b/C:\\Users\\jemil\\vivebien-deploy-stage-e35-final\\tests\\e35-fronteras.test.ts"
+@@ -0,0 +1,199 @@
++import { beforeEach, describe, expect, it, vi } from 'vitest'
++import { readFileSync } from 'node:fs'
++import path from 'node:path'
++import { NextResponse } from 'next/server'
++import { puede } from '../src/lib/acceso/permisos'
++
++/**
++ * E-35 · SEGURIDAD Y FRONTERAS (D-62/D-63 → QA-011/012/013 + feedback). Cada prueba nació ROJA contra E-34 (producción) y quedó VERDE con el arreglo.
++ *  · E35-02  GET /api/admin/propiedades: 401 sin sesión, 403 cliente/publicador, 200 admin/super admin (antes: lista pública a cualquiera).
++ *  · E35-03  el diagnóstico de Telegram deja de ser público: vive en /api/admin/telegram/diagnostico, protegido, y el webhook ya no responde GET.
++ *  · E35-04  las respuestas autenticadas llevan `Cache-Control: private, no-store` (cabecera central en next.config) y las rutas que antes
++ *            las consumían sin sesión ahora usan /api/catalogo.
++ *  · E35-05  /api/ayuda/feedback: tope de tamaño (413), forma del id (400), tope por origen y por artículo (429 + Retry-After), no-store.
++ */
++const RAIZ = path.join(__dirname, '..')
++const leer = (rel: string) => readFileSync(path.join(RAIZ, ...rel.split('/')), 'utf8')
++
++const mundo = vi.hoisted(() => ({
++  filas: [] as Array<Record<string, unknown>>,
++  clientes: [] as string[], // con qué clave se pidió cada cliente de Supabase
++  inserts: [] as Array<Record<string, unknown>>,
++}))
++
++// Auth: misma regla que el servidor real (`panel.admin` = admin | super_admin), con el token «Bearer <rol>» como identidad.
++vi.mock('@/lib/auth-server', () => {
++  const chequear = async (req: Request) => {
++    const h = req.headers.get('authorization') ?? ''
++    if (!h.startsWith('Bearer ')) return { error: NextResponse.json({ error: 'Falta la sesión.' }, { status: 401 }) }
++    const rol = h.slice(7)
++    const quien = rol === 'super_admin' ? { rol: 'admin', superAdmin: true } : { rol, superAdmin: false }
++    if (!puede(quien as Parameters<typeof puede>[0], 'panel.admin')) return { error: NextResponse.json({ error: 'Sin permiso.' }, { status: 403 }) }
++    return { perfil: { uid: 'u-' + rol, email: rol + '@x.test', rol: quien.rol, superAdmin: quien.superAdmin, estado: 'activo', nombre: rol, emailVerified: true } }
++  }
++  return { requireAdmin: chequear, exigir: chequear, requireRole: chequear }
++})
++vi.mock('@/lib/supabase-servidor', () => ({
++  clienteServidor: (_url: string, clave: string) => {
++    mundo.clientes.push(clave)
++    const c: Record<string, unknown> = {}
++    c.select = () => c
++    c.order = () => c
++    c.eq = () => c
++    c.insert = (f: Record<string, unknown>) => { mundo.inserts.push(f); return Promise.resolve({ error: null }) }
++    c.from = () => c
++    c.then = (r: (v: unknown) => unknown) => r({ data: mundo.filas, error: null })
++    return c
++  },
++}))
++vi.mock('@/lib/auditoria', () => ({ registrar: async () => {} }))
++vi.mock('@/lib/refrescar', () => ({ refrescarCatalogo: () => {} }))
++
++const FILAS = [
++  { id: 'pub', estado_pub: 'publicada', estatus: 'disponible', titulo: 'Pública', owner_email: 'dueno@privado.test' },
++  { id: 'bor', estado_pub: 'borrador', estatus: 'disponible', titulo: 'Borrador', owner_email: 'otro@privado.test' },
++  { id: 'pau', estado_pub: 'publicada', estatus: 'pausada', titulo: 'Pausada', owner_email: 'x@privado.test' },
++]
++
++const ENTORNO = { NEXT_PUBLIC_SUPABASE_URL: 'http://localhost:1', NEXT_PUBLIC_SUPABASE_ANON_KEY: 'anon-test', SUPABASE_SERVICE_ROLE_KEY: 'service-test' }
++beforeEach(() => {
++  mundo.filas = FILAS.map((f) => ({ ...f })); mundo.clientes = []; mundo.inserts = []
++  for (const [k, v] of Object.entries(ENTORNO)) vi.stubEnv(k, v)
++})
++
++const get = (url: string, token?: string) => new Request('https://vivebienn.com' + url, { headers: token ? { authorization: 'Bearer ' + token } : {} })
++
++describe('E35-02 · GET /api/admin/propiedades exige administrador', () => {
++  it('sin sesión: 401 y NO se consulta la base', async () => {
++    const { GET } = await import('../src/app/api/admin/propiedades/route')
++    const r = await GET(get('/api/admin/propiedades'))
++    expect(r.status).toBe(401)
++    expect(mundo.clientes).toHaveLength(0)
++  })
++  for (const rol of ['cliente', 'publicador']) {
++    it(`${rol}: 403 y NO se consulta la base`, async () => {
++      const { GET } = await import('../src/app/api/admin/propiedades/route')
++      const r = await GET(get('/api/admin/propiedades', rol))
++      expect(r.status).toBe(403)
++      expect(mundo.clientes).toHaveLength(0)
++    })
++  }
++  for (const rol of ['admin', 'super_admin']) {
++    it(`${rol}: 200 con TODO el inventario (borradores y pausadas incluidos) y respuesta privada`, async () => {
++      const { GET } = await import('../src/app/api/admin/propiedades/route')
++      const r = await GET(get('/api/admin/propiedades', rol))
++      expect(r.status).toBe(200)
++      expect((await r.json()).map((p: { id: string }) => p.id)).toEqual(['pub', 'bor', 'pau'])
++      expect(mundo.clientes).toEqual(['service-test'])
++      expect(r.headers.get('cache-control')).toMatch(/private/)
++      expect(r.headers.get('cache-control')).toMatch(/no-store/)
++    })
++  }
++  it('la lectura pública sigue en /api/catalogo (D-59) y nada del portal consume ya la ruta de administración sin sesión', () => {
++    for (const rel of ['src/components/MetricasCliente.tsx', 'src/components/MisFavoritos.tsx']) {
++      const s = leer(rel)
++      expect(s, rel).not.toContain('/api/admin/propiedades')
++      expect(s, rel).toContain('/api/catalogo')
++    }
++    // el panel de administración sí la usa, pero SIEMPRE con la sesión
++    const dash = leer('src/app/dashboard/page.tsx')
++    expect(dash).toMatch(/fetch\('\/api\/admin\/propiedades', \{ headers: await authHeaders\(\) \}\)/)
++  })
++})
++
++describe('E35-03 · diagnóstico de Telegram', () => {
++  it('el webhook ya no responde GET (no hay diagnóstico público)', async () => {
++    const m = await import('../src/app/api/telegram/webhook/route')
++    expect((m as Record<string, unknown>).GET).toBeUndefined()
++    expect(typeof m.POST).toBe('function')
++  })
++  it('/api/admin/telegram/diagnostico: 401 / 403 / 200 y sin secretos', async () => {
++    vi.stubEnv('TELEGRAM_WEBHOOK_SECRET', 'secreto-super-largo-123')
++    vi.stubEnv('TELEGRAM_BOT_TOKEN', '123456:ABC-token-real')
++    const { GET } = await import('../src/app/api/admin/telegram/diagnostico/route')
++    expect((await GET(get('/api/admin/telegram/diagnostico'))).status).toBe(401)
++    expect((await GET(get('/api/admin/telegram/diagnostico', 'cliente'))).status).toBe(403)
++    expect((await GET(get('/api/admin/telegram/diagnostico', 'publicador'))).status).toBe(403)
++    for (const rol of ['admin', 'super_admin']) {
++      const r = await GET(get('/api/admin/telegram/diagnostico', rol))
++      expect(r.status).toBe(200)
++      const texto = JSON.stringify(await r.json())
++      expect(texto).toMatch(/configurado/)
++      expect(texto).not.toContain('secreto-super-largo-123')
++      expect(texto).not.toContain('ABC-token-real')
++      expect(texto).not.toMatch(/\blongitud|length\b/i) // ni siquiera el largo del secreto
++      expect(r.headers.get('cache-control')).toMatch(/no-store/)
++    }
++  })
++})
++
++describe('E35-04 · las respuestas autenticadas no se cachean', () => {
++  it('next.config pone `Cache-Control: private, no-store` y `Vary` a identidad, citas, publicador y administración', async () => {
++    const cfg = (await import('../next.config')).default
++    const reglas = await cfg.headers!()
++    for (const ruta of ['/api/usuarios/me', '/api/citas', '/api/citas/x', '/api/publicador/propiedades', '/api/admin/usuarios', '/api/admin/salud']) {
++      const hechas = reglas.filter((r) => new RegExp('^' + r.source.replace(/\/:path\*/g, '(/.*)?') + '$').test(ruta))
++      const cab = Object.fromEntries(hechas.flatMap((r) => r.headers).map((h) => [h.key.toLowerCase(), h.value]))
++      expect(cab['cache-control'], ruta).toBe('private, no-store')
++      expect(cab['vary'], ruta).toMatch(/Cookie/)
++      expect(cab['vary'], ruta).toMatch(/Authorization/)
++    }
++  })
++  it('las páginas y las APIs públicas NO reciben esa cabecera (el catálogo sigue cacheable)', async () => {
++    const cfg = (await import('../next.config')).default
++    const reglas = await cfg.headers!()
++    for (const ruta of ['/', '/propiedades', '/api/catalogo', '/api/salud', '/api/ayuda/feedback']) {
++      const hechas = reglas.filter((r) => new RegExp('^' + r.source.replace(/\/:path\*/g, '(/.*)?') + '$').test(ruta))
++      const cab = hechas.flatMap((r) => r.headers).map((h) => h.key.toLowerCase())
++      expect(cab, ruta).not.toContain('cache-control')
++    }
++  })
++})
++
++describe('E35-05 · POST /api/ayuda/feedback contra abuso', () => {
++  const post = (cuerpo: unknown, ip = '203.0.113.7', extra: Record<string, string> = {}) =>
++    new Request('https://vivebienn.com/api/ayuda/feedback', {
++      method: 'POST', headers: { 'content-type': 'application/json', 'x-forwarded-for': ip, ...extra },
++      body: typeof cuerpo === 'string' ? cuerpo : JSON.stringify(cuerpo),
++    })
++
++  beforeEach(async () => { const a = await import('../src/lib/limites-almacen'); a.memoria.vaciar(); a.reiniciarAlmacen() })
++
++  it('un cuerpo enorme se rechaza con 413 SIN leerlo ni escribir', async () => {
++    const { POST } = await import('../src/app/api/ayuda/feedback/route')
++    const r = await POST(post({ articuloId: 'a', util: true, comentario: 'x'.repeat(50_000) }))
++    expect(r.status).toBe(413)
++    expect(mundo.inserts).toHaveLength(0)
++  })
++  it('un id con forma rara (largo o con símbolos) es 400 y no se escribe', async () => {
++    const { POST } = await import('../src/app/api/ayuda/feedback/route')
++    for (const id of ['a'.repeat(200), "x'; drop table--", '<script>', '']) {
++      const r = await POST(post({ articuloId: id, util: true }))
++      expect(r.status, id.slice(0, 20)).toBe(400)
++    }
++    expect(mundo.inserts).toHaveLength(0)
++  })
++  it('el comentario se recorta a 500 y la respuesta no se cachea', async () => {
++    const { POST } = await import('../src/app/api/ayuda/feedback/route')
++    const r = await POST(post({ articuloId: 'art-1', util: false, comentario: 'y'.repeat(900) }))
++    expect(r.status).toBe(200)
++    expect((mundo.inserts[0].comentario as string).length).toBe(500)
++    expect(r.headers.get('cache-control')).toMatch(/no-store/)
++  })
++  it('el mismo origen no puede inflar UN artículo: a la 4.ª opinión en la ventana, 429 con Retry-After', async () => {
++    const { POST } = await import('../src/app/api/ayuda/feedback/route')
++    for (let i = 0; i < 3; i++) expect((await POST(post({ articuloId: 'art-1', util: true }))).status).toBe(200)
++    const r = await POST(post({ articuloId: 'art-1', util: true }))
++    expect(r.status).toBe(429)
++    expect(Number(r.headers.get('retry-after'))).toBeGreaterThan(0)
++    // otro artículo del mismo origen todavía pasa; otro origen también
++    expect((await POST(post({ articuloId: 'art-2', util: true }))).status).toBe(200)
++    expect((await POST(post({ articuloId: 'art-1', util: true }, '198.51.100.9'))).status).toBe(200)
++  })
++  it('y por origen en total: a la 21.ª petición, 429 aunque cambie de artículo', async () => {
++    const { POST } = await import('../src/app/api/ayuda/feedback/route')
++    let ultimo = 200
++    for (let i = 0; i < 25; i++) ultimo = (await POST(post({ articuloId: 'art-' + i, util: true }))).status
++    expect(ultimo).toBe(429)
++  })
++})
+
+### tests/limites.test.ts
+diff --git "a/C:\\Users\\jemil\\vivebien-deploy-stage-e34\\tests\\limites.test.ts" "b/C:\\Users\\jemil\\vivebien-deploy-stage-e35-final\\tests\\limites.test.ts"
+index f3a841e..2af0995 100644
+--- "a/C:\\Users\\jemil\\vivebien-deploy-stage-e34\\tests\\limites.test.ts"
++++ "b/C:\\Users\\jemil\\vivebien-deploy-stage-e35-final\\tests\\limites.test.ts"
+@@ -100,7 +100,8 @@ describe('R-03 · POST /api/ayuda/feedback tiene tope', () => {
+   it('ANTES: ilimitado. AHORA: 20 por 10 min por origen y el 21.º es 429 sin escribir', async () => {
+     const { POST } = await import('../src/app/api/ayuda/feedback/route')
+     const codigos: number[] = []
+-    for (let i = 0; i < 25; i++) codigos.push((await POST(req(valido))).status)
++    // E-35: artículos DISTINTOS (el mismo artículo tiene además su propio tope de 3, probado en e35-fronteras.test.ts)
++    for (let i = 0; i < 25; i++) codigos.push((await POST(req({ ...valido, articuloId: 'a' + i }))).status)
+     expect(codigos.slice(0, 20).every((c) => c === 200)).toBe(true)
+     expect(codigos.slice(20).every((c) => c === 429)).toBe(true)
+     expect(inserts).toBe(20) // el 429 llega ANTES de escribir
+@@ -108,12 +109,12 @@ describe('R-03 · POST /api/ayuda/feedback tiene tope', () => {
+   })
+   it('abuso: 300 peticiones seguidas desde un origen → solo 20 llegan a la base', async () => {
+     const { POST } = await import('../src/app/api/ayuda/feedback/route')
+-    await Promise.all(Array.from({ length: 300 }, () => POST(req(valido, '198.51.100.1'))))
++    await Promise.all(Array.from({ length: 300 }, (_, i) => POST(req({ ...valido, articuloId: 'a' + i }, '198.51.100.1'))))
+     expect(inserts).toBe(20)
+   })
+   it('un origen bloqueado no afecta a otro (uso legítimo normal intacto)', async () => {
+     const { POST } = await import('../src/app/api/ayuda/feedback/route')
+-    for (let i = 0; i < 25; i++) await POST(req(valido, '192.0.2.1'))
++    for (let i = 0; i < 25; i++) await POST(req({ ...valido, articuloId: 'a' + i }, '192.0.2.1'))
+     expect((await POST(req(valido, '192.0.2.2'))).status).toBe(200)
+   })
+   it('las peticiones inválidas también cuentan (no se puede inundar con basura) y siguen dando 400 mientras no se pase el tope', async () => {
+
+### tests/qa021-sql.test.ts
+diff --git "a/C:\\Users\\jemil\\vivebien-deploy-stage-e35-final\\tests\\qa021-sql.test.ts" "b/C:\\Users\\jemil\\vivebien-deploy-stage-e35-final\\tests\\qa021-sql.test.ts"
+new file mode 100644
+index 0000000..980f320
+--- /dev/null
++++ "b/C:\\Users\\jemil\\vivebien-deploy-stage-e35-final\\tests\\qa021-sql.test.ts"
+@@ -0,0 +1,104 @@
++import { beforeEach, describe, expect, it } from 'vitest'
++import { PGlite } from '@electric-sql/pglite'
++import { readFileSync } from 'node:fs'
++import path from 'node:path'
++
++/**
++ * E-35-01 (QA-021): el SQL de corrección y su rollback, probados contra Postgres real (PGlite) con un esquema idéntico en lo que importa
++ * (`eventos.id` GENERATED ALWAYS, `vistas`, `audit_logs`). NO toca producción: demuestra que la limpieza borra EXACTAMENTE las 25 filas, que
++ * aborta si el estado no es el esperado y que el rollback las devuelve idénticas. Ejecutar la corrección en producción sigue exigiendo
++ * autorización explícita del usuario.
++ */
++const docs = (n: string) => readFileSync(path.join(__dirname, '..', 'docs', 'QA', n), 'utf8')
++const PROP = '5243dab0-e301-4ce1-a5de-f5f57037e613'
++
++const ESQUEMA = `
++  create table public.propiedades (id text primary key, vistas int not null default 0);
++  create table public.eventos (
++    id bigint generated always as identity primary key, nombre text not null, uid text, sesion text,
++    propiedad_id text, datos jsonb, creado_en timestamptz not null default now());
++  create table public.audit_logs (
++    id bigint generated always as identity primary key, actor_uid text not null, actor_email text, actor_rol text,
++    accion text not null, entidad text not null, entidad_id text, antes jsonb, despues jsonb, creado_en timestamptz not null default now());
++`
++
++/** Estado real de producción el 7-oct-2026: 2 vistas previas (ids 179, 180) + las 25 de la prueba (ids 188-212) = 27. */
++async function sembrar(db: PGlite, opciones: { extra?: string } = {}) {
++  await db.exec(ESQUEMA)
++  await db.exec(`insert into public.propiedades (id, vistas) values ('${PROP}', 27), ('otra', 5)`)
++  const filas = docs('QA-021-filas.csv').trim().split('\n').slice(1).map((l) => l.split(','))
++  await db.exec(`insert into public.eventos (id, nombre, uid, sesion, propiedad_id, datos, creado_en) overriding system value values
++    (179, 'property_view', null, 's-previo-a', '${PROP}', null, '2026-10-05 20:15:51.332122+00'),
++    (180, 'property_view', null, 's-previo-b', '${PROP}', null, '2026-10-06 15:25:00.849044+00'),
++    ${filas.map((f) => `(${f[0]}, 'property_view', null, '${f[1]}', '${PROP}', null, '${f[2]}')`).join(',\n    ')};
++    ${opciones.extra ?? ''}`)
++}
++
++const contar = async (db: PGlite, where = `propiedad_id = '${PROP}'`) =>
++  Number(((await db.query<{ n: string }>(`select count(*)::text n from public.eventos where ${where}`)).rows[0]).n)
++const vistas = async (db: PGlite) => Number(((await db.query<{ v: number }>(`select vistas v from public.propiedades where id = '${PROP}'`)).rows[0]).v)
++
++describe('QA-021 · corrección exacta y rollback (PGlite, sin tocar producción)', () => {
++  let db: PGlite
++  beforeEach(async () => { db = new PGlite() })
++
++  it('la evidencia son exactamente 25 filas consecutivas 188-212', () => {
++    const ids = docs('QA-021-filas.csv').trim().split('\n').slice(1).map((l) => Number(l.split(',')[0]))
++    expect(ids).toEqual(Array.from({ length: 25 }, (_, i) => 188 + i))
++  })
++
++  it('la corrección borra solo esas 25, deja las 2 previas, ajusta vistas 27→2 y deja huella', async () => {
++    await sembrar(db)
++    await db.exec(docs('QA-021-correccion.sql'))
++    expect(await contar(db)).toBe(2)
++    expect((await db.query<{ id: string }>(`select id::text id from public.eventos order by id`)).rows.map((r) => r.id)).toEqual(['179', '180'])
++    expect(await vistas(db)).toBe(2)
++    const a = (await db.query<{ accion: string; despues: { vistas: number } }>(`select accion, despues from public.audit_logs`)).rows
++    expect(a).toHaveLength(1)
++    expect(a[0].accion).toBe('qa.telemetria_corregida')
++    expect(a[0].despues.vistas).toBe(2)
++    // otra propiedad: intacta
++    expect(Number(((await db.query<{ v: number }>(`select vistas v from public.propiedades where id = 'otra'`)).rows[0]).v)).toBe(5)
++  })
++
++  it('aborta SIN cambios si alguien añadió/quitó una fila del rango (no son exactamente 25)', async () => {
++    await sembrar(db)
++    await db.exec(`delete from public.eventos where id = 200`)
++    await expect(db.exec(docs('QA-021-correccion.sql'))).rejects.toThrow(/se esperaban 25 filas/)
++    await db.exec('rollback').catch(() => {})
++    expect(await contar(db)).toBe(26)
++    expect(await vistas(db)).toBe(27)
++  })
++
++  it('aborta SIN cambios si el contador ya no vale 27 (alguien más lo movió)', async () => {
++    await sembrar(db)
++    await db.exec(`update public.propiedades set vistas = 28 where id = '${PROP}'`)
++    await expect(db.exec(docs('QA-021-correccion.sql'))).rejects.toThrow(/vistas = 28/)
++    await db.exec('rollback').catch(() => {})
++    expect(await contar(db)).toBe(27)
++  })
++
++  it('no toca filas del mismo rango que no sean property_view de esa propiedad (otra propiedad con id 190 no existe: se usa sesión distinta)', async () => {
++    await sembrar(db)
++    // una fila de otra propiedad con id fuera del rango y una property_view de la propiedad ya posterior a la ventana
++    await db.exec(`insert into public.eventos (nombre, sesion, propiedad_id, creado_en) values ('property_view', 's-nuevo', '${PROP}', '2026-10-08 10:00:00+00'), ('property_view', 's-otra', 'otra', '2026-10-07 05:00:00+00')`)
++    await db.exec(`update public.propiedades set vistas = 28 where id = '${PROP}'`) // simula la visita nueva
++    await expect(db.exec(docs('QA-021-correccion.sql'))).rejects.toThrow(/vistas = 28/) // el guard del contador protege la visita legítima
++  })
++
++  it('el rollback devuelve las 25 filas idénticas (mismos ids y fechas) y vistas a 27', async () => {
++    await sembrar(db)
++    const antes = (await db.query(`select id::text id, nombre, uid, sesion, propiedad_id, datos, creado_en::text c from public.eventos order by id`)).rows
++    await db.exec(docs('QA-021-correccion.sql'))
++    await db.exec(docs('QA-021-rollback.sql'))
++    const despues = (await db.query(`select id::text id, nombre, uid, sesion, propiedad_id, datos, creado_en::text c from public.eventos order by id`)).rows
++    expect(despues).toEqual(antes)
++    expect(await vistas(db)).toBe(27)
++    expect((await db.query<{ accion: string }>(`select accion from public.audit_logs order by id`)).rows.map((r) => r.accion)).toEqual(['qa.telemetria_corregida', 'qa.telemetria_restaurada'])
++  })
++
++  it('el rollback aborta si la corrección no se aplicó (las filas ya existen)', async () => {
++    await sembrar(db)
++    await expect(db.exec(docs('QA-021-rollback.sql'))).rejects.toThrow(/ya hay 25 filas/)
++  })
++})
+
+### tests/supabase-timeouts.test.ts
+diff --git "a/C:\\Users\\jemil\\vivebien-deploy-stage-e34\\tests\\supabase-timeouts.test.ts" "b/C:\\Users\\jemil\\vivebien-deploy-stage-e35-final\\tests\\supabase-timeouts.test.ts"
+index 42234d6..7ac4497 100644
+--- "a/C:\\Users\\jemil\\vivebien-deploy-stage-e34\\tests\\supabase-timeouts.test.ts"
++++ "b/C:\\Users\\jemil\\vivebien-deploy-stage-e35-final\\tests\\supabase-timeouts.test.ts"
+@@ -96,7 +96,8 @@ describe('presupuesto total de la ficha', () => {
+ 
+ describe('estructura: toda lectura PÚBLICA (clave anónima) usa el límite corto', () => {
+   const SRC = path.join(__dirname, '..', 'src')
+-  const archivos = ['app/api/admin/propiedades/route.ts', 'app/api/ayuda/feedback/route.ts', 'app/api/catalogo/route.ts', 'lib/ayuda/consultas.ts', 'lib/ficha-servidor.ts']
++  // E-35: `app/api/admin/propiedades/route.ts` salió de esta lista: ya no lee con la clave pública (solo administradores, clave de servicio).
++  const archivos = ['app/api/ayuda/feedback/route.ts', 'app/api/catalogo/route.ts', 'lib/ayuda/consultas.ts', 'lib/ficha-servidor.ts']
+   it.each(archivos)('%s pasa «publico» a clienteServidor', (a) => {
+     const t = readFileSync(path.join(SRC, a), 'utf8')
+     expect(t).toMatch(/NEXT_PUBLIC_SUPABASE_ANON_KEY!,\s*'publico'/)
+
+### tests/visibilidad-publica.test.ts
+diff --git "a/C:\\Users\\jemil\\vivebien-deploy-stage-e34\\tests\\visibilidad-publica.test.ts" "b/C:\\Users\\jemil\\vivebien-deploy-stage-e35-final\\tests\\visibilidad-publica.test.ts"
+index d6a800b..60d329d 100644
+--- "a/C:\\Users\\jemil\\vivebien-deploy-stage-e34\\tests\\visibilidad-publica.test.ts"
++++ "b/C:\\Users\\jemil\\vivebien-deploy-stage-e35-final\\tests\\visibilidad-publica.test.ts"
+@@ -73,13 +73,15 @@ describe('todos los lectores públicos usan la regla única', () => {
+     'src/app/sitemap.ts',
+     'src/lib/ficha-servidor.ts',
+     'src/app/propiedades/[id]/page-client.tsx',
+-    'src/app/api/admin/propiedades/route.ts',
+   ])('%s importa esVisibleAlPublico', (ruta) => {
+     expect(leer(ruta)).toContain('esVisibleAlPublico')
+   })
+-  it('la rama anónima de /api/admin/propiedades filtra y la de admin devuelve todo', () => {
++  it('E-35: /api/admin/propiedades YA NO es un lector público: exige administrador antes de consultar (la lectura pública es /api/catalogo)', () => {
+     const src = leer('src/app/api/admin/propiedades/route.ts')
+-    expect(src).toMatch(/if \(!esAdmin\) return NextResponse\.json\([\s\S]*filter\(esVisibleAlPublico\)/)
++    const get = src.slice(src.indexOf('export async function GET'), src.indexOf('export async function POST'))
++    expect(get).toContain('await requireAdmin(req)')
++    expect(get.indexOf('requireAdmin')).toBeLessThan(get.indexOf('.from('))
++    expect(src).not.toContain('esVisibleAlPublico')
+   })
+   it('el sitemap filtra antes de generar las URLs', () => {
+     const src = leer('src/app/sitemap.ts')
+

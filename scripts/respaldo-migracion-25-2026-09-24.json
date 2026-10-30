@@ -1,0 +1,38 @@
+{
+  "_nota": "Respaldo previo a la migración 25 (baja de cuenta, D-35). Contiene PII: NO se sube al repositorio.",
+  "tomado_en": "2026-09-24T04:05:29.944693+00:00",
+  "usuarios": [
+    {"uid":"Tx3WHs74jHXbQEIJrV67GkktuuE3","email":"joseemilianoponceperez@gmail.com","nombre":"Jose Emiliano Ponce Perez","telefono":"+524778116501","rol":"publicador","estado":"activo","creado_en":"2026-09-10T05:23:57.074167+00:00","actualizado_en":"2026-09-10T05:25:06.342389+00:00","whatsapp":null,"foto_url":null,"inmobiliaria":null,"zonas":["Valle del Campestre"],"biografia":null,"busca_operacion":null,"presupuesto_max":null,"bienvenida_vista":false,"completitud":65,"ultimo_acceso":null,"notificaciones_vistas_en":null,"busca_zonas":null,"busca_tipos":null},
+    {"uid":"1L5izAMCUwV2YkGBXIZjDiIBAtI3","email":"grupo.p.11.ee@gmail.com","nombre":"Jose Emiliano Ponce Perez","telefono":"+524778116501","rol":"cliente","estado":"activo","creado_en":"2026-09-09T22:16:19.160347+00:00","actualizado_en":"2026-09-23T04:52:03.298905+00:00","whatsapp":"4778116501","foto_url":null,"inmobiliaria":null,"zonas":null,"biografia":null,"busca_operacion":"ambas","presupuesto_max":10000000,"bienvenida_vista":true,"completitud":70,"ultimo_acceso":"2026-09-23T04:52:03.241+00:00","notificaciones_vistas_en":null,"busca_zonas":null,"busca_tipos":null},
+    {"uid":"rKaWPaZq0vUzOAC7aGrGBfY0YHV2","email":"aledosepocascaracole@gmail.com","nombre":null,"telefono":null,"rol":"cliente","estado":"activo","creado_en":"2026-09-23T17:50:37.269829+00:00","actualizado_en":"2026-09-23T17:50:37.432447+00:00","whatsapp":null,"foto_url":null,"inmobiliaria":null,"zonas":null,"biografia":null,"busca_operacion":null,"presupuesto_max":null,"bienvenida_vista":false,"completitud":0,"ultimo_acceso":"2026-09-23T17:50:37.353+00:00","notificaciones_vistas_en":null,"busca_zonas":null,"busca_tipos":null},
+    {"uid":"KjLYE88rW7UaAMyt211taM8LJuz1","email":"jemilianoponceperez@gmail.com","nombre":"JOSE EMILIANO PONCE","telefono":"4778108559","rol":"super_admin","estado":"activo","creado_en":"2026-09-12T18:07:19.104923+00:00","actualizado_en":"2026-09-23T17:51:21.101442+00:00","whatsapp":null,"foto_url":null,"inmobiliaria":null,"zonas":null,"biografia":null,"busca_operacion":null,"presupuesto_max":null,"bienvenida_vista":true,"completitud":100,"ultimo_acceso":"2026-09-23T17:51:21.074+00:00","notificaciones_vistas_en":null,"busca_zonas":null,"busca_tipos":null}
+  ],
+  "invitaciones": [
+    {"id":3,"email":"joseponcep@gp-once.com","nombre":null,"rol":"super_admin","estado":"pendiente","invitado_por":"D-13 · migración 21","creado_en":"2026-09-19T08:39:19.667045+00:00","enviado_en":null,"aceptada_en":null,"aceptada_por":null},
+    {"id":4,"email":"joseponcer@vivebienn.com","nombre":null,"rol":"super_admin","estado":"pendiente","invitado_por":"D-13 · migración 21","creado_en":"2026-09-19T08:39:19.667045+00:00","enviado_en":null,"aceptada_en":null,"aceptada_por":null}
+  ],
+  "propiedades_relevante": [
+    {"id":"borrador-mueeh0xw59a","estatus":"disponible","owner_id":"KjLYE88rW7UaAMyt211taM8LJuz1","revisado_por":null},
+    {"id":"propiedad-sin-titulo-d52n","estatus":"disponible","owner_id":"KjLYE88rW7UaAMyt211taM8LJuz1","revisado_por":"jemilianoponceperez@gmail.com"},
+    {"id":"propiedad-sin-titulo-bx0f","estatus":"disponible","owner_id":"KjLYE88rW7UaAMyt211taM8LJuz1","revisado_por":"jemilianoponceperez@gmail.com"},
+    {"id":"sanjuan","estatus":"disponible","owner_id":null,"revisado_por":null},
+    {"id":"propiedad-sin-titulo-wljv","estatus":"disponible","owner_id":"KjLYE88rW7UaAMyt211taM8LJuz1","revisado_por":"jemilianoponceperez@gmail.com"},
+    {"id":"propiedad-sin-titulo-06rv","estatus":"disponible","owner_id":"KjLYE88rW7UaAMyt211taM8LJuz1","revisado_por":"jemilianoponceperez@gmail.com"},
+    {"id":"tzula-castillos","estatus":"disponible","owner_id":null,"revisado_por":null},
+    {"id":"propiedad-sin-titulo-qzsl","estatus":"disponible","owner_id":"KjLYE88rW7UaAMyt211taM8LJuz1","revisado_por":"jemilianoponceperez@gmail.com"}
+  ],
+  "citas": [],
+  "solicitudes_contacto": [],
+  "esquema_antes": {
+    "usuarios_email_nullable": "NO",
+    "citas_creada_por_nullable": "NO",
+    "usuarios_estado_check": "CHECK ((estado = ANY (ARRAY['activo'::text, 'suspendido'::text, 'pendiente'::text])))",
+    "invitaciones_estado_check": "CHECK ((estado = ANY (ARRAY['pendiente'::text, 'aceptada'::text, 'cancelada'::text])))",
+    "usuarios_email_solo_falta_si_eliminada": null,
+    "propiedades_gestion_check": null,
+    "bajas_de_cuenta": null,
+    "citas_operativas": null,
+    "solicitudes_contacto_operativas": null,
+    "propiedades_gestion_existe": 0
+  }
+}

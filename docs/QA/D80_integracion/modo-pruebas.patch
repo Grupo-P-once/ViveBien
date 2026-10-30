@@ -1,0 +1,1340 @@
+--- a/src/lib/correo/config.ts
++++ b/src/lib/correo/config.ts
+@@ -48,6 +48,14 @@
+ export const TEXTO_CONSENTIMIENTO_MARKETING =
+   'Al pedirlo, aceptas recibir por correo propiedades de VIVE BIEN que se ajusten a lo que elegiste, como máximo una cada tres días. Si no te interesan, te das de baja con un clic desde cualquier correo. Usamos tu correo sólo para esto.'
+ 
++/**
++ * MODO DE PRUEBAS (D-80). Con `CORREO_MODO_PRUEBAS=1`, TODO correo que sale por `enviarCorreo` se redirige a este único destino,
++ * sea cual sea el destinatario original (y no se admiten copias): ningún cliente, usuario ni propietario real recibe nada.
++ * El destino es una CONSTANTE de código (no una variable de entorno) a propósito: nadie lo puede apuntar a otra dirección por error.
++ * Apagado por defecto; no cambia ni activa nada del envío real (sigue mandando `CORREO_TRANSACCIONAL` / `CORREO_MARKETING`).
++ */
++export const DESTINO_PRUEBAS = 'jemilianoponceperez@gmail.com'
++
+ export type EntornoCorreo = {
+   transaccional: boolean
+   marketing: boolean
+@@ -57,6 +65,8 @@
+   remitente: string | null
+   /** Remitente SÓLO del correo comercial (por ejemplo, desde un subdominio dedicado). Si no existe, se usa el normal. */
+   remitenteMarketing: string | null
++  /** Modo de pruebas: redirige TODO envío a `DESTINO_PRUEBAS`. Ausente = apagado. */
++  modoPruebas?: boolean
+ }
+ 
+ /** Lee las variables en el momento de usarlas (no al importar), para poder probar y para que un cambio de variable se note. */
+@@ -69,6 +79,7 @@
+     webhookSecret: (env.RESEND_WEBHOOK_SECRET ?? '').trim(),
+     remitente: (env.RESEND_FROM ?? '').trim() || null,
+     remitenteMarketing: (env.RESEND_FROM_MARKETING ?? '').trim() || null,
++    modoPruebas: env.CORREO_MODO_PRUEBAS === '1',
+   }
+ }
+ 
+--- a/src/lib/correo/enviar.ts
++++ b/src/lib/correo/enviar.ts
+@@ -1,6 +1,7 @@
+ import { NEGOCIO } from '../config/negocio'
+-import { CORREO, entornoCorreo, type EntornoCorreo, type LimitesCorreo } from './config'
++import { CORREO, DESTINO_PRUEBAS, entornoCorreo, type EntornoCorreo, type LimitesCorreo } from './config'
+ import { normalizarCorreo } from './seguridad'
++import { cuerpoDePruebas, exigirSoloDestinoDePruebas, llamarResend, PREFIJO_PRUEBA } from './resend'
+ 
+ /**
+  * Envío de correo por Resend (D-80). Código de servidor: la clave nunca sale de aquí.
+@@ -43,12 +44,17 @@
+   motivo?: string
+ }
+ 
++export { PREFIJO_PRUEBA, exigirSoloDestinoDePruebas }
++
+ type Opciones = { fetch?: typeof fetch; entorno?: EntornoCorreo; limites?: Partial<LimitesCorreo> }
+ 
+ export async function enviarCorreo(db: DbCorreo, s: SolicitudCorreo, o: Opciones = {}): Promise<ResultadoEnvio> {
+   const env = o.entorno ?? entornoCorreo()
+-  const para = normalizarCorreo(s.para)
+-  if (!para) return { estado: 'omitido', motivo: 'destinatario_invalido' }
++  // Se valida el destinatario ORIGINAL igual que en producción (una lista, un correo con saltos de línea o uno inválido se omite); en modo de
++  // pruebas, DESPUÉS se sustituye por el destino de pruebas, antes de reservar, registrar o enviar nada.
++  const original = normalizarCorreo(s.para)
++  if (!original) return { estado: 'omitido', motivo: 'destinatario_invalido' }
++  const para = env.modoPruebas ? DESTINO_PRUEBAS : original
+   if (s.clave.length < 3 || s.clave.length > 200) return { estado: 'omitido', motivo: 'clave_invalida' }
+   // Banderas: lo nuevo sale apagado. Sin clave del proveedor no se reserva nada (no se gasta presupuesto ni se deja basura).
+   if (s.categoria === 'transaccional' && !env.transaccional) return { estado: 'omitido', motivo: 'transaccional_apagado' }
+@@ -91,20 +97,29 @@
+     cabeceras['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click'
+   }
+ 
++  const base: Record<string, unknown> = {
++    from: (s.categoria === 'marketing' ? env.remitenteMarketing : null) || env.remitente || NEGOCIO.remitente,
++    to: [para],
++    reply_to: s.responderA || NEGOCIO.email,
++    subject: s.asunto,
++    html: s.html,
++    text: s.texto,
++    ...(Object.keys(cabeceras).length ? { headers: cabeceras } : {}),
++  }
++  // Modo de pruebas: el cuerpo se reconstruye (destino fijo, sin copias, sin baja ni enlaces con token) y se revisa ANTES de llamar al proveedor.
++  const cuerpo = env.modoPruebas ? cuerpoDePruebas(base) : base
++  if (env.modoPruebas) {
++    try {
++      exigirSoloDestinoDePruebas(cuerpo)
++    } catch {
++      await marcar('error', null, 'fuga_modo_pruebas')
++      console.error('[correo] modo de pruebas: envío bloqueado por destinatarios inesperados')
++      return { estado: 'error', motivo: 'fuga_modo_pruebas' }
++    }
++  }
++
+   try {
+-    const res = await (o.fetch ?? fetch)('https://api.resend.com/emails', {
+-      method: 'POST',
+-      headers: { Authorization: `Bearer ${env.resendKey}`, 'Content-Type': 'application/json', 'Idempotency-Key': s.clave },
+-      body: JSON.stringify({
+-        from: (s.categoria === 'marketing' ? env.remitenteMarketing : null) || env.remitente || NEGOCIO.remitente,
+-        to: [para],
+-        reply_to: s.responderA || NEGOCIO.email,
+-        subject: s.asunto,
+-        html: s.html,
+-        text: s.texto,
+-        ...(Object.keys(cabeceras).length ? { headers: cabeceras } : {}),
+-      }),
+-    })
++    const res = await llamarResend({ apiKey: env.resendKey, cuerpo, idempotencia: s.clave, fetch: o.fetch, modoPruebas: env.modoPruebas === true })
+     if (res.ok) {
+       const cuerpo = (await res.json().catch(() => null)) as { id?: unknown } | null
+       await marcar('enviado', typeof cuerpo?.id === 'string' ? cuerpo.id : null, null)
+--- a/src/lib/correo/tarea.ts
++++ b/src/lib/correo/tarea.ts
+@@ -15,6 +15,9 @@
+  * detiene a las demás; un agotamiento del presupuesto sí.
+  */
+ 
++/** Personas que se procesan por ejecución de la tarea cuando está activo el modo de pruebas. */
++export const TOPE_LOTE_PRUEBAS = 3
++
+ export type ResumenTarea = {
+   estado: 'desactivada' | 'pausada' | 'terminada' | 'error'
+   motivo?: string
+@@ -50,6 +53,8 @@
+   if (!env.marketing || !env.resendKey || env.secreto.length < SECRETO_MINIMO) return vacio('desactivada', 'banderas_o_claves')
+   const ahora = o.ahora ?? new Date()
+   const lim = { ...CORREO, ...(o.limites ?? {}) }
++  // Modo de pruebas: todo va a UNA bandeja, así que se procesan pocas personas por ejecución (no se inunda ni se gasta la cuota diaria).
++  if (env.modoPruebas) lim.loteMarketing = Math.min(lim.loteMarketing, TOPE_LOTE_PRUEBAS)
+ 
+   const salud = await db.rpc('correo_salud')
+   const pausa = debePausarse(salud.error ? null : (salud.data as { enviados7?: number; rebotados7?: number; quejas7?: number }))
+--- a/src/lib/correo/resend.ts
++++ b/src/lib/correo/resend.ts
+@@ -0,0 +1,110 @@
++import { NEGOCIO } from '../config/negocio'
++import { DESTINO_PRUEBAS } from './config'
++
++/**
++ * ÚNICO punto del sitio que llama a la API de Resend (D-80, modo de pruebas).
++ *
++ * Los cuatro emisores (correo D-80, aviso de leads, citas e invitaciones) arman su cuerpo y llegan aquí. Con `CORREO_MODO_PRUEBAS=1`
++ * el cuerpo se RECONSTRUYE desde una lista blanca —no se «limpia»—, de modo que lo que el emisor haya puesto en `to`, `cc`, `bcc`, `cco`,
++ * `reply_to`, adjuntos o cabeceras de destinatarios no existe para el proveedor. Después una barrera independiente vuelve a revisar el
++ * resultado y lanza si algo quedó fuera de lugar. Una prueba estática obliga a que ningún otro archivo hable con la API.
++ *
++ * Sin el modo activo, el cuerpo pasa tal cual: producción no cambia.
++ */
++export const URL_RESEND = 'https://api.resend.com/emails'
++
++/** Prefijo del asunto en modo de pruebas: se ve a simple vista que no es un correo real. */
++export const PREFIJO_PRUEBA = '[PRUEBA] '
++
++/** Hacia dónde apuntan los enlaces sensibles en un correo de pruebas: a una página cualquiera del sitio, sin efecto. */
++export const ENLACE_INERTE = 'https://vivebienn.com/?enlace=deshabilitado-en-pruebas'
++
++export function modoPruebasActivo(env: Record<string, string | undefined> = process.env): boolean {
++  return env.CORREO_MODO_PRUEBAS === '1'
++}
++
++// Rutas que actúan sobre datos reales con sólo abrirse (confirmar o dar de baja una suscripción, aceptar/cancelar una cita) y cualquier
++// enlace con un parámetro `t=` (token). En un correo de pruebas se sustituyen por `ENLACE_INERTE`: el token real ni siquiera sale.
++const ENLACE_SENSIBLE = /https?:\/\/[^\s"'<>)]*(?:\/citas\/accion|\/correo\/(?:confirmar|baja|preferencias)|\/api\/correo\/|\/api\/citas\/|[?#&]t=)[^\s"'<>)]*/gi
++export function neutralizarEnlaces(texto: unknown): string {
++  return typeof texto === 'string' ? texto.replace(ENLACE_SENSIBLE, ENLACE_INERTE) : ''
++}
++
++/** Cabeceras que se conservan: sólo las que no son de destinatarios ni de baja (la baja de un correo de pruebas no debe poder actuar). */
++const CABECERA_PROHIBIDA = /^(to|cc|bcc|cco|reply-to|list-unsubscribe|list-unsubscribe-post)$/i
++
++/**
++ * Reconstruye el cuerpo para el modo de pruebas desde una lista blanca: remitente, asunto y contenido del emisor; destinatario y
++ * respuesta fijos; cabeceras seguras; enlaces sensibles neutralizados; sin adjuntos (un .ics lleva organizador y asistentes, y aceptarlo
++ * enviaría una respuesta a una dirección real).
++ */
++export function cuerpoDePruebas(c: Record<string, unknown>): Record<string, unknown> {
++  const asunto = typeof c.subject === 'string' ? c.subject : ''
++  const cab: Record<string, string> = {}
++  if (c.headers && typeof c.headers === 'object') {
++    for (const [k, v] of Object.entries(c.headers as Record<string, unknown>)) {
++      if (!CABECERA_PROHIBIDA.test(k.trim()) && typeof v === 'string' && !/[\r\n]/.test(v) && !/[\r\n]/.test(k)) cab[k] = neutralizarEnlaces(v)
++    }
++  }
++  cab['X-Vive-Bien-Modo'] = 'pruebas'
++  return {
++    from: c.from,
++    to: [DESTINO_PRUEBAS],
++    reply_to: NEGOCIO.email,
++    subject: asunto.startsWith(PREFIJO_PRUEBA) ? asunto : `${PREFIJO_PRUEBA}${asunto.replace(/[\r\n]+/g, ' ')}`,
++    html: neutralizarEnlaces(c.html),
++    text: neutralizarEnlaces(c.text),
++    headers: cab,
++  }
++}
++
++const CLAVES_PERMITIDAS = new Set(['from', 'to', 'reply_to', 'subject', 'html', 'text', 'headers'])
++
++/**
++ * Última barrera: el cuerpo que va al proveedor sólo puede tener UN destinatario (el de pruebas) y ninguna clave fuera de la lista
++ * (copias, adjuntos, programación…). Se llama justo antes de enviar, sobre el objeto ya armado. Lanza si algo se escapó.
++ */
++export function exigirSoloDestinoDePruebas(cuerpo: Record<string, unknown>): void {
++  const to = cuerpo.to
++  if (!Array.isArray(to) || to.length !== 1 || to[0] !== DESTINO_PRUEBAS) throw new Error('fuga_modo_pruebas')
++  if (Object.keys(cuerpo).some((k) => !CLAVES_PERMITIDAS.has(k))) throw new Error('fuga_modo_pruebas')
++  // Las respuestas tampoco pueden irse a otra dirección: en modo de pruebas el «reply_to» es siempre el institucional.
++  if (cuerpo.reply_to !== NEGOCIO.email) throw new Error('fuga_modo_pruebas')
++  const cab = cuerpo.headers
++  if (cab !== undefined && (!cab || typeof cab !== 'object' || Array.isArray(cab))) throw new Error('fuga_modo_pruebas')
++  if (cab) {
++    // Ni una cabecera de destinatarios o de baja, ni un salto de línea en una cabecera (así no se inyecta «Bcc:» dentro de otra).
++    for (const [k, v] of Object.entries(cab as Record<string, unknown>)) {
++      if (CABECERA_PROHIBIDA.test(k.trim()) || /[\r\n]/.test(k) || typeof v !== 'string' || /[\r\n]/.test(v)) throw new Error('fuga_modo_pruebas')
++    }
++  }
++}
++
++type Llamada = {
++  apiKey: string
++  cuerpo: Record<string, unknown>
++  /** Cabecera `Idempotency-Key` (sólo la usan los emisores que ya la usaban). */
++  idempotencia?: string
++  fetch?: typeof fetch
++  /** Para pruebas; por defecto se lee `CORREO_MODO_PRUEBAS`. */
++  modoPruebas?: boolean
++}
++
++/** Llama a Resend. En modo de pruebas redirige y revisa el cuerpo; si algo no cuadra lanza `fuga_modo_pruebas` SIN llamar al proveedor. */
++export async function llamarResend(l: Llamada): Promise<Response> {
++  const pruebas = l.modoPruebas ?? modoPruebasActivo()
++  let cuerpo = l.cuerpo
++  if (pruebas) {
++    cuerpo = cuerpoDePruebas(l.cuerpo)
++    exigirSoloDestinoDePruebas(cuerpo)
++  }
++  return (l.fetch ?? fetch)(URL_RESEND, {
++    method: 'POST',
++    headers: {
++      Authorization: `Bearer ${l.apiKey}`,
++      'Content-Type': 'application/json',
++      ...(l.idempotencia ? { 'Idempotency-Key': l.idempotencia } : {}),
++    },
++    body: JSON.stringify(cuerpo),
++  })
++}
+--- a/src/lib/aviso-lead.ts
++++ b/src/lib/aviso-lead.ts
+@@ -1,5 +1,6 @@
+ import { CORREO_CONTACTO } from './contacto'
+ import { NEGOCIO } from './config/negocio'
++import { llamarResend } from './correo/resend'
+ 
+ /**
+  * Avisar de que entró un lead.
+@@ -108,13 +109,10 @@
+   `
+ 
+   try {
+-    const res = await fetch('https://api.resend.com/emails', {
+-      method: 'POST',
+-      headers: {
+-        Authorization: `Bearer ${clave}`,
+-        'Content-Type': 'application/json',
+-      },
+-      body: JSON.stringify({
++    // Pasa por el único emisor (`correo/resend.ts`): con CORREO_MODO_PRUEBAS=1 el destino y la respuesta se fijan ahí.
++    const res = await llamarResend({
++      apiKey: clave,
++      cuerpo: {
+         from: process.env.RESEND_FROM || NEGOCIO.remitente,
+         to: [CORREO_CONTACTO],
+         // El asunto lleva el nombre y el origen: se decide si abrirlo desde la
+@@ -123,7 +121,7 @@
+         reply_to: lead.email || undefined,
+         text: texto,
+         html,
+-      }),
++      },
+     })
+ 
+     if (!res.ok) {
+--- a/src/lib/invitacion-correo.ts
++++ b/src/lib/invitacion-correo.ts
+@@ -1,5 +1,6 @@
+ import { SITIO } from './sitio'
+ import { NEGOCIO } from './config/negocio'
++import { llamarResend } from './correo/resend'
+ 
+ /**
+  * El correo de invitación al panel.
+@@ -84,17 +85,17 @@
+   `
+ 
+   try {
+-    const res = await fetch('https://api.resend.com/emails', {
+-      method: 'POST',
+-      headers: { Authorization: `Bearer ${clave}`, 'Content-Type': 'application/json' },
+-      body: JSON.stringify({
++    // Pasa por el único emisor (`correo/resend.ts`): con CORREO_MODO_PRUEBAS=1 el destino y la respuesta se fijan ahí.
++    const res = await llamarResend({
++      apiKey: clave,
++      cuerpo: {
+         from: process.env.RESEND_FROM || NEGOCIO.remitente,
+         to: [opciones.email],
+         subject: 'Te invitaron a Vive Bien Grupo Inmobiliario',
+         reply_to: opciones.invitadoPor || undefined,
+         text: texto,
+         html,
+-      }),
++      },
+     })
+     if (!res.ok) {
+       const cuerpo = await res.text().catch(() => '')
+--- a/src/lib/citas/enviar.ts
++++ b/src/lib/citas/enviar.ts
+@@ -1,199 +1,202 @@
+-import { supabaseAdmin } from '../auth-server'
+-import { SITIO } from '../sitio'
+-import { NEGOCIO } from '../config/negocio'
+-import { claveCorreo, planDeCorreos, plantilla, type CorreoPlaneado, type EventoCorreo, type Para } from './correos'
+-import { enlaceGoogleCalendar, generarIcs } from './ics'
+-import { caducidad, nuevoToken } from './tokens'
+-import type { CitaFila } from './vista'
+-import { rutaDeVisitas } from './enlaces'
+-import { cuentasDeCitas } from './asesores'
+-import { puedeActuarEnCita, veDatosDelInteresado, type CuentaDeCitas } from '../acceso/capacidades'
+-import { avisar } from '../alertas'
+-
+-/**
+- * Manda los correos que tocan tras un cambio de una cita.
+- *
+- * ─────────────────────────────────────────────────────────────
+- * NO DUPLICAR, EN DOS CAPAS
+- *
+- *  1. Antes de enviar se guarda la fila en `citas_correos` con una llave
+- *     única (`cita/<id>/<tipo>/v<versión>/<para>`). Si ya existe, ese correo
+- *     ya se mandó —o se está mandando—: no se vuelve a mandar. Un doble clic,
+- *     un reintento de la red o la misma acción repetida no duplican nada.
+- *  2. La misma llave va en la cabecera `Idempotency-Key` de Resend: si la red
+- *     corta a medio envío y se reintenta, Resend devuelve la respuesta original
+- *     sin mandar otro correo.
+- *
+- * Nunca lanza: el correo es el aviso, no la cita. Si falla, queda la fila con
+- * `estado = 'error'` para verlo y reintentarlo; la cita ya está guardada.
+- * ─────────────────────────────────────────────────────────────
+- */
+-
+-type Db = ReturnType<typeof supabaseAdmin>
+-
+-type Filas = {
+-  cita: CitaFila
+-  asesor: { nombre: string | null; email: string | null; rol: string | null } | null
+-  cliente: { nombre: string | null; email: string | null } | null
+-  /** Permisos efectivos del asesor (ADR-0013): decide qué datos y botones llevan sus correos. */
+-  asesorCuenta: CuentaDeCitas | null
+-}
+-
+-async function leer(db: Db, id: string): Promise<Filas | null> {
+-  const { data, error } = await db.from('citas')
+-    .select('*, asesor:usuarios!citas_asesor_uid_fkey(nombre, email, rol), cliente:usuarios!citas_cliente_uid_fkey(nombre, email)')
+-    .eq('id', id).maybeSingle()
+-  if (error || !data) return null
+-  const { asesor, cliente, ...cita } = data as CitaFila & { asesor: Filas['asesor']; cliente: Filas['cliente'] }
+-  const asesorCuenta = (await cuentasDeCitas(db, [(cita as CitaFila).asesor_uid])).get((cita as CitaFila).asesor_uid) ?? null
+-  return { cita, asesor, cliente, asesorCuenta }
+-}
+-
+-/**
+- * Dónde ve la visita cada quien (V-1.1.82, P3-01: las rutas salen de
+- * `lib/citas/enlaces.ts`). El asesor es el equipo de VIVE BIEN o, si es un
+- * publicador con `recibir_citas` (ADR-0013), va a su propia pantalla.
+- */
+-export function enlaceParaVer(citaId: string, para: Para, asesorEsPublicador = false): string {
+-  return `${SITIO}${rutaDeVisitas(para === 'cliente' ? 'cliente' : asesorEsPublicador ? 'publicador' : 'equipo', citaId)}`
+-}
+-
+-async function mandar(opts: {
+-  clave: string
+-  para: string
+-  asunto: string
+-  html: string
+-  texto: string
+-  ics?: string | null
+-}): Promise<{ ok: true; id: string | null } | { ok: false; error: string }> {
+-  const api = process.env.RESEND_API_KEY?.trim()
+-  if (!api) return { ok: false, error: 'sin RESEND_API_KEY' }
+-  try {
+-    const res = await fetch('https://api.resend.com/emails', {
+-      method: 'POST',
+-      headers: { Authorization: `Bearer ${api}`, 'Content-Type': 'application/json', 'Idempotency-Key': opts.clave },
+-      body: JSON.stringify({
+-        from: process.env.RESEND_FROM || NEGOCIO.remitente,
+-        to: [opts.para],
+-        // Quien responda a una cita habla con VIVE BIEN, no con un remitente que no lee nadie.
+-        reply_to: NEGOCIO.email,
+-        subject: opts.asunto,
+-        html: opts.html,
+-        text: opts.texto,
+-        ...(opts.ics ? { attachments: [{ filename: 'visita-vive-bien.ics', content: Buffer.from(opts.ics, 'utf8').toString('base64') }] } : {}),
+-      }),
+-    })
+-    const cuerpo = await res.text().catch(() => '')
+-    if (!res.ok) return { ok: false, error: `Resend ${res.status}: ${cuerpo.slice(0, 200)}` }
+-    let id: string | null = null
+-    try { id = (JSON.parse(cuerpo) as { id?: string }).id ?? null } catch { /* sin id */ }
+-    return { ok: true, id }
+-  } catch (e) {
+-    return { ok: false, error: e instanceof Error ? e.message : 'fallo de red' }
+-  }
+-}
+-
+-async function uno(db: Db, f: Filas, m: CorreoPlaneado, ahora: Date): Promise<void> {
+-  const { cita } = f
+-  const email = m.para === 'cliente' ? (cita.cliente_email || f.cliente?.email) : f.asesor?.email
+-  const clave = claveCorreo(cita.id, m.tipo, cita.version, m.para)
+-  if (!email) {
+-    console.warn(`[citas] sin correo para ${m.para} de la cita ${cita.id}: no se avisó (${m.tipo})`)
+-    return
+-  }
+-
+-  // Capa 1: si la fila ya existe, este correo ya salió (o está saliendo).
+-  const { data: fila, error: errFila } = await db.from('citas_correos').insert({
+-    cita_id: cita.id, tipo: m.tipo, destinatario_rol: m.para, destinatario_email: email, clave_idempotencia: clave,
+-  }).select('id').single()
+-  if (errFila) {
+-    if (errFila.code !== '23505') console.error('[citas] no se pudo registrar el correo', errFila.message)
+-    return
+-  }
+-
+-  // Un publicador atendiendo la cita (ADR-0013): sus correos NO llevan los datos
+-  // del interesado salvo que tenga `ver_datos_interesado`, sólo traen los
+-  // botones (y los tokens) de lo que su permiso le deja hacer, y enlazan a SUS
+-  // citas recibidas.
+-  // Falla CERRADO: si no se pudo leer la cuenta del asesor (error de lectura o
+-  // cuenta borrada), el correo va sin datos del interesado y sin botones.
+-  const sinCuenta = m.para === 'asesor' && !f.asesorCuenta
+-  const publicador = m.para === 'asesor' && f.asesorCuenta?.rol === 'publicador' ? f.asesorCuenta : null
+-  const verInteresado = !sinCuenta && (!publicador || veDatosDelInteresado(publicador))
+-  const accionesPermitidas = sinCuenta
+-    ? []
+-    : publicador
+-      ? m.acciones.filter((a) => puedeActuarEnCita(publicador, a, cita.estado))
+-      : m.acciones
+-
+-  // Un token por acción, para esta persona y esta versión de la cita.
+-  const inicio = new Date(cita.inicio)
+-  const acciones: { accion: typeof m.acciones[number]; url: string }[] = []
+-  if (accionesPermitidas.length) {
+-    const expira = caducidad(inicio, ahora)
+-    const filasToken = accionesPermitidas.map((accion) => {
+-      const t = nuevoToken()
+-      acciones.push({ accion, url: `${SITIO}/citas/accion#${t.plano}` })
+-      return { cita_id: cita.id, accion, para_rol: m.para, hash: t.hash, version_cita: cita.version, expira_en: expira.toISOString() }
+-    })
+-    const { error } = await db.from('citas_tokens').insert(filasToken)
+-    if (error) {
+-      // Sin tokens guardados los botones no servirían: se manda sin botones.
+-      console.error('[citas] no se pudieron guardar los enlaces', error.message)
+-      acciones.length = 0
+-    }
+-  }
+-
+-  const titulo = cita.propiedad_titulo ?? 'la propiedad'
+-  const verla = enlaceParaVer(cita.id, m.para, publicador !== null)
+-  const fin = new Date(cita.fin)
+-  const conCalendario = m.ics === 'publicar'
+-  const correo = plantilla(m.tipo, m.para, {
+-    destinatario: m.para === 'cliente' ? cita.cliente_nombre : f.asesor?.nombre ?? null,
+-    propiedad: titulo,
+-    lugar: cita.lugar,
+-    inicio,
+-    propuesto: cita.propuesta_inicio ? new Date(cita.propuesta_inicio) : null,
+-    motivo: cita.motivo_cancelacion,
+-    cliente: verInteresado ? { nombre: cita.cliente_nombre, telefono: cita.cliente_telefono } : null,
+-    notasCliente: verInteresado ? cita.notas_cliente : null,
+-    acciones,
+-    enlacePanel: verla,
+-    enlaceGoogle: conCalendario ? enlaceGoogleCalendar({ inicio, fin, titulo, lugar: cita.lugar, enlace: verla }) : null,
+-    ahora,
+-  })
+-  const ics = m.ics
+-    ? generarIcs({ id: cita.id, version: cita.version, inicio, fin, titulo, lugar: cita.lugar, enlace: verla, cancelada: m.ics === 'cancelar', ahora })
+-    : null
+-
+-  const r = await mandar({ clave, para: email, asunto: correo.asunto, html: correo.html, texto: correo.texto, ics })
+-  await db.from('citas_correos').update(r.ok
+-    ? { estado: 'enviado', resend_id: r.id, enviado_en: new Date().toISOString(), intentos: 1, error: null }
+-    : { estado: 'error', error: r.error.slice(0, 500), intentos: 1 },
+-  ).eq('id', fila.id)
+-  if (!r.ok) console.error(`[citas] correo ${m.tipo} a ${m.para} no salió:`, r.error)
+-}
+-
+-/** Manda los correos de este cambio. Se llama después de responder (`after()`). */
+-export async function avisarCambio(citaId: string, evento: EventoCorreo, actorUid: string | null, ahora = new Date()): Promise<void> {
+-  try {
+-    const db = supabaseAdmin()
+-    const f = await leer(db, citaId)
+-    if (!f) return
+-    // VIVE BIEN se entera de toda visita en una propiedad de un publicador (los
+-    // leads son del flujo comercial de VIVE BIEN, ADR-0006). Sin datos personales.
+-    if (evento === 'CREATED' && f.asesorCuenta?.rol === 'publicador') {
+-      void avisar({
+-        nivel: 'aviso',
+-        titulo: 'Nueva visita en la propiedad de un publicador',
+-        datos: { Propiedad: f.cita.propiedad_titulo, Atiende: f.asesor?.nombre ?? null, Estado: f.cita.estado },
+-        clave: `cita-publicador:${f.cita.id}`,
+-      })
+-    }
+-    for (const m of planDeCorreos(evento, f.cita, actorUid)) {
+-      await uno(db, f, m, ahora)
+-    }
+-  } catch (e) {
+-    console.error('[citas] avisarCambio', e instanceof Error ? e.message : e)
+-  }
+-}
++import { supabaseAdmin } from '../auth-server'
++import { SITIO } from '../sitio'
++import { NEGOCIO } from '../config/negocio'
++import { llamarResend } from '../correo/resend'
++import { claveCorreo, planDeCorreos, plantilla, type CorreoPlaneado, type EventoCorreo, type Para } from './correos'
++import { enlaceGoogleCalendar, generarIcs } from './ics'
++import { caducidad, nuevoToken } from './tokens'
++import type { CitaFila } from './vista'
++import { rutaDeVisitas } from './enlaces'
++import { cuentasDeCitas } from './asesores'
++import { puedeActuarEnCita, veDatosDelInteresado, type CuentaDeCitas } from '../acceso/capacidades'
++import { avisar } from '../alertas'
++
++/**
++ * Manda los correos que tocan tras un cambio de una cita.
++ *
++ * ─────────────────────────────────────────────────────────────
++ * NO DUPLICAR, EN DOS CAPAS
++ *
++ *  1. Antes de enviar se guarda la fila en `citas_correos` con una llave
++ *     única (`cita/<id>/<tipo>/v<versión>/<para>`). Si ya existe, ese correo
++ *     ya se mandó —o se está mandando—: no se vuelve a mandar. Un doble clic,
++ *     un reintento de la red o la misma acción repetida no duplican nada.
++ *  2. La misma llave va en la cabecera `Idempotency-Key` de Resend: si la red
++ *     corta a medio envío y se reintenta, Resend devuelve la respuesta original
++ *     sin mandar otro correo.
++ *
++ * Nunca lanza: el correo es el aviso, no la cita. Si falla, queda la fila con
++ * `estado = 'error'` para verlo y reintentarlo; la cita ya está guardada.
++ * ─────────────────────────────────────────────────────────────
++ */
++
++type Db = ReturnType<typeof supabaseAdmin>
++
++type Filas = {
++  cita: CitaFila
++  asesor: { nombre: string | null; email: string | null; rol: string | null } | null
++  cliente: { nombre: string | null; email: string | null } | null
++  /** Permisos efectivos del asesor (ADR-0013): decide qué datos y botones llevan sus correos. */
++  asesorCuenta: CuentaDeCitas | null
++}
++
++async function leer(db: Db, id: string): Promise<Filas | null> {
++  const { data, error } = await db.from('citas')
++    .select('*, asesor:usuarios!citas_asesor_uid_fkey(nombre, email, rol), cliente:usuarios!citas_cliente_uid_fkey(nombre, email)')
++    .eq('id', id).maybeSingle()
++  if (error || !data) return null
++  const { asesor, cliente, ...cita } = data as CitaFila & { asesor: Filas['asesor']; cliente: Filas['cliente'] }
++  const asesorCuenta = (await cuentasDeCitas(db, [(cita as CitaFila).asesor_uid])).get((cita as CitaFila).asesor_uid) ?? null
++  return { cita, asesor, cliente, asesorCuenta }
++}
++
++/**
++ * Dónde ve la visita cada quien (V-1.1.82, P3-01: las rutas salen de
++ * `lib/citas/enlaces.ts`). El asesor es el equipo de VIVE BIEN o, si es un
++ * publicador con `recibir_citas` (ADR-0013), va a su propia pantalla.
++ */
++export function enlaceParaVer(citaId: string, para: Para, asesorEsPublicador = false): string {
++  return `${SITIO}${rutaDeVisitas(para === 'cliente' ? 'cliente' : asesorEsPublicador ? 'publicador' : 'equipo', citaId)}`
++}
++
++/** Exportada sólo para que una prueba demuestre que NINGÚN correo de citas salta el modo de pruebas; el único llamador es `uno`. */
++export async function mandar(opts: {
++  clave: string
++  para: string
++  asunto: string
++  html: string
++  texto: string
++  ics?: string | null
++}): Promise<{ ok: true; id: string | null } | { ok: false; error: string }> {
++  const api = process.env.RESEND_API_KEY?.trim()
++  if (!api) return { ok: false, error: 'sin RESEND_API_KEY' }
++  try {
++    // Pasa por el único emisor (`correo/resend.ts`): con CORREO_MODO_PRUEBAS=1 el destino, la respuesta y los enlaces con token se fijan ahí.
++    const res = await llamarResend({
++      apiKey: api,
++      idempotencia: opts.clave,
++      cuerpo: {
++        from: process.env.RESEND_FROM || NEGOCIO.remitente,
++        to: [opts.para],
++        // Quien responda a una cita habla con VIVE BIEN, no con un remitente que no lee nadie.
++        reply_to: NEGOCIO.email,
++        subject: opts.asunto,
++        html: opts.html,
++        text: opts.texto,
++        ...(opts.ics ? { attachments: [{ filename: 'visita-vive-bien.ics', content: Buffer.from(opts.ics, 'utf8').toString('base64') }] } : {}),
++      },
++    })
++    const cuerpo = await res.text().catch(() => '')
++    if (!res.ok) return { ok: false, error: `Resend ${res.status}: ${cuerpo.slice(0, 200)}` }
++    let id: string | null = null
++    try { id = (JSON.parse(cuerpo) as { id?: string }).id ?? null } catch { /* sin id */ }
++    return { ok: true, id }
++  } catch (e) {
++    return { ok: false, error: e instanceof Error ? e.message : 'fallo de red' }
++  }
++}
++
++async function uno(db: Db, f: Filas, m: CorreoPlaneado, ahora: Date): Promise<void> {
++  const { cita } = f
++  const email = m.para === 'cliente' ? (cita.cliente_email || f.cliente?.email) : f.asesor?.email
++  const clave = claveCorreo(cita.id, m.tipo, cita.version, m.para)
++  if (!email) {
++    console.warn(`[citas] sin correo para ${m.para} de la cita ${cita.id}: no se avisó (${m.tipo})`)
++    return
++  }
++
++  // Capa 1: si la fila ya existe, este correo ya salió (o está saliendo).
++  const { data: fila, error: errFila } = await db.from('citas_correos').insert({
++    cita_id: cita.id, tipo: m.tipo, destinatario_rol: m.para, destinatario_email: email, clave_idempotencia: clave,
++  }).select('id').single()
++  if (errFila) {
++    if (errFila.code !== '23505') console.error('[citas] no se pudo registrar el correo', errFila.message)
++    return
++  }
++
++  // Un publicador atendiendo la cita (ADR-0013): sus correos NO llevan los datos
++  // del interesado salvo que tenga `ver_datos_interesado`, sólo traen los
++  // botones (y los tokens) de lo que su permiso le deja hacer, y enlazan a SUS
++  // citas recibidas.
++  // Falla CERRADO: si no se pudo leer la cuenta del asesor (error de lectura o
++  // cuenta borrada), el correo va sin datos del interesado y sin botones.
++  const sinCuenta = m.para === 'asesor' && !f.asesorCuenta
++  const publicador = m.para === 'asesor' && f.asesorCuenta?.rol === 'publicador' ? f.asesorCuenta : null
++  const verInteresado = !sinCuenta && (!publicador || veDatosDelInteresado(publicador))
++  const accionesPermitidas = sinCuenta
++    ? []
++    : publicador
++      ? m.acciones.filter((a) => puedeActuarEnCita(publicador, a, cita.estado))
++      : m.acciones
++
++  // Un token por acción, para esta persona y esta versión de la cita.
++  const inicio = new Date(cita.inicio)
++  const acciones: { accion: typeof m.acciones[number]; url: string }[] = []
++  if (accionesPermitidas.length) {
++    const expira = caducidad(inicio, ahora)
++    const filasToken = accionesPermitidas.map((accion) => {
++      const t = nuevoToken()
++      acciones.push({ accion, url: `${SITIO}/citas/accion#${t.plano}` })
++      return { cita_id: cita.id, accion, para_rol: m.para, hash: t.hash, version_cita: cita.version, expira_en: expira.toISOString() }
++    })
++    const { error } = await db.from('citas_tokens').insert(filasToken)
++    if (error) {
++      // Sin tokens guardados los botones no servirían: se manda sin botones.
++      console.error('[citas] no se pudieron guardar los enlaces', error.message)
++      acciones.length = 0
++    }
++  }
++
++  const titulo = cita.propiedad_titulo ?? 'la propiedad'
++  const verla = enlaceParaVer(cita.id, m.para, publicador !== null)
++  const fin = new Date(cita.fin)
++  const conCalendario = m.ics === 'publicar'
++  const correo = plantilla(m.tipo, m.para, {
++    destinatario: m.para === 'cliente' ? cita.cliente_nombre : f.asesor?.nombre ?? null,
++    propiedad: titulo,
++    lugar: cita.lugar,
++    inicio,
++    propuesto: cita.propuesta_inicio ? new Date(cita.propuesta_inicio) : null,
++    motivo: cita.motivo_cancelacion,
++    cliente: verInteresado ? { nombre: cita.cliente_nombre, telefono: cita.cliente_telefono } : null,
++    notasCliente: verInteresado ? cita.notas_cliente : null,
++    acciones,
++    enlacePanel: verla,
++    enlaceGoogle: conCalendario ? enlaceGoogleCalendar({ inicio, fin, titulo, lugar: cita.lugar, enlace: verla }) : null,
++    ahora,
++  })
++  const ics = m.ics
++    ? generarIcs({ id: cita.id, version: cita.version, inicio, fin, titulo, lugar: cita.lugar, enlace: verla, cancelada: m.ics === 'cancelar', ahora })
++    : null
++
++  const r = await mandar({ clave, para: email, asunto: correo.asunto, html: correo.html, texto: correo.texto, ics })
++  await db.from('citas_correos').update(r.ok
++    ? { estado: 'enviado', resend_id: r.id, enviado_en: new Date().toISOString(), intentos: 1, error: null }
++    : { estado: 'error', error: r.error.slice(0, 500), intentos: 1 },
++  ).eq('id', fila.id)
++  if (!r.ok) console.error(`[citas] correo ${m.tipo} a ${m.para} no salió:`, r.error)
++}
++
++/** Manda los correos de este cambio. Se llama después de responder (`after()`). */
++export async function avisarCambio(citaId: string, evento: EventoCorreo, actorUid: string | null, ahora = new Date()): Promise<void> {
++  try {
++    const db = supabaseAdmin()
++    const f = await leer(db, citaId)
++    if (!f) return
++    // VIVE BIEN se entera de toda visita en una propiedad de un publicador (los
++    // leads son del flujo comercial de VIVE BIEN, ADR-0006). Sin datos personales.
++    if (evento === 'CREATED' && f.asesorCuenta?.rol === 'publicador') {
++      void avisar({
++        nivel: 'aviso',
++        titulo: 'Nueva visita en la propiedad de un publicador',
++        datos: { Propiedad: f.cita.propiedad_titulo, Atiende: f.asesor?.nombre ?? null, Estado: f.cita.estado },
++        clave: `cita-publicador:${f.cita.id}`,
++      })
++    }
++    for (const m of planDeCorreos(evento, f.cita, actorUid)) {
++      await uno(db, f, m, ahora)
++    }
++  } catch (e) {
++    console.error('[citas] avisarCambio', e instanceof Error ? e.message : e)
++  }
++}
+--- a/src/lib/firebase.ts
++++ b/src/lib/firebase.ts
+@@ -1,5 +1,5 @@
+ import { initializeApp, getApps } from 'firebase/app'
+-import { getAuth, GoogleAuthProvider } from 'firebase/auth'
++import { connectAuthEmulator, getAuth, GoogleAuthProvider } from 'firebase/auth'
+ 
+ const firebaseConfig = {
+   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+@@ -21,5 +21,17 @@
+ const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0]
+ 
+ export const auth = getAuth(app)
++
++/**
++ * Emulador de Firebase Auth (SÓLO pruebas, D-80). Firebase manda por su cuenta, desde el navegador, el correo de restablecer contraseña
++ * y el de verificar correo; no pasan por Resend, así que `CORREO_MODO_PRUEBAS` no los alcanza. Con `NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR=127.0.0.1:9099`
++ * la sesión habla con el emulador local, que NO envía nada: guarda el código en memoria. Sólo se acepta una dirección de este equipo
++ * (127.0.0.1, localhost o [::1]); cualquier otro valor se ignora, para que una variable mal puesta nunca apunte a otro servidor.
++ * Sin la variable (producción) no cambia nada.
++ */
++const EMULADOR_AUTH = process.env.NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR?.trim()
++if (EMULADOR_AUTH && /^(127\.0\.0\.1|localhost|\[::1\]):\d{2,5}$/.test(EMULADOR_AUTH) && !auth.emulatorConfig) {
++  connectAuthEmulator(auth, `http://${EMULADOR_AUTH}`, { disableWarnings: true })
++}
+ export const googleProvider = new GoogleAuthProvider()
+ export default app
+--- a/tests/correo-enviar.test.ts
++++ b/tests/correo-enviar.test.ts
+@@ -28,7 +28,7 @@
+ 
+ describe('banderas y claves: lo nuevo sale APAGADO', () => {
+   it('por defecto (sin variables) todo está apagado', () => {
+-    expect(entornoCorreo({})).toEqual({ transaccional: false, marketing: false, resendKey: '', secreto: '', webhookSecret: '', remitente: null, remitenteMarketing: null })
++    expect(entornoCorreo({})).toEqual({ transaccional: false, marketing: false, resendKey: '', secreto: '', webhookSecret: '', remitente: null, remitenteMarketing: null, modoPruebas: false })
+     expect(entornoCorreo({ CORREO_TRANSACCIONAL: 'true', CORREO_MARKETING: 'si' }).transaccional).toBe(false) // sólo «1» activa
+   })
+ 
+--- a/tests/correo-integracion.test.ts
++++ b/tests/correo-integracion.test.ts
+@@ -39,7 +39,10 @@
+   const cols = Object.keys(p)
+   await pg.query(`insert into public.propiedades (${cols.join(', ')}) values (${cols.map((_, i) => `$${i + 1}`).join(', ')})`, cols.map((c) => p[c]))
+ }
+-const ahoraBase = new Date('2026-10-10T16:00:00Z')
++// El «ahora» de la tarea debe ir por DELANTE del reloj real de la base: la migración 36 calcula `proximo_envio_en = greatest(now(), …)` con el reloj
++// de PGlite, así que con una hora fija (antes 2026-10-10T16:00Z) las suscriptoras confirmadas después de esa hora «aún no tocaban» y dos pruebas fallaban
++// según la hora del día. Se ancla a la fecha fija o al reloj real, lo que sea posterior (+1 min): determinista y sin tocar el código de producción.
++const ahoraBase = new Date(Math.max(Date.parse('2026-10-10T16:00:00Z'), Date.now()) + 60_000)
+ 
+ async function suscriptoraActiva(correo: string, prefs: Record<string, unknown> = { operacion: 'venta', tipos: ['nave'] }) {
+   const fila = await q<{ id: string }>(`select (public.correo_suscribir($1, 'Ana', $2::jsonb, 'recomendaciones', 'marketing-2026-10')->>'id') as id`, [correo, JSON.stringify(prefs)])
+@@ -295,3 +298,57 @@
+     expect(await fijarMarketingDeCuenta(db, { ...cuenta, verificado: false }, { aceptar: false })).toEqual({ estado: 'baja' })
+   })
+ })
++
++describe('MODO DE PRUEBAS de punta a punta: nada sale a nadie más que al destino de pruebas', () => {
++  const PRUEBAS: EntornoCorreo = { ...ENV, modoPruebas: true }
++  const DESTINO = 'jemilianoponceperez@gmail.com'
++  const soloDestino = () => {
++    for (const p of peticiones) {
++      expect(p.cuerpo.to).toEqual([DESTINO])
++      expect(Object.keys(p.cuerpo).filter((k) => /^(cc|bcc|cco)$/i.test(k))).toEqual([])
++      expect(p.cuerpo.reply_to).toBe('informes@vivebienn.com')
++      expect(p.cuerpo.subject.startsWith('[PRUEBA] ')).toBe(true)
++    }
++  }
++
++  it('visitante: el primer correo, la confirmación y la baja no llegan a la dirección real; el registro en la base tampoco la guarda en correo_envios', async () => {
++    await insertarPropiedad(NAVE('uno'))
++    const s = await suscribirVisitante(db, { correo: 'cliente.real@empresa-real.test', nombre: 'Cliente Real', tipos: ['nave'], operacion: 'venta', zona: 'León', acepto: true }, { entorno: PRUEBAS, fetch: fetchFalso, ahoraMs: ahoraBase.getTime() })
++    expect(s).toEqual({ ok: true })
++    expect(peticiones).toHaveLength(1)
++    soloDestino()
++    expect(JSON.stringify(peticiones.map((p) => p.cuerpo.to))).not.toContain('empresa-real')
++    expect((await q<{ email_norm: string }>(`select email_norm from public.correo_envios`)).map((r) => r.email_norm)).toEqual([DESTINO])
++  })
++
++  it('transaccionales (bienvenida y confirmación a publicador): ambos van al destino de pruebas', async () => {
++    const c = { correo: 'propietario.real@empresa-real.test', verificado: true }
++    expect((await enviarBienvenida(db, 'uid-p1', c, { entorno: PRUEBAS, fetch: fetchFalso })).estado).toBe('enviado')
++    expect((await enviarConfirmacionPublicador(db, 41, c, { entorno: PRUEBAS, fetch: fetchFalso })).estado).toBe('enviado')
++    expect(peticiones).toHaveLength(2)
++    soloDestino()
++    expect((await q<{ email_norm: string }>(`select distinct email_norm from public.correo_envios`)).map((r) => r.email_norm)).toEqual([DESTINO])
++  })
++
++  it('tarea de recomendaciones: con varias suscriptoras reales sólo salen al destino de pruebas y nunca más de 3 personas por ejecución', async () => {
++    await insertarPropiedad(NAVE('uno'))
++    for (let i = 1; i <= 6; i++) await suscriptoraActiva(`real${i}@empresa-real.test`)
++    const lejos = new Date(ahoraBase.getTime() + 30 * 86_400_000)
++    const r = await ejecutarTareaMarketing(db, { entorno: PRUEBAS, fetch: fetchFalso, ahora: lejos })
++    expect(r.procesadas).toBeLessThanOrEqual(3)
++    expect(peticiones.length).toBeGreaterThanOrEqual(1)
++    expect(peticiones.length).toBeLessThanOrEqual(3)
++    soloDestino()
++    expect(JSON.stringify(peticiones)).not.toContain('empresa-real')
++  })
++
++  it('destinatarios múltiples o con inyección no llegan ni a la base ni al proveedor', async () => {
++    const antes = peticiones.length
++    for (const correo of ['a@x.test, b@x.test', 'a@x.test\r\nBcc: b@x.test']) {
++      const r = await enviarBienvenida(db, 'uid-multi', { correo, verificado: true }, { entorno: PRUEBAS, fetch: fetchFalso })
++      expect(r.estado).toBe('omitido')
++    }
++    expect(peticiones.length).toBe(antes)
++    expect(await q(`select 1 from public.correo_envios`)).toEqual([])
++  })
++})
+--- a/tests/correo-guardias.test.ts
++++ b/tests/correo-guardias.test.ts
+@@ -39,7 +39,7 @@
+ 
+   it('RESEND_API_KEY, CORREO_SECRETO y RESEND_WEBHOOK_SECRET sólo se leen en el módulo de configuración y en el cron', () => {
+     const lectores = TODOS.filter((f) => /process\.env\.(RESEND_API_KEY|CORREO_SECRETO|RESEND_WEBHOOK_SECRET)/.test(codigo(readFileSync(f, 'utf8')))).map(rel).sort()
+-    expect(lectores.filter((f) => !['src/lib/correo/config.ts', 'src/lib/aviso-lead.ts', 'src/lib/citas/enviar.ts', 'src/lib/invitacion-correo.ts', 'src/lib/alertas.ts', 'src/lib/salud-diagnostico.ts', 'src/app/api/alertas/resumen/route.ts'].includes(f))).toEqual([])
++    expect(lectores.filter((f) => !['src/lib/correo/config.ts', 'src/lib/correo/resend.ts', 'src/lib/aviso-lead.ts', 'src/lib/citas/enviar.ts', 'src/lib/invitacion-correo.ts', 'src/lib/alertas.ts', 'src/lib/salud-diagnostico.ts', 'src/app/api/alertas/resumen/route.ts'].includes(f))).toEqual([])
+   })
+ 
+   it('los registros del módulo de correo no imprimen direcciones, cuerpos, claves ni tokens', () => {
+@@ -158,3 +158,38 @@
+     expect(sql.match(/security definer set search_path = public/g)?.length ?? 0).toBeGreaterThanOrEqual(8)
+   })
+ })
++
++describe('MODO DE PRUEBAS: todo emisor de correo del código pasa por un único punto', () => {
++  const CENTRAL = 'src/lib/correo/resend.ts'
++  const EMISORES = ['src/lib/correo/enviar.ts', 'src/lib/aviso-lead.ts', 'src/lib/citas/enviar.ts', 'src/lib/invitacion-correo.ts']
++
++  it('sólo `correo/resend.ts` conoce la API de Resend: ningún otro archivo llama a api.resend.com', () => {
++    const conApi = TODOS.filter((f) => /api\.resend\.com/.test(codigo(readFileSync(f, 'utf8')))).map(rel)
++    expect(conApi).toEqual([CENTRAL])
++  })
++
++  it('los cuatro emisores conocidos usan `llamarResend`, y nadie más lo hace sin que se decida a propósito', () => {
++    const usan = TODOS.filter((f) => /\bllamarResend\(/.test(codigo(readFileSync(f, 'utf8')))).map(rel).sort()
++    expect(usan).toEqual([...EMISORES, CENTRAL].sort())
++    for (const f of TODOS.filter((x) => rel(x) !== CENTRAL)) expect(codigo(readFileSync(f, 'utf8')), rel(f)).not.toMatch(/\bfetch\([^)]*(resend|URL_RESEND)/i)
++  })
++
++  it('el punto central reconstruye el cuerpo y lo revisa ANTES de llamar al proveedor, con el destino como constante de código', () => {
++    const t = codigo(leer(CENTRAL))
++    expect(t.indexOf('cuerpoDePruebas(l.cuerpo)')).toBeGreaterThan(0)
++    expect(t.indexOf('exigirSoloDestinoDePruebas(cuerpo)')).toBeGreaterThan(t.indexOf('cuerpoDePruebas(l.cuerpo)'))
++    expect(t.indexOf('exigirSoloDestinoDePruebas(cuerpo)')).toBeLessThan(t.indexOf('URL_RESEND, {'))
++    expect(t).toMatch(/body: JSON\.stringify\(cuerpo\)/)
++    const c = codigo(leer('src/lib/correo/config.ts'))
++    expect(c).toMatch(/export const DESTINO_PRUEBAS = 'jemilianoponceperez@gmail\.com'/)
++    expect(c).not.toMatch(/process\.env\.[A-Z_]*DESTINO/)
++    expect(c).toMatch(/modoPruebas: env\.CORREO_MODO_PRUEBAS === '1'/)
++  })
++
++  it('el emisor de D-80 (`enviar.ts`) también revisa su cuerpo antes de llamar y deja el envío en error si algo no cuadra', () => {
++    const t = codigo(leer('src/lib/correo/enviar.ts'))
++    expect(t).toMatch(/cuerpoDePruebas\(base\)/)
++    expect(t.indexOf('exigirSoloDestinoDePruebas(cuerpo)')).toBeLessThan(t.indexOf('llamarResend({'))
++    expect(t).toMatch(/fuga_modo_pruebas/)
++  })
++})
+--- a/tests/correo-modo-pruebas.test.ts
++++ b/tests/correo-modo-pruebas.test.ts
+@@ -0,0 +1,183 @@
++import { beforeEach, describe, expect, it, vi } from 'vitest'
++import { DESTINO_PRUEBAS, entornoCorreo, type EntornoCorreo } from '../src/lib/correo/config'
++import { enviarCorreo, exigirSoloDestinoDePruebas, PREFIJO_PRUEBA, type DbCorreo, type SolicitudCorreo } from '../src/lib/correo/enviar'
++import { ENLACE_INERTE } from '../src/lib/correo/resend'
++
++/**
++ * D-80 — MODO DE PRUEBAS: con `CORREO_MODO_PRUEBAS=1` NINGÚN correo puede salir hacia otra dirección que `jemilianoponceperez@gmail.com`.
++ * La restricción vive en el punto central de envío (`enviarCorreo`) y se comprueba otra vez sobre el cuerpo ya armado, justo antes de llamar
++ * al proveedor. El proveedor es un doble (nada sale de verdad): estas pruebas no envían ningún correo.
++ */
++const ENV: EntornoCorreo = { transaccional: true, marketing: true, resendKey: 're_clave_secreta_de_prueba', secreto: 's'.repeat(40), webhookSecret: '', remitente: null, remitenteMarketing: null }
++const ENV_PRUEBAS: EntornoCorreo = { ...ENV, modoPruebas: true }
++const REAL = 'cliente.real@empresa-real.test'
++const BASE: SolicitudCorreo = { clave: 'bienvenida/uid-1', categoria: 'transaccional', tipo: 'bienvenida', para: REAL, asunto: 'Hola', html: '<p>hola</p>', texto: 'hola' }
++
++type Peticion = { url: string; init: RequestInit; cuerpo: Record<string, unknown> }
++let peticiones: Peticion[]
++let rpcs: Array<{ fn: string; args: Record<string, unknown> }>
++const db: DbCorreo = {
++  rpc: async (fn, args = {}) => {
++    rpcs.push({ fn, args })
++    return fn === 'correo_reservar_envio' ? { data: { accion: 'enviar', id: 7 }, error: null } : { data: null, error: null }
++  },
++  from: () => { throw new Error('no se usa') },
++}
++const fetchOk = (async (url: string, init: RequestInit) => {
++  peticiones.push({ url, init, cuerpo: JSON.parse(String(init.body)) })
++  return new Response('{"id":"re_123"}', { status: 200 })
++}) as unknown as typeof fetch
++
++beforeEach(() => {
++  peticiones = []
++  rpcs = []
++  vi.spyOn(console, 'error').mockImplementation(() => undefined)
++})
++const enviar = (s: Record<string, unknown>, env = ENV_PRUEBAS) => enviarCorreo(db, { ...BASE, ...s } as SolicitudCorreo, { entorno: env, fetch: fetchOk })
++const todoElTrafico = () => JSON.stringify({ peticiones: peticiones.map((p) => ({ url: p.url, h: p.init.headers, c: p.cuerpo })), rpcs })
++
++describe('la bandera: separada del modo real y apagada por defecto', () => {
++  it('el destino de pruebas es una CONSTANTE del código (no se puede apuntar a otra dirección con una variable)', () => {
++    expect(DESTINO_PRUEBAS).toBe('jemilianoponceperez@gmail.com')
++    expect(entornoCorreo({ CORREO_MODO_PRUEBAS: '1', CORREO_DESTINO_PRUEBAS: 'otra@x.test', DESTINO_PRUEBAS: 'otra@x.test' })).toMatchObject({ modoPruebas: true })
++  })
++
++  it('apagado por defecto; sólo el valor «1» lo activa', () => {
++    expect(entornoCorreo({}).modoPruebas).toBe(false)
++    for (const v of ['0', '', 'true', 'si', 'yes', ' 1', '1 ', 'on']) expect(entornoCorreo({ CORREO_MODO_PRUEBAS: v }).modoPruebas, v).toBe(false)
++    expect(entornoCorreo({ CORREO_MODO_PRUEBAS: '1' }).modoPruebas).toBe(true)
++  })
++
++  it('NO activa el envío real: sin las banderas de correo o sin clave, el modo de pruebas tampoco envía', async () => {
++    for (const env of [{ ...ENV_PRUEBAS, transaccional: false }, { ...ENV_PRUEBAS, resendKey: '' }]) {
++      expect((await enviar({}, env)).estado).toBe('omitido')
++    }
++    expect((await enviar({ categoria: 'marketing', urlBaja: 'https://vivebienn.com/b' }, { ...ENV_PRUEBAS, marketing: false })).estado).toBe('omitido')
++    expect(peticiones).toEqual([])
++    expect(rpcs).toEqual([])
++  })
++
++  it('sin modo de pruebas el envío real no cambia: va al destinatario original, sin prefijo ni cabecera de modo', async () => {
++    await enviar({ responderA: 'asesor@vivebienn.com' }, ENV)
++    expect(peticiones[0].cuerpo).toMatchObject({ to: [REAL], reply_to: 'asesor@vivebienn.com', subject: 'Hola' })
++    expect(peticiones[0].cuerpo.headers).toBeUndefined()
++  })
++})
++
++describe('en modo de pruebas TODO sale al destino de pruebas', () => {
++  it('transaccional: destinatario sustituido, asunto marcado, cabecera de modo y respuesta institucional', async () => {
++    expect((await enviar({ responderA: 'asesor.real@empresa-real.test' })).estado).toBe('enviado')
++    expect(peticiones).toHaveLength(1)
++    expect(peticiones[0].cuerpo).toMatchObject({ to: [DESTINO_PRUEBAS], subject: `${PREFIJO_PRUEBA}Hola`, reply_to: 'informes@vivebienn.com' })
++    expect((peticiones[0].cuerpo.headers as Record<string, string>)['X-Vive-Bien-Modo']).toBe('pruebas')
++  })
++
++  it('marketing: igual, pero SIN cabeceras de baja ni enlaces con token (un correo de pruebas no puede dar de baja a nadie real)', async () => {
++    await enviar({ clave: 'reco/x/dia', categoria: 'marketing', tipo: 'recomendaciones', urlBaja: 'https://vivebienn.com/api/correo/baja?t=TOKENREAL', html: '<a href="https://vivebienn.com/correo/baja#t=TOKENREAL">baja</a>', texto: 'https://vivebienn.com/correo/baja#t=TOKENREAL' })
++    expect(peticiones[0].cuerpo.to).toEqual([DESTINO_PRUEBAS])
++    const cab = peticiones[0].cuerpo.headers as Record<string, string>
++    expect(Object.keys(cab)).toEqual(['X-Vive-Bien-Modo'])
++    expect(todoElTrafico()).not.toContain('TOKENREAL')
++    expect(peticiones[0].cuerpo.html).toContain(ENLACE_INERTE)
++  })
++
++  it('el destinatario ORIGINAL no aparece en ninguna parte del tráfico: ni en la petición, ni en la base (la reserva usa el destino de pruebas)', async () => {
++    await enviar({})
++    expect(todoElTrafico()).not.toContain('empresa-real')
++    expect(rpcs.find((r) => r.fn === 'correo_reservar_envio')!.args.p_email).toBe(DESTINO_PRUEBAS)
++  })
++
++  it('mayúsculas, espacios y variantes del mismo correo original no cambian el resultado', async () => {
++    for (const [i, para] of ['  CLIENTE.Real@Empresa-REAL.test ', 'cliente.real@empresa-real.test'].entries()) {
++      await enviar({ clave: `bienvenida/uid-${i}`, para })
++    }
++    expect(peticiones.map((p) => p.cuerpo.to)).toEqual([[DESTINO_PRUEBAS], [DESTINO_PRUEBAS]])
++  })
++
++  it('el destinatario inválido se omite igual que en producción (el modo de pruebas no «arregla» una solicitud mala)', async () => {
++    for (const para of ['no-es-correo', '', 'a@b']) expect((await enviar({ para })).motivo).toBe('destinatario_invalido')
++    expect(peticiones).toEqual([])
++  })
++})
++
++describe('varios destinatarios, CC y CCO: ninguno puede salir', () => {
++  it('una lista de destinatarios en `para` (coma, punto y coma, espacio, salto de línea, arreglo) se omite y no se envía NADA', async () => {
++    for (const para of ['a@x.test, b@x.test', 'a@x.test;b@x.test', 'a@x.test b@x.test', 'a@x.test\nb@x.test', 'a@x.test\r\nBcc: b@x.test', '<a@x.test>,<b@x.test>']) {
++      expect((await enviar({ para })).estado, JSON.stringify(para)).toBe('omitido')
++    }
++    for (const para of [['a@x.test', 'b@x.test'], ['a@x.test'], { a: 1 }, null, undefined, 42]) {
++      expect((await enviar({ para })).estado, JSON.stringify(para)).toBe('omitido')
++    }
++    expect(peticiones).toEqual([])
++  })
++
++  it('campos extra de una solicitud sin tipar (`to`, `cc`, `bcc`, `cco`, `destinatarios`) NO llegan al proveedor', async () => {
++    await enviar({ to: ['x@x.test'], cc: ['c@x.test'], bcc: ['b@x.test'], cco: ['o@x.test'], CC: 'z@x.test', Bcc: 'y@x.test', destinatarios: ['d@x.test'], reply_to: 'r@x.test', headers: { Bcc: 'h@x.test' } })
++    expect(peticiones).toHaveLength(1)
++    const c = peticiones[0].cuerpo
++    expect(c.to).toEqual([DESTINO_PRUEBAS])
++    for (const k of Object.keys(c)) expect(k).toMatch(/^(from|to|reply_to|subject|html|text|headers)$/)
++    expect(c.reply_to).toBe('informes@vivebienn.com')
++    expect(Object.keys(c.headers as object).sort()).toEqual(['X-Vive-Bien-Modo'])
++    expect(todoElTrafico()).not.toMatch(/c@x\.test|b@x\.test|o@x\.test|z@x\.test|y@x\.test|d@x\.test|h@x\.test|r@x\.test|x@x\.test/)
++  })
++
++  it('un enlace de baja con saltos de línea no puede inyectar una cabecera `Bcc` ni mandar copias', async () => {
++    const r = await enviar({ categoria: 'marketing', clave: 'reco/inyeccion', urlBaja: 'https://vivebienn.com/b\r\nBcc: victima@x.test' })
++    expect(r.estado).toBe('enviado')
++    expect(todoElTrafico()).not.toMatch(/victima|Bcc/i)
++    expect(Object.keys(peticiones[0].cuerpo.headers as object)).toEqual(['X-Vive-Bien-Modo'])
++  })
++
++  it('la barrera final rechaza cualquier cuerpo con otro destinatario, copias, cabeceras de destinatarios o respuesta ajena', () => {
++    const ok = { to: [DESTINO_PRUEBAS], reply_to: 'informes@vivebienn.com', subject: 's', headers: { 'X-Vive-Bien-Modo': 'pruebas' } }
++    expect(() => exigirSoloDestinoDePruebas(ok)).not.toThrow()
++    const malos: Array<Record<string, unknown>> = [
++      { ...ok, to: ['otro@x.test'] },
++      { ...ok, to: [DESTINO_PRUEBAS, 'otro@x.test'] },
++      { ...ok, to: ['otro@x.test', DESTINO_PRUEBAS] },
++      { ...ok, to: DESTINO_PRUEBAS },
++      { ...ok, to: [] },
++      { ...ok, to: undefined },
++      { ...ok, to: [DESTINO_PRUEBAS.toUpperCase()] },
++      { ...ok, cc: ['c@x.test'] },
++      { ...ok, bcc: ['b@x.test'] },
++      { ...ok, BCC: ['b@x.test'] },
++      { ...ok, Cco: ['b@x.test'] },
++      { ...ok, cc: [] },
++      { ...ok, reply_to: 'otro@x.test' },
++      { ...ok, reply_to: undefined },
++      { ...ok, headers: { Bcc: 'b@x.test' } },
++      { ...ok, headers: { ' cc ': 'b@x.test' } },
++      { ...ok, headers: { To: 'b@x.test' } },
++      { ...ok, headers: { 'X-A': 'v\r\nBcc: b@x.test' } },
++      { ...ok, headers: { 'X-A': 'v\nCc: b@x.test' } },
++      { ...ok, headers: { 'X-A': 5 } },
++      { ...ok, headers: { 'List-Unsubscribe': '<https://vivebienn.com/api/correo/baja?t=T>' } },
++      { ...ok, headers: { 'list-unsubscribe-post': 'List-Unsubscribe=One-Click' } },
++      { ...ok, attachments: [{ filename: 'a.ics', content: 'x' }] },
++      { ...ok, scheduled_at: 'in 1 min' },
++      { ...ok, tags: [] },
++    ]
++    for (const m of malos) expect(() => exigirSoloDestinoDePruebas(m), JSON.stringify(m)).toThrow('fuga_modo_pruebas')
++  })
++
++  it('el destino de pruebas exacto es el ÚNICO que acepta la barrera (ni subdominios ni variantes)', () => {
++    for (const to of ['jemilianoponceperez@gmail.com.otro.test', 'xjemilianoponceperez@gmail.com', 'jemilianoponceperez+x@gmail.com', 'jemilianoponceperez@gmail.co']) {
++      expect(() => exigirSoloDestinoDePruebas({ to: [to], reply_to: 'informes@vivebienn.com' }), to).toThrow()
++    }
++  })
++})
++
++describe('el cuerpo que ve el proveedor, en modo de pruebas, respecto del modo real', () => {
++  it('sólo cambian destinatario, asunto, respuesta y la cabecera de modo: el contenido (html/texto) es el mismo', async () => {
++    await enviar({}, ENV)
++    await enviar({ clave: 'bienvenida/uid-2' }, ENV_PRUEBAS)
++    const [real, prueba] = peticiones.map((p) => p.cuerpo)
++    expect(prueba.html).toBe(real.html)
++    expect(prueba.text).toBe(real.text)
++    expect(prueba.from).toBe(real.from)
++    expect(real.to).toEqual([REAL])
++    expect(prueba.to).toEqual([DESTINO_PRUEBAS])
++  })
++})
+--- a/tests/correo-modo-pruebas-emisores.test.ts
++++ b/tests/correo-modo-pruebas-emisores.test.ts
+@@ -0,0 +1,162 @@
++import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
++import { DESTINO_PRUEBAS } from '../src/lib/correo/config'
++import { cuerpoDePruebas, ENLACE_INERTE, exigirSoloDestinoDePruebas, llamarResend, modoPruebasActivo, neutralizarEnlaces, PREFIJO_PRUEBA } from '../src/lib/correo/resend'
++import { avisarDeLead } from '../src/lib/aviso-lead'
++import { enviarInvitacion } from '../src/lib/invitacion-correo'
++import { mandar } from '../src/lib/citas/enviar'
++import { CORREO_CONTACTO } from '../src/lib/contacto'
++
++/**
++ * D-80 — MODO DE PRUEBAS en TODOS los emisores de correo del sitio (los tres anteriores a D-80 incluidos).
++ * `fetch` es un doble: no sale ningún correo ni se usa ninguna clave real.
++ */
++type Peticion = { url: string; headers: Record<string, string>; cuerpo: Record<string, unknown> }
++let peticiones: Peticion[]
++const CRLF = String.fromCharCode(13, 10)
++const TOKEN = 'TOKENSECRETOREAL123'
++
++beforeEach(() => {
++  peticiones = []
++  vi.stubEnv('RESEND_API_KEY', 're_clave_de_prueba_falsa')
++  vi.stubGlobal('fetch', async (url: string, init: RequestInit) => {
++    peticiones.push({ url, headers: init.headers as Record<string, string>, cuerpo: JSON.parse(String(init.body)) })
++    return new Response('{"id":"re_1"}', { status: 200 })
++  })
++  vi.spyOn(console, 'error').mockImplementation(() => undefined)
++  vi.spyOn(console, 'warn').mockImplementation(() => undefined)
++})
++afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); vi.restoreAllMocks() })
++
++const LEAD = { nombre: 'Visitante Real', telefono: '4771234567', email: 'visitante.real@cliente-real.test', mensaje: 'Hola', origen: 'contacto' }
++const citaMandar = (x: Record<string, unknown> = {}) => mandar({
++  clave: 'cita/1/v1/cliente', para: 'cliente.cita@cliente-real.test', asunto: 'Tu visita', ics: 'BEGIN:VCALENDAR' + CRLF + 'ORGANIZER:mailto:asesor.real@cliente-real.test' + CRLF + 'END:VCALENDAR',
++  html: '<a href="https://vivebienn.com/citas/accion#' + TOKEN + '">Confirmar</a> <a href="https://vivebienn.com/portal">Ver</a>',
++  texto: 'Confirmar: https://vivebienn.com/citas/accion#' + TOKEN, ...x,
++})
++const emisores: Array<[string, () => Promise<unknown>]> = [
++  ['avisarDeLead', () => avisarDeLead(LEAD)],
++  ['enviarInvitacion', () => enviarInvitacion({ email: 'invitado.real@cliente-real.test', rol: 'publicador', invitadoPor: 'jefe.real@cliente-real.test' })],
++  ['citas/mandar', () => citaMandar()],
++]
++
++describe('con CORREO_MODO_PRUEBAS=1 cada emisor entrega SOLO al destino de pruebas', () => {
++  beforeEach(() => { vi.stubEnv('CORREO_MODO_PRUEBAS', '1') })
++
++  for (const [nombre, emitir] of emisores) {
++    it(`${nombre}: destinatario fijo, sin copias, sin adjuntos, sin direcciones reales en ningún campo de destinatario`, async () => {
++      await emitir()
++      expect(peticiones).toHaveLength(1)
++      const c = peticiones[0].cuerpo
++      expect(peticiones[0].url).toBe('https://api.resend.com/emails')
++      expect(c.to).toEqual([DESTINO_PRUEBAS])
++      expect(c.reply_to).toBe('informes@vivebienn.com')
++      expect(String(c.subject).startsWith(PREFIJO_PRUEBA)).toBe(true)
++      expect(Object.keys(c).filter((k) => !['from', 'to', 'reply_to', 'subject', 'html', 'text', 'headers'].includes(k))).toEqual([])
++      expect(Object.keys(c.headers as object)).toEqual(['X-Vive-Bien-Modo'])
++      expect(JSON.stringify({ to: c.to, reply_to: c.reply_to, headers: c.headers })).not.toContain('cliente-real')
++    })
++
++    it(`${nombre}: con la bandera apagada o con cualquier valor distinto de «1», el envío real NO cambia`, async () => {
++      for (const v of ['', '0', 'true', ' 1']) {
++        vi.stubEnv('CORREO_MODO_PRUEBAS', v)
++        peticiones = []
++        await emitir()
++        expect(peticiones[0].cuerpo.to).not.toEqual([DESTINO_PRUEBAS])
++        expect(String(peticiones[0].cuerpo.subject).startsWith(PREFIJO_PRUEBA)).toBe(false)
++      }
++    })
++  }
++
++  it('avisarDeLead: la persona que dejó sus datos NO recibe nada: ni como destinatario ni como respuesta (aunque su correo traiga una inyección)', async () => {
++    await avisarDeLead({ ...LEAD, email: 'a@x.test' + CRLF + 'Bcc: victima@x.test' })
++    expect(peticiones).toHaveLength(1)
++    const c = peticiones[0].cuerpo
++    expect(JSON.stringify({ t: c.to, r: c.reply_to, h: c.headers })).not.toMatch(/victima|a@x\.test/)
++  })
++
++  it('enviarInvitacion: «invitadoPor» y un invitado con varias direcciones no pueden ser copia ni respuesta', async () => {
++    await enviarInvitacion({ email: 'uno@x.test, dos@x.test', rol: 'asesor', invitadoPor: 'copia@x.test' })
++    const c = peticiones[0].cuerpo
++    expect(c.to).toEqual([DESTINO_PRUEBAS])
++    expect(c.reply_to).toBe('informes@vivebienn.com')
++    expect(JSON.stringify({ to: c.to, reply_to: c.reply_to, headers: c.headers })).not.toMatch(/copia@|uno@|dos@/)
++  })
++
++  it('citas: los enlaces con token (aceptar/cancelar la cita) NO salen; el adjunto .ics (organizador/asistentes) tampoco', async () => {
++    await citaMandar()
++    const c = peticiones[0].cuerpo
++    expect(JSON.stringify(c)).not.toContain(TOKEN)
++    expect(String(c.html)).toContain(ENLACE_INERTE)
++    expect(String(c.text)).toContain(ENLACE_INERTE)
++    expect(String(c.html)).toContain('https://vivebienn.com/portal') // un enlace sin efecto se conserva
++    expect('attachments' in c).toBe(false)
++    expect(JSON.stringify(c)).not.toContain('asesor.real')
++  })
++
++  it('sin clave del proveedor nadie envía nada, tampoco en modo de pruebas', async () => {
++    vi.stubEnv('RESEND_API_KEY', '')
++    for (const [, emitir] of emisores) await emitir()
++    expect(peticiones).toEqual([])
++  })
++})
++
++describe('sin modo de pruebas, producción queda como estaba', () => {
++  beforeEach(() => { vi.stubEnv('CORREO_MODO_PRUEBAS', '') })
++  it('aviso de lead va al buzón interno con respuesta al interesado; invitación al invitado; citas conserva enlaces, .ics e idempotencia', async () => {
++    await avisarDeLead(LEAD)
++    expect(peticiones[0].cuerpo).toMatchObject({ to: [CORREO_CONTACTO], reply_to: LEAD.email })
++    await enviarInvitacion({ email: 'invitado.real@cliente-real.test', rol: 'publicador', invitadoPor: 'jefe@x.test' })
++    expect(peticiones[1].cuerpo).toMatchObject({ to: ['invitado.real@cliente-real.test'], reply_to: 'jefe@x.test' })
++    await citaMandar()
++    expect(peticiones[2].cuerpo).toMatchObject({ to: ['cliente.cita@cliente-real.test'] })
++    expect(JSON.stringify(peticiones[2].cuerpo)).toContain(TOKEN)
++    expect(Array.isArray(peticiones[2].cuerpo.attachments)).toBe(true)
++    expect(peticiones[2].headers['Idempotency-Key']).toBe('cita/1/v1/cliente')
++  })
++})
++
++describe('el módulo central', () => {
++  it('modoPruebasActivo: sólo «1»', () => {
++    expect(modoPruebasActivo({})).toBe(false)
++    for (const v of ['', '0', 'true', 'yes', ' 1', '1 ']) expect(modoPruebasActivo({ CORREO_MODO_PRUEBAS: v })).toBe(false)
++    expect(modoPruebasActivo({ CORREO_MODO_PRUEBAS: '1' })).toBe(true)
++  })
++
++  it('cuerpoDePruebas reconstruye desde una lista blanca: CC/CCO en cualquier forma, varios destinatarios, adjuntos y cabeceras de copia desaparecen', () => {
++    const hostil = {
++      from: 'Vive Bien <informes@vivebienn.com>', to: ['x@x.test', 'y@x.test'], cc: ['c@x.test'], bcc: ['b@x.test'], BCC: 'B@x.test', Cco: ['o@x.test'], ' cc ': 'z@x.test',
++      reply_to: 'r@x.test', subject: 'Hola' + CRLF + 'Bcc: s@x.test', html: '<p>x</p>', text: 'x', scheduled_at: 'in 1 min', tags: [{ name: 'a', value: 'b' }],
++      attachments: [{ filename: 'a.ics', content: 'eA==' }],
++      headers: { Bcc: 'h@x.test', CC: 'h2@x.test', To: 'h3@x.test', 'Reply-To': 'h4@x.test', 'List-Unsubscribe': '<https://vivebienn.com/api/correo/baja?t=T>', 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click', 'X-Ok': 'bien', 'X-Mal': 'a' + CRLF + 'Bcc: q@x.test' },
++    }
++    const c = cuerpoDePruebas(hostil)
++    expect(() => exigirSoloDestinoDePruebas(c)).not.toThrow()
++    expect(c.to).toEqual([DESTINO_PRUEBAS])
++    expect(Object.keys(c).sort()).toEqual(['from', 'headers', 'html', 'reply_to', 'subject', 'text', 'to'])
++    expect(c.headers).toEqual({ 'X-Ok': 'bien', 'X-Vive-Bien-Modo': 'pruebas' })
++    expect(String(c.subject)).not.toMatch(/[\r\n]/)
++    expect(JSON.stringify({ ...c, subject: "" })).not.toMatch(/@x.test/) // el asunto es texto de una sola línea: no puede abrir una cabecera
++    expect(cuerpoDePruebas(c).subject).toBe(c.subject) // idempotente: no duplica el prefijo
++  })
++
++  it('llamarResend: en modo de pruebas el proveedor recibe el cuerpo reconstruido, nunca el original', async () => {
++    const vistos: string[] = []
++    const fetchDoble = (async (_u: string, init: RequestInit) => { vistos.push(String(init.body)); return new Response('{}', { status: 200 }) }) as unknown as typeof fetch
++    await llamarResend({ apiKey: 'k', modoPruebas: true, fetch: fetchDoble, cuerpo: { from: 'a', to: ['real@x.test'], cc: ['c@x.test'], bcc: ['b@x.test'], subject: 's', html: 'h', text: 't' } })
++    expect(vistos).toHaveLength(1)
++    expect(vistos[0]).not.toMatch(/real@x|c@x|b@x|"cc"|"bcc"/)
++    expect(JSON.parse(vistos[0]).to).toEqual([DESTINO_PRUEBAS])
++  })
++
++  it('neutralizarEnlaces: tokens de cita, confirmación, baja, preferencias y cualquier t= quedan inertes; los demás enlaces no', () => {
++    const t = [
++      'https://vivebienn.com/citas/accion#' + TOKEN, 'https://vivebienn.com/correo/confirmar#t=' + TOKEN, 'https://vivebienn.com/correo/baja#t=' + TOKEN,
++      'https://vivebienn.com/api/correo/baja?t=' + TOKEN, 'https://vivebienn.com/correo/preferencias#t=' + TOKEN, 'https://otro.test/x?a=1&t=' + TOKEN, 'https://vivebienn.com/api/citas/accion?x=' + TOKEN,
++    ].join(' ')
++    const r = neutralizarEnlaces(t)
++    expect(r).not.toContain(TOKEN)
++    expect(r.split(ENLACE_INERTE)).toHaveLength(8)
++    expect(neutralizarEnlaces('https://vivebienn.com/propiedades/casa-1')).toBe('https://vivebienn.com/propiedades/casa-1')
++    expect(neutralizarEnlaces(undefined)).toBe('')
++  })
++})
+--- a/tests/firebase-emulador-correos.test.ts
++++ b/tests/firebase-emulador-correos.test.ts
+@@ -0,0 +1,112 @@
++import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
++import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
++import { join, relative } from 'node:path'
++
++/**
++ * D-80 — los correos que Firebase Auth manda por su cuenta (restablecer contraseña y verificar correo) no pasan por Resend, así que
++ * `CORREO_MODO_PRUEBAS` no los alcanza. Se cubren con el EMULADOR de Firebase Auth: con `NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR` la sesión
++ * habla con un servidor local que NO envía nada. Parte estática (siempre corre) + parte con emulador (corre si `FIREBASE_AUTH_EMULATOR_PRUEBAS`
++ * apunta a uno, p. ej. `127.0.0.1:9099`; arrancar con `firebase emulators:start --only auth --project demo-vivebien`).
++ */
++const RAIZ = join(__dirname, '..')
++const SRC = join(RAIZ, 'src')
++const codigo = (t: string) => t.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1')
++function archivos(dir: string, acc: string[] = []): string[] {
++  for (const n of readdirSync(dir)) {
++    const p = join(dir, n)
++    if (statSync(p).isDirectory()) archivos(p, acc)
++    else if (/\.(ts|tsx)$/.test(n)) acc.push(p)
++  }
++  return acc
++}
++const rel = (p: string) => relative(RAIZ, p).split('\\').join('/')
++const TODOS = archivos(SRC)
++
++describe('inventario estático: dónde Firebase manda correo por su cuenta', () => {
++  it('sólo estos archivos llaman a los envíos de correo de Firebase (si aparece otro, hay que cubrirlo a propósito)', () => {
++    const llamadas = TODOS.filter((f) => /\b(sendPasswordResetEmail|sendEmailVerification|sendSignInLinkToEmail|verifyBeforeUpdateEmail)\(/.test(codigo(readFileSync(f, 'utf8')))).map(rel).sort()
++    expect(llamadas).toEqual(['src/components/acceso/Entrar.tsx', 'src/components/admin/AdminShell.tsx', 'src/components/cuenta/CuentaYSeguridad.tsx'])
++  })
++
++  it('todas esas llamadas usan el `auth` de src/lib/firebase.ts (el único lugar que sabe conectarse al emulador)', () => {
++    for (const f of ['src/components/acceso/Entrar.tsx', 'src/components/cuenta/CuentaYSeguridad.tsx', 'src/components/admin/AdminShell.tsx']) {
++      expect(readFileSync(join(RAIZ, f), 'utf8'), f).toMatch(/from ['"][^'"]*lib\/firebase['"]/)
++    }
++    const dueños = TODOS.filter((f) => /\bgetAuth\(/.test(codigo(readFileSync(f, 'utf8')))).map(rel)
++    expect(dueños).toEqual(['src/lib/firebase.ts'])
++  })
++
++  it('el emulador sólo se conecta a esta máquina y sólo si la variable existe', () => {
++    const t = codigo(readFileSync(join(SRC, 'lib', 'firebase.ts'), 'utf8'))
++    expect(t).toMatch(/NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR/)
++    expect(t).toMatch(/\(127\\\.0\\\.0\\\.1\|localhost\|\\\[::1\\\]\):/)
++    expect(t).toMatch(/connectAuthEmulator\(auth, `http:\/\/\$\{EMULADOR_AUTH\}`/)
++    // Ningún archivo de entorno versionado la activa.
++    for (const f of ['.env.example', '.env.production', 'vercel.json']) {
++      if (existsSync(join(RAIZ, f))) expect(readFileSync(join(RAIZ, f), 'utf8'), f).not.toMatch(/FIREBASE_AUTH_EMULATOR/)
++    }
++  })
++})
++
++type Cargado = { auth: import('firebase/auth').Auth }
++async function cargarFirebase(valor: string | undefined): Promise<Cargado> {
++  vi.resetModules()
++  vi.stubEnv('NEXT_PUBLIC_FIREBASE_API_KEY', 'clave-falsa-de-pruebas')
++  vi.stubEnv('NEXT_PUBLIC_FIREBASE_PROJECT_ID', 'demo-vivebien')
++  vi.stubEnv('NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN', 'demo-vivebien.firebaseapp.com')
++  vi.stubEnv('NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR', valor ?? '')
++  const { deleteApp, getApps } = await import('firebase/app')
++  for (const a of getApps()) await deleteApp(a)
++  return (await import('../src/lib/firebase')) as unknown as Cargado
++}
++
++describe('conexión al emulador (sin red)', () => {
++  it('sin la variable —producción— no se conecta a ningún emulador', async () => {
++    expect((await cargarFirebase(undefined)).auth.emulatorConfig).toBeNull()
++  })
++  it('una dirección que no es de esta máquina se IGNORA', async () => {
++    for (const v of ['evil.example.com:9099', 'http://127.0.0.1:9099', '127.0.0.1', '127.0.0.1:9099/x', '10.0.0.5:9099', 'localhost.evil.test:9099', '127.0.0.1.evil.test:9099']) {
++      expect((await cargarFirebase(v)).auth.emulatorConfig, v).toBeNull()
++    }
++  })
++  it('una dirección local sí conecta', async () => {
++    const { auth } = await cargarFirebase('127.0.0.1:9099')
++    expect(auth.emulatorConfig).toMatchObject({ host: '127.0.0.1', port: 9099 })
++  })
++})
++
++const EMULADOR = process.env.FIREBASE_AUTH_EMULATOR_PRUEBAS?.trim()
++// El SDK de Firebase (build de Node) toma `fetch` al CARGARSE, no en cada llamada: el registro de URLs se instala aquí, antes de importarlo, y no con vi.spyOn.
++const urls: string[] = []
++const original = globalThis.fetch
++if (EMULADOR) {
++  globalThis.fetch = (async (entrada: RequestInfo | URL, init?: RequestInit) => {
++    urls.push(typeof entrada === 'string' ? entrada : entrada instanceof URL ? entrada.href : entrada.url)
++    return original(entrada, init)
++  }) as typeof fetch
++}
++describe.runIf(!!EMULADOR && /^127\.0\.0\.1:\d+$/.test(EMULADOR))('con el emulador real: los correos de Firebase se quedan en el emulador', () => {
++  const PROYECTO = 'demo-vivebien'
++  const CORREO = `cliente.real.${Date.now()}@cliente-real.test` // único por corrida: el emulador conserva los códigos viejos
++  const limpiar = () => fetch(`http://${EMULADOR}/emulator/v1/projects/${PROYECTO}/accounts`, { method: 'DELETE' })
++  beforeAll(async () => { await limpiar() })
++  afterAll(async () => { await limpiar(); globalThis.fetch = original; vi.unstubAllEnvs() })
++
++  it('restablecer contraseña y verificar correo: el emulador recibe ambos códigos y NINGUNA petición sale a un servidor de Google', async () => {
++    const { auth } = await cargarFirebase(EMULADOR)
++    const { createUserWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail } = await import('firebase/auth')
++    const cred = await createUserWithEmailAndPassword(auth, CORREO, 'Clave-De-Prueba-1!')
++    urls.length = 0
++    await sendEmailVerification(cred.user)
++    await sendPasswordResetEmail(auth, CORREO)
++
++    expect(urls.length).toBeGreaterThanOrEqual(2)
++    for (const u of urls) expect(u.startsWith(`http://${EMULADOR}/`), u).toBe(true)
++    // El emulador imita la ruta del servicio real (`/identitytoolkit.googleapis.com/…`), pero el ANFITRIÓN es el local: ninguna URL empieza por un servidor de Google.
++    expect(urls.filter((u) => /^https?:\/\/[^/]*(googleapis|google\.com|firebaseapp|vivebienn)/.test(u))).toEqual([])
++
++    const r = await (await fetch(`http://${EMULADOR}/emulator/v1/projects/${PROYECTO}/oobCodes`)).json() as { oobCodes: Array<{ email: string; requestType: string }> }
++    const tipos = r.oobCodes.filter((c) => c.email === CORREO).map((c) => c.requestType).sort()
++    expect(tipos).toEqual(['PASSWORD_RESET', 'VERIFY_EMAIL'])
++  })
++})

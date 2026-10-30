@@ -1,0 +1,178 @@
+--- a/next.config.ts
++++ b/next.config.ts
+@@ -110,6 +110,7 @@
+   "/api/alertas/:path*",
+   "/api/busquedas/:path*",
+   "/api/contacto/:path*",
++  "/api/correo/:path*",
+   "/api/cuenta/:path*",
+   "/api/diagnostico/:path*",
+   "/api/eventos/:path*",
+--- a/vercel.json
++++ b/vercel.json
+@@ -3,6 +3,10 @@
+     {
+       "path": "/api/alertas/resumen",
+       "schedule": "0 15 * * *"
++    },
++    {
++      "path": "/api/correo/tarea",
++      "schedule": "0 16 * * *"
+     }
+   ]
+ }
+--- a/src/app/api/registro-lead/route.ts
++++ b/src/app/api/registro-lead/route.ts
+@@ -2,6 +2,10 @@
+ import { supabaseAdmin } from '@/lib/auth-server'
+ import { frenarAsync, origenDe, TOPES } from '@/lib/limites'
+ import { avisarDeLead } from '@/lib/aviso-lead'
++import { verifyIdToken } from '@/lib/auth-server'
++import { INTERES_PUBLICAR } from '@/lib/correo/constantes'
++import { despuesDeResponder, enviarConfirmacionPublicador } from '@/lib/correo/transaccionales'
++import type { DbCorreo } from '@/lib/correo/enviar'
+ import { escribirTolerante } from '@/lib/columnas'
+ import { avisar } from '@/lib/alertas'
+ import {
+@@ -110,6 +114,7 @@
+   /* ── Guardar ──
+      Se intenta, pero el resultado NO decide si el lead se pierde. */
+   let guardado = false
++  let leadId: number | null = null
+   let fallo = ''
+ 
+   try {
+@@ -117,7 +122,11 @@
+     // TODAS las que falten —antes sólo una, y con tres ausentes no entraba
+     // ningún lead— y lo quitado se pliega en `mensaje`: el consentimiento no
+     // se puede perder en silencio.
+-    const r = await escribirTolerante((f) => db.from('leads').insert(f), fila, { plegarEn: 'mensaje' })
++    const r = await escribirTolerante(async (f) => {
++      const w = await db.from('leads').insert(f).select('id').maybeSingle()
++      if (!w.error && typeof w.data?.id === 'number') leadId = w.data.id
++      return { error: w.error }
++    }, fila, { plegarEn: 'mensaje' })
+     if (r.error) {
+       fallo = r.error
+     } else {
+@@ -182,6 +191,16 @@
+ 
+   // Si al menos una de las dos vías funcionó, para la persona su solicitud
+   // llegó — y es verdad. Sólo se le dice que falló si se perdió de verdad.
++  // D-80: la persona que SOLICITA publicar recibe una confirmación (no es una aprobación). Sólo a su correo verificado de la
++  // sesión, una vez por solicitud, después de responder y sin tumbar el registro del lead.
++  if (guardado && leadId !== null && interes === INTERES_PUBLICAR) {
++    const id = leadId
++    const usuario = await verifyIdToken(req).catch(() => null)
++    if (usuario) {
++      despuesDeResponder(() => enviarConfirmacionPublicador(db as unknown as DbCorreo, id, { correo: usuario.email, verificado: usuario.emailVerified, nombre }))
++    }
++  }
++
+   if (guardado || aviso.enviado) {
+     return NextResponse.json({ ok: true, guardado, avisado: aviso.enviado })
+   }
+--- a/src/app/api/usuarios/me/route.ts
++++ b/src/app/api/usuarios/me/route.ts
+@@ -12,6 +12,8 @@
+ import { normalizarOperacion, normalizarPresupuesto, normalizarTipos, normalizarZonas } from '@/lib/cliente/busqueda'
+ import { leerFlags } from '@/lib/config/flags-servidor'
+ import { portalAbiertoPara } from '@/lib/portal/apertura'
++import { despuesDeResponder, enviarBienvenida } from '@/lib/correo/transaccionales'
++import type { DbCorreo } from '@/lib/correo/enviar'
+ 
+ /** Columnas del perfil que puede no haber si 06-perfil.sql no está aplicado. */
+ const COLUMNAS = [
+@@ -151,6 +153,11 @@
+     fila = (data as Record<string, unknown> | null) ?? null
+ 
+     await registrarAcceso(db, user.uid)
++
++    // D-80: cuenta NUEVA → bienvenida transaccional (apagada por defecto; después de responder; nunca tumba el alta).
++    if (!yaExiste) {
++      despuesDeResponder(() => enviarBienvenida(db as unknown as DbCorreo, user.uid, { correo: user.email, verificado: user.emailVerified, nombre: perfil.nombre }))
++    }
+   } catch (e) {
+     // Antes esto era `catch {}` a secas, pensando sólo en «la migración no
+     // está aplicada». Pero también se traga que la base esté caída — y
+--- a/src/lib/limites.ts
++++ b/src/lib/limites.ts
+@@ -90,6 +90,12 @@
+   citas: { maximo: 40, ventanaMs: 10 * 60 * 1000 },
+   /** Firmas de subida: una por foto. Un anuncio lleva 30; nadie firma 150 en diez minutos. */
+   medios: { maximo: 150, ventanaMs: 10 * 60 * 1000 },
++  /** D-80: pedir recomendaciones por correo. Cada envío cuesta presupuesto y, si alguien escribe el correo de OTRA persona, le llega un mensaje: pocas veces por hora y por origen. */
++  correo: { maximo: 5, ventanaMs: 60 * 60 * 1000 },
++  /** D-80: confirmar o darse de baja desde un enlace firmado (el correo nunca se escribe aquí): un gesto de persona. */
++  correoEnlaces: { maximo: 30, ventanaMs: 10 * 60 * 1000 },
++  /** D-80: eventos del proveedor de correo; la firma es lo que manda, esto sólo acota un bucle. */
++  correoWebhook: { maximo: 600, ventanaMs: 10 * 60 * 1000 },
+   /** Fallos al entrar con Google (bitácora anónima): pocos por persona; lo demás es ruido. */
+   acceso: { maximo: 20, ventanaMs: 10 * 60 * 1000 },
+   /**
+--- a/src/components/Footer.tsx
++++ b/src/components/Footer.tsx
+@@ -166,6 +166,15 @@
+             <Link href="/terminos" style={{ color: 'rgba(255,255,255,.7)', textDecoration: 'none' }}>
+               Términos y condiciones
+             </Link>
++            {/* D-80: el enlace aparece sólo cuando se activa la función (variable pública, se lee al compilar). */}
++            {process.env.NEXT_PUBLIC_CORREO_RECOMENDACIONES === '1' && (
++              <>
++                <span style={{ color: 'rgba(255,255,255,.25)', margin: '0 .6rem' }}>·</span>
++                <Link href="/recomendaciones" style={{ color: 'rgba(255,255,255,.7)', textDecoration: 'none' }}>
++                  Propiedades por correo
++                </Link>
++              </>
++            )}
+           </p>
+           <p style={{ fontSize: '.8rem', color: 'rgba(255,255,255,.45)' }}>
+             © {new Date().getFullYear()} Vive Bien Grupo Inmobiliario. Todos los derechos reservados. | León, Guanajuato, México.
+--- a/src/components/QuieroPublicar.tsx
++++ b/src/components/QuieroPublicar.tsx
+@@ -1,6 +1,7 @@
+ 'use client'
+ import { useState } from 'react'
+ import { auth } from '@/lib/firebase'
++import { INTERES_PUBLICAR } from '@/lib/correo/constantes'
+ 
+ /**
+  * El camino de cliente a publicador.
+@@ -39,7 +40,7 @@
+         body: JSON.stringify({
+           nombre: nombre.trim(),
+           telefono: telefono.trim(),
+-          interes: 'Quiere publicar una propiedad',
++          interes: INTERES_PUBLICAR,
+           mensaje: 'Solicita acceso de publicador desde su panel.',
+           origen: 'registro',
+           consentimiento: true,
+--- a/src/components/portal/ConfiguracionPortal.tsx
++++ b/src/components/portal/ConfiguracionPortal.tsx
+@@ -3,6 +3,7 @@
+ import { Settings } from 'lucide-react'
+ import { Pantalla } from '@/components/portal/Pantalla'
+ import CuentaYSeguridad from '@/components/cuenta/CuentaYSeguridad'
++import PreferenciaCorreo from '@/components/correo/PreferenciaCorreo'
+ 
+ /**
+  * «Configuración» del portal (3b-2).
+@@ -17,6 +18,7 @@
+   return (
+     <Pantalla titulo="Configuración" descripcion="Tu cuenta y cómo entras." icono={Settings}>
+       <CuentaYSeguridad metodos={metodos} propiedades={propiedades} />
++      <PreferenciaCorreo />
+     </Pantalla>
+   )
+ }
+--- a/tests/e39-guardias.test.ts
++++ b/tests/e39-guardias.test.ts
+@@ -102,7 +102,7 @@
+     expect(webhooks.length).toBeGreaterThanOrEqual(2)
+     for (const f of webhooks) {
+       const t = leer(f)
+-      expect(t, rel(f) + ': secreto/firma en tiempo constante').toMatch(/timingSafeEqual/)
++      expect(t, rel(f) + ': secreto/firma en tiempo constante').toMatch(/timingSafeEqual|verificarWebhook\(/)
+       expect(t, rel(f) + ': tope de tamaño del cuerpo').toMatch(/MAX_CUERPO/)
+       expect(t, rel(f) + ': registros saneados').toMatch(/limpiarTexto/)
+     }

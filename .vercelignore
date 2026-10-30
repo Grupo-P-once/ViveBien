@@ -1,0 +1,16 @@
+# Solo dentro del staging temporal. NO es el de producción ni el del repo.
+# Lista de INCLUSIÓN: se ignora todo lo de la raíz y se re-incluye lo estrictamente necesario.
+# OJO: el CLI pregunta por la ruta SIN barra final, así que `!/src` (y no `!/src/`) es lo que re-incluye el directorio.
+/*
+!/src
+!/public
+!/package.json
+!/package-lock.json
+!/next.config.ts
+!/tsconfig.json
+!/postcss.config.mjs
+!/vercel.json
+# Vista previa de desarrollo de ADMIN: vive en el staging para QA, no se despliega.
+/src/app/vista-previa/admin
+/src/components/admin/VistaPreviaAdmin.tsx
+/src/lib/admin/vista-previa-permisos.ts

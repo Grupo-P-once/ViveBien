@@ -1,0 +1,27 @@
+{
+  "chequeos": [
+    { "nombre": "salud", "ruta": "/api/salud", "estado": 200, "contiene": ["\"ok\":true"] },
+    { "nombre": "catálogo: 7 y sin la pausada", "ruta": "/api/catalogo", "estado": 200, "noContiene": ["\"id\":\"sanjuan\"", "borrador-mueeh0xw59a"], "longitudJson": { "campo": "propiedades", "longitud": 7 } },
+    { "nombre": "admin/propiedades anónimo: 7 y sin la pausada", "ruta": "/api/admin/propiedades", "estado": 200, "noContiene": ["\"id\":\"sanjuan\""], "longitudJson": { "longitud": 7 } },
+    { "nombre": "publicador sin sesión", "ruta": "/api/publicador/propiedades", "estado": 401 },
+    { "nombre": "usuarios/me sin sesión", "ruta": "/api/usuarios/me", "estado": 401 },
+    { "nombre": "admin usuarios sin sesión", "ruta": "/api/admin/usuarios", "estado": 401 },
+    { "nombre": "admin flags sin sesión", "ruta": "/api/admin/flags", "estado": 401 },
+    { "nombre": "citas sin sesión", "ruta": "/api/citas", "estado": 401 },
+    { "nombre": "leads sin sesión", "ruta": "/api/leads", "estado": 401 },
+    { "nombre": "listado", "ruta": "/propiedades", "estado": 200 },
+    { "nombre": "ficha disponible por nombre público", "ruta": "/propiedades/casa-en-venta-canada-del-regugio-norte-540-m2-leon-n8tl", "estado": 200 },
+    { "nombre": "ficha disponible por id", "ruta": "/propiedades/tzula-castillos", "estado": 200 },
+    { "nombre": "ficha pausada por id: 404", "ruta": "/propiedades/sanjuan", "estado": 404 },
+    { "nombre": "ficha pausada por folio: 404", "ruta": "/propiedades/VB-2026-00001", "estado": 404 },
+    { "nombre": "borrador eliminado por id: 404", "ruta": "/propiedades/borrador-mueeh0xw59a", "estado": 404 },
+    { "nombre": "borrador eliminado por folio: 404", "ruta": "/propiedades/VB-2026-00022", "estado": 404 },
+    { "nombre": "inexistente: 404", "ruta": "/propiedades/no-existe-xyz-123", "estado": 404 },
+    { "nombre": "404 real", "ruta": "/no-existe-xyz-123", "estado": 404 },
+    { "nombre": "sitemap sin ocultas", "ruta": "/sitemap.xml", "estado": 200, "contiene": ["tzula-castillos"], "noContiene": ["sanjuan", "VB-2026-00001", "borrador-mueeh0xw59a"] },
+    { "nombre": "/publicador", "ruta": "/publicador", "estado": 200 },
+    { "nombre": "cola de revisión", "ruta": "/admin/propiedades/pendientes", "estado": 200 },
+    { "nombre": "admin propiedades", "ruta": "/admin/propiedades", "estado": 200 },
+    { "nombre": "admin usuarios (página)", "ruta": "/admin/usuarios", "estado": 200 }
+  ]
+}

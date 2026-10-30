@@ -1,0 +1,186 @@
+/* ── Valuador de VIVE BIEN ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   Mismo lenguaje que Nosotros/Contacto: etiqueta con filete rojo → titular Playfair con cursiva roja → tarjetas blancas de 18 px con diagonal roja.
+   CSS plano y contenedor con `width: min()` (los reset sin capa de globals.css anulan `px-*`/`mx-auto`). Autocontenido: no depende de otras hojas. */
+.val { --v-azul: #0f2747; --v-rojo: #C8102E; --v-gris: #4b5563; --v-papel: #fbfaf8; --v-linea: #dfe3ea; font-family: 'Montserrat', system-ui, sans-serif; color: var(--v-azul); background: var(--v-papel); }
+.val * { box-sizing: border-box; }
+.val-wrap { width: min(100% - 2.5rem, 1100px); margin-inline: auto; position: relative; z-index: 1; }
+.val-sr, .val-anuncio { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* Hero */
+.val-hero { position: relative; overflow: hidden; isolation: isolate; color: #fff; padding: 5.5rem 0 4.2rem; background: linear-gradient(140deg, #0b1d3a 0%, #0f2747 40%, #1b365d 62%, #8B1A1A 88%, #C8102E 100%); }
+.val-hero::before { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(115deg, transparent 0 48%, rgba(255,255,255,.05) 48% 60%, transparent 60% 72%, rgba(255,255,255,.04) 72% 80%, transparent 80%); }
+.val-hero::after { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: linear-gradient(90deg, var(--v-rojo), transparent 70%); }
+.val-eyebrow { display: flex; align-items: center; gap: .8rem; margin: 0 0 1rem; font: 700 .72rem 'Montserrat', system-ui, sans-serif; letter-spacing: .26em; text-transform: uppercase; color: var(--v-rojo); }
+.val-eyebrow::before { content: ''; flex: 0 0 38px; height: 1.5px; background: var(--v-rojo); }
+.val-hero .val-eyebrow { color: rgba(255,255,255,.88); }
+.val-h1 { margin: 0 0 1rem; font: 700 clamp(2.3rem, 5.6vw, 4rem)/1.05 'Playfair Display', Georgia, serif; letter-spacing: -.01em; color: #fff; }
+.val-h1 em { display: block; font-style: italic; color: #ff5470; }
+.val-hero-p { margin: 0; max-width: 54ch; font-size: 1.05rem; line-height: 1.7; color: rgba(255,255,255,.92); }
+
+/* Caja del flujo */
+.val-cuerpo { position: relative; overflow: hidden; padding: 0 0 4rem; }
+.val-cuerpo::after { content: ''; position: absolute; right: -7%; bottom: -8%; width: 22%; height: 40%; background: var(--v-rojo); clip-path: polygon(100% 0, 100% 100%, 0 100%); pointer-events: none; }
+.val-caja { position: relative; z-index: 2; margin: -2.4rem 0 0; padding: 1.6rem 1.3rem 1.8rem; border-radius: 20px; background: #fff; border-top: 4px solid var(--v-rojo); box-shadow: 0 24px 60px rgba(15,39,71,.16); }
+.val-progreso { margin-bottom: 1.4rem; }
+.val-paso-n { margin: 0 0 .5rem; font-size: .84rem; color: var(--v-gris); }
+.val-progreso-barra { height: 6px; border-radius: 99px; background: #e8ebf0; overflow: hidden; }
+.val-progreso-barra span { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, #0f2747, var(--v-rojo)); transition: width .35s ease; }
+.val-pasos { list-style: none; margin: .5rem 0 0; padding: 0; display: flex; justify-content: space-between; font: 700 .7rem 'Montserrat', system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; color: #6b7280; }
+.val-pasos li[data-on="true"] { color: var(--v-azul); }
+
+.val-h2 { margin: 0 0 .5rem; font: 700 clamp(1.7rem, 3.4vw, 2.3rem)/1.12 'Playfair Display', Georgia, serif; color: var(--v-azul); outline: none; }
+.val-h2 em { font-style: italic; color: var(--v-rojo); }
+.val-h3 { margin: 1.6rem 0 .5rem; font: 800 1.05rem 'Montserrat', system-ui, sans-serif; color: var(--v-azul); }
+.val-ayuda, .val-sub { margin: 0 0 1.2rem; font-size: .95rem; line-height: 1.6; color: var(--v-gris); }
+.val-sub { margin: .35rem 0 .6rem; font-size: .84rem; }
+.val-opc, .val-req { font: 600 .68rem 'Montserrat', system-ui, sans-serif; letter-spacing: .06em; text-transform: uppercase; color: #6b7280; margin-left: .35rem; }
+.val-req { color: var(--v-rojo); }
+
+/* Fichas (radio) */
+.val-grupo { border: 0; padding: 0; margin: 0 0 1.3rem; min-width: 0; }
+.val-grupo legend { padding: 0; margin-bottom: .55rem; font: 700 .76rem 'Montserrat', system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; color: var(--v-gris); }
+.val-fichas { display: grid; gap: .65rem; }
+.val-fichas-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.val-fichas-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.val-ficha { position: relative; display: flex; align-items: center; gap: .65rem; min-height: 56px; padding: .7rem .9rem; border: 1.5px solid var(--v-linea); border-radius: 12px; background: #fff; cursor: pointer; font: 700 .92rem 'Montserrat', system-ui, sans-serif; color: var(--v-azul); transition: border-color .2s, box-shadow .2s, background .2s; }
+.val-ficha input { position: absolute; opacity: 0; inset: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+.val-ficha svg { color: var(--v-rojo); flex: 0 0 auto; }
+.val-ficha:hover { border-color: #9aa6b8; }
+.val-ficha[data-on="true"] { border-color: var(--v-azul); background: #f1f4f9; box-shadow: 0 0 0 3px rgba(15,39,71,.12); }
+.val-ficha:focus-within { outline: 3px solid var(--v-azul); outline-offset: 2px; }
+.val-nota { display: flex; align-items: flex-start; gap: .5rem; margin: 0; padding: .7rem .9rem; border-radius: 10px; background: #f1f4f9; font-size: .86rem; line-height: 1.5; color: var(--v-azul); }
+.val-nota svg { flex: 0 0 auto; margin-top: .15rem; color: var(--v-rojo); }
+
+/* Campos */
+.val-campo { margin: 0 0 1rem; min-width: 0; }
+.val-campo label { display: block; margin-bottom: .35rem; font: 700 .76rem 'Montserrat', system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--v-gris); }
+.val-input { display: flex; align-items: center; gap: .6rem; padding: 0 .9rem; border: 1.5px solid var(--v-linea); border-radius: 10px; background: #fff; color: #6b7280; transition: border-color .2s, box-shadow .2s; }
+.val-input:focus-within { border-color: var(--v-rojo); box-shadow: 0 0 0 3px rgba(200,16,46,.15); }
+.val-input input { flex: 1 1 auto; min-width: 0; min-height: 48px; border: 0; outline: 0; background: transparent; font: 400 1rem 'Montserrat', system-ui, sans-serif; color: #1f2937; }
+.val-input input::placeholder { color: #6b7280; opacity: .85; }
+.val-input input:disabled { opacity: .5; }
+.val-input:has(input[aria-invalid="true"]) { border-color: #b91c1c; }
+.val-check { display: flex; gap: .6rem; align-items: flex-start; margin: .4rem 0 0; font-size: .9rem; line-height: 1.5; color: var(--v-gris); cursor: pointer; }
+.val-check input { width: 20px; height: 20px; margin-top: .1rem; accent-color: var(--v-azul); flex: 0 0 auto; }
+.val-doble { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 .9rem; }
+.val-error { margin: .35rem 0 0; font-size: .84rem; font-weight: 600; color: #b91c1c; }
+.val-error-caja { display: flex; gap: .5rem; align-items: center; padding: .7rem .9rem; border-radius: 10px; background: #fef2f2; }
+
+/* Botones y navegación */
+.val-nav { display: flex; justify-content: space-between; align-items: center; gap: .8rem; margin-top: 1.6rem; flex-wrap: wrap; }
+.val-btn { display: inline-flex; align-items: center; justify-content: center; gap: .55rem; min-height: 48px; padding: .75rem 1.4rem; border-radius: 10px; border: 1.5px solid transparent; cursor: pointer; font: 800 .92rem 'Montserrat', system-ui, sans-serif; letter-spacing: .02em; text-decoration: none; transition: transform .2s, box-shadow .2s, opacity .2s; }
+.val-btn:hover:not(:disabled) { transform: translateY(-2px); }
+.val-btn:disabled { opacity: .6; cursor: not-allowed; }
+.val-btn:focus-visible, .val-check input:focus-visible, .val-input input:focus-visible { outline: 3px solid #fff; outline-offset: 2px; box-shadow: 0 0 0 5px var(--v-azul); }
+.val-btn-rojo { color: #fff; background: linear-gradient(180deg, #b30f27, #8a0b1d); box-shadow: 0 10px 24px rgba(138,11,29,.28); }
+html body a.val-btn-claro, .val-btn-claro { color: var(--v-azul); background: #fff; border-color: var(--v-azul); }
+html body a.val-btn-verde { color: #0b1a10; background: linear-gradient(180deg, #34e07a, #25d366); box-shadow: 0 8px 22px rgba(37,211,102,.3); }
+.val-gira { animation: val-gira 1s linear infinite; }
+@keyframes val-gira { to { transform: rotate(360deg); } }
+
+/* Resultado */
+.val-resultado .val-eyebrow { margin-bottom: .6rem; font-size: .68rem; }
+.val-resumen { display: flex; align-items: center; gap: .45rem; margin: 0 0 1.2rem; font-size: .9rem; color: var(--v-gris); }
+.val-resumen svg { color: #15803d; }
+.val-medidor { padding: 1.4rem 1.2rem; border-radius: 16px; background: linear-gradient(135deg, #0f2747, #1b365d); color: #fff; }
+.val-rango { margin: 0; display: flex; align-items: baseline; flex-wrap: wrap; gap: .3rem .6rem; font: 700 clamp(1.6rem, 5.4vw, 2.6rem)/1.1 'Playfair Display', Georgia, serif; }
+.val-rango i { font-style: normal; opacity: .7; }
+.val-rango small { font: 600 .8rem 'Montserrat', system-ui, sans-serif; letter-spacing: .12em; text-transform: uppercase; opacity: .85; }
+.val-barra { position: relative; height: 8px; margin: 1.1rem 0 .8rem; border-radius: 99px; background: linear-gradient(90deg, #8B1A1A, #ff5470); }
+.val-marca { position: absolute; top: 50%; width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 50%; background: #fff; border: 3px solid #0f2747; box-shadow: 0 2px 8px rgba(0,0,0,.4); }
+.val-central { margin: 0; font-size: .95rem; color: rgba(255,255,255,.92); }
+.val-confianza { margin-top: 1rem; padding: .9rem 1.1rem; border-radius: 12px; border-left: 5px solid #b45f06; background: #fff7ed; }
+.val-confianza[data-nivel="alto"] { border-color: #15803d; background: #f0fdf4; } .val-confianza[data-nivel="bajo"] { border-color: #b91c1c; background: #fef2f2; }
+.val-confianza strong { display: block; margin-bottom: .3rem; font-size: .95rem; color: #1f2937; }
+.val-confianza ul, .val-lista { margin: 0; padding-left: 1.1rem; font-size: .88rem; line-height: 1.6; color: var(--v-gris); }
+.val-comps { list-style: none; margin: 0; padding: 0; display: grid; gap: .7rem; }
+.val-comps li { display: grid; gap: .4rem; padding: .8rem 1rem; border: 1px solid var(--v-linea); border-radius: 12px; background: #fff; }
+.val-comp-cab { display: flex; flex-direction: column; gap: .1rem; }
+.val-comp-cab a, .val-comp-cab span { font-weight: 700; color: var(--v-azul); }
+html body .val-comp-cab a { color: var(--v-azul); text-decoration: underline; }
+.val-comp-cab small, .val-comp-nums small { font-size: .78rem; color: #4b5563; }
+.val-comp-nums { display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; }
+.val-comp-nums strong { font: 700 1.05rem 'Playfair Display', Georgia, serif; }
+.val-comp-chips { display: flex; flex-wrap: wrap; gap: .35rem; }
+.val-comp-chips span { padding: .15rem .55rem; border-radius: 99px; background: #eef2f7; font-size: .72rem; font-weight: 600; color: var(--v-azul); }
+.val-vacio { padding: 1.1rem 1.2rem; border-radius: 14px; background: #fff7ed; border: 1px solid #fed7aa; }
+.val-vacio p { margin: 0 0 .7rem; font-size: .95rem; line-height: 1.6; color: #1f2937; }
+.val-aviso { display: flex; gap: .7rem; margin: 1.6rem 0 0; padding: 1rem 1.1rem; border-radius: 12px; background: #fffbeb; border: 1px solid #fde68a; }
+.val-aviso svg { flex: 0 0 auto; margin-top: .15rem; color: #b45309; }
+.val-aviso p { margin: 0; font-size: .86rem; line-height: 1.6; color: #422006; }
+html body .val-aviso a { color: #7c2d12; text-decoration: underline; }
+.val-contacto { margin-top: 1.4rem; padding: 1.1rem 1.2rem; border-radius: 14px; background: #f1f4f9; }
+.val-contacto .val-h3 { margin-top: 0; }
+.val-nav-contacto { margin-top: .8rem; }
+.val-form { margin-top: 1rem; display: grid; gap: .2rem; }
+.val-ok { display: flex; gap: .5rem; align-items: center; margin: 1rem 0 0; font-weight: 700; color: #15803d; }
+.val-nav-fin { margin-top: 1.4rem; }
+
+/* Información bajo el flujo */
+.val-info { padding: 3.2rem 0 1rem; }
+.val-info-grid { display: grid; gap: 1.2rem; }
+.val-tarjeta { padding: 1.4rem 1.3rem; border-radius: 16px; background: #fff; border: 1px solid rgba(15,39,71,.07); box-shadow: 0 10px 30px rgba(15,39,71,.08); }
+.val-tarjeta h3 { margin: 0 0 .5rem; font: 700 1.25rem 'Playfair Display', Georgia, serif; color: var(--v-azul); }
+.val-tarjeta p, .val-tarjeta li { font-size: .92rem; line-height: 1.65; color: var(--v-gris); }
+.val-tarjeta ul { margin: .4rem 0 0; padding-left: 1.1rem; }
+
+@media (min-width: 640px) {
+  .val-fichas-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .val-caja { padding: 2.2rem 2.2rem 2.2rem; }
+  .val-comps li { grid-template-columns: minmax(0, 1.4fr) auto; align-items: center; }
+  .val-comp-chips { grid-column: 1 / -1; }
+  .val-info-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 900px) { .val-hero { padding: 7rem 0 5rem; } .val-caja { margin-top: -3rem; } }
+@media (max-width: 420px) { .val-doble { grid-template-columns: minmax(0, 1fr); } }
+@media (prefers-reduced-motion: reduce) { .val-btn, .val-ficha, .val-input, .val-progreso-barra span { transition: none; } .val-btn:hover:not(:disabled) { transform: none; } .val-gira { animation: none; } }
+.val-en-portal .val-hero { padding-top: 3rem; }
+
+/* Portada según la lámina del propietario (`pg web/valuador`): panel claro a la izquierda con el titular oscuro, fotografía a la derecha que se funde,
+   triángulos rojos de la marca. Los redes sociales de VIVE BIEN usan el mismo lenguaje (fondo crema + forma roja). */
+.val-hero { background: #f4f1ed; color: var(--v-azul); }
+.val-hero::before { content: ''; position: absolute; left: 0; bottom: 0; width: 22%; height: 46%; z-index: 0; background: linear-gradient(135deg, #C8102E, #8B1A1A); clip-path: polygon(0 100%, 0 28%, 100% 100%); opacity: .95; }
+.val-hero::after { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: linear-gradient(90deg, var(--v-rojo), transparent 70%); z-index: 3; }
+.val-hero-foto { position: absolute; inset: 0 0 0 34%; z-index: -1; -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 30%); mask-image: linear-gradient(90deg, transparent 0, #000 30%); }
+.val-hero-foto img { width: 100%; height: 100%; object-fit: cover; object-position: 40% 50%; display: block; }
+.val-hero-foto::after { content: ''; position: absolute; right: 0; top: 0; width: 28%; height: 62%; background: linear-gradient(225deg, rgba(200,16,46,.85), rgba(139,26,26,.55)); clip-path: polygon(100% 0, 100% 100%, 0 0); }
+.val-hero .val-eyebrow { color: #3b3b44; }
+.val-h1 { color: #1f2430; }
+.val-h1 em { color: var(--v-rojo); }
+.val-hero-p { color: #374151; }
+@media (max-width: 899px) {
+  .val-hero-foto { inset: 0; opacity: .3; -webkit-mask-image: none; mask-image: none; }
+  .val-hero-foto::after { display: none; }
+  .val-hero::before { width: 34%; height: 30%; }
+}
+/* Ajustes tras revisar en pantalla: el triángulo no debe tapar el titular y la foto se funde más lejos del texto */
+.val-hero::before { width: 15%; height: 24%; z-index: -1; }
+.val-hero-foto { inset: 0 0 0 40%; -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 38%); mask-image: linear-gradient(90deg, transparent 0, #000 38%); }
+@media (max-width: 899px) { .val-hero::before { width: 30%; height: 18%; } .val-hero-foto { opacity: .22; } }
+
+/* ── Portada del valuador, versión final: texto y fotografía en dos paneles (el texto NUNCA va sobre la foto) ────────────────────────────────────
+   Panel claro a la izquierda con el titular oscuro; la fotografía ocupa el panel derecho con borde diagonal y un triángulo rojo; sin solapes. */
+.val-hero { padding: 4.5rem 0 3.2rem; display: flex; flex-direction: column; background: #f4f1ed; }
+.val-hero::before { width: 12%; height: 20%; z-index: 0; opacity: .95; }
+.val-hero .val-wrap { z-index: 2; }
+.val-hero .val-wrap > * { max-width: min(560px, 100%); }
+.val-h1 { font-size: clamp(2.3rem, 5vw, 3.7rem); color: #1f2430; text-shadow: none; }
+.val-h1 em { display: block; color: #C8102E; }
+.val-hero-p { color: #374151; }
+.val-hero-foto { order: 2; position: relative; inset: auto; height: 210px; margin: 1.8rem 0 -3.2rem; opacity: 1; z-index: 1; -webkit-mask-image: none; mask-image: none; clip-path: polygon(0 18%, 100% 0, 100% 100%, 0 100%); }
+.val-hero-foto img { object-position: 45% 55%; }
+.val-hero-foto::after { right: 0; top: 0; width: 34%; height: 70%; background: linear-gradient(225deg, rgba(200,16,46,.9), rgba(139,26,26,.55)); clip-path: polygon(100% 0, 100% 100%, 0 0); display: block; }
+.val-cuerpo { padding: 2.6rem 0 4rem; }
+.val-caja { margin: 0; }
+@media (min-width: 900px) {
+  .val-hero { display: block; padding: 5.5rem 0 4.5rem; min-height: 420px; }
+  .val-hero .val-wrap > * { max-width: min(540px, 47vw); }
+  .val-hero-foto { position: absolute; inset: 0 0 0 52%; height: auto; margin: 0; clip-path: polygon(15% 0, 100% 0, 100% 100%, 0 100%); }
+  .val-hero-foto img { object-position: 38% 50%; }
+  .val-hero-foto::after { width: 30%; height: 55%; }
+  .val-hero::before { width: 14%; height: 26%; }
+  .val-cuerpo { padding-top: 3rem; }
+}
+.val-en-portal .val-hero { padding-top: 3rem; }
+/* Sin el triángulo rojo del lado izquierdo de la portada (decisión del propietario, 21-oct-2026): no se veía bien. */
+.val-hero::before { content: none; display: none; }

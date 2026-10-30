@@ -1,0 +1,11 @@
+grupo	peticiones	sobrevive	privada_antes_mb	privada_despues_mb	crece_mb	bytes_por_peticion	error_http_pct
+catalogo	12000	si	144	269	125	10923	0
+listado	12001	si	136	251	115	10048	0
+home	12001	si	137	263	126	11009	0
+sitemap	12001	si	137	256	119	10398	0
+ayuda	12001	si	145	271	126	11009	0
+ayuda_buscar	11959	NO	137	-1	(murió)	-	45.0
+salud	11916	NO	137	-1	(murió)	-	45.7
+ficha	10375	NO	105	-1	(murió)	-	80.0
+ficha_id	10586	NO	144	-1	(murió)	-	83.3
+ficha_oculta_404	10514	NO	136	-1	(murió)	-	80.8
