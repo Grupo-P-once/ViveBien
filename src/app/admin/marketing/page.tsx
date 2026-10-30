@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useSesion } from '@/components/admin/sesion'
 import Resultados from '@/components/admin/marketing/Resultados'
 import BibliotecaCorreos, { type CatalogoBiblioteca } from '@/components/admin/marketing/BibliotecaCorreos'
+import MatrizDeEventos from '@/components/admin/marketing/MatrizDeEventos'
 
 /**
  * Panel «Marketing y correos» — PRIMERA VERSIÓN, SOLO LECTURA (F1, 30-oct-2026).
@@ -23,13 +24,6 @@ type Tipo = { id: string; nombre: string; categoria: string; estado: string; dis
 type Evento = { grupo: string; evento: string; destinatario: string; canal: string; categoria: string; preferencia: string; frecuencia: string; plantilla: string; disparador: string; idempotencia: string; estado: string }
 type Catalogo = CatalogoBiblioteca & { tipos: Tipo[]; matriz: Evento[] }
 
-const ESTADO: Record<string, string> = {
-  envia_hoy: 'Se envía hoy',
-  codigo_apagado: 'Código listo, apagado',
-  apagado_por_texto_legal: 'Apagado: falta texto legal aprobado',
-  lo_manda_firebase: 'Lo manda Firebase',
-  no_existe: 'No existe todavía',
-}
 const val = (v: number | string | null) => (v === null ? 'sin dato' : String(v))
 
 export default function PanelMarketing() {
@@ -130,26 +124,7 @@ export default function PanelMarketing() {
         )}
       </section>
 
-      <section aria-labelledby="m-matriz" className="rounded-xl border bg-card p-5">
-        <h2 id="m-matriz" className="font-heading text-lg font-semibold">Matriz de eventos</h2>
-        <p className="mt-1 text-sm text-muted-foreground">Catálogo tentativo: no significa que exista cada correo. Las categorías son provisionales hasta la asesoría legal; la campana y el correo son canales independientes.</p>
-        {catalogo && (
-          <div className="mt-3 overflow-x-auto">
-            <table className="w-full min-w-[900px] text-left text-xs">
-              <caption className="sr-only">Eventos de correo y su estado</caption>
-              <thead><tr className="border-b">{['Grupo', 'Evento', 'Destinatario', 'Canal', 'Categoría', 'Preferencia', 'Frecuencia', 'Estado'].map((h) => <th key={h} scope="col" className="px-2 py-2 font-semibold">{h}</th>)}</tr></thead>
-              <tbody>
-                {catalogo.matriz.map((m) => (
-                  <tr key={m.grupo + m.evento} className="border-b align-top">
-                    <td className="px-2 py-2">{m.grupo}</td><td className="px-2 py-2">{m.evento}</td><td className="px-2 py-2">{m.destinatario}</td><td className="px-2 py-2">{m.canal}</td>
-                    <td className="px-2 py-2">{m.categoria}</td><td className="px-2 py-2">{m.preferencia}</td><td className="px-2 py-2">{m.frecuencia}</td><td className="px-2 py-2 font-medium">{ESTADO[m.estado] ?? m.estado}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
+      <MatrizDeEventos matriz={catalogo?.matriz ?? null} />
     </main>
   )
 }

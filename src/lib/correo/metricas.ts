@@ -57,9 +57,11 @@ export function validarRango(r: Rango, ahora: Date): { ok: true } | { ok: false;
   return { ok: true }
 }
 
-export type Totales = { enviados: Celda; entregados: Celda; rebotes: Celda; quejas: Celda; fallos: Celda; omitidos: Celda; pendientes: Celda }
+/** `null` = NO DISPONIBLE (no es cero): hoy sólo pasa con entregados, rebotes y quejas cuando falta el webhook de Resend (ver `sinDatosDelProveedor`). */
+type DiaDeTrabajo = Omit<DiaDeSerie, 'entregados' | 'rebotes' | 'quejas'> & { entregados: number; rebotes: number; quejas: number }
+export type Totales = { enviados: Celda; entregados: Celda | null; rebotes: Celda | null; quejas: Celda | null; fallos: Celda; omitidos: Celda; pendientes: Celda }
 export type Tasa = { id: 'entrega' | 'rebote' | 'queja' | 'baja'; nombre: string; formula: string; valor: number | null; numerador: Celda | null; denominador: number; motivoSinDato: string | null }
-export type DiaDeSerie = { dia: string; enviados: number; entregados: number; rebotes: number; quejas: number; fallos: number; omitidos: number; bajas?: number; bajasAcumuladas?: number }
+export type DiaDeSerie = { dia: string; enviados: number; entregados: number | null; rebotes: number | null; quejas: number | null; fallos: number; omitidos: number; bajas?: number; bajasAcumuladas?: number }
 export type Bloque = {
   grupo: Grupo
   /** `true` si el grupo es demasiado pequeño para mostrar detalle (1 a 4 envíos). */
@@ -74,6 +76,8 @@ export type Resultado = {
   filtros: { tipo: string | null; grupo: FiltroGrupo }
   tipos: Array<{ id: string; total: number }>
   bloques: Bloque[]
+  /** Métricas que no se pudieron obtener y por qué (el panel las marca «No disponible» en tarjetas, tasas y gráficas). */
+  noDisponibles?: Array<{ metrica: string; motivo: string }>
 }
 
 type ContextoBajas = { filas: FilaBaja[]; acumuladasAntes: number; vigentes: number }
@@ -82,7 +86,7 @@ const pct = (n: number, d: number) => Math.round((n / d) * 1000) / 10
 
 function bloque(grupo: Grupo, filas: FilaEnvio[], dias: string[], bajas: ContextoBajas | null): Bloque {
   const cuenta = { enviados: 0, entregados: 0, rebotes: 0, quejas: 0, fallos: 0, omitidos: 0, pendientes: 0 }
-  const porDia = new Map<string, DiaDeSerie>(dias.map((d) => [d, { dia: d, enviados: 0, entregados: 0, rebotes: 0, quejas: 0, fallos: 0, omitidos: 0 }]))
+  const porDia = new Map<string, DiaDeTrabajo>(dias.map((d) => [d, { dia: d, enviados: 0, entregados: 0, rebotes: 0, quejas: 0, fallos: 0, omitidos: 0 }]))
   for (const f of filas) {
     const dia = porDia.get(diaLocal(f.momento))
     if (!dia) continue
@@ -151,6 +155,26 @@ export function calcular(filas: FilaEnvio[], bajas: ContextoBajas | null, filtro
     filtros: { tipo: filtro.tipo, grupo: filtro.grupo },
     tipos: [...tipos].map(([id, total]) => ({ id, total })).sort((a, b) => b.total - a.total || a.id.localeCompare(b.id)),
     bloques: grupos.map((g) => bloque(g, conTipo.filter((f) => grupoDe(f.categoria) === g), dias, bajasCtx)),
+  }
+}
+
+export const SIN_WEBHOOK = 'Falta el webhook de Resend en este entorno: sin él no llegan las entregas, los rebotes ni las quejas, así que no se puede medir (no es cero).'
+
+/**
+ * Sin webhook del proveedor las entregas, los rebotes y las quejas NO se pueden saber: el libro no los actualiza. En vez de mostrar ceros que parecen medidos,
+ * se marcan como no disponibles (`null`) en totales, tasas y series. Enviados, fallos, omitidos y bajas no dependen del webhook y se conservan.
+ */
+export function sinDatosDelProveedor(r: Resultado): Resultado {
+  const afectadas = ['entrega', 'rebote', 'queja']
+  return {
+    ...r,
+    noDisponibles: [{ metrica: 'Entregados, rebotes y quejas de spam', motivo: SIN_WEBHOOK }],
+    bloques: r.bloques.map((b) => ({
+      ...b,
+      totales: { ...b.totales, entregados: null, rebotes: null, quejas: null },
+      tasas: b.tasas.map((x) => (afectadas.includes(x.id) ? { ...x, valor: null, numerador: null, motivoSinDato: SIN_WEBHOOK } : x)),
+      serie: b.serie ? b.serie.map((d) => ({ ...d, entregados: null, rebotes: null, quejas: null })) : null,
+    })),
   }
 }
 

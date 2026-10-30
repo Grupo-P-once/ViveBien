@@ -167,3 +167,30 @@ describe('datos de demostración', () => {
     expect((await pedir('?demo=1')).status).toBe(400)
   })
 })
+
+describe('webhook de Resend y métricas no disponibles (ruta)', () => {
+  const datos = () => { mundo.tablas.correo_envios = [...muchos(8, 'servicio', 'enviado', '2026-10-28', 'pruebas'), ...muchos(3, 'servicio', 'error', '2026-10-28', 'pruebas')] }
+  it('sin RESEND_WEBHOOK_SECRET: entregados, rebotes y quejas salen null y se avisa; enviados y fallos se conservan', async () => {
+    vi.stubEnv('VERCEL_ENV', 'preview'); vi.stubEnv('RESEND_WEBHOOK_SECRET', '')
+    como('admin'); datos()
+    const j = await (await pedir('?dias=7&grupo=servicio')).json()
+    expect(j.fuentes.webhookConfigurado).toBe(false)
+    expect(j.resultado.bloques[0].totales).toMatchObject({ enviados: 8, entregados: null, rebotes: null, quejas: null, fallos: '<5' })
+    expect(j.resultado.noDisponibles[0].motivo).toMatch(/webhook/)
+  })
+  it('con el webhook configurado se muestran las cifras (cero si no hubo eventos)', async () => {
+    vi.stubEnv('VERCEL_ENV', 'preview'); vi.stubEnv('RESEND_WEBHOOK_SECRET', 'whsec_sintetico')
+    como('admin'); datos()
+    const j = await (await pedir('?dias=7&grupo=servicio')).json()
+    expect(j.fuentes.webhookConfigurado).toBe(true)
+    expect(j.resultado.bloques[0].totales.entregados).toBe(0)
+    expect(j.resultado.noDisponibles).toBeUndefined()
+  })
+  it('los datos de ejemplo no se marcan como no disponibles (son sintéticos y completos)', async () => {
+    vi.stubEnv('VERCEL_ENV', 'preview'); vi.stubEnv('RESEND_WEBHOOK_SECRET', '')
+    como('admin')
+    const j = await (await pedir('?dias=30&demo=1')).json()
+    expect(j.resultado.bloques[0].totales.entregados).not.toBeNull()
+    expect(j.resultado.noDisponibles).toBeUndefined()
+  })
+})

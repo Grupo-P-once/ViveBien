@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
-import { calcular, datosDeDemostracion, diaLocal, diasDelRango, grupoDe, MIN_CELDA, rangoDeUltimosDias, validarRango, type FilaBaja, type FilaEnvio } from '../src/lib/correo/metricas'
+import { calcular, datosDeDemostracion, sinDatosDelProveedor, diaLocal, diasDelRango, grupoDe, MIN_CELDA, rangoDeUltimosDias, validarRango, type FilaBaja, type FilaEnvio } from '../src/lib/correo/metricas'
 import { BIBLIOTECA, MUESTRA_POR_OMISION, muestraPermitida, SIN_VISTA_PREVIA, vistaPrevia } from '../src/lib/correo/biblioteca'
 import { correoDeAlertas } from '../src/lib/avisos-cliente'
 import { remitenteDe } from '../src/lib/correo/enviar'
@@ -223,3 +223,26 @@ describe('eventos del proveedor que alimentan los números', () => {
 })
 
 vi.setConfig({ testTimeout: 20_000 })
+
+describe('sin webhook de Resend: lo que no se puede medir queda «no disponible», no en cero', () => {
+  const filas = [...muchas(30, 'servicio', 'enviado', '2026-10-24'), ...muchas(6, 'servicio', 'error', '2026-10-25'), ...muchas(5, 'servicio', 'omitido', '2026-10-26')]
+  const base = calcular(filas, null, filtro({ grupo: 'servicio' }))
+  const r = sinDatosDelProveedor(base)
+  const b = r.bloques[0]
+  it('entregados, rebotes y quejas pasan a null en totales y en cada día; enviados, fallos y omitidos se conservan', () => {
+    expect(b.totales).toMatchObject({ enviados: 30, entregados: null, rebotes: null, quejas: null, fallos: 6, omitidos: 5 })
+    expect(b.serie!.every((d) => d.entregados === null && d.rebotes === null && d.quejas === null)).toBe(true)
+    expect(b.serie!.reduce((a, d) => a + d.enviados, 0)).toBe(30)
+    expect(b.serie!.reduce((a, d) => a + d.fallos, 0)).toBe(6)
+  })
+  it('las tasas que dependen del webhook no dan un 0 % falso: dicen por qué no hay dato', () => {
+    for (const id of ['entrega', 'rebote', 'queja']) expect(b.tasas.find((x) => x.id === id), id).toMatchObject({ valor: null, numerador: null, motivoSinDato: expect.stringContaining('webhook') })
+    expect(r.noDisponibles?.[0].motivo).toMatch(/webhook/)
+  })
+  it('no modifica el cálculo original y las bajas promocionales no dependen del webhook', () => {
+    expect(base.bloques[0].totales.entregados).toBe(0)
+    const p = sinDatosDelProveedor(calcular(muchas(10, 'marketing', 'enviado', '2026-10-24', 'recomendaciones'), { filas: [{ baja_en: '2026-10-25T18:00:00.000Z' }], acumuladasAntes: 0, vigentes: 1 }, filtro({ grupo: 'promocional' })))
+    expect(p.bloques[0].bajas).not.toBeNull()
+    expect(p.bloques[0].serie!.some((d) => d.bajas !== undefined)).toBe(true)
+  })
+})

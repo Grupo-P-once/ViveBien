@@ -3,7 +3,7 @@ import { exigir, supabaseAdmin } from '@/lib/auth-server'
 import { frenarAsync, TOPES } from '@/lib/limites'
 import { entornoCorreo, entornoDeCupo } from '@/lib/correo/config'
 import { BIBLIOTECA } from '@/lib/correo/biblioteca'
-import { calcular, datosDeDemostracion, DEFINICIONES, diaLocal, NO_DISPONIBLES, rangoDeUltimosDias, validarRango, ZONA, type FilaBaja, type FilaEnvio, type FiltroGrupo, type Rango } from '@/lib/correo/metricas'
+import { calcular, datosDeDemostracion, DEFINICIONES, diaLocal, NO_DISPONIBLES, rangoDeUltimosDias, sinDatosDelProveedor, validarRango, ZONA, type FilaBaja, type FilaEnvio, type FiltroGrupo, type Rango } from '@/lib/correo/metricas'
 
 /**
  * Resultados de correo del panel «Marketing · Correos». SOLO LECTURA y SOLO AGREGADOS: no lee direcciones (ni siquiera la huella), nombres ni listas de personas.
@@ -111,11 +111,13 @@ export async function GET(req: Request) {
     contar('correo_webhook_vistos'),
   ])
 
+  const webhookConfigurado = Boolean(entornoCorreo().webhookSecret)
+  const calculado = calcular(filasEnvio, { filas: filasBaja, acumuladasAntes: antes ?? 0, vigentes: vigentes ?? 0 }, filtro)
   return NextResponse.json({
     ...comun,
     origen,
     disponible: true,
-    fuentes: { webhookConfigurado: Boolean(entornoCorreo().webhookSecret), eventosDelProveedor: eventos, truncado: envios.truncado || (bajasLeidas?.truncado ?? false) },
-    resultado: calcular(filasEnvio, { filas: filasBaja, acumuladasAntes: antes ?? 0, vigentes: vigentes ?? 0 }, filtro),
+    fuentes: { webhookConfigurado, eventosDelProveedor: eventos, truncado: envios.truncado || (bajasLeidas?.truncado ?? false) },
+    resultado: webhookConfigurado ? calculado : sinDatosDelProveedor(calculado),
   }, { headers: cabeceras })
 }
