@@ -159,6 +159,21 @@ describe('tarea de avisos a clientes', () => {
     expect(await libro.usados()).toBe(0) // y no se reservó cupo
   })
 
+  it('cuenta NUEVA sin fila de preferencias y SIN acción afirmativa (sin búsqueda con «Avisarme», sin campana de precio): no recibe NINGÚN correo, aunque los avisos vengan activados por omisión', async () => {
+    estado.base = crearBase({
+      usuarios: [{ uid: 'u-nueva', email: 'nueva@ejemplo.invalid', nombre: 'Nueva', estado: 'activo' }],
+      propiedades: [prop('a')],
+      busquedas_guardadas: [{ id: 1, uid: 'u-nueva', nombre: 'Sin avisos', filtros: { op: 'venta', tipo: 'casa' }, alertas: false, frecuencia: 'diaria', creado_en: hace(10), avisada_en: null }],
+      legal_aceptaciones: [],
+      cliente_avisos_precio: [],
+      notificaciones: [],
+    }, { unicas: { notificaciones: ['uid', 'clave'] } }, { notificaciones: () => ({ creada_en: new Date().toISOString() }) })
+    const { avisosDeClientes } = await import('../src/lib/avisos-cliente-servidor')
+    const r = await avisosDeClientes()
+    expect(r.correosEnviados).toBe(0)
+    expect(enviados).toEqual([])
+  })
+
   it('una elección GUARDADA se respeta (apagado = no se manda) y el valor por omisión solo aplica a quien no tiene fila', async () => {
     estado.base = base()
     estado.base.tablas.preferencias_notificacion[0].correo_alertas = false // Ana eligió apagar
