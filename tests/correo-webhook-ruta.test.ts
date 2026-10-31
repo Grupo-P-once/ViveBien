@@ -22,13 +22,14 @@ let POST: (req: Request) => Promise<Response>
 beforeAll(async () => {
   libro = await crearLibro(); h.db = libro.db
   await libro.pg.exec(readFileSync(path.join(__dirname, "..", "supabase", "63-correo-baja-promocional.sql"), "utf8")) // email.failed y la baja promocional viven en la 63
+  await libro.pg.exec(readFileSync(path.join(__dirname, "..", "supabase", "67-correo-eventos-pendientes.sql"), "utf8")) // cuarentena de eventos sin envío (MKT-49)
   POST = (await import('../src/app/api/correo/webhook/route')).POST
   vi.stubEnv('RESEND_WEBHOOK_SECRET', SECRETO)
 }, 60_000)
 afterAll(async () => { vi.unstubAllEnvs(); await libro?.cerrar() })
 beforeEach(async () => {
   await libro.vaciar()
-  await libro.pg.exec('delete from public.correo_webhook_vistos; delete from public.correo_suscriptores;')
+  await libro.pg.exec('delete from public.correo_webhook_vistos; delete from public.correo_eventos_pendientes; delete from public.correo_suscriptores;')
   vi.stubEnv('RESEND_WEBHOOK_SECRET', SECRETO)
 })
 afterEach(() => { vi.restoreAllMocks() })
@@ -170,15 +171,24 @@ describe('sin garantía de orden (Resend): el estado final no depende de quién 
     expect(await estadoDe()).toBe('entregado')
   })
 
-  it('LÍMITE CONOCIDO (a corregir antes de habilitar envíos): un evento que llega ANTES de que el envío tenga su resend_id no encuentra fila, queda marcado «visto» y un replay del proveedor ya no lo aplica', async () => {
+  it('MKT-49 corregido: un evento ANTES de que el envío tenga su resend_id queda en cuarentena (200, sin efectos) y se aplica al anotarse el ID; el replay del mismo svix-id no duplica', async () => {
     await sembrar('pendiente', null)
     const c = evento('email.delivered')
     const r = await POST(peticion(c, { id: 'carrera_1' }))
-    expect(r.status).toBe(200)
-    expect(await estadoDe()).toBe('pendiente') // no hubo fila con ese resend_id todavía
-    await libro.pg.query(`update public.correo_envios set estado = 'enviado', resend_id = 're_prueba_1'`) // el emisor termina de anotar el envío
-    await POST(peticion(c, { id: 'carrera_1' })) // replay oficial del MISMO evento
-    expect(await estadoDe()).toBe('enviado') // sigue sin «entregado»: el dedup lo bloquea
+    expect(r.status).toBe(200); expect(await r.json()).toMatchObject({ resultado: 'pendiente' })
+    expect(await estadoDe()).toBe('pendiente'); expect(await cuenta('correo_eventos_pendientes')).toBe(1)
+    await libro.pg.query(`select public.correo_marcar_envio((select id from public.correo_envios where clave = 'k-prueba-1'), 'enviado', 're_prueba_1', null)`) // el emisor termina de anotar el envío
+    expect(await estadoDe()).toBe('entregado'); expect(await cuenta('correo_eventos_pendientes')).toBe(0)
+    await libro.pg.query(`update public.correo_envios set estado = 'enviado'`)
+    const r2 = await POST(peticion(c, { id: 'carrera_1' })) // replay oficial del MISMO evento
+    expect(await r2.json()).toMatchObject({ resultado: 'duplicado' }); expect(await estadoDe()).toBe('enviado')
+  })
+
+  it('un evento de OTRA aplicación (resend_id que no es nuestro): 200 «pendiente», sin cambiar estados ni suprimir a nadie', async () => {
+    await sembrar()
+    const r = await POST(peticion(evento('email.bounced', { email_id: 're_de_otra_app', bounce: { type: 'Permanent' } }), { id: 'ajeno_1' }))
+    expect(r.status).toBe(200); expect(await r.json()).toMatchObject({ resultado: 'pendiente' })
+    expect(await estadoDe()).toBe('enviado'); expect(await cuenta('correo_supresiones')).toBe(0)
   })
 })
 

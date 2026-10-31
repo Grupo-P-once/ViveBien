@@ -145,7 +145,8 @@ export async function fijarMarketingDeCuenta(
 }
 
 /** Evento ya verificado del proveedor → la base lo aplica una sola vez. */
-export async function aplicarEventoProveedor(db: DbCorreo, svixId: string, evento: unknown): Promise<'aplicado' | 'duplicado' | 'ignorado' | 'error'> {
+export type ResultadoEvento = 'aplicado' | 'pendiente' | 'duplicado' | 'ignorado' | 'sin_identidad' | 'descartado' | 'error'
+export async function aplicarEventoProveedor(db: DbCorreo, svixId: string, evento: unknown): Promise<ResultadoEvento> {
   const e = (evento && typeof evento === 'object' ? evento : {}) as { type?: unknown; data?: Record<string, unknown> }
   const tipo = typeof e.type === 'string' ? e.type : ''
   // Aperturas y clics (email.opened / email.clicked) NO se guardan a propósito: el seguimiento es opcional en Resend, está apagado por omisión y es aproximado.
@@ -162,5 +163,8 @@ export async function aplicarEventoProveedor(db: DbCorreo, svixId: string, event
     p_rebote_permanente: permanente,
   })
   if (!r) return 'error'
-  return r.resultado === 'duplicado' ? 'duplicado' : 'aplicado'
+  // «pendiente»: llegó antes de que el envío tuviera su resend_id (o es de otra aplicación): queda en cuarentena SIN efectos y se aplica al anotarse el ID (migración 67).
+  // «sin_identidad»: no trae resend_id, no se puede atribuir. Todos responden 200 a Resend: no hay nada que reintentar.
+  const x = String(r.resultado)
+  return x === 'duplicado' || x === 'pendiente' || x === 'sin_identidad' || x === 'descartado' || x === 'ignorado' ? x : 'aplicado'
 }
