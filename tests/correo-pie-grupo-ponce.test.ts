@@ -62,7 +62,8 @@ describe('logotipo completo de VIVE BIEN', () => {
 describe('avisos por correo activados por omisión + engranaje', () => {
   it('sin fila de preferencias, el motor de avisos trata alertas, precio y legales como activados; una baja (fila en false) se respeta', () => {
     const src = leer('src/lib/avisos-cliente-servidor.ts')
-    expect(src).toContain('?? { correo_alertas: true, correo_legal: true, correo_precio: true }')
+    expect(src).toContain('?? { correo_alertas: true, correo_legal: true, correo_precio: pf.conPrecio }') // el de precio solo si la columna existe
+    expect(src).toContain("r.omitido = 'sin_preferencias'") // y con la lectura rota NO se usa ningún valor por omisión: falla cerrada
     expect(src).toMatch(/p\.correo_alertas \? suyas\.filter/) // quien tiene la fila en false no recibe
     const api = leer('src/app/api/portal/preferencias/route.ts')
     expect(api).toContain('correoAlertas: f?.correo_alertas ?? true')
