@@ -127,6 +127,15 @@ describe('evento válido: se aplica UNA vez, aunque Resend lo entregue varias', 
     expect(await estadoDe()).toBe('error')
   })
 
+  it('suppressed (Resend suprimió el envío): el envío queda «suprimido» y la dirección se suprime por huella, una sola vez aunque se repita', async () => {
+    await sembrar()
+    const r = await POST(peticion(evento('email.suppressed'), { id: 'msg_s1' }))
+    expect(r.status).toBe(200); expect(await r.json()).toMatchObject({ resultado: 'aplicado' })
+    expect(await estadoDe()).toBe('suprimido'); expect(await cuenta('correo_supresiones')).toBe(1)
+    await POST(peticion(evento('email.suppressed'), { id: 'msg_s2' }))
+    expect(await cuenta('correo_supresiones')).toBe(1)
+  })
+
   it.each(['email.sent', 'email.delivery_delayed', 'email.opened', 'email.clicked', 'email.scheduled', 'domain.updated', 'contact.created', 'tipo.inventado'])(
     'evento %s: con firma válida responde 200 «ignorado» (para que Resend no reintente), sin tocar la base ni marcarlo visto',
     async (tipo) => {
