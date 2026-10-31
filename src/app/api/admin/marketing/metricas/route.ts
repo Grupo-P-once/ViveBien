@@ -3,7 +3,7 @@ import { exigir, supabaseAdmin } from '@/lib/auth-server'
 import { frenarAsync, TOPES } from '@/lib/limites'
 import { entornoCorreo, entornoDeCupo } from '@/lib/correo/config'
 import { BIBLIOTECA } from '@/lib/correo/biblioteca'
-import { calcular, datosDeDemostracion, DEFINICIONES, diaLocal, NO_DISPONIBLES, rangoDeUltimosDias, sinDatosDelProveedor, validarRango, ZONA, type FilaBaja, type FilaEnvio, type FiltroGrupo, type Rango } from '@/lib/correo/metricas'
+import { calcular, datosDeDemostracion, DEFINICIONES, diaLocal, NO_DISPONIBLES, rangoDeUltimosDias, SIN_EVENTOS, sinDatosDelProveedor, validarRango, ZONA, type FilaBaja, type FilaEnvio, type FiltroGrupo, type Rango } from '@/lib/correo/metricas'
 
 /**
  * Resultados de correo del panel «Marketing · Correos». SOLO LECTURA y SOLO AGREGADOS: no lee direcciones (ni siquiera la huella), nombres ni listas de personas.
@@ -118,6 +118,8 @@ export async function GET(req: Request) {
     origen,
     disponible: true,
     fuentes: { webhookConfigurado, eventosDelProveedor: eventos, truncado: envios.truncado || (bajasLeidas?.truncado ?? false) },
-    resultado: webhookConfigurado ? calculado : sinDatosDelProveedor(calculado),
+    // Datos del proveedor = hay secreto Y ya llegó al menos un evento verificado. Con secreto pero sin eventos (webhook sin registrar, mal apuntado o sin envíos) no se
+    // dibuja un cero que parezca medido: entregas, rebotes y quejas quedan «no disponibles» con su motivo.
+    resultado: !webhookConfigurado ? sinDatosDelProveedor(calculado) : !(eventos && eventos > 0) ? sinDatosDelProveedor(calculado, SIN_EVENTOS) : calculado,
   }, { headers: cabeceras })
 }

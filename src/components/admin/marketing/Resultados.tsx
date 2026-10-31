@@ -89,7 +89,7 @@ function BloqueDeCorreo({ b, demo, sinWebhook }: { b: Bloque; demo: boolean; sin
   const sinEnvios = t.enviados === 0 && t.fallos === 0 && t.omitidos === 0 && t.pendientes === 0
   const serie: DiaDeSerie[] | null = b.serie
   const rotulo = demo ? 'Datos de ejemplo (sintéticos)' : 'Datos reales de esta base'
-  const aviso = (que: string) => (sinWebhook ? [`${que}: no disponible. Falta el webhook de Resend en este entorno; no se dibuja como cero porque no es una medición.`] : [])
+  const aviso = (que: string) => (sinWebhook ? [`${que}: no disponible. Resend no está entregando eventos a este entorno (webhook sin configurar o aún sin ningún evento); no se dibuja como cero porque no es una medición.`] : [])
   const vacio = sinEnvios ? ['Sin envíos en este periodo: las barras están en cero porque no hubo actividad.'] : []
   const conBajas = b.grupo === 'promocional' && serie?.some((d) => d.bajas !== undefined)
   return (
@@ -223,7 +223,7 @@ export default function Resultados({ entorno }: { entorno: string | null }) {
             {datos.origen.descripcion}
           </p>
           <p className="text-xs text-muted-foreground">Zona horaria: {datos.zona} (hora de VIVE BIEN). Periodo: {r ? `${r.periodo.desde} al ${r.periodo.hasta} (${r.periodo.dias} ${r.periodo.dias === 1 ? 'día' : 'días'})` : '—'}. Hoy es {datos.hoy}.</p>
-          {sinWebhook && <p role="note" data-sin-webhook className="rounded-lg border bg-background p-3 text-sm">Resend todavía no avisa a este sistema (el webhook no está configurado aquí): <strong>entregados, rebotes y quejas de spam aparecen como «No disponible»</strong> y no se dibujan como cero. Enviados, fallos, omitidos y bajas sí se miden.</p>}
+          {sinWebhook && <p role="note" data-sin-webhook className="rounded-lg border bg-background p-3 text-sm">Resend todavía no avisa a este sistema (el webhook no está configurado o aún no ha entregado ningún evento verificado): <strong>entregados, rebotes y quejas de spam aparecen como «No disponible»</strong> y no se dibujan como cero. Enviados, fallos, omitidos y bajas sí se miden.</p>}
           {datos.fuentes?.eventosDelProveedor !== null && datos.fuentes?.eventosDelProveedor !== undefined && <p className="text-xs text-muted-foreground">Eventos del proveedor recibidos (últimos 90 días): {datos.fuentes.eventosDelProveedor}.</p>}
           {datos.fuentes?.truncado && <p role="note" className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">El periodo tiene tantas filas que se leyó solo una parte: acórtalo para ver cifras completas.</p>}
           {datos.disponible === false && <p role="status" className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">{datos.explicacion}</p>}

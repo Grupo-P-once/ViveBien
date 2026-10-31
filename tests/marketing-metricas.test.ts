@@ -178,9 +178,19 @@ describe('webhook de Resend y métricas no disponibles (ruta)', () => {
     expect(j.resultado.bloques[0].totales).toMatchObject({ enviados: 8, entregados: null, rebotes: null, quejas: null, fallos: '<5' })
     expect(j.resultado.noDisponibles[0].motivo).toMatch(/webhook/)
   })
-  it('con el webhook configurado se muestran las cifras (cero si no hubo eventos)', async () => {
+  it('con secreto PERO SIN ningún evento recibido: sigue «no disponible» (no se dibuja un cero que parezca medido) y el motivo lo explica', async () => {
     vi.stubEnv('VERCEL_ENV', 'preview'); vi.stubEnv('RESEND_WEBHOOK_SECRET', 'whsec_sintetico')
-    como('admin'); datos()
+    como('admin'); datos(); mundo.tablas.correo_webhook_vistos = []
+    const j = await (await pedir('?dias=7&grupo=servicio')).json()
+    expect(j.fuentes.webhookConfigurado).toBe(true)
+    expect(j.fuentes.eventosDelProveedor).toBe(0)
+    expect(j.resultado.bloques[0].totales).toMatchObject({ enviados: 8, entregados: null, rebotes: null, quejas: null })
+    expect(j.resultado.noDisponibles[0].motivo).toMatch(/ningún evento verificado/)
+    expect(j.resultado.bloques[0].tasas.filter((t: { id: string; valor: number | null }) => ['entrega', 'rebote', 'queja'].includes(t.id)).every((t: { valor: number | null }) => t.valor === null)).toBe(true)
+  })
+  it('con secreto Y eventos recibidos: se muestran las cifras (puede haber ceros reales)', async () => {
+    vi.stubEnv('VERCEL_ENV', 'preview'); vi.stubEnv('RESEND_WEBHOOK_SECRET', 'whsec_sintetico')
+    como('admin'); datos(); mundo.tablas.correo_webhook_vistos = [{ svix_id: 'evento_1' }]
     const j = await (await pedir('?dias=7&grupo=servicio')).json()
     expect(j.fuentes.webhookConfigurado).toBe(true)
     expect(j.resultado.bloques[0].totales.entregados).toBe(0)

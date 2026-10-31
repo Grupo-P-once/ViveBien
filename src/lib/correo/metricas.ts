@@ -159,20 +159,22 @@ export function calcular(filas: FilaEnvio[], bajas: ContextoBajas | null, filtro
 }
 
 export const SIN_WEBHOOK = 'Falta el webhook de Resend en este entorno: sin él no llegan las entregas, los rebotes ni las quejas, así que no se puede medir (no es cero).'
+/** El secreto existe pero Resend todavía no ha entregado NINGÚN evento verificado: un cero aquí sería indistinguible de «el webhook no está llegando». */
+export const SIN_EVENTOS = 'El secreto del webhook está configurado, pero Resend todavía no ha entregado ningún evento verificado a este sistema (revisa que el webhook esté registrado en Resend y apunte a esta dirección): entregas, rebotes y quejas no se pueden medir todavía (no es cero).'
 
 /**
  * Sin webhook del proveedor las entregas, los rebotes y las quejas NO se pueden saber: el libro no los actualiza. En vez de mostrar ceros que parecen medidos,
  * se marcan como no disponibles (`null`) en totales, tasas y series. Enviados, fallos, omitidos y bajas no dependen del webhook y se conservan.
  */
-export function sinDatosDelProveedor(r: Resultado): Resultado {
+export function sinDatosDelProveedor(r: Resultado, motivo: string = SIN_WEBHOOK): Resultado {
   const afectadas = ['entrega', 'rebote', 'queja']
   return {
     ...r,
-    noDisponibles: [{ metrica: 'Entregados, rebotes y quejas de spam', motivo: SIN_WEBHOOK }],
+    noDisponibles: [{ metrica: 'Entregados, rebotes y quejas de spam', motivo }],
     bloques: r.bloques.map((b) => ({
       ...b,
       totales: { ...b.totales, entregados: null, rebotes: null, quejas: null },
-      tasas: b.tasas.map((x) => (afectadas.includes(x.id) ? { ...x, valor: null, numerador: null, motivoSinDato: SIN_WEBHOOK } : x)),
+      tasas: b.tasas.map((x) => (afectadas.includes(x.id) ? { ...x, valor: null, numerador: null, motivoSinDato: motivo } : x)),
       serie: b.serie ? b.serie.map((d) => ({ ...d, entregados: null, rebotes: null, quejas: null })) : null,
     })),
   }
