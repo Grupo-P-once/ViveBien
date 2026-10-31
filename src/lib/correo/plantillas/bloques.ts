@@ -96,7 +96,7 @@ export function marcoCorreo(o: { preheader: string; filas: string; pie?: string;
       ${bloqueGrupoPOnce()}
     </td></tr>
   </table>
-  ${o.avisoPropiedades === false ? '' : `<p style="max-width:600px;margin:13px auto 0;font-family:${TEXTO};font-size:10px;line-height:15px;color:#4B5563;text-align:center">La disponibilidad, el precio y las condiciones de las propiedades pueden cambiar. Confirma la información con VIVE BIEN antes de tomar una decisión.</p>`}
+  ${o.avisoPropiedades === false ? '' : `<p style="max-width:600px;margin:13px auto 0;font-family:${TEXTO};font-size:12px;line-height:18px;color:#4B5563;text-align:center">La disponibilidad, el precio y las condiciones de las propiedades pueden cambiar. Confirma la información con VIVE BIEN antes de tomar una decisión.</p>`}
 </td></tr></table>
 </body></html>`
 }
