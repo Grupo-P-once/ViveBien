@@ -135,6 +135,38 @@ describe('tarea de avisos a clientes', () => {
     const r = await avisosDeClientes()
     expect(r.notificacionesNuevas).toBe(2); expect(enviados).toEqual([])
   })
+
+  // FALLA CERRADA (30-oct-2026): los valores por omisión ACTIVADOS solo valen si la lectura salió bien y la persona no tiene elección guardada.
+  it('si fallan LAS DOS lecturas de preferencias (con y sin correo_precio) NO se manda ningún correo y no se usan los valores por omisión', async () => {
+    estado.base = crearBase({
+      usuarios: [{ uid: 'u-ana', email: 'ana@ejemplo.invalid', nombre: 'Ana', estado: 'activo' }],
+      propiedades: [prop('a')],
+      busquedas_guardadas: [{ id: 1, uid: 'u-ana', nombre: 'Casas en León', filtros: { op: 'venta', tipo: 'casa' }, alertas: true, frecuencia: 'diaria', creado_en: hace(10), avisada_en: null }],
+      legal_aceptaciones: [{ uid: 'u-ana', documento: 'privacidad', version: '2020-01-01' }],
+      notificaciones: [],
+    }, { unicas: { notificaciones: ['uid', 'clave'] }, sinTabla: ['preferencias_notificacion'] }, { notificaciones: () => ({ creada_en: new Date().toISOString() }) })
+    const consultas: string[] = []
+    const desde = estado.base.from.bind(estado.base)
+    estado.base.from = ((n: string) => { if (n === 'preferencias_notificacion') consultas.push(n); return desde(n) }) as typeof estado.base.from
+    const err = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const { avisosDeClientes } = await import('../src/lib/avisos-cliente-servidor')
+    const r = await avisosDeClientes()
+    err.mockRestore()
+    expect(consultas.length).toBe(2) // se intentaron las dos: con y sin la columna de precio
+    expect(r.omitido).toBe('sin_preferencias')
+    expect(r.correosEnviados).toBe(0)
+    expect(enviados).toEqual([]) // el emisor ni se llamó: ninguna petición a Resend
+    expect(await libro.usados()).toBe(0) // y no se reservó cupo
+  })
+
+  it('una elección GUARDADA se respeta (apagado = no se manda) y el valor por omisión solo aplica a quien no tiene fila', async () => {
+    estado.base = base()
+    estado.base.tablas.preferencias_notificacion[0].correo_alertas = false // Ana eligió apagar
+    estado.base.tablas.busquedas_guardadas.push({ id: 9, uid: 'u-luis', nombre: 'Luis sí', filtros: { op: 'venta', tipo: 'casa' }, alertas: true, frecuencia: 'diaria', creado_en: hace(10), avisada_en: null }) // Luis no tiene fila
+    const { avisosDeClientes } = await import('../src/lib/avisos-cliente-servidor')
+    await avisosDeClientes()
+    expect(enviados.map((e) => e.to[0])).toEqual(['luis@ejemplo.invalid'])
+  })
 })
 
 describe('POST/GET /api/portal/contactos', () => {

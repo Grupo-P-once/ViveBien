@@ -65,8 +65,9 @@ async function enviarCorreo(uid: string, tipo: 'alertas' | 'baja_de_precio' | 'l
  */
 async function leerPreferencias(db: ReturnType<typeof supabaseAdmin>, uids: string[]) {
   const con = await db.from('preferencias_notificacion').select('uid, correo_alertas, correo_legal, correo_precio').in('uid', uids)
-  if (!con.error) return con
-  return db.from('preferencias_notificacion').select('uid, correo_alertas, correo_legal').in('uid', uids)
+  if (!con.error) return { ...con, conPrecio: true }
+  const sin = await db.from('preferencias_notificacion').select('uid, correo_alertas, correo_legal').in('uid', uids)
+  return { ...sin, conPrecio: false }
 }
 
 export async function avisosDeClientes(ahora = Date.now()): Promise<ResumenDeAvisos> {
@@ -159,6 +160,9 @@ export async function avisosDeClientes(ahora = Date.now()): Promise<ResumenDeAvi
     leerPreferencias(db, uids),
     db.from('busquedas_guardadas').select('id, nombre, filtros').in('id', [...new Set(filas.map((f) => f.busqueda_id).filter((x): x is number => typeof x === 'number'))]),
   ])
+  // FALLA CERRADA: si NO se pudieron leer las preferencias (fallaron las dos consultas), no se sabe qué eligió cada persona. Los valores por omisión ACTIVADOS solo valen cuando la
+  // lectura salió bien y esa persona no tiene una elección guardada; con la lectura rota no se usa ninguno y no se manda ningún correo (los avisos siguen en la bandeja del portal).
+  if (pf.error || !pf.data) { console.error('[avisos] no se pudieron leer las preferencias: no se manda ningún correo'); r.omitido = 'sin_preferencias'; return r }
   const usuario = new Map(((us.data ?? []) as Array<{ uid: string; email: string | null; nombre: string | null; estado: string | null }>).map((u) => [u.uid, u]))
   const pref = new Map(((pf.data ?? []) as Array<{ uid: string; correo_alertas: boolean; correo_legal: boolean; correo_precio?: boolean }>).map((p) => [p.uid, p]))
   const busqueda = new Map(((bn.data ?? []) as unknown as Array<{ id: number; nombre: string | null; filtros: BusquedaParaAviso['filtros'] }>).map((b) => [b.id, b]))
@@ -168,7 +172,8 @@ export async function avisosDeClientes(ahora = Date.now()): Promise<ResumenDeAvi
     const u = usuario.get(uid)
     if (!u?.email || (u.estado && u.estado !== 'activo')) continue
     // Sin fila de preferencias = valores por omisión ACTIVADOS (decisión del dueño, 30-oct-2026); quien se dio de baja tiene su fila en false y se respeta.
-    const p = pref.get(uid) ?? { correo_alertas: true, correo_legal: true, correo_precio: true }
+    // El de precio solo si la columna existe (migración 60 aplicada); si no, falla cerrado.
+    const p = pref.get(uid) ?? { correo_alertas: true, correo_legal: true, correo_precio: pf.conPrecio }
     const baja = crearTokenDeBaja(uid)
     const urlBaja = baja ? `${SITIO}/api/avisos/baja?t=${baja}` : `${SITIO}/portal/configuracion`
     const urlPreferencias = `${SITIO}/portal/configuracion`

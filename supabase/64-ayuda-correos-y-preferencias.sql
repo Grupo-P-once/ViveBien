@@ -1,5 +1,6 @@
 -- ═══════════════════════════════════════════════════════════
 -- Vive Bien · 64 — Centro de Ayuda: «¿Qué correos me manda VIVE BIEN y cómo los controlo?» (30-oct-2026)
+-- CORREGIDA HACIA ADELANTE por la 66: asegura las categorías y reinserta los artículos (verificado en staging con filas reales).
 -- ESTADO: registrada en STAGING (vivebien-staging) pero SIN EFECTO: el Centro de Ayuda de staging está vacío (0 categorías), así que no insertó nada. NO está en producción.
 -- Va DESPUÉS del contenido de la 27 y del código; hay que VOLVER A EJECUTARLA cuando exista la categoría «privacidad-y-seguridad» (es idempotente).
 -- Dos artículos nuevos: «¿Qué correos me manda VIVE BIEN y cómo los controlo?» (Privacidad y seguridad) y «¿Cómo activo o desactivo los avisos por correo?» (Búsquedas y alertas). Idempotente. Reversa: 64-ayuda-correos-y-preferencias.REVERTIR.sql
