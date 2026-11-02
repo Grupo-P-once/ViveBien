@@ -171,9 +171,11 @@ describe('los componentes públicos usan el helper', () => {
       const src = sinComentarios(lee(ruta))
       // Ninguna foto del catálogo puede llegar cruda al `src`.
       expect(src).not.toMatch(/src=\{fotos\[[^\]]+\]\}/)
-      expect(src).not.toMatch(/src=\{f\}/)
-      // Y el helper tiene que estar importado de verdad.
-      expect(src).toMatch(/from '@\/lib\/medios\/optimizar'/)
+      // `src={f}` solo es válido dentro de un <NextImage> que lleve el cargador de Cloudinary (LINT-1: pasa por `fotoOptimizada`).
+      for (const m of src.matchAll(/<(\w+)\b[^<]*?src=\{f\}[^<]*?\/>/g)) expect(m[0], `${ruta}: ${m[0].slice(0, 60)}`).toMatch(/<NextImage\b[\s\S]*loader=\{cargadorCloudinary\}/)
+      expect(src).not.toMatch(/<img\b[^>]*src=\{f\}/)
+      // Y el helper tiene que estar importado de verdad (directo o a través del cargador de Cloudinary, que es `fotoOptimizada`).
+      expect(src).toMatch(/from '@\/lib\/medios\/(optimizar|cargador-cloudinary)'/)
     })
   }
 

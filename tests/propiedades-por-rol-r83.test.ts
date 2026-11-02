@@ -60,7 +60,8 @@ describe('2 · Publicador y Asociado: un solo espacio en su portal', () => {
   it('«Nueva propiedad» es una sección en línea de la lista; sin «Primeros pasos» ni otra pantalla', () => {
     const l = leer('src/components/portal/MisPropiedades.tsx')
     expect(l).toContain('data-alta-en-linea')
-    expect(l).toContain('setAbrirNueva')
+    expect(l).toContain('abrirManual') // LINT-1: «abrir nueva» derivado de `?nueva=1` con la elección manual encima
+    expect(l).toMatch(/const abrirNueva = abrirManual \?\? \(pidioNueva && !conMarco\)/)
     expect(l).not.toContain('Bienvenida')
     expect(l).not.toMatch(/router\.(push|replace)\(['"`]\/publicador/)
   })

@@ -93,7 +93,8 @@ describe('R-07/R-09: imágenes y SSR de la foto principal', () => {
     // La foto principal de la ficha la pinta ahora la galería fluida: pide el tamaño que se ve, con prioridad alta la primera (es el LCP) y la ficha le pasa `prioridad`.
     expect(leer('components/catalogo/GaleriaFluida.tsx')).toMatch(/imgResponsiva\(url, sizes, ficha \? 1200 : 640\)[\s\S]*?fetchPriority=\{prioridad && i === 0 \? 'high' : undefined\}/)
     expect(leer('app/propiedades/[id]/page-client.tsx')).toMatch(/<GaleriaFluida variante="ficha"[^>]*sizes="\(max-width: 1000px\) 100vw, 920px" prioridad/)
-    expect(leer('components/PropertyCard.tsx')).toMatch(/imgResponsiva\([\s\S]*?loading="lazy"/)
+    // LINT-1: la tarjeta pasó de <img> + `imgResponsiva` a <NextImage> con el cargador de Cloudinary (mismo `sizes`, misma carga perezosa)
+    expect(leer('components/PropertyCard.tsx')).toMatch(/loader=\{cargadorCloudinary\}[\s\S]*?sizes=\{HUECO\}[\s\S]*?loading="lazy"/)
     expect(leer('app/propiedades/page-client.tsx')).toContain('/portadas/propiedades.webp') // portada local del propietario (antes: foto remota con srcset)
     expect(leer('app/propiedades/page-client.tsx')).toContain('fetchPriority="high"')
     // Portada rediseñada: el LCP ya no es la foto remota del hero viejo sino la PORTADA local del video (webp de ~20-30 KB, `<picture>` por ancho).
