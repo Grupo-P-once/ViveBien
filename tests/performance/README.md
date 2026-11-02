@@ -23,4 +23,4 @@ bash tests/performance/comparar-codigo-actual-vs-parche.sh <carpeta-de-logs>   #
 `node --require tests/performance/heap-probe.cjs node_modules/next/dist/bin/next start -p 3140` (**no** vía `NODE_OPTIONS`) y `curl localhost:9501/gc` (heap vivo tras GC forzado) o `/snap?f=ruta`; comparar snapshots con `node --max-old-space-size=8000 comparar-snapshots.cjs a b`. **Primero distinguir fuga de GC perezoso**: el RSS solo no prueba nada.
 
 ## Otras sondas
-`sonda-seguridad.py` y `sonda-limites.py` (solo `localhost`, rehúsan otro host), `barrido-paginas.py` (3 GET por página), `navegador-web-vitals.cjs` y `lcp-causa.cjs` (Playwright; solo lectura), `muestrear-memoria.ps1`, `generar-matriz-qa.py` (regenera `docs/QA/MATRIZ_MAESTRA.*`). Informes y evidencia: `k6/reports/`.
+`sonda-seguridad.py` y `sonda-limites.py` (solo `localhost`, rehúsan otro host), `barrido-paginas.py` (3 GET por página), `navegador-web-vitals.mjs` y `lcp-causa.mjs` (Playwright, módulos ES; solo lectura), `muestrear-memoria.ps1`, `generar-matriz-qa.py` (regenera `docs/QA/MATRIZ_MAESTRA.*`). Informes y evidencia: `k6/reports/`.

@@ -3,12 +3,10 @@
  * `payload_esperado_d80.json` (el del stage, sha256 6e64feee…). Se corre ANTES y DESPUÉS del gate para probar que las pruebas no tocaron la fuente.
  *   node huella_candidato.cjs <etiqueta>
  */
-/* eslint-disable @typescript-eslint/no-require-imports -- CommonJS (.cjs): `require` es su única sintaxis de importación; solo este bloque, el resto de reglas sigue activo */
-const crypto = require('node:crypto')
-const fs = require('node:fs')
-const os = require('node:os')
-const path = require('node:path')
-/* eslint-enable @typescript-eslint/no-require-imports */
+const crypto = process.getBuiltinModule('node:crypto')
+const fs = process.getBuiltinModule('node:fs')
+const os = process.getBuiltinModule('node:os')
+const path = process.getBuiltinModule('node:path')
 
 const RAIZ = path.join(os.homedir(), 'vivebien-candidato-d80')
 const ETIQUETA = process.argv[2] || 'huella'

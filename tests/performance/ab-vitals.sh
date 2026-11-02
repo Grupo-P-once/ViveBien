@@ -18,6 +18,6 @@ rm -rf "$PERF/src"; cp -r "$SRC_MEDIR" "$PERF/src"
 ( cd "$PERF"; entorno; npx next build > "$SP/build_vit_$ET.log" 2>&1; echo "build $ET exit=$?"; nohup npx next start -p 3140 > "$SP/start_vit_$ET.log" 2>&1 & )
 for i in $(seq 1 30); do c=$(curl -s -o /dev/null -w "%{http_code}" localhost:3140/api/salud); [ "$c" != "000" ] && break; sleep 2; done
 for r in / /propiedades /propiedades/tzula-castillos; do curl -s -o /dev/null "localhost:3140$r"; done
-THROTTLE="${THROTTLE:-}" PAGINAS="$PAGS" MSYS_NO_PATHCONV=1 node navegador-web-vitals.cjs http://localhost:3140 "k6/reports/vitals-$ET.json" "$REP" | tee "k6/reports/vitals-$ET.txt"
+THROTTLE="${THROTTLE:-}" PAGINAS="$PAGS" MSYS_NO_PATHCONV=1 node navegador-web-vitals.mjs http://localhost:3140 "k6/reports/vitals-$ET.json" "$REP" | tee "k6/reports/vitals-$ET.txt"
 matar
 echo "VITALS $ET TERMINADO"

@@ -8,10 +8,8 @@
  *   · memoria RSS al terminar ≤ 700 MB (E-34: 566–572 MB; E-33 fugaba hasta ~1,9 GB)
  * El resultado detecta REGRESIONES respecto a E-34; no garantiza capacidad en producción.
  */
-/* eslint-disable @typescript-eslint/no-require-imports -- CommonJS (.cjs): `require` es su única sintaxis de importación; solo este bloque, el resto de reglas sigue activo */
-const fs = require('node:fs')
-const path = require('node:path')
-/* eslint-enable @typescript-eslint/no-require-imports */
+const fs = process.getBuiltinModule('node:fs')
+const path = process.getBuiltinModule('node:path')
 
 const RAIZ = path.resolve(__dirname, '..', '..')
 const [tsv] = process.argv.slice(2).filter((a) => !a.startsWith('--'))

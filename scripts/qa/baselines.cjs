@@ -7,11 +7,9 @@
  *        → (re)escribe el manifiesto: lo que cambió de hash se marca con la fecha de hoy; lo que no, conserva su estado.
  * Una captura «vigente» debe haberse tomado con fixtura congelada (datos deterministas); sin ella solo puede ser «obsoleta» (declarada, no gate).
  */
-/* eslint-disable @typescript-eslint/no-require-imports -- CommonJS (.cjs): `require` es su única sintaxis de importación; solo este bloque, el resto de reglas sigue activo */
-const fs = require('node:fs')
-const path = require('node:path')
-const crypto = require('node:crypto')
-/* eslint-enable @typescript-eslint/no-require-imports */
+const fs = process.getBuiltinModule('node:fs')
+const path = process.getBuiltinModule('node:path')
+const crypto = process.getBuiltinModule('node:crypto')
 
 const RAIZ = path.resolve(__dirname, '..', '..')
 const DIR = path.join(RAIZ, 'tests-visual', 'capturas')

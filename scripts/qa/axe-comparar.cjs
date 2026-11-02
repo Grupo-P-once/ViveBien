@@ -5,10 +5,8 @@
  *   node scripts/qa/axe-comparar.cjs <salida.json>              → compara
  *   node scripts/qa/axe-comparar.cjs <salida.json> --escribir   → fija la línea base (solo tras revisar que mejoró)
  */
-/* eslint-disable @typescript-eslint/no-require-imports -- CommonJS (.cjs): `require` es su única sintaxis de importación; solo este bloque, el resto de reglas sigue activo */
-const fs = require('node:fs')
-const path = require('node:path')
-/* eslint-enable @typescript-eslint/no-require-imports */
+const fs = process.getBuiltinModule('node:fs')
+const path = process.getBuiltinModule('node:path')
 
 const RAIZ = path.resolve(__dirname, '..', '..')
 const BASE = path.join(RAIZ, 'docs', 'QA', 'axe-baseline.json')

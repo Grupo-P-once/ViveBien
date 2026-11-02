@@ -4,11 +4,9 @@
  *   node scripts/qa/lint-comparar.cjs               → compara
  *   node scripts/qa/lint-comparar.cjs --escribir    → fija la línea base con el estado actual (solo tras revisar que mejoró o es esperado)
  */
-/* eslint-disable @typescript-eslint/no-require-imports -- CommonJS (.cjs): `require` es su única sintaxis de importación; solo este bloque, el resto de reglas sigue activo */
-const { spawnSync } = require('node:child_process')
-const fs = require('node:fs')
-const path = require('node:path')
-/* eslint-enable @typescript-eslint/no-require-imports */
+const { spawnSync } = process.getBuiltinModule('node:child_process')
+const fs = process.getBuiltinModule('node:fs')
+const path = process.getBuiltinModule('node:path')
 
 const RAIZ = path.resolve(__dirname, '..', '..')
 const BASE = path.join(RAIZ, 'docs', 'QA', 'lint-baseline.json')

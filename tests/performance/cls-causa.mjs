@@ -1,8 +1,7 @@
-// ¿Qué elemento provoca los saltos de layout (CLS)? (R-08, D-62). Solo lectura. Uso: node cls-causa.cjs <BASE> <ruta> [ancho] [THROTTLE=perfil]
-/* eslint-disable @typescript-eslint/no-require-imports -- CommonJS (.cjs): `require` es su única sintaxis de importación; solo este bloque, el resto de reglas sigue activo */
-const { chromium, devices } = require('C:/Users/jemil/vivebien-deploy-stage-e33/node_modules/playwright')
-const { instalarGuardia } = require('../../scripts/qa/guardia-produccion.cjs')
-/* eslint-enable @typescript-eslint/no-require-imports */
+// ¿Qué elemento provoca los saltos de layout (CLS)? (R-08, D-62). Solo lectura. Uso: node cls-causa.mjs <BASE> <ruta> [ancho] [THROTTLE=perfil]
+import { chromium, devices } from 'playwright'
+import guardia from '../../scripts/qa/guardia-produccion.cjs'
+const { instalarGuardia } = guardia
 ;(async () => {
   const [base, ruta, ancho] = [process.argv[2], process.argv[3], Number(process.argv[4] || 390)]
   const b = await chromium.launch()

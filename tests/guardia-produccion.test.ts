@@ -94,7 +94,7 @@ describe('los scripts de k6 contra producción solo hacen lecturas', () => {
     expect(readFileSync(path.join(dir, rel), 'utf8')).not.toMatch(/http\.(post|put|patch|del|request|batch)\s*\(/)
   })
   it('los scripts de Playwright de producción instalan la guardia', () => {
-    for (const f of ['navegador-web-vitals.cjs', 'csp-violaciones.cjs', 'lcp-causa.cjs']) {
+    for (const f of ['navegador-web-vitals.mjs', 'csp-violaciones.mjs', 'lcp-causa.mjs']) {
       expect(readFileSync(path.join(__dirname, 'performance', f), 'utf8'), f).toMatch(/guardia-produccion/)
     }
   })

@@ -8,12 +8,10 @@
  * (token de Telegram, claves de servicio, correo, cron…) se pasa VACÍA al servidor de prueba para que `.env.local` no la cargue, y la clave de servicio de
  * Supabase es una ficticia: el servidor de prueba no puede escribir en producción ni mandar avisos reales (observación 0010).
  */
-/* eslint-disable @typescript-eslint/no-require-imports -- CommonJS (.cjs): `require` es su única sintaxis de importación; solo este bloque, el resto de reglas sigue activo */
-const { spawn, spawnSync } = require('node:child_process')
-const fs = require('node:fs')
-const os = require('node:os')
-const path = require('node:path')
-/* eslint-enable @typescript-eslint/no-require-imports */
+const { spawn, spawnSync } = process.getBuiltinModule('node:child_process')
+const fs = process.getBuiltinModule('node:fs')
+const os = process.getBuiltinModule('node:os')
+const path = process.getBuiltinModule('node:path')
 
 const RAIZ = path.resolve(__dirname, '..', '..')
 const RAPIDO = process.argv.includes('--rapido')

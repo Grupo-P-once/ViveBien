@@ -2,13 +2,11 @@
  * SOLO LECTURA. Compara el árbol REAL de producción (dpl_99T2…) con FINAL, D75, MAIN_WT (árbol de trabajo) y HEAD.
  * Sólo hace GET con `vercel api`; no escribe en ningún árbol ni despliega nada.
  */
-/* eslint-disable @typescript-eslint/no-require-imports -- CommonJS (.cjs): `require` es su única sintaxis de importación; solo este bloque, el resto de reglas sigue activo */
-const { spawnSync } = require('node:child_process')
-const crypto = require('node:crypto')
-const fs = require('node:fs')
-const os = require('node:os')
-const path = require('node:path')
-/* eslint-enable @typescript-eslint/no-require-imports */
+const { spawnSync } = process.getBuiltinModule('node:child_process')
+const crypto = process.getBuiltinModule('node:crypto')
+const fs = process.getBuiltinModule('node:fs')
+const os = process.getBuiltinModule('node:os')
+const path = process.getBuiltinModule('node:path')
 
 const TEAM = 'team_WqoyIiavBLrfbGlwD2UqGZPW'
 const PROD = 'dpl_99T2PdWgi48XiVTNjiKbhNJM5a1Z'

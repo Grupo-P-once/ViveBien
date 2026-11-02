@@ -1,10 +1,9 @@
 // Rendimiento en navegador (solo lectura): TTFB, FCP, LCP, CLS, errores JS y de red, peso y número de peticiones por página y ancho.
-// Uso: node navegador-web-vitals.cjs <BASE> <salida.json> [repeticiones]   (playwright se resuelve desde el staging)
-/* eslint-disable @typescript-eslint/no-require-imports -- CommonJS (.cjs): `require` es su única sintaxis de importación; solo este bloque, el resto de reglas sigue activo */
-const { chromium } = require('C:/Users/jemil/vivebien-deploy-stage-e33/node_modules/playwright')
-const fs = require('fs')
-const { instalarGuardia } = require('../../scripts/qa/guardia-produccion.cjs') // R-15: contra producción solo lecturas; la telemetría y las escrituras se abortan antes de salir
-/* eslint-enable @typescript-eslint/no-require-imports */
+// Uso: node navegador-web-vitals.mjs <BASE> <salida.json> [repeticiones]   (playwright se resuelve desde el staging)
+import { chromium } from 'playwright'
+import fs from 'node:fs'
+import guardia from '../../scripts/qa/guardia-produccion.cjs' // R-15: contra producción solo lecturas; la telemetría y las escrituras se abortan antes de salir
+const { instalarGuardia } = guardia
 const BASE = process.argv[2]
 const SALIDA = process.argv[3]
 const N = Number(process.argv[4] || 3)
