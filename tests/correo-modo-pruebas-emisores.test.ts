@@ -15,6 +15,9 @@ import { enviarInvitacion } from '../src/lib/invitacion-correo'
 import { mandar } from '../src/lib/citas/enviar'
 import { CORREO_CONTACTO } from '../src/lib/contacto'
 
+// MKT-60: estas pruebas ejercitan el camino con la compuerta común ENCENDIDA; el camino apagado lo cubre tests/correo-compuerta-envio.test.ts.
+process.env.CORREO_ENVIO = '1'
+
 /**
  * D-80 — MODO DE PRUEBAS en TODOS los emisores de correo del sitio (los tres anteriores a D-80 incluidos).
  * `fetch` es un doble: no sale ningún correo ni se usa ninguna clave real.

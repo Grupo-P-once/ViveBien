@@ -107,6 +107,9 @@ import { GET as listarCitas } from '../src/app/api/citas/route'
 import { GET as leerCita } from '../src/app/api/citas/[id]/route'
 import { POST as transicionRuta } from '../src/app/api/citas/[id]/transicion/route'
 
+// MKT-60: estas pruebas ejercitan el camino con la compuerta común ENCENDIDA; el camino apagado lo cubre tests/correo-compuerta-envio.test.ts.
+process.env.CORREO_ENVIO = '1'
+
 // ── Fixtures ───────────────────────────────────────────────────
 
 const ID = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`

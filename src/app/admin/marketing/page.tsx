@@ -14,7 +14,7 @@ import MatrizDeEventos from '@/components/admin/marketing/MatrizDeEventos'
  */
 type Cupo = { hoy: number; tope_dia: number; mes: number; tope_mes: number } | null
 type Resumen = {
-  banderas: { entorno: string; transaccionalEncendido: boolean; marketingAutorizado: boolean; marketingEncendido: boolean; modoPruebas: boolean }
+  banderas: { entorno: string; envioEncendido?: boolean; transaccionalEncendido: boolean; marketingAutorizado: boolean; marketingEncendido: boolean; modoPruebas: boolean }
   cupo: { total: { dia: number; mes: number }; libroProduccion: Cupo; libroPruebas: Cupo; migracionAplicada: boolean; limite: string }
   estadoDeEnvio: { bloqueado: boolean; motivo: string | null; explicacion: string }
   conciliacion: { leido_en: string; resend_dia_usado: number; resend_mes_usado: number; vence_en: string | null; vigente: boolean; periodo: string } | null
@@ -77,6 +77,7 @@ export default function PanelMarketing() {
           <div className="mt-3 space-y-3 text-sm">
             <ul className="list-disc space-y-1 pl-5">
               <li>Entorno de este despliegue: <strong>{resumen.banderas.entorno === 'produccion' ? 'producción' : 'pruebas (no envía correo real)'}</strong>.</li>
+              <li>Compuerta de envío (todos los correos): <strong>{resumen.banderas.envioEncendido ? 'encendida' : 'apagada (no sale ningún correo)'}</strong>.</li>
               <li>Correos transaccionales nuevos: <strong>{resumen.banderas.transaccionalEncendido ? 'encendidos' : 'apagados'}</strong>. Promociones: <strong>{resumen.banderas.marketingAutorizado ? 'autorizadas' : 'apagadas (falta texto legal aprobado)'}</strong>. Modo de pruebas: <strong>{resumen.banderas.modoPruebas ? 'activo (todo va a informes@)' : 'apagado'}</strong>.</li>
               <li>Tope de VIVE BIEN: {resumen.cupo.total.dia} al día y {resumen.cupo.total.mes} por ciclo (el plan gratuito permite 100 y 3,000).</li>
               <li>

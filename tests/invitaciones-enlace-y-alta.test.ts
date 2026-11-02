@@ -79,6 +79,9 @@ import { esAscenso, RANGO_DE_ROL } from '../src/lib/acceso/roles'
 import { escaparLike, normalizarCorreo } from '../src/lib/invitaciones'
 import { invitacionDeOtroCorreo, pantallaDeDashboard } from '../src/lib/acceso/destino-dashboard'
 
+// MKT-60: estas pruebas ejercitan el camino con la compuerta común ENCENDIDA; el camino apagado lo cubre tests/correo-compuerta-envio.test.ts.
+process.env.CORREO_ENVIO = '1'
+
 const invitar = (cuerpo: Record<string, unknown>) =>
   POST(new Request('https://vivebienn.com/api/admin/invitaciones', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(cuerpo) }))
 

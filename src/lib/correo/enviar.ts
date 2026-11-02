@@ -1,5 +1,5 @@
 import { NEGOCIO } from '../config/negocio'
-import { DESTINO_PRUEBAS, entornoCorreo, entornoDeCupo, envioPermitido, type EntornoCorreo, type EntornoDeCupo } from './config'
+import { DESTINO_PRUEBAS, entornoCorreo, entornoDeCupo, envioHabilitado, envioPermitido, type EntornoCorreo, type EntornoDeCupo } from './config'
 import { normalizarCorreo } from './seguridad'
 import { cuerpoDePruebas, exigirSoloDestinoDePruebas, idDePrueba, llamarResend, MARCA_PRUEBA, prefijoDePrueba } from './resend'
 
@@ -109,6 +109,8 @@ export async function marcarEnvio(db: DbCorreo, id: number, estado: 'enviado' | 
 
 export async function enviarCorreo(db: DbCorreo, s: SolicitudCorreo, o: Opciones = {}): Promise<ResultadoEnvio> {
   const env = o.entorno ?? entornoCorreo()
+  // COMPUERTA COMÚN (MKT-60): la misma que usa `enviarPorEmisorUnico`. Va antes de cualquier otra regla; ausente o apagada = no se envía nada.
+  if (!envioHabilitado()) return { estado: 'omitido', motivo: 'envio_apagado' }
   // Se valida el destinatario ORIGINAL igual que en producción (una lista, un correo con saltos de línea o uno inválido se omite); en modo de
   // pruebas, DESPUÉS se sustituye por el destino de pruebas, antes de reservar, registrar o enviar nada.
   const original = normalizarCorreo(s.para)

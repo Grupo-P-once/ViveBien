@@ -11,6 +11,9 @@ import { ejecutarTareaMarketing } from '../src/lib/correo/tarea'
 import { enviarBienvenida, enviarConfirmacionPublicador } from '../src/lib/correo/transaccionales'
 import { crearEnlace, leerEnlace } from '../src/lib/correo/seguridad'
 
+// MKT-60: estas pruebas ejercitan el camino con la compuerta común ENCENDIDA; el camino apagado lo cubre tests/correo-compuerta-envio.test.ts.
+process.env.CORREO_ENVIO = '1'
+
 /**
  * D-80 — el sistema de correo DE PUNTA A PUNTA, sin enviar nada: el TypeScript real habla con las funciones SQL reales de la
  * migración 36 (en PGlite) y con un «Resend» falso que sólo anota las peticiones. NADA toca producción ni a nadie.

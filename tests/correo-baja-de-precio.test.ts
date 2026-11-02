@@ -11,6 +11,9 @@ afterAll(async () => { await libro?.cerrar() })
 import { crearBase, type Fila } from './dobles/supabase-memoria'
 import { correoDeBajaDePrecio } from '../src/lib/avisos-cliente'
 
+// MKT-60: estas pruebas ejercitan el camino con la compuerta común ENCENDIDA; el camino apagado lo cubre tests/correo-compuerta-envio.test.ts.
+process.env.CORREO_ENVIO = '1'
+
 /**
  * CORREO de «baja de precio» con RESEND SIMULADO (28-oct-2026). Nada sale a la red. Se prueba: que un aviso en la bandeja NO es un correo; que solo con consentimiento PROPIO (`correo_precio`)
  * sale un correo, al destinatario correcto y con sus datos; que no se duplica; que un fallo de Resend no lo marca como enviado y se reintenta; que la baja en un clic apaga el correo;

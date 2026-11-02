@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { BIBLIOTECA, MATRIZ_DE_EVENTOS, vistaPrevia } from '../src/lib/correo/biblioteca'
 import { olvidarCorreoDeCuenta, purgarCorreo } from '../src/lib/correo/retencion'
 import type { DbCorreo } from '../src/lib/correo/enviar'
@@ -227,6 +227,20 @@ describe('retención y olvido: nunca bloquean ni exponen datos', () => {
 
 describe('F2 · el panel explica POR QUÉ el envío está bloqueado (falla cerrada)', () => {
   const estado = async () => (await (await resumen(req('/api/admin/marketing/resumen'))).json()).estadoDeEnvio as { bloqueado: boolean; motivo: string | null; explicacion: string }
+  // MKT-60: estas pruebas miran los motivos que vienen DESPUÉS de la compuerta común; con ella apagada el motivo siempre es `envio_apagado`.
+  beforeEach(() => { process.env.CORREO_ENVIO = '1' })
+  afterEach(() => { delete process.env.CORREO_ENVIO })
+
+  it('MKT-60: con la compuerta CORREO_ENVIO apagada (ausente, vacía, 0) → bloqueado por `envio_apagado`, aunque haya lectura vigente y libro', async () => {
+    como('admin')
+    mundo.conciliacion = { leido_en: new Date().toISOString(), resend_dia_usado: 1, resend_mes_usado: 4 }
+    for (const v of [undefined, '', '0', 'true']) {
+      if (v === undefined) delete process.env.CORREO_ENVIO; else process.env.CORREO_ENVIO = v
+      const e = await estado()
+      expect(e).toMatchObject({ bloqueado: true, motivo: 'envio_apagado' })
+      expect(e.explicacion).toMatch(/CORREO_ENVIO/)
+    }
+  })
 
   it('producción sin lectura vigente de Resend → bloqueado, con el motivo', async () => {
     como('admin')

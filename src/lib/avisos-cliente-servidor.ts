@@ -11,6 +11,7 @@ import {
 } from '@/lib/avisos-cliente'
 import { crearTokenDeBaja } from '@/lib/avisos-token'
 import { claveResend, enviarPorEmisorUnico } from '@/lib/correo/emisor'
+import { envioHabilitado } from '@/lib/correo/config'
 import { createHash } from 'node:crypto'
 import { cambiosDePrecio, type PropiedadConPrecio, type SuscripcionDePrecio } from '@/lib/avisos-precio'
 
@@ -150,7 +151,8 @@ export async function avisosDeClientes(ahora = Date.now()): Promise<ResumenDeAvi
     }
   }
 
-  // 3 · Correos
+  // 3 · Correos. COMPUERTA COMÚN (MKT-60): con `CORREO_ENVIO` apagada los avisos quedan en la bandeja del portal y no se toca ninguna otra cosa.
+  if (!envioHabilitado()) { r.omitido = 'envio_apagado'; return r }
   const pendientes = await db.from('notificaciones').select('id, uid, tipo, titulo, cuerpo, enlace, busqueda_id, propiedad_id, clave').is('correo_enviado_en', null).in('tipo', ['busqueda_nueva', 'baja_de_precio', 'legal']).order('creada_en', { ascending: true }).limit(3000)
   if (pendientes.error || !pendientes.data?.length) return r
   const filas = pendientes.data as Array<NotificacionNueva & { id: number }>

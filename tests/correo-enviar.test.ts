@@ -2,6 +2,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { enviarCorreo, type DbCorreo, type SolicitudCorreo } from '../src/lib/correo/enviar'
 import { entornoCorreo, type EntornoCorreo } from '../src/lib/correo/config'
 
+// MKT-60: estas pruebas ejercitan el camino con la compuerta común ENCENDIDA; el camino apagado lo cubre tests/correo-compuerta-envio.test.ts.
+process.env.CORREO_ENVIO = '1'
+
 /** D-80 — el envío: banderas apagadas, reserva en la base, cabeceras de baja, errores sin filtrar y registros sin datos personales. */
 const ENV: EntornoCorreo = { transaccional: true, marketing: true, resendKey: 're_clave_secreta_de_prueba', secreto: 's'.repeat(40), webhookSecret: '', remitente: null, remitenteMarketing: null }
 const BASE: SolicitudCorreo = { clave: 'bienvenida/uid-1', categoria: 'transaccional', tipo: 'bienvenida', para: 'Persona@Ejemplo.test', asunto: 'Hola', html: '<p>hola</p>', texto: 'hola' }

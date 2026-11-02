@@ -10,6 +10,9 @@ beforeEach(async () => { await libro.vaciar() })
 afterAll(async () => { await libro?.cerrar() })
 import { crearBase, type Fila } from './dobles/supabase-memoria'
 
+// MKT-60: estas pruebas ejercitan el camino con la compuerta común ENCENDIDA; el camino apagado lo cubre tests/correo-compuerta-envio.test.ts.
+process.env.CORREO_ENVIO = '1'
+
 /**
  * La tarea de avisos a clientes y las rutas del portal (28-oct-2026): contactos, notificaciones, preferencias y baja en un clic.
  * Supabase y Resend DE MEMORIA: nada sale a la red. Se prueba lo que importa: idempotencia, consentimiento, aislamiento entre personas y que lo fallido se reintente sin duplicar.
@@ -300,4 +303,32 @@ describe('baja de avisos en un clic', () => {
     expect(g.headers.get('content-security-policy')).toContain("default-src 'none'")
     expect(g.headers.get('x-robots-tag')).toBe('noindex')
   })
+})
+
+// MKT-60: con la compuerta común apagada la tarea diaria sigue creando los avisos del portal, pero NO manda ningún correo ni toca el libro.
+describe('tarea de avisos a clientes — compuerta CORREO_ENVIO apagada', () => {
+  const base = () => crearBase({
+    usuarios: [{ uid: 'u-ana', email: 'ana@ejemplo.invalid', nombre: 'Ana', estado: 'activo' }],
+    propiedades: [prop('b', { publicada_en: hace(0.5), created_at: hace(0.5) })],
+    busquedas_guardadas: [{ id: 1, uid: 'u-ana', nombre: 'Casas en León', filtros: { op: 'venta', tipo: 'casa' }, alertas: true, frecuencia: 'diaria', creado_en: hace(10), avisada_en: null }],
+    preferencias_notificacion: [{ uid: 'u-ana', correo_alertas: true, correo_legal: true }],
+    legal_aceptaciones: [],
+    notificaciones: [],
+  }, { unicas: { notificaciones: ['uid', 'clave'] } }, { notificaciones: () => ({ creada_en: new Date().toISOString() }) })
+
+  for (const v of [undefined, '', '0']) {
+    it(`CORREO_ENVIO=${JSON.stringify(v)}: avisos en el portal sí, correos no (queda pendiente para cuando se encienda)`, async () => {
+      const antes = process.env.CORREO_ENVIO
+      if (v === undefined) delete process.env.CORREO_ENVIO; else process.env.CORREO_ENVIO = v
+      try {
+        estado.base = base()
+        const { avisosDeClientes } = await import('../src/lib/avisos-cliente-servidor')
+        const r = await avisosDeClientes()
+        expect(r).toMatchObject({ notificacionesNuevas: 1, correosEnviados: 0, correosFallidos: 0, omitido: 'envio_apagado' })
+        expect(enviados).toEqual([])
+        expect(await libro.usados()).toBe(0)
+        expect(estado.base!.tablas.notificaciones[0].correo_enviado_en ?? null).toBeNull()
+      } finally { if (antes === undefined) delete process.env.CORREO_ENVIO; else process.env.CORREO_ENVIO = antes }
+    })
+  }
 })

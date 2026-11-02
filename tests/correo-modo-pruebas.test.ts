@@ -3,6 +3,9 @@ import { DESTINO_PRUEBAS, entornoCorreo, type EntornoCorreo } from '../src/lib/c
 import { enviarCorreo, exigirSoloDestinoDePruebas, MARCA_PRUEBA, type DbCorreo, type SolicitudCorreo } from '../src/lib/correo/enviar'
 import { ENLACE_INERTE } from '../src/lib/correo/resend'
 
+// MKT-60: estas pruebas ejercitan el camino con la compuerta común ENCENDIDA; el camino apagado lo cubre tests/correo-compuerta-envio.test.ts.
+process.env.CORREO_ENVIO = '1'
+
 /**
  * D-80 — MODO DE PRUEBAS: con `CORREO_MODO_PRUEBAS=1` NINGÚN correo puede salir hacia otra dirección que `informes@vivebienn.com`.
  * La restricción vive en el punto central de envío (`enviarCorreo`) y se comprueba otra vez sobre el cuerpo ya armado, justo antes de llamar

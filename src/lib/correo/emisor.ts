@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto'
-import { DESTINO_PRUEBAS, entornoCorreo, entornoDeCupo, envioPermitido, type EntornoDeCupo } from './config'
+import { DESTINO_PRUEBAS, entornoCorreo, entornoDeCupo, envioHabilitado, envioPermitido, type EntornoDeCupo } from './config'
 import { marcarEnvio, reservarCupo, type CategoriaCorreo, type DbCorreo } from './enviar'
 import { dbDelLibro } from './libro'
 import { normalizarCorreo } from './seguridad'
@@ -58,6 +58,9 @@ export const claveResend = (): string => entornoCorreo().resendKey
 const YA_SALIO = new Set(['enviado', 'entregado', 'rebotado', 'queja'])
 
 export async function enviarPorEmisorUnico(p: PedidoEmisor): Promise<ResultadoEmisor> {
+  // COMPUERTA COMÚN (MKT-60): sin `CORREO_ENVIO=1` no sale nada, ni se reserva cupo ni se toca la base. Es lo PRIMERO que se mira y SOLO
+  // depende de la variable de entorno: el pedido no trae ningún parámetro que la salte (ni siquiera para pruebas; ellas fijan la variable).
+  if (!envioHabilitado()) return { ok: false, estado: 'bloqueado', detalle: 'envio_apagado' }
   if (!p.apiKey) return { ok: false, estado: 'sin_clave' }
   if (p.clave.length < 3 || p.clave.length > 200) return { ok: false, estado: 'invalido', detalle: 'clave_invalida' }
   const pruebas = p.modoPruebas ?? modoPruebasActivo()

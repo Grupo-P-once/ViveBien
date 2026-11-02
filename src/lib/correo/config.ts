@@ -122,5 +122,14 @@ export function entornoCorreo(env: Record<string, string | undefined> = process.
   }
 }
 
+/**
+ * COMPUERTA COMÚN DE ENVÍO (MKT-60, 2-nov-2026). Lo decide `CORREO_ENVIO`, leída en el momento de usarla. La lectura de uso de Resend
+ * (el cupo) NO enciende nada por sí sola: antes de esta compuerta, `enviarPorEmisorUnico` solo estaba frenado por la falta de esa lectura,
+ * así que guardarla abría el aviso de contacto, las invitaciones, las citas y los avisos a clientes sin que nadie lo hubiera pedido.
+ */
+// Cierre seguro: solo el valor exacto '1' enciende; ausente, vacío o cualquier otra cosa = apagada. Se lee SIEMPRE de la variable de entorno real:
+// ningún objeto ni parámetro de entorno inyectado (`Opciones.entorno`, pedidos del emisor) puede encenderla.
+export const envioHabilitado = (env: Record<string, string | undefined> = process.env): boolean => env.CORREO_ENVIO === '1'
+
 /** El secreto de los enlaces firmados debe ser largo: uno corto o ausente deja el marketing apagado. */
 export const SECRETO_MINIMO = 32

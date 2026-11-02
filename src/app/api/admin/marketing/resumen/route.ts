@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { exigir, supabaseAdmin } from '@/lib/auth-server'
 import { frenarAsync, TOPES } from '@/lib/limites'
-import { CUPO_POR_ENTORNO, CUPO_TOTAL, entornoCorreo, entornoDeCupo, MARKETING_AUTORIZADO } from '@/lib/correo/config'
+import { CUPO_POR_ENTORNO, CUPO_TOTAL, entornoCorreo, entornoDeCupo, envioHabilitado, MARKETING_AUTORIZADO } from '@/lib/correo/config'
 
 /**
  * Resumen del panel «Marketing y correos» (F1). SOLO LECTURA y SOLO AGREGADOS: cupo, última conciliación con Resend, banderas y conteos de consentimiento.
@@ -63,7 +63,7 @@ export async function GET(req: Request) {
 
   // ¿Puede salir un correo AHORA? Es lo que decide la base en cada envío; aquí sólo se explica el motivo. Fuera de producción la salida es SIMULADA.
   const enProduccion = entornoDeCupo() === 'produccion'
-  const motivoDeBloqueo = !enProduccion ? 'fuera_de_produccion_simulado' : cupoProd === null ? 'libro_sin_migracion' : !lecturaVigente ? 'sin_lectura_vigente_de_resend' : null
+  const motivoDeBloqueo = !enProduccion ? 'fuera_de_produccion_simulado' : !envioHabilitado() ? 'envio_apagado' : cupoProd === null ? 'libro_sin_migracion' : !lecturaVigente ? 'sin_lectura_vigente_de_resend' : null
 
   return NextResponse.json(
     {
@@ -73,11 +73,12 @@ export async function GET(req: Request) {
         motivo: motivoDeBloqueo,
         explicacion:
           motivoDeBloqueo === 'fuera_de_produccion_simulado' ? 'Este despliegue no es producción: todo envío es SIMULADO y no llama a Resend.'
+            : motivoDeBloqueo === 'envio_apagado' ? 'La compuerta de envío (CORREO_ENVIO) está apagada: ningún correo sale, sin importar la lectura de Resend ni el cupo.'
             : motivoDeBloqueo === 'libro_sin_migracion' ? 'La migración del libro de correo no está aplicada en esta base: no se puede confirmar el cupo, por eso no sale ningún correo.'
               : motivoDeBloqueo === 'sin_lectura_vigente_de_resend' ? 'No hay una lectura vigente (de los últimos 8 días) del panel de Resend: no se puede probar el consumo total de la cuenta, por eso no sale ningún correo. El Super Admin debe registrar una lectura.'
                 : 'Hay libro de cupo y una lectura vigente de Resend: los envíos pueden salir mientras haya cupo.',
       },
-      banderas: { entorno: entornoDeCupo(), transaccionalEncendido: env.transaccional, marketingAutorizado: MARKETING_AUTORIZADO, marketingEncendido: env.marketing, modoPruebas: env.modoPruebas === true },
+      banderas: { entorno: entornoDeCupo(), envioEncendido: envioHabilitado(), transaccionalEncendido: env.transaccional, marketingAutorizado: MARKETING_AUTORIZADO, marketingEncendido: env.marketing, modoPruebas: env.modoPruebas === true },
       cupo: {
         total: CUPO_TOTAL,
         rebanadas: CUPO_POR_ENTORNO,

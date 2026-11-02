@@ -7,6 +7,9 @@ import { mandar } from '../src/lib/citas/enviar'
 import { DESTINO_PRUEBAS } from '../src/lib/correo/config'
 import { idDePrueba, llamarResend } from '../src/lib/correo/resend'
 
+// MKT-60: estas pruebas ejercitan el camino con la compuerta común ENCENDIDA; el camino apagado lo cubre tests/correo-compuerta-envio.test.ts.
+process.env.CORREO_ENVIO = '1'
+
 /**
  * F0 — CUPO DURO Y EMISOR ÚNICO, de punta a punta con el libro REAL (migración 62 en PGlite) y un «Resend» falso.
  * Regla del dueño: el plan gratuito de Resend no se rebasa NUNCA, y si el sistema no puede confirmar el cupo, no se envía.
