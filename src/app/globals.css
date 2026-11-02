@@ -2,7 +2,7 @@
 /* Leaflet: sin su CSS las tiles se apilan y los controles quedan sueltos. */
 @import "leaflet/dist/leaflet.css";
 @import "tw-animate-css";
-@import "shadcn/tailwind.css";
+@import "./shadcn-tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
 

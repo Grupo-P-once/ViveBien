@@ -60,7 +60,6 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
-    "shadcn": "^4.21.0",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.11"
@@ -70,6 +69,7 @@
     "rimraf": {
       "glob": "^14.0.3"
     },
-    "systeminformation": "^5.33.18"
+    "systeminformation": "^5.33.18",
+    "minimatch": "^11.0.4"
   }
 }
