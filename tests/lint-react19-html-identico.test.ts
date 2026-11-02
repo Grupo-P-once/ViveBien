@@ -1,0 +1,51 @@
+import { createHash } from 'node:crypto'
+import { createElement } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
+import { describe, expect, it, vi } from 'vitest'
+
+/**
+ * LINT-1 (2-nov-2026) — PRUEBA DE CARACTERIZACIÓN. Al sacar los componentes definidos DENTRO del render (regla `react-hooks/static-components`)
+ * a nivel de módulo, el HTML que producen Términos, Privacidad y la Vista previa del anuncio NO puede cambiar ni una letra. Los hashes de abajo
+ * se calcularon con el código ANTERIOR a la limpieza (commit 5bda322); la prueba debe pasar igual antes y después.
+ * Header y Footer (componentes de cliente con sesión) se sustituyen por marcadores: no forman parte de lo que se limpia.
+ */
+vi.mock('@/components/Header', () => ({ default: () => null }))
+vi.mock('@/components/Footer', () => ({ default: () => null }))
+
+const huella = (html: string) => createHash('sha256').update(html).digest('hex').slice(0, 24)
+
+describe('el HTML de las páginas legales y de la vista previa no cambia con la limpieza de lint', () => {
+  it('Términos y Condiciones: texto y marcado idénticos', async () => {
+    const { default: Terminos } = await import('../src/app/terminos/page')
+    const html = renderToStaticMarkup(createElement(Terminos))
+    expect(html.length).toBeGreaterThan(5000)
+    expect({ largo: html.length, huella: huella(html) }).toEqual(GOLDEN.terminos)
+  })
+
+  it('Aviso de Privacidad: texto y marcado idénticos', async () => {
+    const { default: Privacidad } = await import('../src/app/privacidad/page')
+    const html = renderToStaticMarkup(createElement(Privacidad))
+    expect(html.length).toBeGreaterThan(5000)
+    expect({ largo: html.length, huella: huella(html) }).toEqual(GOLDEN.privacidad)
+  })
+
+  it('Vista previa del anuncio: vacía (todos los huecos) y completa', async () => {
+    const { default: Vista } = await import('../src/components/VistaPreviaAnuncio')
+    const vacia = renderToStaticMarkup(createElement(Vista, {}))
+    const completa = renderToStaticMarkup(createElement(Vista, {
+      titulo: 'Casa en Jardines del Moral', precio: 3_450_000, mantenimiento: 1200, operacion: 'renta', tipo: 'casa',
+      colonia: 'Jardines del Moral', ciudad: 'León', metros: 180, recamaras: 3, banos: 2, fotos: ['https://ejemplo.invalid/a.jpg'],
+      extras: { caracteristicas: { estacionamientos: 2, amueblado: true } },
+    }))
+    expect(vacia).toContain('Falta el precio')
+    expect(completa).toContain('/ mes')
+    expect({ vacia: [vacia.length, huella(vacia)], completa: [completa.length, huella(completa)] }).toEqual(GOLDEN.vista)
+  })
+})
+
+// Se rellenan con la salida de la primera corrida sobre 5bda322 (ver `LINT-1` en Obsidian).
+const GOLDEN = {
+  terminos: { largo: 16239, huella: 'a6e70381e1d74809281184c1' },
+  privacidad: { largo: 19865, huella: '5b4689d21f3284e3683862a8' },
+  vista: { vacia: [1542, '3e9aec9a7dd433947f70cf9c'], completa: [1671, 'bb0ae8ee6f77aa2dba096a35'] },
+} as { terminos: { largo: number; huella: string }; privacidad: { largo: number; huella: string }; vista: { vacia: [number, string]; completa: [number, string] } }
