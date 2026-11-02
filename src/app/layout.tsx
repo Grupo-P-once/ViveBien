@@ -1,3 +1,4 @@
+import './fuentes.css' // Montserrat, Open Sans y Playfair Display alojadas en /fuentes (LINT-2): mismas familias, pesos y display=swap que antes de Google
 import type { Metadata } from 'next'
 import './globals.css'
 import WAFloat from '@/components/WAFloat'
@@ -55,13 +56,6 @@ export default function RootLayout({
   return (
     <html lang="es">
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* eslint-disable-next-line @next/next/no-page-custom-font -- el layout raíz del App Router carga la fuente en TODAS las páginas; la regla describe el Pages Router (nextjs.org/docs/messages/no-page-custom-font) */}
-        <link
-          href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Open+Sans:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700;1,900&display=swap"
-          rel="stylesheet"
-        />
         <link
           rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
