@@ -1,6 +1,6 @@
 'use client'
 import { precioPorM2 } from '@/lib/medidas'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { auth } from '@/lib/firebase'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -106,29 +106,30 @@ export default function MetricasCliente() {
   const [perfil, setPerfil] = useState<Perfil>({})
   const [cargando, setCargando] = useState(true)
 
-  const cargar = useCallback(async () => {
-    try {
-      const h = await cabeceras()
-      const [rp, rf, rm] = await Promise.all([
-        fetch('/api/catalogo'), // E-35: la lectura pública es el catálogo, no la ruta de administración
-        fetch('/api/favoritos', { headers: h }),
-        fetch('/api/usuarios/me', { headers: h }),
-      ])
-      if (rp.ok) {
-        const d = await rp.json()
-        const lista = Array.isArray(d) ? d : d?.propiedades
-        setProps(Array.isArray(lista) ? lista : [])
-      }
-      if (rf.ok) {
-        const d = await rf.json()
-        setFavIds(Array.isArray(d) ? d : [])
-      }
-      if (rm.ok) setPerfil(await rm.json())
-    } catch { /* las tarjetas dicen que faltan datos */ }
-    setCargando(false)
+  useEffect(() => {
+    const cargar = async () => {
+      try {
+        const h = await cabeceras()
+        const [rp, rf, rm] = await Promise.all([
+          fetch('/api/catalogo'), // E-35: la lectura pública es el catálogo, no la ruta de administración
+          fetch('/api/favoritos', { headers: h }),
+          fetch('/api/usuarios/me', { headers: h }),
+        ])
+        if (rp.ok) {
+          const d = await rp.json()
+          const lista = Array.isArray(d) ? d : d?.propiedades
+          setProps(Array.isArray(lista) ? lista : [])
+        }
+        if (rf.ok) {
+          const d = await rf.json()
+          setFavIds(Array.isArray(d) ? d : [])
+        }
+        if (rm.ok) setPerfil(await rm.json())
+      } catch { /* las tarjetas dicen que faltan datos */ }
+      setCargando(false)
+    }
+    cargar()
   }, [])
-
-  useEffect(() => { cargar() }, [cargar])
 
   if (cargando) return null
 

@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { auth } from '@/lib/firebase'
 import { nombreDe, rutaDe } from '@/lib/propiedad-publica'
@@ -45,25 +45,26 @@ export default function MisFavoritos() {
   const [cargando, setCargando] = useState(true)
   const [fallo, setFallo] = useState(false)
 
-  const cargar = useCallback(async () => {
-    try {
-      const [rf, rp] = await Promise.all([
-        fetch('/api/favoritos', { headers: await cabeceras() }),
-        fetch('/api/catalogo'), // E-35: la lectura pública es el catálogo, no la ruta de administración
-      ])
-      if (!rf.ok) { setFallo(true); setCargando(false); return }
-      const listaIds: string[] = await rf.json()
-      const cuerpo = rp.ok ? await rp.json() : []
-      const todas: Propiedad[] = Array.isArray(cuerpo) ? cuerpo : (cuerpo?.propiedades ?? [])
-      setIds(Array.isArray(listaIds) ? listaIds : [])
-      setProps(Array.isArray(todas) ? todas : [])
-    } catch {
-      setFallo(true)
+  useEffect(() => {
+    const cargar = async () => {
+      try {
+        const [rf, rp] = await Promise.all([
+          fetch('/api/favoritos', { headers: await cabeceras() }),
+          fetch('/api/catalogo'), // E-35: la lectura pública es el catálogo, no la ruta de administración
+        ])
+        if (!rf.ok) { setFallo(true); setCargando(false); return }
+        const listaIds: string[] = await rf.json()
+        const cuerpo = rp.ok ? await rp.json() : []
+        const todas: Propiedad[] = Array.isArray(cuerpo) ? cuerpo : (cuerpo?.propiedades ?? [])
+        setIds(Array.isArray(listaIds) ? listaIds : [])
+        setProps(Array.isArray(todas) ? todas : [])
+      } catch {
+        setFallo(true)
+      }
+      setCargando(false)
     }
-    setCargando(false)
+    cargar()
   }, [])
-
-  useEffect(() => { cargar() }, [cargar])
 
   async function quitar(id: string) {
     // Optimista: el corazón responde al instante y se corrige si falla.

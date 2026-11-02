@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { auth } from '@/lib/firebase'
 import { aHref, contar, describir, normalizarFiltros, type Filtros } from '@/lib/busquedas'
@@ -40,28 +40,29 @@ export default function MisBusquedas() {
   const [fallo, setFallo] = useState(false)
   const [borrando, setBorrando] = useState<number | null>(null)
 
-  const cargar = useCallback(async () => {
-    try {
-      const [rb, rc] = await Promise.all([
-        fetch('/api/busquedas', { headers: await cabeceras() }),
-        fetch('/api/catalogo'),
-      ])
-      if (!rb.ok) { setFallo(true); setCargando(false); return }
-      const jb = await rb.json()
-      setBusquedas(Array.isArray(jb.busquedas) ? jb.busquedas : [])
-      // Sin catálogo se enseñan las búsquedas igual, sólo sin contador.
-      if (rc.ok) {
-        const jc = await rc.json().catch(() => ({}))
-        setCatalogo(Array.isArray(jc.propiedades) ? jc.propiedades : null)
+  useEffect(() => {
+    const cargar = async () => {
+      try {
+        const [rb, rc] = await Promise.all([
+          fetch('/api/busquedas', { headers: await cabeceras() }),
+          fetch('/api/catalogo'),
+        ])
+        if (!rb.ok) { setFallo(true); setCargando(false); return }
+        const jb = await rb.json()
+        setBusquedas(Array.isArray(jb.busquedas) ? jb.busquedas : [])
+        // Sin catálogo se enseñan las búsquedas igual, sólo sin contador.
+        if (rc.ok) {
+          const jc = await rc.json().catch(() => ({}))
+          setCatalogo(Array.isArray(jc.propiedades) ? jc.propiedades : null)
+        }
+        setFallo(false)
+      } catch {
+        setFallo(true)
       }
-      setFallo(false)
-    } catch {
-      setFallo(true)
+      setCargando(false)
     }
-    setCargando(false)
+    cargar()
   }, [])
-
-  useEffect(() => { cargar() }, [cargar])
 
   async function borrar(id: number) {
     setBorrando(id)

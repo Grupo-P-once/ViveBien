@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { auth } from '@/lib/firebase'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -132,23 +132,24 @@ export default function Metricas({ propiedades, leads, contactos }: Props) {
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
 
-  const cargar = useCallback(async () => {
-    try {
-      const res = await fetch('/api/eventos', { headers: await cabeceras() })
-      if (!res.ok) {
-        setError('No se pudieron cargar las métricas.')
-        setResumen(null)
-      } else {
-        setResumen(await res.json())
-        setError('')
+  useEffect(() => {
+    const cargar = async () => {
+      try {
+        const res = await fetch('/api/eventos', { headers: await cabeceras() })
+        if (!res.ok) {
+          setError('No se pudieron cargar las métricas.')
+          setResumen(null)
+        } else {
+          setResumen(await res.json())
+          setError('')
+        }
+      } catch {
+        setError('Error de red al cargar las métricas.')
       }
-    } catch {
-      setError('Error de red al cargar las métricas.')
+      setCargando(false)
     }
-    setCargando(false)
+    cargar()
   }, [])
-
-  useEffect(() => { cargar() }, [cargar])
 
   const publicadas = propiedades.filter(
     p => (p.estado_pub ?? 'publicada') === 'publicada' && p.estatus === 'disponible',
