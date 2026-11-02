@@ -29,7 +29,6 @@ vi.mock('@/lib/limites', async (original) => ({ ...(await original<typeof import
 vi.mock('@/lib/auditoria', () => ({ registrar: async (e: Record<string, unknown>) => { estado.bitacora.push(e) } }))
 
 const ANA: Perfil = { uid: 'u-ana', email: 'ana@ejemplo.invalid', rol: 'cliente', superAdmin: false }
-const LUIS: Perfil = { uid: 'u-luis', email: 'luis@ejemplo.invalid', rol: 'cliente', superAdmin: false }
 const hace = (dias: number) => new Date(Date.now() - dias * 86_400_000).toISOString()
 const prop = (id: string, sobre: Fila = {}): Fila => ({ id, titulo: `Casa ${id}`, tipo: 'casa', operacion: 'venta', precio: 3_000_000, precio_incluye_iva: false, moneda: 'MXN', ubicacion: 'León', colonia: 'Cañada', ciudad: 'León', metros: 200, recamaras: 3, banos: 2, altura_libre: null, andenes: null, estatus: 'disponible', estado_pub: 'publicada', slug: `casa-${id}`, folio: `VB-2026-0000${id.length}`, fotos: [], publicada_en: hace(1), created_at: hace(1), extras: null, ...sobre })
 const POST = (url: string, cuerpo: unknown) => new Request(`https://vb.test${url}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(cuerpo) })

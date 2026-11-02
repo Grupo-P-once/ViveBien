@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { DESTINO_PRUEBAS, entornoCorreo, type EntornoCorreo } from '../src/lib/correo/config'
-import { enviarCorreo, exigirSoloDestinoDePruebas, MARCA_PRUEBA, type DbCorreo, type SolicitudCorreo } from '../src/lib/correo/enviar'
+import { enviarCorreo, exigirSoloDestinoDePruebas, type DbCorreo, type SolicitudCorreo } from '../src/lib/correo/enviar'
 import { ENLACE_INERTE } from '../src/lib/correo/resend'
 
 // MKT-60: estas pruebas ejercitan el camino con la compuerta común ENCENDIDA; el camino apagado lo cubre tests/correo-compuerta-envio.test.ts.

@@ -70,7 +70,8 @@ export async function avisarDeLead(lead: Lead): Promise<Resultado> {
   if (!clave) {
     // No es un error: es que todavía no se ha configurado. Se registra para
     // que quede rastro de cuántos avisos se están perdiendo.
-    console.warn(`[aviso-lead] sin RESEND_API_KEY — nadie fue avisado de: ${lead.nombre} (${lead.telefono})`)
+    // Sin nombre ni teléfono: el contacto ya quedó guardado en la base y un registro de la plataforma no debe llevar datos personales.
+    console.warn('[aviso-lead] sin RESEND_API_KEY — un contacto nuevo no fue avisado por correo (quedó guardado)')
     return { enviado: false, motivo: 'sin-configurar' }
   }
 

@@ -49,7 +49,8 @@ export async function enviarInvitacion(opciones: {
   const papel = ROL_EN_PALABRAS[opciones.rol] ?? opciones.rol
 
   if (!clave) {
-    console.warn(`[invitacion] sin RESEND_API_KEY — no se avisó a ${opciones.email}`)
+    // Sin la dirección de la persona invitada: un registro de la plataforma no debe llevar correos.
+    console.warn('[invitacion] sin RESEND_API_KEY — no se avisó por correo a la persona invitada')
     return { enviado: false, motivo: 'sin-configurar' }
   }
 
