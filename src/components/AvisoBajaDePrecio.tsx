@@ -36,10 +36,16 @@ export default function AvisoBajaDePrecio({ propiedadId, isLoggedIn }: { propied
   // 404 de la puerta del portal (portal cerrado para esta cuenta): NO es «muy pronto», es «no está disponible para tu cuenta».
   const [portalCerrado, setPortalCerrado] = useState(false)
 
+  // Al cambiar de ficha o de sesión el estado se recalcula al instante (ajuste durante el render); el efecto solo hace la consulta.
+  const [vista, setVista] = useState({ isLoggedIn, propiedadId })
+  if (vista.isLoggedIn !== isLoggedIn || vista.propiedadId !== propiedadId) {
+    setVista({ isLoggedIn, propiedadId })
+    setEstado(isLoggedIn ? 'cargando' : 'inactivo')
+  }
+
   useEffect(() => {
-    if (!isLoggedIn) { setEstado('inactivo'); return }
+    if (!isLoggedIn) return
     let vivo = true
-    setEstado('cargando')
     llamar('GET', propiedadId).then((r) => {
       if (!vivo) return
       if (r.ok) setEstado(r.activo ? 'activo' : 'inactivo')

@@ -34,7 +34,7 @@ export const options = {
 
 const pausa = () => sleep(1 + Math.random() * 2)
 
-export default function () {
+export default function escenarioB100UsuariosConcurrentes() {
   iniciarVisita()
   leer('home', '/'); pausa()
   leer('listado', '/propiedades'); leer('catalogo', '/api/catalogo'); pausa()

@@ -13,7 +13,7 @@ export default function DialogoNuevaPropiedad() {
   const [abierto, setAbierto] = useState(false)
   useEffect(() => {
     const abrir = () => { consumirNuevaPendiente(); setAbierto(true) }
-    if (consumirNuevaPendiente()) setAbierto(true)
+    if (consumirNuevaPendiente()) queueMicrotask(() => setAbierto(true))
     window.addEventListener(EVENTO_NUEVA_PROPIEDAD, abrir)
     return () => window.removeEventListener(EVENTO_NUEVA_PROPIEDAD, abrir)
   }, [])

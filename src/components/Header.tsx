@@ -1,4 +1,5 @@
 'use client'
+import NextImage from 'next/image'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -29,8 +30,9 @@ export default function Header() {
   }, [menuOpen])
 
   // Al cambiar de pagina el menu se cierra solo: si el enlace lleva a la ruta
-  // en la que ya estas, el onClick no basta para que desaparezca.
-  useEffect(() => { setMenuOpen(false) }, [ruta])
+  // en la que ya estas, el onClick no basta para que desaparezca. Se ajusta durante el render (sin efecto): no hay un pintado intermedio con el menú abierto.
+  const [rutaVista, setRutaVista] = useState(ruta)
+  if (rutaVista !== ruta) { setRutaVista(ruta); setMenuOpen(false) }
 
   async function cerrarSesion() {
     await signOut(auth)
@@ -94,7 +96,7 @@ export default function Header() {
             >
               <span style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'var(--rojo)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.85rem', fontWeight: 800, overflow: 'hidden', flexShrink: 0 }}>
                 {user.photoURL
-                  ? <img src={user.photoURL} alt="" style={{ width: '28px', height: '28px', objectFit: 'cover' }} />
+                  ? <NextImage unoptimized src={user.photoURL} alt="" width={28} height={28} style={{ width: '28px', height: '28px', objectFit: 'cover' }} />
                   : userInitial}
               </span>
               <span style={{ maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

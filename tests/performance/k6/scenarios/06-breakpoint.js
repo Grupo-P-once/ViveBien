@@ -10,4 +10,4 @@ export const options = {
   thresholds: umbrales(true),
 }
 const cola = SUPERFICIES.CLIENTE
-export default function () { pedir(cola[Math.floor(Math.random() * cola.length)]) }
+export default function escenarioBreakpoint() { pedir(cola[Math.floor(Math.random() * cola.length)]) }

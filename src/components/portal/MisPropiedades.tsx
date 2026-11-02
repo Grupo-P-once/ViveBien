@@ -50,7 +50,8 @@ function PanelPropiedades() {
   // «Nueva propiedad»: el formulario se abre EN LÍNEA, en esta misma pantalla (nada de cambiar de panel).
   // Con el marco del rol hay una VENTANA para esto; sin marco (portal cerrado) queda el formulario en línea de siempre.
   const conMarco = useSesionOpcional() !== null
-  const [abrirNueva, setAbrirNueva] = useState(false)
+  // `?nueva=1` abre el formulario sin marco; si la persona lo abre o lo cierra a mano, manda lo suyo (`abrirManual`) hasta que la URL cambie.
+  const [abrirManual, setAbrirManual] = useState<boolean | null>(null)
   const [user, setUser] = useState<User | null>(null)
   const [cargando, setCargando] = useState(true)
   const [props, setProps] = useState<Prop[]>([])
@@ -72,10 +73,11 @@ function PanelPropiedades() {
 
   // «Nueva propiedad» del portal llega aquí con `?nueva=1`: se enfoca el título y el borrador se crea al enviarlo.
   const pidioNueva = consulta.get('nueva') === '1'
+  const [pidioVisto, setPidioVisto] = useState(pidioNueva)
+  if (pidioVisto !== pidioNueva) { setPidioVisto(pidioNueva); setAbrirManual(null) }
+  const abrirNueva = abrirManual ?? (pidioNueva && !conMarco)
   useEffect(() => {
-    if (!pidioNueva) return
-    if (conMarco) abrirNuevaPropiedad()
-    else setAbrirNueva(true)
+    if (pidioNueva && conMarco) abrirNuevaPropiedad()
   }, [pidioNueva, conMarco])
   useEffect(() => {
     if (abrirNueva && !cargando && user) campoTitulo.current?.focus()
@@ -212,7 +214,7 @@ function PanelPropiedades() {
         acciones={
           <>
             {recibeCitas && <Button asChild variant="outline" className="h-10 px-4"><Link href="/publicador/citas">Citas recibidas</Link></Button>}
-            <Button className="h-10 px-4" onClick={() => (conMarco ? abrirNuevaPropiedad() : setAbrirNueva((v) => !v))}>
+            <Button className="h-10 px-4" onClick={() => (conMarco ? abrirNuevaPropiedad() : setAbrirManual(!abrirNueva))}>
               <Plus aria-hidden /> Nueva propiedad
             </Button>
           </>
@@ -227,7 +229,7 @@ function PanelPropiedades() {
         <button type="submit" style={{ padding: '12px 20px', background: 'var(--rojo)', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 700, cursor: 'pointer' }}>
           Crear borrador
         </button>
-        <button type="button" onClick={() => { setAbrirNueva(false); setNuevoTitulo('') }} style={{ padding: '12px 20px', background: '#fff', color: 'var(--azul)', border: '1px solid var(--borde-frio)', borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}>
+        <button type="button" onClick={() => { setAbrirManual(false); setNuevoTitulo('') }} style={{ padding: '12px 20px', background: '#fff', color: 'var(--azul)', border: '1px solid var(--borde-frio)', borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}>
           Cancelar
         </button>
       </form>

@@ -19,7 +19,7 @@ export const options = {
 
 const pausa = (min, max) => sleep(min + Math.random() * (max - min))
 
-export default function () {
+export default function escenarioA100VisitasPorHora() {
   iniciarVisita()
   leer('home', '/')
   pausa(5, 20)                                          // lee la portada

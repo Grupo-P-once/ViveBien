@@ -9,4 +9,4 @@ export const options = {
   scenarios: { memoria: { executor: 'constant-arrival-rate', rate: TASA, timeUnit: '1s', duration: __ENV.DURACION || '2m', preAllocatedVUs: 100, maxVUs: Number(__ENV.MAX_VUS || 2500) } },
   thresholds: umbrales(false),
 }
-export default function () { pedir(lista[Math.floor(Math.random() * lista.length)]) }
+export default function escenarioMemoria() { pedir(lista[Math.floor(Math.random() * lista.length)]) }

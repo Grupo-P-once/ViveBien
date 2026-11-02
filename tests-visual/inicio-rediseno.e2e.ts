@@ -547,10 +547,10 @@ test.describe('«Contáctanos»: mapita de la tienda', () => {
     // tarjetas a la vista según el ancho: ≥1100 → 4; ≥700 → 2; menos → al menos 1
     await page.waitForTimeout(800)
     const ancho = page.viewportSize()!.width
-    const visibles = await redes.locator('.ini-post').evaluateAll((els, ancho) => {
+    const visibles = await redes.locator('.ini-post').evaluateAll((els) => {
       const pista = document.querySelector('.ini-redes-pista')!.getBoundingClientRect()
       return els.filter((e) => { const r = e.getBoundingClientRect(); return r.left >= pista.left - 2 && r.right <= pista.right + 2 }).length
-    }, ancho)
+    })
     if (ancho >= 1100) expect(visibles).toBe(4); else if (ancho >= 700) expect(visibles).toBe(2); else expect(visibles).toBeGreaterThanOrEqual(1)
     // flechas: «anterior» deshabilitada al inicio; «siguiente» desplaza
     const pista = redes.locator('.ini-redes-pista')

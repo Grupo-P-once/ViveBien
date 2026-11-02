@@ -1,4 +1,5 @@
 'use client'
+import NextImage from 'next/image'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ArrowRight, Bookmark, ChevronLeft, ChevronRight, EllipsisVertical, Heart, MessageCircle, Send } from 'lucide-react'
 import { NEGOCIO } from '@/lib/config/negocio'
@@ -41,13 +42,13 @@ function Tarjeta({ p, red }: { p: Publicacion; red: Red }) {
   return (
     <article className="ini-post" data-red={red} data-publicacion={p.id}>
       <header className="ini-post-cab">
-        <span className="ini-post-avatar" aria-hidden><img src={LOGO} alt="" width={475} height={316} loading="lazy" decoding="async" /></span>
+        <span className="ini-post-avatar" aria-hidden><NextImage unoptimized src={LOGO} alt="" width={475} height={316} loading="lazy" decoding="async" /></span>
         <span className="ini-post-usuario">{h.usuario}</span>
         <EllipsisVertical aria-hidden size={18} className="ini-post-menu" />
       </header>
       {/* La imagen también enlaza, pero es un duplicado del enlace de abajo: se oculta a lectores y al tabulador. */}
       <a className="ini-post-img" href={destino} target="_blank" rel="noopener noreferrer" tabIndex={-1} aria-hidden>
-        <img src={`/redes/${p.imagen}`} alt="" width={p.ancho} height={p.alto} loading="lazy" decoding="async" />
+        <NextImage unoptimized src={`/redes/${p.imagen}`} alt="" width={p.ancho} height={p.alto} loading="lazy" decoding="async" />
       </a>
       <p className="ini-solo-lectores">{p.alt}</p>
       <div className="ini-post-iconos" aria-hidden>

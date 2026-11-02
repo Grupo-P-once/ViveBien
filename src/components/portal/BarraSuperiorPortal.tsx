@@ -74,7 +74,7 @@ function Campana() {
   }, [pedir])
 
   useEffect(() => {
-    void cargar()
+    void (async () => { await cargar() })() // la lectura inicial no escribe estado de forma síncrona en el efecto
     const cada = window.setInterval(() => { if (document.visibilityState === 'visible') void cargar() }, 60_000)
     const alVolver = () => { if (document.visibilityState === 'visible') void cargar() }
     document.addEventListener('visibilitychange', alVolver)

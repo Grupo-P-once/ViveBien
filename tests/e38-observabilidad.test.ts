@@ -50,7 +50,7 @@ describe('registro seguro · redactar', () => {
     expect((r.anidado as Record<string, unknown>).apiKey).toBe('[redactado]')
   })
   it('limita profundidad, listas y número de claves', () => {
-    const profundo = redactar({ a: { b: { c: { d: 'x' } } } }) as Record<string, any>
+    const profundo = redactar({ a: { b: { c: { d: 'x' } } } }) as Record<string, unknown>
     expect(JSON.stringify(profundo)).toContain('[…]')
     expect((redactar(Array.from({ length: 50 }, (_, i) => i)) as unknown[]).length).toBe(10)
   })
@@ -81,7 +81,7 @@ describe('registrarError · una línea JSON, correlacionable y saneada', () => {
     expect(o.extra.detalle).toBe('ok')
   })
   it('nunca lanza, ni con errores raros', () => {
-    expect(() => registrarError('x', { circular: (() => { const a: any = {}; a.a = a; return a })() })).not.toThrow()
+    expect(() => registrarError('x', { circular: (() => { const a: Record<string, unknown> = {}; a.a = a; return a })() })).not.toThrow()
     expect(() => registrarError('x', undefined)).not.toThrow()
   })
 })

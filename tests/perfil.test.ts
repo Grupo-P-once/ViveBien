@@ -83,7 +83,8 @@ describe('candado de publicacion', () => {
   })
 
   it('las zonas suman al porcentaje pero no bloquean', () => {
-    const { zonas: _fuera, ...sinZonas } = PUBLICADOR_COMPLETO
+    const sinZonas: Partial<typeof PUBLICADOR_COMPLETO> = { ...PUBLICADOR_COMPLETO }
+    delete sinZonas.zonas
     expect(puedePublicar(sinZonas, 'publicador').ok).toBe(true)
   })
 

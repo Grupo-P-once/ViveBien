@@ -1,8 +1,10 @@
 // Rendimiento en navegador (solo lectura): TTFB, FCP, LCP, CLS, errores JS y de red, peso y número de peticiones por página y ancho.
 // Uso: node navegador-web-vitals.cjs <BASE> <salida.json> [repeticiones]   (playwright se resuelve desde el staging)
+/* eslint-disable @typescript-eslint/no-require-imports -- CommonJS (.cjs): `require` es su única sintaxis de importación; solo este bloque, el resto de reglas sigue activo */
 const { chromium } = require('C:/Users/jemil/vivebien-deploy-stage-e33/node_modules/playwright')
 const fs = require('fs')
 const { instalarGuardia } = require('../../scripts/qa/guardia-produccion.cjs') // R-15: contra producción solo lecturas; la telemetría y las escrituras se abortan antes de salir
+/* eslint-enable @typescript-eslint/no-require-imports */
 const BASE = process.argv[2]
 const SALIDA = process.argv[3]
 const N = Number(process.argv[4] || 3)
@@ -20,7 +22,7 @@ const mediana = (a) => { const s = [...a].sort((x, y) => x - y); return s.length
       for (let i = 0; i < N; i++) {
         const ctx = await b.newContext({ viewport: { width: w, height: 900 } })
         const p = await ctx.newPage()
-        const errs = []; const fallos = []; let bytes = 0; let n = 0
+        const errs = []; const fallos = []; let n = 0
         const guardia = instalarGuardia(ctx, { base: BASE, permitirTelemetria: process.env.PERMITIR_TELEMETRIA === '1' }); bloqueadasTotal += 0
         const cdp = await ctx.newCDPSession(p); await cdp.send('Network.enable')
         // Perfil de red (THROTTLE=perfil): ≤768 px = móvil 4G lento (1,6 Mbps, 150 ms); más ancho = banda ancha modesta (10 Mbps, 40 ms). Sin él: red sin limitar.
@@ -32,7 +34,7 @@ const mediana = (a) => { const s = [...a].sort((x, y) => x - y); return s.length
         p.on('pageerror', (e) => errs.push(e.message))
         p.on('console', (m) => { if (m.type() === 'error' && !/upgrade-insecure-requests/.test(m.text())) errs.push(m.text().slice(0, 100)) })
         p.on('requestfailed', (r) => fallos.push(r.url().slice(0, 80)))
-        p.on('response', async (r) => { n++; try { const l = r.headers()['content-length']; if (l) bytes += Number(l) } catch {} })
+        p.on('response', () => { n++ })
         await p.addInitScript(() => {
           window.__vit = { lcp: 0, cls: 0 }
           new PerformanceObserver((l) => { for (const e of l.getEntries()) window.__vit.lcp = e.startTime }).observe({ type: 'largest-contentful-paint', buffered: true })

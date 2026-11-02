@@ -146,8 +146,6 @@ const DIR_E = process.env.EVIDENCIA_DIR ?? join(process.cwd(), '..', 'lanzamient
 mkdirSync(DIR_E, { recursive: true })
 const captura = async (page: Page, nombre: string) => page.screenshot({ path: join(DIR_E, `${test.info().project.name}__${nombre}.png`), fullPage: false })
 const esCajon = (page: Page) => (page.viewportSize()?.width ?? 1440) < 1024
-const menu = (page: Page) => page.getByRole('navigation', { name: 'Panel del publicador' })
-const abrirCajon = async (page: Page) => { if (esCajon(page)) await page.getByRole('button', { name: 'Mostrar u ocultar el menú' }).click() }
 /** El marco (sidebar) sigue puesto: en pantalla ancha el menú está a la vista; en cajón, su botón. */
 async function marcoPresente(page: Page) {
   // R8.3: el trabajo con propiedades se pinta dentro del panel del rol (portal o administración); nunca un panel aparte.

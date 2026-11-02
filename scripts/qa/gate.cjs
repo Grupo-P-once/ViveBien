@@ -8,10 +8,12 @@
  * (token de Telegram, claves de servicio, correo, cron…) se pasa VACÍA al servidor de prueba para que `.env.local` no la cargue, y la clave de servicio de
  * Supabase es una ficticia: el servidor de prueba no puede escribir en producción ni mandar avisos reales (observación 0010).
  */
+/* eslint-disable @typescript-eslint/no-require-imports -- CommonJS (.cjs): `require` es su única sintaxis de importación; solo este bloque, el resto de reglas sigue activo */
 const { spawn, spawnSync } = require('node:child_process')
 const fs = require('node:fs')
 const os = require('node:os')
 const path = require('node:path')
+/* eslint-enable @typescript-eslint/no-require-imports */
 
 const RAIZ = path.resolve(__dirname, '..', '..')
 const RAPIDO = process.argv.includes('--rapido')
@@ -58,13 +60,12 @@ function entorno(extra = {}) {
 }
 const entornoApp = () => entorno({ ...PUBLICO, NEXT_PUBLIC_SUPABASE_URL: `http://localhost:${REPLICA}`, SUPABASE_SERVICE_ROLE_KEY: 'dummy-local-key', CORREO_MARKETING: '1', CORREO_SECRETO: 'secreto-falso-solo-para-pruebas-locales-0123456789', QA_SERVIDOR_EXTERNO: '1', QA_PUERTO: PUERTO, QA_TIMEOUT_MS: '60000', QA_REINTENTOS: '2' })
 
-let replica = null, servidor = null, n = 0
+let n = 0
 const resultados = []
 const ejecutar = (cmd, args, env) => spawnSync(cmd, args, { cwd: RAIZ, stdio: 'inherit', shell: true, ...(env ? { env } : {}) }).status ?? 1
 
 function matarPuertos() {
   for (const port of [PUERTO, REPLICA]) spawnSync('powershell', ['-NoProfile', '-Command', `Get-NetTCPConnection -LocalPort ${port} -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }`], { stdio: 'ignore' })
-  replica = null; servidor = null
 }
 function resumen() {
   console.log('\n──────── resumen qa:gate ────────')
@@ -77,7 +78,7 @@ async function esperar(url, ms = 120000) {
 }
 async function arrancarReplica(fixtura) {
   matarPuertos()
-  replica = spawn('node', [path.join('tests', 'performance', 'mock-supabase.mjs')], { cwd: RAIZ, stdio: 'ignore', env: entorno({
+  spawn('node', [path.join('tests', 'performance', 'mock-supabase.mjs')], { cwd: RAIZ, stdio: 'ignore', env: entorno({
     MOCK_PORT: REPLICA, REAL_SUPABASE_URL: PUBLICO.NEXT_PUBLIC_SUPABASE_URL ?? '', REAL_SUPABASE_ANON_KEY: PUBLICO.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '',
     MOCK_FLAGS_JSON: '{"portalCliente":true,"citasEnLinea":false,"publisherPortal":false}',
     ...(fixtura ? { MOCK_FIXTURA: path.join(RAIZ, 'tests-visual', 'fixtura', 'publico.json') } : {}),
@@ -86,7 +87,7 @@ async function arrancarReplica(fixtura) {
 }
 async function arrancarServidor() {
   await arrancarReplica(true)
-  servidor = spawn('npx', ['next', 'start', '-p', PUERTO], { cwd: RAIZ, stdio: 'ignore', shell: true, env: entornoApp() })
+  spawn('npx', ['next', 'start', '-p', PUERTO], { cwd: RAIZ, stdio: 'ignore', shell: true, env: entornoApp() })
   if (!(await esperar(`http://localhost:${PUERTO}/api/salud`))) throw new Error('el servidor de prueba no arrancó')
   // calentamiento: la primera petición en frío agota los 30 s de Playwright (observación 0015)
   for (const r of ['/', '/propiedades', '/entrar', '/contacto', '/ayuda', '/nosotros', '/admin', '/propiedades/sanjuan']) { try { await fetch(`http://localhost:${PUERTO}${r}`) } catch { /* se ignora */ } }

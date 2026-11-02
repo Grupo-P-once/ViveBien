@@ -105,7 +105,7 @@ vi.mock('@/lib/asignar-slug', () => ({ asignarSlugAlPublicar: async () => null, 
 vi.mock('@/lib/invitaciones', () => ({ aplicarInvitacion: async () => null }))
 
 import {
-  CAPACIDADES, DEFAULTS_POR_TIPO, capacidadDeAccionDeCita, capacidadesEfectivas, decidirCambioDePermisos,
+  CAPACIDADES, DEFAULTS_POR_TIPO, capacidadDeAccionDeCita, capacidadesEfectivas,
   normalizarOverrides, tieneCapacidad, tipoDe,
 } from '../src/lib/acceso/capacidades'
 import { resolverPerfil } from '../src/lib/auth-server'

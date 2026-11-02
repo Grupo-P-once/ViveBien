@@ -1,8 +1,10 @@
 'use client'
+import NextImage, { getImageProps } from 'next/image'
+import { cargadorCloudinary } from '@/lib/medios/cargador-cloudinary'
 import { precioPorM2, pesosPorM2 } from '@/lib/medidas'
 import Consentimiento, { PistaConsentimiento } from '@/components/Consentimiento'
 import { lugarDe } from '@/lib/ubicacion'
-import { useState, useEffect, use } from 'react'
+import { useState, useEffect, useRef, use } from 'react'
 import { supabase } from '@/lib/supabase'
 import { SELECT_PUBLICO } from '@/lib/propiedad-publica'
 import Header from '@/components/Header'
@@ -28,7 +30,6 @@ import { SITIO } from '@/lib/sitio'
 import { NEGOCIO } from '@/lib/config/negocio'
 import { registrarContactoDelCliente } from '@/lib/registrar-contacto-cliente'
 import { esVisibleAlPublico } from '@/lib/visibilidad-publica'
-import { fotoOptimizada, imgResponsiva } from '@/lib/medios/optimizar'
 import { etiquetaSuperficie, superficiesDe } from '@/lib/caracteristicas'
 import CaracteristicasFicha from '@/components/CaracteristicasFicha'
 import { amenidadesParaFicha } from '@/lib/caracteristicas'
@@ -106,6 +107,9 @@ export default function DetallePropiedad({ params, idInterno, inicial }: { param
   const [regOpen, setRegOpen] = useState(false)
   const [similares, setSimilares] = useState<Propiedad[]>([])
   const { isLoggedIn, user } = useAuth()
+  // La carga de la ficha no debe repetirse al iniciar sesión; solo necesita saber, cuando decide ofrecer el registro, si HAY sesión en ese momento.
+  const sesionRef = useRef(isLoggedIn)
+  useEffect(() => { sesionRef.current = isLoggedIn }, [isLoggedIn])
 
   useEffect(() => {
     async function load() {
@@ -137,7 +141,7 @@ export default function DetallePropiedad({ params, idInterno, inicial }: { param
           // El registro se ofrece aquí, no en la portada: a la segunda
           // propiedad que alguien abre ya hay una conversación.
           const vistas = contarFichaVista(data.id)
-          if (debeOfrecerRegistro({ conSesion: isLoggedIn, fichasVistas: vistas })) {
+          if (debeOfrecerRegistro({ conSesion: sesionRef.current, fichasVistas: vistas })) {
             // Un respiro para que vea la propiedad primero: el formulario llega
             // después de la foto y el precio, no encima de ellos.
             setTimeout(() => {
@@ -187,9 +191,11 @@ export default function DetallePropiedad({ params, idInterno, inicial }: { param
     for (const d of [1, -1, 2]) {
       const u = fs[(lightbox + d + fs.length) % fs.length]
       if (!u) continue
-      const r = imgResponsiva(u, '90vw', 1600), im = new Image()
-      if (r.srcSet) { im.sizes = '90vw'; im.srcset = r.srcSet }
-      im.src = r.src
+      // Se precarga EXACTAMENTE lo que pintará la ventana (mismo cargador, mismo `sizes`): si no coincidiera, el navegador no reutilizaría la descarga.
+      const { props: a } = getImageProps({ loader: cargadorCloudinary, src: u, width: 0, height: 0, sizes: '90vw', alt: '' })
+      const im = new Image()
+      if (a.srcSet) { im.sizes = '90vw'; im.srcset = a.srcSet }
+      im.src = a.src
       im.decode?.().catch(() => {})
     }
   }, [lightbox, prop])
@@ -393,12 +399,15 @@ export default function DetallePropiedad({ params, idInterno, inicial }: { param
             {fotos.slice(0, 2).map((f, i) => (
               <div key={i} onClick={() => setMainFoto(i)} style={{ flex: 1, overflow: 'hidden', borderRadius: i === 0 ? '0 12px 0 0' : '0 0 12px 0', cursor: 'pointer', position: 'relative', border: mainFoto === i ? '3px solid var(--rojo-claro)' : 'none' }}>
                 {/* Miniaturas de 280 px de ancho: no hace falta más. */}
-                <img
-                  src={fotoOptimizada(f, 560)}
+                <NextImage
+                  loader={cargadorCloudinary}
+                  src={f}
+                  fill
+                  sizes="280px"
                   alt=""
                   loading="lazy"
                   decoding="async"
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform .3s', display: 'block' }}
+                  style={{ objectFit: 'cover', transition: 'transform .3s', display: 'block' }}
                   onMouseEnter={e => { (e.target as HTMLImageElement).style.transform = 'scale(1.05)' }}
                   onMouseLeave={e => { (e.target as HTMLImageElement).style.transform = '' }} />
               </div>
@@ -707,11 +716,16 @@ export default function DetallePropiedad({ params, idInterno, inicial }: { param
           <button onClick={e => { e.stopPropagation(); setLightbox(i => (i! - 1 + fotos.length) % fotos.length) }} style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,.15)', border: 'none', color: '#fff', width: '50px', height: '50px', borderRadius: '50%', fontSize: '1.2rem', cursor: 'pointer' }}>&#8249;</button>
           <figure style={{ margin: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }} onClick={e => e.stopPropagation()}>
             {/* A pantalla completa sí se justifica pedirla grande, pero no la original de 1966 px: 1600 cubre cualquier portátil. */}
-            <img
-              {...imgResponsiva(fotos[lightbox] ?? '', '90vw', 1600)}
+            <NextImage
+              loader={cargadorCloudinary}
+              src={fotos[lightbox] ?? ''}
+              width={0}
+              height={0}
+              sizes="90vw"
+              loading="eager"
               alt={pies[fotos[lightbox]] ?? ''}
               decoding="async"
-              style={{ maxWidth: '90vw', maxHeight: pies[fotos[lightbox]] ? '78vh' : '85vh', objectFit: 'contain', borderRadius: '8px' }} />
+              style={{ width: 'auto', height: 'auto', maxWidth: '90vw', maxHeight: pies[fotos[lightbox]] ? '78vh' : '85vh', objectFit: 'contain', borderRadius: '8px' }} />
             {pies[fotos[lightbox]] && (
               <figcaption style={{ color: '#fff', fontSize: '.9rem', maxWidth: '70ch', textAlign: 'center', lineHeight: 1.5 }}>
                 {pies[fotos[lightbox]]}

@@ -2,7 +2,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { MODALIDAD_SIN_REVISION, ofreceAccesoEnRevision } from '../src/lib/acceso/capacidades'
 import {
-  ETIQUETAS_PROPIEDADES, RUTA_COLA_ADMIN, RUTA_EN_REVISION, RUTA_LISTA_ADMIN, RUTA_LISTA_PUBLICADOR, RUTA_NUEVA_ADMIN, RUTA_NUEVA_PUBLICADOR,
+  ETIQUETAS_PROPIEDADES, RUTA_COLA_ADMIN, RUTA_EN_REVISION, RUTA_LISTA_PUBLICADOR, RUTA_NUEVA_ADMIN, RUTA_NUEVA_PUBLICADOR,
   destinoCanonico, estadoDeFiltro, ofreceEnRevision, rutaDeEditorDe, rutaListaDePropiedades,
 } from '../src/lib/publicador/espacio'
 

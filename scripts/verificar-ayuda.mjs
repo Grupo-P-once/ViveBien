@@ -48,26 +48,27 @@ if (!arts.filas || !cats.filas) {
   fallo('no se pudo consultar la API como anon')
 } else {
   const fugas = arts.filas.filter((a) => a.ambito !== 'publica' || a.estado !== 'PUBLICADO')
-  fugas.length ? fallo(`${fugas.length} artículos filtrados: ${fugas.map((f) => `${f.ambito}/${f.estado}`).join(', ')}`)
-               : bien(`${arts.filas.length} artículos visibles, todos publica/PUBLICADO`)
+  if (fugas.length) fallo(`${fugas.length} artículos filtrados: ${fugas.map((f) => `${f.ambito}/${f.estado}`).join(', ')}`)
+  else bien(`${arts.filas.length} artículos visibles, todos publica/PUBLICADO`)
 
   const futuros = arts.filas.filter((a) => a.estado_producto === 'futuro')
-  futuros.length ? fallo(`${futuros.length} artículos «futuro» visibles: ${futuros.map((f) => f.slug).join(', ')}`)
-                 : bien('ningún artículo «futuro» es visible')
+  if (futuros.length) fallo(`${futuros.length} artículos «futuro» visibles: ${futuros.map((f) => f.slug).join(', ')}`)
+  else bien('ningún artículo «futuro» es visible')
 
   const sinAviso = arts.filas.filter((a) => a.estado_producto !== 'disponible' && !a.aviso?.trim())
-  sinAviso.length ? fallo(`${sinAviso.length} no disponibles SIN aviso: ${sinAviso.map((s) => s.slug).join(', ')}`)
-                  : bien(`los ${arts.filas.filter((a) => a.estado_producto !== 'disponible').length} parciales visibles llevan su aviso`)
+  if (sinAviso.length) fallo(`${sinAviso.length} no disponibles SIN aviso: ${sinAviso.map((s) => s.slug).join(', ')}`)
+  else bien(`los ${arts.filas.filter((a) => a.estado_producto !== 'disponible').length} parciales visibles llevan su aviso`)
 
   const catsInternas = cats.filas.filter((c) => c.ambito !== 'publica')
-  catsInternas.length ? fallo(`categorías internas visibles: ${catsInternas.map((c) => c.slug).join(', ')}`)
-                      : bien(`${cats.filas.length} categorías visibles, ninguna interna`)
+  if (catsInternas.length) fallo(`categorías internas visibles: ${catsInternas.map((c) => c.slug).join(', ')}`)
+  else bien(`${cats.filas.length} categorías visibles, ninguna interna`)
 }
 
 for (const t of ['knowledge_article_versions', 'knowledge_article_sources', 'knowledge_searches', 'knowledge_change_events', 'knowledge_feedback']) {
   const r = await comoAnon(`${t}?select=id`)
   const cerrado = r.http >= 400 || r.filas?.length === 0
-  cerrado ? bien(`${t}: cerrado`) : fallo(`${t}: ${r.filas?.length} filas visibles para anon`)
+  if (cerrado) bien(`${t}: cerrado`)
+  else fallo(`${t}: ${r.filas?.length} filas visibles para anon`)
 }
 
 const escritura = await fetch(`${SUPA}/rest/v1/knowledge_articles`, {
@@ -75,8 +76,8 @@ const escritura = await fetch(`${SUPA}/rest/v1/knowledge_articles`, {
   headers: { apikey: ANON, Authorization: `Bearer ${ANON}`, 'Content-Type': 'application/json' },
   body: JSON.stringify({ slug: 'intruso', titulo: 'X' }),
 })
-escritura.status >= 400 ? bien(`escribir un artículo como anon: rechazado (${escritura.status})`)
-                        : fallo(`¡anon pudo escribir un artículo! HTTP ${escritura.status}`)
+if (escritura.status >= 400) bien(`escribir un artículo como anon: rechazado (${escritura.status})`)
+else fallo(`¡anon pudo escribir un artículo! HTTP ${escritura.status}`)
 
 /* ── 2 · Las cuatro rutas, en tres tamaños ────────────────────────────── */
 
@@ -154,7 +155,8 @@ const ctx404 = await navegador.newContext({ viewport: { width: 1440, height: 900
 for (const [que, ruta] of DEBEN_SER_404) {
   const p = await ctx404.newPage()
   const res = await p.goto(BASE + ruta, { waitUntil: 'domcontentloaded', timeout: 45_000 })
-  res?.status() === 404 ? bien(`${que}: 404`) : fallo(`${que} (${ruta}) devolvió ${res?.status()}, no 404`)
+  if (res?.status() === 404) bien(`${que}: 404`)
+  else fallo(`${que} (${ruta}) devolvió ${res?.status()}, no 404`)
   await p.close()
 }
 await ctx404.close()
@@ -171,7 +173,8 @@ for (const a of visibles.filas ?? []) {
   const cat = a.knowledge_categories?.slug
   if (!cat) { fallo(`el artículo «${a.slug}» no tiene categoría`); continue }
   const res = await pagina.goto(`${BASE}/ayuda/${cat}/${a.slug}`, { waitUntil: 'domcontentloaded', timeout: 45_000 })
-  res?.status() === 200 ? vistos++ : fallo(`/ayuda/${cat}/${a.slug} devolvió ${res?.status()}`)
+  if (res?.status() === 200) vistos++
+  else fallo(`/ayuda/${cat}/${a.slug} devolvió ${res?.status()}`)
 }
 bien(`${vistos} de ${visibles.filas?.length ?? 0} artículos públicos responden 200`)
 
@@ -180,16 +183,15 @@ bien(`${vistos} de ${visibles.filas?.length ?? 0} artículos públicos responden
 console.log('\n── 5 · Sitemap ──')
 const sm = await (await fetch(`${BASE}/sitemap.xml`)).text()
 const enSitemap = [...sm.matchAll(/<loc>([^<]*\/ayuda[^<]*)<\/loc>/g)].map((m) => m[1])
-enSitemap.some((u) => u.endsWith('/ayuda')) ? bien('/ayuda está') : fallo('/ayuda no está en el sitemap')
+if (enSitemap.some((u) => u.endsWith('/ayuda'))) bien('/ayuda está')
+else fallo('/ayuda no está en el sitemap')
 // Coincidencia EXACTA: `includes` daba un falso positivo porque la categoría
 // `buscar-propiedades` empieza igual que la ruta del buscador.
-enSitemap.some((u) => u.replace(/\/$/, '').endsWith('/ayuda/buscar'))
-  ? fallo('/ayuda/buscar NO debería estar en el sitemap')
-  : bien('/ayuda/buscar fuera del sitemap, como debe')
+if (enSitemap.some((u) => u.replace(/\/$/, '').endsWith('/ayuda/buscar'))) fallo('/ayuda/buscar NO debería estar en el sitemap')
+else bien('/ayuda/buscar fuera del sitemap, como debe')
 for (const interno of ['publicadores', 'google-calendar', 'como-solicitar-ser-publicador']) {
-  enSitemap.some((u) => u.includes(interno))
-    ? fallo(`«${interno}» anunciado en el sitemap`)
-    : bien(`«${interno}» no se anuncia`)
+  if (enSitemap.some((u) => u.includes(interno))) fallo(`«${interno}» anunciado en el sitemap`)
+  else bien(`«${interno}» no se anuncia`)
 }
 console.log(`   rutas de ayuda en el sitemap: ${enSitemap.length}`)
 
@@ -202,8 +204,8 @@ for (const [nombre, ancho, alto] of TAMANOS) {
   await p.goto(`${BASE}/`, { waitUntil: 'domcontentloaded', timeout: 90_000 })
   await p.waitForTimeout(500)
   const n = await p.locator('a[href="/ayuda"]').count()
-  n > 0 ? bien(`${nombre}: ${n} enlace(s) al Centro desde la portada`)
-        : fallo(`${nombre}: la portada no enlaza al Centro`)
+  if (n > 0) bien(`${nombre}: ${n} enlace(s) al Centro desde la portada`)
+  else fallo(`${nombre}: la portada no enlaza al Centro`)
   await c.close()
 }
 

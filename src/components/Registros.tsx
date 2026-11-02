@@ -84,8 +84,7 @@ export default function Registros() {
   const [filtro, setFiltro] = useState<string>('todos')
   const [busqueda, setBusqueda] = useState('')
 
-  const cargar = useCallback(async () => {
-    setCargando(true)
+  const traer = useCallback(async () => {
     try {
       const res = await fetch('/api/admin/registros', { headers: await cabeceras() })
       const j = await res.json().catch(() => ({}))
@@ -104,7 +103,13 @@ export default function Registros() {
     setCargando(false)
   }, [])
 
-  useEffect(() => { cargar() }, [cargar])
+  // Recarga manual (botón «Actualizar»): marca «cargando» y vuelve a traer. La primera carga arranca ya en «cargando».
+  const cargar = useCallback(async () => {
+    setCargando(true)
+    await traer()
+  }, [traer])
+
+  useEffect(() => { void (async () => { await traer() })() }, [traer])
 
   const conteos = useMemo(() => {
     const c: Record<string, number> = {}

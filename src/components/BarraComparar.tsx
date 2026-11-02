@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useMemo, useSyncExternalStore } from 'react'
 import Link from 'next/link'
 import { obtenerComparar, alCambiarComparar, limpiarComparar, alternarComparar, MAXIMO_COMPARAR } from '@/lib/comparador'
 
@@ -15,16 +15,15 @@ import { obtenerComparar, alCambiarComparar, limpiarComparar, alternarComparar, 
  * inútil enseña que el sitio no piensa.
  */
 export default function BarraComparar() {
-  const [ids, setIds] = useState<string[]>([])
-  const [montado, setMontado] = useState(false)
-
-  useEffect(() => {
-    // Se lee después de montar: en el servidor no hay localStorage, y leerlo
-    // durante el render daría una interfaz distinta a la del cliente.
-    setIds(obtenerComparar())
-    setMontado(true)
-    return alCambiarComparar(setIds)
-  }, [])
+  // Se lee como almacén externo: en el servidor no hay localStorage y la instantánea del servidor es «vacío», así que el HTML inicial
+  // coincide con el del cliente; después de hidratar se lee la lista real y se escuchan los cambios.
+  const crudo = useSyncExternalStore(
+    (aviso) => alCambiarComparar(aviso),
+    () => JSON.stringify(obtenerComparar()),
+    () => '[]',
+  )
+  const ids = useMemo(() => JSON.parse(crudo) as string[], [crudo])
+  const montado = useSyncExternalStore(() => () => {}, () => true, () => false)
 
   if (!montado || ids.length === 0) return null
 

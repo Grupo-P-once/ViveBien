@@ -404,7 +404,8 @@ describe('URL: normalización, ida y vuelta y restauración', () => {
   })
   it('limpiar: sin filtros no queda nada (null) y cada filtro se puede quitar por separado', () => {
     const f = filtrosDeUrl(new URLSearchParams('amb=estudio&ant=5'))!
-    const { amb: _a, ...sinAmb } = f
+    const sinAmb = { ...f }
+    delete sinAmb.amb
     expect(normalizarFiltros(sinAmb)).toEqual({ ant: '5' })
     expect(normalizarFiltros({})).toBeNull()
   })

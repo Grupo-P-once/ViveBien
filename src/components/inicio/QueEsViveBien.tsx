@@ -1,4 +1,5 @@
 'use client'
+import NextImage from 'next/image'
 import { alFallarImagen } from '@/lib/imagen-respaldo'
 import { ArrowUpRight, HardHat, MapPin, ShieldCheck, TrendingUp, Users, FileText, Handshake, Shield, type LucideIcon } from 'lucide-react'
 
@@ -54,7 +55,7 @@ export function QueEsViveBien() {
         <div className="ini-inst-texto">
           <h2 id="que-es-titulo" className="ini-eyebrow"><span aria-hidden className="ini-eyebrow-linea" />¿Qué es Vive Bien?</h2>
           {/* Logotipo OFICIAL, versión principal sobre fondo claro. Sin recortar ni recolorear. */}
-          <img src="/logo_transparent.png" alt="Vive Bien Grupo Inmobiliario" width={190} height={126} className="ini-logo-vb"
+          <NextImage unoptimized loading="eager" src="/logo_transparent.png" alt="Vive Bien Grupo Inmobiliario" width={190} height={126} className="ini-logo-vb"
             onError={e => alFallarImagen(e.currentTarget, '/icon.png')} />
           <p className="ini-lema">Espacios para <em>vivir.</em><br />Oportunidades para <em>crecer.</em></p>
           <p className="ini-parrafo">
@@ -65,7 +66,7 @@ export function QueEsViveBien() {
         </div>
         {/* Fotografía entera (la proporción del marco es la de la foto) con acercamiento lento; imagen de ambiente, no un inmueble del catálogo. */}
         <figure className="ini-inst-foto ini-foto ini-foto-casa">
-          <img src="/inicio/vivebien-casa.webp" alt="Residencia contemporánea con terraza de cristal, jardín iluminado y vista a la ciudad y las montañas al atardecer" width={1420} height={840} loading="lazy" decoding="async"
+          <NextImage unoptimized src="/inicio/vivebien-casa.webp" alt="Residencia contemporánea con terraza de cristal, jardín iluminado y vista a la ciudad y las montañas al atardecer" width={1420} height={840} loading="lazy" decoding="async"
             onError={e => alFallarImagen(e.currentTarget, '/icon.png')} />
         </figure>
       </div>
@@ -78,13 +79,13 @@ export function SeccionProin() {
     <section className="ini-institucional ini-proin" aria-labelledby="proin-titulo" data-seccion="proin">
       <div className="ini-inst-grid ini-inst-invertida">
         <figure className="ini-inst-foto ini-foto ini-foto-edificio">
-          <img src="/inicio/proin-edificio.webp" alt="Edificio corporativo de PROIN: fachada de piedra oscura, grandes ventanales y acceso con jardín" width={1400} height={1050} loading="lazy" decoding="async"
+          <NextImage unoptimized src="/inicio/proin-edificio.webp" alt="Edificio corporativo de PROIN: fachada de piedra oscura, grandes ventanales y acceso con jardín" width={1400} height={1050} loading="lazy" decoding="async"
             onError={e => alFallarImagen(e.currentTarget, '/icon.png')} />
           <span aria-hidden className="ini-triangulo ini-triangulo-izquierda" />
         </figure>
         <div className="ini-inst-texto">
           <p className="ini-eyebrow"><span aria-hidden className="ini-eyebrow-linea" />Nuestro grupo desarrollador</p>
-          <img src="/inicio/proin-logo.png" alt="PROIN Desarrolladores, proyectos inmobiliarios" width={404} height={312} className="ini-logo-proin"
+          <NextImage unoptimized loading="eager" src="/inicio/proin-logo.png" alt="PROIN Desarrolladores, proyectos inmobiliarios" width={404} height={312} className="ini-logo-proin"
             onError={e => alFallarImagen(e.currentTarget, '/inicio/proin-logo.png')} />
           <h2 id="proin-titulo" className="ini-lema ini-lema-proin">Desarrollando <em>espacios con valor.</em></h2>
           {/* La relación, dicha sin rodeos. */}

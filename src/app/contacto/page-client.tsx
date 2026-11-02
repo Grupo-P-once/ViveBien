@@ -1,4 +1,5 @@
 'use client'
+import NextImage from 'next/image'
 import { useEffect, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import Consentimiento, { PistaConsentimiento } from '@/components/Consentimiento'
@@ -122,7 +123,7 @@ export default function ContactoPage() {
       <main className="nos cto" id="contenido">
         {/* Hero */}
         <section className="cto-hero" aria-labelledby="cto-h1" data-seccion="cto-hero">
-          <div aria-hidden className="cto-hero-foto"><img src="/portadas/contacto.webp" alt="" width={1218} height={749} fetchPriority="high" decoding="async" /></div>
+          <div aria-hidden className="cto-hero-foto"><NextImage unoptimized loading="eager" src="/portadas/contacto.webp" alt="" width={1218} height={749} fetchPriority="high" decoding="async" /></div>
           <div className="nos-wrap">
             <p className="nos-eyebrow">Hablemos · León, Gto.</p>
             <h1 id="cto-h1" className="cto-h1">Contáctanos <em>tu asesor te espera</em></h1>

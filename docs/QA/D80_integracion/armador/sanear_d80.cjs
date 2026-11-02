@@ -4,8 +4,10 @@
  * Trabaja sólo sobre los archivos que se le pasan (copias dentro del worktree de integración).
  *   node sanear_d80.cjs <raiz-del-worktree>
  */
+/* eslint-disable @typescript-eslint/no-require-imports -- CommonJS (.cjs): `require` es su única sintaxis de importación; solo este bloque, el resto de reglas sigue activo */
 const fs = require('node:fs')
 const path = require('node:path')
+/* eslint-enable @typescript-eslint/no-require-imports */
 const RAIZ = process.argv[2]
 if (!RAIZ) throw new Error('uso: node sanear_d80.cjs <raiz>')
 

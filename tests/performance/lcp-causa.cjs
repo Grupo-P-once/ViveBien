@@ -1,6 +1,8 @@
 // ¿Qué elemento es el LCP y qué pesa? (solo lectura, producción). Uso: node lcp-causa.cjs <BASE> <ruta> [ancho]
+/* eslint-disable @typescript-eslint/no-require-imports -- CommonJS (.cjs): `require` es su única sintaxis de importación; solo este bloque, el resto de reglas sigue activo */
 const { chromium } = require('C:/Users/jemil/vivebien-deploy-stage-e33/node_modules/playwright')
 const { instalarGuardia } = require('../../scripts/qa/guardia-produccion.cjs') // R-15: contra producción solo lecturas; la telemetría y las escrituras se abortan antes de salir
+/* eslint-enable @typescript-eslint/no-require-imports */
 ;(async () => {
   const [base, ruta, ancho] = [process.argv[2], process.argv[3], Number(process.argv[4] || 390)]
   const b = await chromium.launch()

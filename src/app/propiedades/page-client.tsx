@@ -1,4 +1,6 @@
 'use client'
+import NextImage from 'next/image'
+import { cargadorCloudinary } from '@/lib/medios/cargador-cloudinary'
 import BarraComparar from '@/components/BarraComparar'
 import dynamic from 'next/dynamic'
 
@@ -28,7 +30,7 @@ import { textoDeInformes } from '@/lib/whatsapp-propiedad'
 import { rutaDe } from '@/lib/propiedad-publica'
 import { useDebounce } from '@/lib/useDebounce'
 import { NEGOCIO } from '@/lib/config/negocio'
-import { fotoOptimizada, imgResponsiva } from '@/lib/medios/optimizar'
+import { fotoOptimizada } from '@/lib/medios/optimizar'
 
 interface Propiedad extends PropiedadCatalogo {
   id: string
@@ -718,11 +720,14 @@ function PropModal({ p, onClose, onContact, isLoggedIn }: { p: Propiedad; onClos
         <div style={{ flex: 1.4, background: '#000', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {/* El fondo desenfocado se ve a 30 px de blur: pedirlo a 400 px es indistinguible del original y ahorra casi todo su peso. */}
           <div style={{ position: 'absolute', inset: '-20px', backgroundImage: `url(${fotoOptimizada(fotos[foto] ?? '', 400)})`, backgroundSize: 'cover', backgroundPosition: 'center', filter: 'blur(30px) brightness(.35)' }} />
-          <img
-            {...imgResponsiva(fotos[foto] ?? '', '(max-width: 1000px) 100vw, 580px', 1200)}
+          <NextImage
+            loader={cargadorCloudinary}
+            src={fotos[foto] ?? ''}
+            fill
+            sizes="(max-width: 1000px) 100vw, 580px"
             alt={p.titulo}
             decoding="async"
-            style={{ width: '100%', height: '100%', objectFit: 'contain', position: 'relative', zIndex: 1 }}
+            style={{ objectFit: 'contain', zIndex: 1 }}
           />
           {fotos.length > 1 && (
             <>

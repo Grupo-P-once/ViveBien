@@ -2,11 +2,13 @@
  * SOLO LECTURA. Re-verifica el stage D-80 final: recalcula hashes y compara con el manifiesto/payload, con producción (GET), con la base
  * y con el commit B. No escribe nada (salvo la salida en %TEMP%), no despliega.
  */
+/* eslint-disable @typescript-eslint/no-require-imports -- CommonJS (.cjs): `require` es su única sintaxis de importación; solo este bloque, el resto de reglas sigue activo */
 const { spawnSync } = require('node:child_process')
 const crypto = require('node:crypto')
 const fs = require('node:fs')
 const os = require('node:os')
 const path = require('node:path')
+/* eslint-enable @typescript-eslint/no-require-imports */
 
 const HOME = os.homedir()
 const STAGE = path.join(HOME, 'vivebien-deploy-stage-d80-final')

@@ -1,5 +1,7 @@
 // Compara dos heap snapshots y lista lo que más creció (por tipo+nombre de constructor). Uso: node --max-old-space-size=6000 comparar-snapshots.cjs a.heapsnapshot b.heapsnapshot [top]
+/* eslint-disable @typescript-eslint/no-require-imports -- CommonJS (.cjs): `require` es su única sintaxis de importación; solo este bloque, el resto de reglas sigue activo */
 const fs = require('fs')
+/* eslint-enable @typescript-eslint/no-require-imports */
 function agrega(ruta) {
   const s = JSON.parse(fs.readFileSync(ruta, 'utf8'))
   const nf = s.snapshot.meta.node_fields

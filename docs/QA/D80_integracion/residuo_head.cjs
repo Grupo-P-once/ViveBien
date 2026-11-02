@@ -1,6 +1,8 @@
 // SOLO LECTURA: ¿las 7 rutas del residuo de V-1.1.95 en el árbol de trabajo valen en HEAD lo mismo que en producción?
+/* eslint-disable @typescript-eslint/no-require-imports -- CommonJS (.cjs): `require` es su única sintaxis de importación; solo este bloque, el resto de reglas sigue activo */
 const { spawnSync } = require('node:child_process')
 const crypto = require('node:crypto')
+/* eslint-enable @typescript-eslint/no-require-imports */
 const TEAM = 'team_WqoyIiavBLrfbGlwD2UqGZPW', PROD = 'dpl_99T2PdWgi48XiVTNjiKbhNJM5a1Z'
 const R = 'C:/Users/jemil/vivebien-next'
 const RUTAS = ['src/app/globals.css', 'src/app/propiedades/[id]/page-client.tsx', 'src/app/propiedades/page-client.tsx', 'src/components/PropertyCard.tsx', 'src/components/acceso/Entrar.tsx', 'src/components/portal/PortalShell.tsx', 'src/lib/asignar-slug.ts']

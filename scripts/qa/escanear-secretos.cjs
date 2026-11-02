@@ -7,8 +7,10 @@
  *   · token de bot de Telegram (`123456789:AA…`), claves de AWS (`AKIA…`), bloques de clave privada (`-----BEGIN … PRIVATE KEY-----`), `sk_live_…`.
  * Falsos positivos conocidos: ninguno en el árbol actual; si aparece uno legítimo se lista aquí con su motivo, no se desactiva la regla.
  */
+/* eslint-disable @typescript-eslint/no-require-imports -- CommonJS (.cjs): `require` es su única sintaxis de importación; solo este bloque, el resto de reglas sigue activo */
 const fs = require('node:fs')
 const path = require('node:path')
+/* eslint-enable @typescript-eslint/no-require-imports */
 
 const RAIZ = path.resolve(__dirname, '..', '..')
 const CARPETAS = ['src', 'scripts', 'tests', 'tests-visual', 'docs', 'supabase', 'design', 'docker', 'public']

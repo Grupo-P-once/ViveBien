@@ -2,9 +2,11 @@
 // reescribe la cabecera CSP-Report-Only del documento para probar una política MÁS ESTRICTA sin tocar el servidor.
 // Uso: node csp-violaciones.cjs <BASE> <salida.json> [variante]   variante: base | sin-eval
 // Bloquea /api/eventos (telemetría) para no ensuciar la analítica (R-15). Solo lectura.
+/* eslint-disable @typescript-eslint/no-require-imports -- CommonJS (.cjs): `require` es su única sintaxis de importación; solo este bloque, el resto de reglas sigue activo */
 const { chromium } = require('C:/Users/jemil/vivebien-deploy-stage-e33/node_modules/playwright')
 const fs = require('fs')
 const { instalarGuardia } = require('../../scripts/qa/guardia-produccion.cjs') // R-15: contra producción solo lecturas; la telemetría y las escrituras se abortan antes de salir
+/* eslint-enable @typescript-eslint/no-require-imports */
 const [BASE, SALIDA, VARIANTE = 'base'] = process.argv.slice(2)
 const PAGINAS = ['/', '/propiedades', '/propiedades/casa-en-venta-canada-del-regugio-norte-540-m2-leon-n8tl', '/ayuda', '/ayuda/buscar-propiedades/como-buscar-una-propiedad', '/entrar', '/contacto', '/valuador', '/comparar', '/nosotros', '/privacidad', '/terminos', '/portal', '/publicador', '/admin', '/admin/propiedades/pendientes', '/dashboard']
 ;(async () => {

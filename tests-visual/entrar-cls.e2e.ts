@@ -22,7 +22,7 @@ test.describe('CLS de /entrar por dispositivo', () => {
   test.beforeEach(({}, info) => { test.skip(info.project.name !== 'v1440', 'una sola vez; usa sus propios perfiles de dispositivo') })
 
   // Los perfiles se aplican con `browser.newContext`: `test.use` no admite `defaultBrowserType` dentro de un describe.
-  const perfil = (d: keyof typeof devices) => { const { defaultBrowserType: _omitido, ...resto } = devices[d]; return resto }
+  const perfil = (d: keyof typeof devices) => { return Object.fromEntries(Object.entries(devices[d]).filter(([clave]) => clave !== 'defaultBrowserType')) }
 
   for (const [nombre, opciones] of [
     ['teléfono (Pixel 7)', perfil('Pixel 7')],

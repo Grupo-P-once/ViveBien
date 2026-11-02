@@ -46,8 +46,7 @@ export default function Usuarios() {
   const [aviso, setAviso] = useState('')
   const [ocupado, setOcupado] = useState<string | null>(null)
 
-  const cargar = useCallback(async () => {
-    setCargando(true)
+  const traer = useCallback(async () => {
     try {
       const res = await fetch('/api/admin/usuarios', { headers: await cabeceras() })
       const j = await res.json().catch(() => ({}))
@@ -57,7 +56,13 @@ export default function Usuarios() {
     setCargando(false)
   }, [])
 
-  useEffect(() => { cargar() }, [cargar])
+  // Recarga (botón «Actualizar» y tras cada cambio): marca «cargando» y vuelve a traer. La primera carga arranca ya en «cargando».
+  const cargar = useCallback(async () => {
+    setCargando(true)
+    await traer()
+  }, [traer])
+
+  useEffect(() => { void (async () => { await traer() })() }, [traer])
 
   async function cambiar(uid: string, cambios: Record<string, string>) {
     setOcupado(uid)

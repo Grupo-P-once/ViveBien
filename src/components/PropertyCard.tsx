@@ -1,9 +1,11 @@
 'use client'
+import NextImage from 'next/image'
+import { cargadorCloudinary } from '@/lib/medios/cargador-cloudinary'
 import { precioPorM2, pesosPorM2 } from '@/lib/medidas'
 import { alternarComparar, obtenerComparar, alCambiarComparar } from '@/lib/comparador'
 import { alFallarImagen } from '@/lib/imagen-respaldo'
 import { mailtoDe } from '@/lib/contacto'
-import { useState, useEffect } from 'react'
+import { useState, useSyncExternalStore } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/useAuth'
@@ -14,7 +16,6 @@ import { registrarContactoDelCliente } from '@/lib/registrar-contacto-cliente'
 import { textoDeInformes } from '@/lib/whatsapp-propiedad'
 import { rutaDe } from '@/lib/propiedad-publica'
 import { NEGOCIO, enlaceTelefono } from '@/lib/config/negocio'
-import { imgResponsiva } from '@/lib/medios/optimizar'
 import { etiquetasTarjeta, textoBanos } from '@/lib/caracteristicas'
 import AsesorTarjeta from './AsesorTarjeta'
 import type { AsesorPublico } from '@/lib/asesor-publico'
@@ -65,7 +66,12 @@ const HUECO = '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 380px'
 
 export default function PropertyCard({ propiedad: p }: PropertyCardProps) {
   const [fotoIdx, setFotoIdx] = useState(0)
-  const [comparando, setComparando] = useState(false)
+  // El comparador vive en localStorage y avisa con un evento: se lee como almacén externo (sin efectos). En el servidor, siempre «no».
+  const comparando = useSyncExternalStore(
+    (aviso) => alCambiarComparar(aviso),
+    () => obtenerComparar().includes(p.id),
+    () => false,
+  )
   const [avisoComp, setAvisoComp] = useState('')
   const [regOpen, setRegOpen] = useState(false)
   const { isLoggedIn } = useAuth()
@@ -86,13 +92,6 @@ export default function PropertyCard({ propiedad: p }: PropertyCardProps) {
     setAvisoGuardar('')
     favoritos.alternar(p.id).catch(e => setAvisoGuardar(e instanceof Error ? e.message : 'No se pudo guardar.'))
   }
-
-  // El comparador vive en localStorage: se lee tras montar y se escucha, para
-  // que quitar una desde la barra flotante apague el boton de esta tarjeta.
-  useEffect(() => {
-    setComparando(obtenerComparar().includes(p.id))
-    return alCambiarComparar(ids => setComparando(ids.includes(p.id)))
-  }, [p.id])
 
   function requireAuth(action: () => void) {
     if (isLoggedIn) { action() } else { setRegOpen(true) }
@@ -140,16 +139,17 @@ export default function PropertyCard({ propiedad: p }: PropertyCardProps) {
     >
       {/* ── Photo ── */}
       <div style={{ position: 'relative', height: '230px', background: '#e8ecf0', overflow: 'hidden' }}>
-        <img
-          {...imgResponsiva(fotos[fotoIdx] ?? PLACEHOLDER, HUECO, 800)}
+        <NextImage
+          loader={cargadorCloudinary}
+          src={fotos[fotoIdx] ?? PLACEHOLDER}
+          fill
+          sizes={HUECO}
           alt={p.titulo}
           /* `lazy` + `async`: en el listado hay varias tarjetas y antes todas las fotos se bajaban de golpe, a tamaño original (hasta
              1,5 MB cada una), compitiendo con el JS que la página necesita para hidratar. */
           loading="lazy"
           decoding="async"
-          width={380}
-          height={230}
-          style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform .4s' }}
+          style={{ objectFit: 'cover', transition: 'transform .4s' }}
           // Una sola reserva por imagen (sin bucle si la reserva también falla): ver `imagen-respaldo.ts`.
           onError={e => { alFallarImagen(e.target as HTMLImageElement, PLACEHOLDER) }}
         />

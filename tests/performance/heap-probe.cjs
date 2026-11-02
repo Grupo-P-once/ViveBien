@@ -1,9 +1,11 @@
 // Sonda de heap para diagnosticar fugas (D-62). Se precarga con NODE_OPTIONS=--require ... en el servidor de PRUEBA (nunca en producción).
 //  GET :9501/gc            → fuerza GC y devuelve heapUsed
 //  GET :9501/snap?f=ruta   → escribe un heap snapshot
+/* eslint-disable @typescript-eslint/no-require-imports -- CommonJS (.cjs): `require` es su única sintaxis de importación; solo este bloque, el resto de reglas sigue activo */
 const http = require('http')
 const v8 = require('v8')
 const vm = require('vm')
+/* eslint-enable @typescript-eslint/no-require-imports */
 v8.setFlagsFromString('--expose-gc')
 const gc = vm.runInNewContext('gc')
 const srv = http.createServer((req, res) => {

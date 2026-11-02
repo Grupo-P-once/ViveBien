@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { AlertTriangle, ArrowLeft, Mail, MessageCircle, RefreshCw, UserRound } from 'lucide-react'
@@ -40,16 +40,17 @@ export default function FichaDeUsuario() {
   const [error, setError] = useState<{ mensaje: string; noExiste: boolean } | null>(null)
   const [vuelta, setVuelta] = useState(0)
 
-  const cargar = useCallback(async () => {
-    try {
-      setDatos(await pedir<Respuesta>(`/api/admin/usuarios/${encodeURIComponent(uid)}`))
-      setError(null)
-    } catch (e) {
-      setError({ mensaje: e instanceof Error ? e.message : 'No se pudo cargar la cuenta.', noExiste: e instanceof ErrorDePeticion && e.estado === 404 })
+  useEffect(() => {
+    const cargar = async () => {
+      try {
+        setDatos(await pedir<Respuesta>(`/api/admin/usuarios/${encodeURIComponent(uid)}`))
+        setError(null)
+      } catch (e) {
+        setError({ mensaje: e instanceof Error ? e.message : 'No se pudo cargar la cuenta.', noExiste: e instanceof ErrorDePeticion && e.estado === 404 })
+      }
     }
-  }, [pedir, uid])
-
-  useEffect(() => { void cargar() }, [cargar, vuelta])
+    void cargar()
+  }, [pedir, uid, vuelta])
 
   const volver = (
     <Link href="/admin/usuarios" className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--marca)] hover:underline">

@@ -1,6 +1,6 @@
 'use client'
 import { pesosPorM2, redondear2 } from '@/lib/medidas'
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, useMemo, useSyncExternalStore, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import Header from '@/components/Header'
@@ -119,15 +119,20 @@ const FILAS: Fila[] = [
 function CompararInterior() {
   const params = useSearchParams()
   const [props, setProps] = useState<Propiedad[]>([])
-  const [ids, setIds] = useState<string[]>([])
   const [cargando, setCargando] = useState(true)
   const [fallo, setFallo] = useState(false)
 
-  useEffect(() => {
-    const deUrl = (params.get('ids') ?? '').split(',').map(s => s.trim()).filter(Boolean)
-    setIds(deUrl.length > 0 ? deUrl : obtenerComparar())
-    return alCambiarComparar(setIds)
-  }, [params])
+  // Lista del comparador (localStorage) como almacén externo; en el servidor, vacía. Los `ids` de la URL mandan hasta que el comparador cambia.
+  const almacen = useSyncExternalStore(
+    (aviso) => alCambiarComparar(aviso),
+    () => JSON.stringify(obtenerComparar()),
+    () => '[]',
+  )
+  const claveUrl = params.toString()
+  const deUrl = useMemo(() => (new URLSearchParams(claveUrl).get('ids') ?? '').split(',').map(s => s.trim()).filter(Boolean), [claveUrl])
+  const [base, setBase] = useState({ claveUrl, almacen })
+  if (base.claveUrl !== claveUrl) setBase({ claveUrl, almacen })
+  const ids = deUrl.length > 0 && almacen === base.almacen ? deUrl : (JSON.parse(almacen) as string[])
 
   useEffect(() => {
     ;(async () => {

@@ -12,4 +12,4 @@ export const options = {
   },
   thresholds: umbrales(false),
 }
-export default function () { sesion(elegirRol(), 0.3) }
+export default function escenarioSpike() { sesion(elegirRol(), 0.3) }

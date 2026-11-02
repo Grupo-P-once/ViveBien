@@ -1,4 +1,5 @@
 'use client'
+import NextImage from 'next/image'
 import { useState, useEffect, useCallback } from 'react'
 import {
   signInWithEmailAndPassword,
@@ -594,7 +595,7 @@ export default function DashboardPage() {
             alignItems: 'center', justifyContent: 'center', flexShrink: 0,
           }}>
             {user.photoURL ? (
-              <img src={user.photoURL} alt="" style={{ width: '70px', height: '70px', borderRadius: '50%', objectFit: 'cover' }} />
+              <NextImage unoptimized src={user.photoURL} alt="" width={70} height={70} style={{ width: '70px', height: '70px', borderRadius: '50%', objectFit: 'cover' }} />
             ) : (
               <i className="fa fa-user" style={{ fontSize: '2rem' }} />
             )}
@@ -1332,7 +1333,7 @@ export default function DashboardPage() {
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '.5rem', marginBottom: '.8rem' }}>
                     {(editando.fotos || []).map((url, i) => (
                       <div key={i} style={{ position: 'relative', aspectRatio: '4/3', borderRadius: '8px', overflow: 'hidden', background: '#eee' }}>
-                        <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        <NextImage unoptimized fill sizes="33vw" src={url} alt="" style={{ objectFit: 'cover' }}
                           onError={e => { (e.target as HTMLImageElement).style.opacity = '0.3' }} />
                         <button
                           onClick={() => setEditando(d => ({ ...d, fotos: (d?.fotos || []).filter((_, j) => j !== i) }))}

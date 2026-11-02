@@ -1,4 +1,5 @@
 'use client'
+import NextImage from 'next/image'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import ValuadorFlujo from '@/components/valuador/ValuadorFlujo'
@@ -15,7 +16,7 @@ export default function ValuadorPage({ enPortal = false }: { enPortal?: boolean 
       {!enPortal && <Header />}
       <main className={enPortal ? 'val val-en-portal' : 'val'} id="contenido">
         <section className="val-hero" aria-labelledby="val-h1" data-seccion="val-hero">
-          <div aria-hidden className="val-hero-foto"><img src="/portadas/valuador.webp" alt="" width={1023} height={817} fetchPriority="high" decoding="async" /></div>
+          <div aria-hidden className="val-hero-foto"><NextImage unoptimized loading="eager" src="/portadas/valuador.webp" alt="" width={1023} height={817} fetchPriority="high" decoding="async" /></div>
           <div className="val-wrap">
             <p className="val-eyebrow">Herramienta gratuita · León, Gto.</p>
             <h1 id="val-h1" className="val-h1">Valuador <em>de propiedades</em></h1>

@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useSyncExternalStore } from 'react'
 import { auth } from '@/lib/firebase'
 
 /**
@@ -28,13 +28,16 @@ type Salud = {
 export default function AvisoConfiguracion() {
   const [salud, setSalud] = useState<Salud | null>(null)
   // `?diagnostico=1` en la URL del panel: para cuando se van a probar cosas que
-  // no bloquean, como el correo. Se lee en el efecto, no al pintar, para que el
-  // HTML del servidor y el del navegador coincidan.
-  const [diagnostico, setDiagnostico] = useState(false)
+  // no bloquean, como el correo. Se lee como almacén externo: el servidor
+  // dice «no» y el navegador lee la URL real al hidratar, así el HTML de ambos coincide.
+  const diagnostico = useSyncExternalStore(
+    () => () => {},
+    () => new URLSearchParams(window.location.search).has('diagnostico'),
+    () => false,
+  )
 
   useEffect(() => {
     let vivo = true
-    setDiagnostico(new URLSearchParams(window.location.search).has('diagnostico'))
     // Espera a que Firebase tenga usuario (en el primer render `currentUser` aún puede ser null) y comprueba tras cada await que sigue
     // siendo el MISMO usuario (regla de cambio de cuenta, E-31).
     const baja = auth.onAuthStateChanged(async (u) => {

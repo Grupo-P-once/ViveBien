@@ -1,4 +1,5 @@
 'use client'
+import NextImage from 'next/image'
 import { useEffect } from 'react'
 import Link from 'next/link'
 import { alFallarImagen } from '@/lib/imagen-respaldo'
@@ -183,7 +184,7 @@ export function ValoresNosotros() {
                 <h3>{t}</h3><span aria-hidden className="nos-linea" /><p>{d}</p>
               </div>
               <div className="nos-val-foto" aria-hidden>
-                <img src={IMG(foto)} alt="" width={600} height={450} loading="lazy" decoding="async" style={{ objectPosition: pos }} onError={e => alFallarImagen(e.currentTarget, '/icon.png')} />
+                <NextImage unoptimized src={IMG(foto)} alt="" width={600} height={450} loading="lazy" decoding="async" style={{ objectPosition: pos }} onError={e => alFallarImagen(e.currentTarget, '/icon.png')} />
               </div>
             </li>
           ))}
@@ -306,7 +307,7 @@ export function FamiliaNosotros() {
           {EMPRESAS.map(({ nombre, sector, desc, Icono, logo, href, tono, externo }) => (
             <li key={nombre} className={`nos-empresa ${tono ? `nos-empresa-${tono}` : ''}`}>
               <a className="nos-tarjeta" href={href} target={externo ? '_blank' : undefined} rel={externo ? 'noopener noreferrer' : undefined} data-empresa={nombre.toLowerCase()}>
-                <span className={`nos-tarjeta-panel ${nombre === 'OTLI.IA' ? 'nos-tarjeta-panel-redondo' : ''}`}><img src={logo.src} alt="" width={logo.w} height={logo.h} loading="lazy" decoding="async" /></span>
+                <span className={`nos-tarjeta-panel ${nombre === 'OTLI.IA' ? 'nos-tarjeta-panel-redondo' : ''}`}><NextImage unoptimized src={logo.src} alt="" width={logo.w} height={logo.h} loading="lazy" decoding="async" /></span>
                 <span className="nos-tarjeta-icono"><Icono aria-hidden size={28} /></span>
                 <h3>{nombre}</h3><small>{sector}</small><span aria-hidden className="nos-linea" /><p>{desc}</p>
                 <span className="nos-tarjeta-mas"><i aria-hidden><ChevronRight size={18} /></i>Conoce más{externo && <span className="nos-solo-lectores"> (se abre en una pestaña nueva)</span>}</span>

@@ -264,10 +264,9 @@ describe('fotografías de terceros en las portadas', () => {
     }
   })
   it('las fotos existen en public/ y no se hace pasar otra ciudad por local: la de Pexels se declara ilustrativa; la de Commons nombra su lugar', () => {
-    const fs = require('node:fs') as typeof import('node:fs')
     for (const a of TODOS_LOS_ARTICULOS.filter((x) => x.portada.credito)) {
       const c = a.portada.credito!
-      expect(fs.existsSync('public' + a.portada.src), a.slug).toBe(true)
+      expect(existsSync('public' + a.portada.src), a.slug).toBe(true)
       expect(a.portada.alt.length, a.slug).toBeGreaterThan(30)
       if (c.sitio === 'Pexels') expect(a.portada.alt, a.slug).toMatch(/ilustrativa/)
       else if (c.sitio === 'Wikimedia Commons' && /León|Silao|Puerto Interior/.test(c.titulo)) expect(a.portada.alt, a.slug).toMatch(/León|Silao|Puerto Interior|Guanajuato/)
