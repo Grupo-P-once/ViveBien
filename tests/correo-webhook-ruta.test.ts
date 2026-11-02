@@ -206,3 +206,55 @@ describe('no filtra secretos ni datos personales a los registros', () => {
     expect(salida).not.toContain('re_prueba_1')
   })
 })
+
+/**
+ * MKT-61 (2-nov-2026) — `email.suppressed` y `email.failed` con la FORMA DOCUMENTADA por Resend (https://resend.com/docs/webhooks/emails/suppressed y /failed, consultadas el 2-nov-2026),
+ * firmados localmente con un secreto de prueba y aplicados contra el SQL real en PGlite con datos sintéticos. NO es evidencia del proveedor real: el proveedor no ofrece
+ * un receptor aislable (el webhook es de la cuenta y también llegaría al de Producción); esto demuestra que NUESTRO código acepta el payload documentado.
+ */
+describe('payloads documentados de Resend para email.suppressed y email.failed (sintéticos, locales)', () => {
+  const base = { created_at: new Date().toISOString(), email_id: 're_prueba_1', message_id: '<010001a1@email.amazonses.com>', from: 'Vive Bien <informes@vivebienn.com>', to: ['persona.ejemplo@ejemplo.invalid'], subject: 'Asunto de prueba', broadcast_id: null, template_id: null, tags: { category: 'prueba' } }
+  const suprimido = JSON.stringify({ type: 'email.suppressed', created_at: base.created_at, data: { ...base, suppressed: { type: 'OnAccountSuppressionList', message: 'Resend has suppressed sending to this address because it is on the account-level suppression list.' } } })
+  const fallido = JSON.stringify({ type: 'email.failed', created_at: base.created_at, data: { ...base, failed: { reason: 'reached_daily_quota' } } })
+
+  it('email.suppressed con `data.suppressed`: firma válida → envío «suprimido», supresión por huella, y repetirlo (mismo svix-id) es «duplicado» sin otra supresión', async () => {
+    await sembrar()
+    const r = await POST(peticion(suprimido, { id: 'msg_doc_s1' }))
+    expect(r.status).toBe(200); expect(await r.json()).toMatchObject({ resultado: 'aplicado' })
+    expect(await estadoDe()).toBe('suprimido'); expect(await cuenta('correo_supresiones')).toBe(1)
+    const otra = await POST(peticion(suprimido, { id: 'msg_doc_s1' }))
+    expect(await otra.json()).toMatchObject({ resultado: 'duplicado' })
+    expect(await cuenta('correo_supresiones')).toBe(1)
+  })
+
+  it('email.failed con `data.failed.reason`: el envío queda en «error» y no se suprime a nadie', async () => {
+    await sembrar()
+    const r = await POST(peticion(fallido, { id: 'msg_doc_f1' }))
+    expect(r.status).toBe(200); expect(await r.json()).toMatchObject({ resultado: 'aplicado' })
+    expect(await estadoDe()).toBe('error'); expect(await cuenta('correo_supresiones')).toBe(0)
+  })
+
+  it('un email.suppressed de OTRA aplicación (sin envío propio con ese resend_id) va a cuarentena SIN efectos y se responde 200', async () => {
+    const r = await POST(peticion(suprimido, { id: 'msg_doc_s2' }))
+    expect(r.status).toBe(200); expect(await r.json()).toMatchObject({ resultado: 'pendiente' })
+    expect(await cuenta('correo_supresiones')).toBe(0); expect(await cuenta('correo_eventos_pendientes')).toBe(1)
+  })
+
+  it('cuerpo alterado después de firmar (cambiar el destinatario) → 401 y nada se aplica', async () => {
+    await sembrar()
+    const firmado = firmar('msg_doc_alt', ahoraSeg(), suprimido)
+    const alterado = suprimido.replace('persona.ejemplo@ejemplo.invalid', 'otra.persona@ejemplo.invalid')
+    const req = new Request('https://vb.test/api/correo/webhook', { method: 'POST', headers: { 'content-type': 'application/json', 'svix-id': 'msg_doc_alt', 'svix-timestamp': ahoraSeg(), 'svix-signature': firmado }, body: alterado })
+    expect((await POST(req)).status).toBe(401)
+    expect(await estadoDe()).toBe('enviado'); expect(await cuenta('correo_supresiones')).toBe(0)
+  })
+
+  it('los registros no llevan el correo, el id del proveedor, el asunto ni el texto de la supresión', async () => {
+    const espías = [vi.spyOn(console, 'log').mockImplementation(() => {}), vi.spyOn(console, 'error').mockImplementation(() => {}), vi.spyOn(console, 'warn').mockImplementation(() => {})]
+    await sembrar()
+    await POST(peticion(suprimido, { id: 'msg_doc_l1' }))
+    await POST(peticion(fallido, { id: 'msg_doc_l2' }))
+    const salida = JSON.stringify(espías.flatMap((s) => s.mock.calls))
+    for (const dato of ['persona.ejemplo@ejemplo.invalid', 're_prueba_1', 'Asunto de prueba', 'account-level suppression list']) expect(salida).not.toContain(dato)
+  })
+})
