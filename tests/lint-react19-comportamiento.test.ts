@@ -21,6 +21,8 @@ const src = (ruta: string) => readFileSync(new URL(`../${ruta}`, import.meta.url
 describe('cargador de Cloudinary para next/image', () => {
   it('es exactamente `fotoOptimizada`: la transformación sigue siendo la de Cloudinary por URL', () => {
     for (const w of [16, 384, 640, 1080, 1920]) expect(cargadorCloudinary({ src: CLOUD, width: w })).toBe(fotoOptimizada(CLOUD, w))
+    // `next/image` ofrece hasta 3840 px; las fotos nunca se piden por encima del techo que ya tenía el `srcset` (1920), para no pesar más que antes
+    for (const w of [2048, 3840]) expect(cargadorCloudinary({ src: CLOUD, width: w })).toContain(',w_1920/')
     expect(cargadorCloudinary({ src: CLOUD, width: 640 })).toContain('/image/upload/f_auto,q_auto,w_640/')
   })
   it('lo que no es de Cloudinary sale intacto (Unsplash, /public, data:)', () => {
