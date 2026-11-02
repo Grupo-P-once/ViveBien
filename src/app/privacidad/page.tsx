@@ -17,16 +17,16 @@ export const metadata: Metadata = paginaSeo({
  * Antes de publicarlo: revisión legal, subir `VERSIONES.privacidad` en src/lib/aceptacion-legal.ts y la fecha de arriba (subir la versión
  * dispara el aviso legal por correo a quien aceptó la anterior). Ver MKT-34 en Pendientes de Obsidian.
  */
-export default function PrivacidadPage() {
-  const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
-    <div style={{ marginBottom: '2.5rem' }}>
-      <h2 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, color: 'var(--azul)', fontSize: '1.15rem', marginBottom: '1rem', borderBottom: '2px solid var(--superficie)', paddingBottom: '.5rem' }}>
-        {title}
-      </h2>
-      <div style={{ color: '#555', lineHeight: 1.8, fontSize: '.95rem' }}>{children}</div>
-    </div>
-  )
+const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
+  <div style={{ marginBottom: '2.5rem' }}>
+    <h2 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, color: 'var(--azul)', fontSize: '1.15rem', marginBottom: '1rem', borderBottom: '2px solid var(--superficie)', paddingBottom: '.5rem' }}>
+      {title}
+    </h2>
+    <div style={{ color: '#555', lineHeight: 1.8, fontSize: '.95rem' }}>{children}</div>
+  </div>
+)
 
+export default function PrivacidadPage() {
   return (
     <>
       <Header />

@@ -43,6 +43,15 @@ const num = (v: unknown): number | null => {
 
 const pesos = (n: number) => `$${n.toLocaleString('es-MX', { maximumFractionDigits: 0 })}`
 
+const Hueco = ({ children }: { children: React.ReactNode }) => (
+  <span style={{
+    color: '#B45309', background: 'var(--aviso-fondo-calido)',
+    padding: '1px 7px', borderRadius: 5, fontSize: '.8rem', fontWeight: 600,
+  }}>
+    {children}
+  </span>
+)
+
 export default function VistaPreviaAnuncio(p: Props) {
   const precio = num(p.precio)
   const mant = num(p.mantenimiento)
@@ -57,15 +66,6 @@ export default function VistaPreviaAnuncio(p: Props) {
 
   // Lo que falta se enseña como falta, no se esconde. Un hueco visible en la
   // vista previa dice más que cualquier aviso: así se va a ver de verdad.
-  const Hueco = ({ children }: { children: React.ReactNode }) => (
-    <span style={{
-      color: '#B45309', background: 'var(--aviso-fondo-calido)',
-      padding: '1px 7px', borderRadius: 5, fontSize: '.8rem', fontWeight: 600,
-    }}>
-      {children}
-    </span>
-  )
-
   return (
     <div>
       <p style={{ fontSize: '.85rem', color: '#5A6472', marginBottom: '.85rem', lineHeight: 1.55 }}>

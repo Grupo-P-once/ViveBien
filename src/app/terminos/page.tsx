@@ -11,16 +11,16 @@ export const metadata: Metadata = paginaSeo({
   descripcion: 'Términos y condiciones de uso de la plataforma de Vive Bien Grupo Inmobiliario en León, Guanajuato.',
 })
 
-export default function TerminosPage() {
-  const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
-    <div style={{ marginBottom: '2.5rem' }}>
-      <h2 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, color: 'var(--azul)', fontSize: '1.15rem', marginBottom: '1rem', borderBottom: '2px solid var(--superficie)', paddingBottom: '.5rem' }}>
-        {title}
-      </h2>
-      <div style={{ color: '#555', lineHeight: 1.8, fontSize: '.95rem' }}>{children}</div>
-    </div>
-  )
+const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
+  <div style={{ marginBottom: '2.5rem' }}>
+    <h2 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, color: 'var(--azul)', fontSize: '1.15rem', marginBottom: '1rem', borderBottom: '2px solid var(--superficie)', paddingBottom: '.5rem' }}>
+      {title}
+    </h2>
+    <div style={{ color: '#555', lineHeight: 1.8, fontSize: '.95rem' }}>{children}</div>
+  </div>
+)
 
+export default function TerminosPage() {
   return (
     <>
       <Header />
