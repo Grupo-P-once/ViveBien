@@ -9,7 +9,6 @@ const MapaCatalogo = dynamic(() => import('@/components/catalogo/MapaCatalogo'),
 })
 import { useState, useEffect, Suspense, useCallback, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import SeccionCarrusel from '@/components/catalogo/SeccionCarrusel'
@@ -181,15 +180,6 @@ function PropiedadesContent() {
     updateFiltros(Object.fromEntries(CLAVES_EXTRA.map(k => [k, ''])) as Partial<EstadoFiltros>)
   }
 
-  useEffect(() => {
-    cargarPropiedades()
-  }, [])
-
-  /** snake_case → camelCase (compatibilidad con las tarjetas). */
-  function mapear(filas: any[]): Propiedad[] {
-    return filas.map((p: any) => ({ ...p, alturaLibre: p.altura_libre, m2: p.metros }))
-  }
-
   /* ── Filtros en la CONSULTA ─────────────────────────────────────────────
      Con algún filtro activo se pide al servidor `/api/catalogo?<filtros>`: la base filtra ANTES del tope de 500, así que una propiedad que cumple no se
      queda fuera por caer más allá de la 500. El navegador vuelve a aplicar `coincide` sobre lo recibido (misma regla, resultado exacto e inmediato al teclear). */
@@ -212,7 +202,7 @@ function PropiedadesContent() {
     return () => ctl.abort()
   }, [consultaEstable, reintento])
 
-  async function cargarPropiedades() {
+  const cargarPropiedades = useCallback(async () => {
     setLoading(true)
     try {
       // Por /api/catalogo y no directo a Supabase: esa ruta cachea y guarda
@@ -221,7 +211,7 @@ function PropiedadesContent() {
       const res = await fetch('/api/catalogo')
       if (!res.ok) throw new Error(`catalogo ${res.status}`)
       const payload = await res.json()
-      const visibles = (payload.propiedades || []) as any[]
+      const visibles = (payload.propiedades || []) as Array<Record<string, unknown>>
       setDesactualizado(Boolean(payload.desactualizado))
       // Map snake_case → camelCase for backwards compat
       setPropiedades(mapear(visibles))
@@ -235,7 +225,11 @@ function PropiedadesContent() {
       setFalloConsulta(true)
     }
     setLoading(false)
-  }
+  }, [])
+
+  useEffect(() => {
+    cargarPropiedades()
+  }, [cargarPropiedades])
 
   function getNormTipo(p: Propiedad) {
     // normalize 'depto' → 'departamento'
@@ -794,6 +788,11 @@ function PropModal({ p, onClose, onContact, isLoggedIn }: { p: Propiedad; onClos
       </div>
     </div>
   )
+}
+
+/** snake_case → camelCase (compatibilidad con las tarjetas). */
+function mapear(filas: Array<Record<string, unknown>>): Propiedad[] {
+  return filas.map((p) => ({ ...p, alturaLibre: p.altura_libre, m2: p.metros })) as unknown as Propiedad[]
 }
 
 export default function PropiedadesPage() {

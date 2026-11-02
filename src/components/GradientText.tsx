@@ -1,6 +1,6 @@
 'use client'
 import { useState, useCallback, useRef, useEffect } from 'react'
-import { motion, useMotionValue, useAnimationFrame, useTransform } from 'framer-motion'
+import { motion, useMotionValue, useAnimationFrame, useTransform, type MotionStyle } from 'framer-motion'
 
 interface GradientTextProps {
   children: React.ReactNode
@@ -19,7 +19,6 @@ export default function GradientText({
   className = '',
   colors = ['var(--rojo)', 'var(--rojo-claro)', 'var(--azul)', 'var(--rojo)'],
   animationSpeed = 6,
-  showBorder = false,
   direction = 'horizontal',
   pauseOnHover = false,
   yoyo = true,
@@ -81,7 +80,7 @@ export default function GradientText({
   return (
     <motion.span
       className={className}
-      style={{ ...gradientStyle, backgroundPosition, display: 'inline', ...style } as any}
+      style={{ ...gradientStyle, backgroundPosition, display: 'inline', ...style } as MotionStyle}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >

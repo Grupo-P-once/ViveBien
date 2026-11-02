@@ -77,7 +77,7 @@ export default function TablaMisPropiedades({
   const [pestana, setPestana] = useState<Pestana>(pestanaInicial)
   const [texto, setTexto] = useState('')
 
-  const todas = filas ?? []
+  const todas = useMemo(() => filas ?? [], [filas])
   const pestanas: { clave: Pestana; etiqueta: string }[] = [
     { clave: 'todas', etiqueta: 'Todas' },
     { clave: 'publicadas', etiqueta: 'Publicadas' },

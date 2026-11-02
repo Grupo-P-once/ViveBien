@@ -109,7 +109,7 @@ function ListaDePropiedades() {
     return () => { vivo = false }
   }, [pedir, intento])
 
-  const todas = lista ?? []
+  const todas = useMemo(() => lista ?? [], [lista])
   const conteos = useMemo(() => conteosPorPestana(todas), [todas])
   const kpis = useMemo(() => kpisPropiedades(todas, ahora), [todas, ahora])
   const filtradas = useMemo(() => filtrarPropiedades(todas, pestana, busqueda), [todas, pestana, busqueda])

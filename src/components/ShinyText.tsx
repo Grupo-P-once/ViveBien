@@ -1,6 +1,6 @@
 'use client'
 import { useState, useCallback, useRef } from 'react'
-import { motion, useMotionValue, useAnimationFrame, useTransform } from 'framer-motion'
+import { motion, useMotionValue, useAnimationFrame, useTransform, type MotionStyle } from 'framer-motion'
 
 interface ShinyTextProps {
   text: string
@@ -93,7 +93,7 @@ const ShinyText = ({
   return (
     <motion.span
       className={className}
-      style={{ ...gradientStyle, backgroundPosition } as any}
+      style={{ ...gradientStyle, backgroundPosition } as MotionStyle}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >

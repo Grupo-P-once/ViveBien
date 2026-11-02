@@ -5,7 +5,7 @@ import { alFallarImagen } from '@/lib/imagen-respaldo'
 import { MAPA_GTO } from '@/lib/mapa-guanajuato'
 import { NEGOCIO, HORARIO_TEXTO, enlaceTelefono, enlaceWhatsApp } from '@/lib/config/negocio'
 import {
-  ArrowRight, BadgeCheck, BarChart3, Building2, CalendarDays, Camera, ChevronRight, Clock, FileCheck2, Handshake, Heart, Home, Layers, Lightbulb,
+  ArrowRight, BadgeCheck, BarChart3, Building2, CalendarDays, Camera, ChevronRight, Clock, Handshake, Heart, Home, Layers, Lightbulb,
   Map as MapaIcono, MapPin, Network, Phone, Scale, Search, ShieldCheck, Star, Users, Wrench, MessageCircle, type LucideIcon,
 } from 'lucide-react'
 

@@ -145,9 +145,10 @@ function MiCuentaInterior() {
   // que un administrador acababa respondiendo «¿Compras o rentas?».
   const reparto = repartoDeMiCuenta(perfil?.rol)
   const seVa = reparto.tipo === 'ir'
+  const irA = reparto.tipo === 'ir' ? reparto.a : null
   useEffect(() => {
-    if (reparto.tipo === 'ir') router.replace(reparto.a)
-  }, [reparto.tipo, reparto.tipo === 'ir' ? reparto.a : '', router])
+    if (irA !== null) router.replace(irA)
+  }, [irA, router])
 
   /** Guarda con retardo. Igual que el asistente de propiedad: nadie pulsa «guardar». */
   const guardar = useCallback((cambios: Record<string, unknown>) => {

@@ -106,6 +106,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
+/** Fecha (AAAA-MM-DD) dentro de `dias` días; el cálculo vive fuera del render para que la regla de pureza de React lo vea como una función aparte. */
+function fechaDentroDeDias(dias: number): string {
+  return new Date(Date.now() + dias * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+}
+
 export default async function Page({ params }: Props) {
   const nombre = await nombreDeLaUrl(params)
   const r = await resolverFicha(nombre)
@@ -144,7 +149,7 @@ export default async function Page({ params }: Props) {
           price: data.precio,
           priceCurrency: 'MXN',
           availability: 'https://schema.org/InStock',
-          priceValidUntil: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          priceValidUntil: fechaDentroDeDias(90),
         },
         // La ciudad sale de la propiedad, no escrita a mano: decía siempre
         // 'León', y eso le dice a Google que una nave de Silao está en León.

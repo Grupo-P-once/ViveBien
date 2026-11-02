@@ -20,7 +20,7 @@ import { idYoutube } from '@/lib/youtube'
 import { registrarEvento } from '@/lib/eventos'
 import { enviarGa } from '@/lib/ga'
 import { contarFichaVista, debeOfrecerRegistro, marcarOfrecido } from '@/lib/momento-registro'
-import { nombreDe, rutaDe } from '@/lib/propiedad-publica'
+import { nombreDe } from '@/lib/propiedad-publica'
 import { textoDeInformes } from '@/lib/whatsapp-propiedad'
 import AvisoBajaDePrecio from '@/components/AvisoBajaDePrecio'
 import CorazonDeGuardadas from '@/components/CorazonDeGuardadas'
@@ -652,7 +652,7 @@ export default function DetallePropiedad({ params, idInterno, inicial }: { param
                       <label htmlFor={`fc-${f.key}`} style={{ fontSize: '.72rem', fontWeight: 700, color: '#5b6472', letterSpacing: '.06em', display: 'block', marginBottom: '.3rem' }}>
                         <i className={`fa ${f.icon}`} style={{ marginRight: '.3rem', color: color }} />{f.label}
                       </label>
-                      <input id={`fc-${f.key}`} type={f.type} required={f.required} value={(form as any)[f.key]} placeholder={f.placeholder}
+                      <input id={`fc-${f.key}`} type={f.type} required={f.required} value={(form as unknown as Record<string, string>)[f.key]} placeholder={f.placeholder}
                         onChange={e => setForm(v => ({ ...v, [f.key]: e.target.value }))}
                         style={{ width: '100%', padding: '.65rem .85rem', border: '1.5px solid #E0E4EA', borderRadius: '8px', fontSize: '.9rem', fontFamily: 'inherit', boxSizing: 'border-box' }} />
                     </div>

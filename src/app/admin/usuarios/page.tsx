@@ -83,7 +83,7 @@ export default function PaginaUsuarios() {
     return () => { vivo = false }
   }, [pedir, intento])
 
-  const todos = usuarios ?? []
+  const todos = useMemo(() => usuarios ?? [], [usuarios])
   const kpis = useMemo(() => kpisUsuarios(todos, ahora), [todos, ahora])
   const filtrados = useMemo(() => filtrarUsuarios(todos, { texto: busqueda, rol, estado }), [todos, busqueda, rol, estado])
   const pendientes = invitaciones.filter((i) => i.estado === 'pendiente')

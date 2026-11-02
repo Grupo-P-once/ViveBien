@@ -83,7 +83,7 @@ export default function PaginaRegistros() {
     }
   }, [propiedades])
 
-  const todos = registros ?? []
+  const todos = useMemo(() => registros ?? [], [registros])
   const kpis = useMemo(() => kpisRegistros(todos, ahora), [todos, ahora])
   const conteos = useMemo(() => conteosPorTipo(todos), [todos])
   const filtrados = useMemo(

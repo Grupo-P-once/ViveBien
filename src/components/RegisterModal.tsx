@@ -1,7 +1,6 @@
 'use client'
 import Link from 'next/link'
 import { useState } from 'react'
-import { supabase } from '@/lib/supabase'
 import Consentimiento, { PistaConsentimiento } from '@/components/Consentimiento'
 import { NEGOCIO } from '@/lib/config/negocio'
 

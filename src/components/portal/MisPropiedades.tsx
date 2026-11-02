@@ -5,8 +5,6 @@ import { auth } from '@/lib/firebase'
 import { perfilDeSesion } from '@/lib/acceso/perfil-de-sesion'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { nombreDe, nombreProvisional, rutaDe } from '@/lib/propiedad-publica'
-import { destinoDePublicacion, publicaSinRevisionEfectiva } from '@/lib/publicacion'
 import { abrirNuevaPropiedad, estadoDeFiltro, rutaDeEditorDe } from '@/lib/publicador/espacio'
 import { useSesionOpcional } from '@/components/admin/sesion'
 import { confirmacionDeEnvio, rutaPublicaValida, type RespuestaDeEstado } from '@/lib/publicador/confirmacion'
@@ -32,23 +30,6 @@ type Prop = {
 
 /** Mensaje de la última operación. `advertencia` = no se pudo confirmar. */
 type Aviso = { titulo: string; detalle?: string; ruta?: string | null; advertencia?: boolean }
-
-/** Una frase por estado, para que la tarjeta diga sin ambigüedad en qué punto está (no solo una etiqueta de color). */
-const SITUACION: Record<string, string> = {
-  borrador: 'Borrador: aún no está publicado ni enviado a revisión.',
-  en_revision: 'Enviada a revisión: aún no está publicada.',
-  cambios_solicitados: 'El revisor pidió cambios: aún no está publicada.',
-  rechazada: 'Rechazada: no está publicada.',
-  publicada: 'Publicada: ya se ve en el sitio.',
-}
-
-const ETIQUETA: Record<string, { texto: string; bg: string; color: string }> = {
-  borrador: { texto: 'Borrador', bg: '#f1f5f9', color: '#475569' },
-  en_revision: { texto: 'En revisión', bg: 'var(--aviso-fondo)', color: '#b45309' },
-  cambios_solicitados: { texto: 'Cambios solicitados', bg: '#ffedd5', color: '#c2410c' },
-  rechazada: { texto: 'Rechazada', bg: 'var(--error-fondo-fuerte)', color: 'var(--error-fuerte)' },
-  publicada: { texto: 'Publicada', bg: 'var(--exito-fondo)', color: 'var(--exito-fuerte)' },
-}
 
 async function cabeceras(): Promise<HeadersInit> {
   const t = await auth.currentUser?.getIdToken()

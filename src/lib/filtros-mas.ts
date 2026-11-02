@@ -17,7 +17,7 @@
  */
 
 import { SUBTIPOS } from './esquemas/propiedad'
-import { DEFINICIONES, aplica, boolDe, enumDe, etiquetaSubtipo, leerCaracteristicas, listaDe, numeroDe, superficiesDe, tipoBase, type PropiedadConCaracteristicas } from './caracteristicas'
+import { DEFINICIONES, boolDe, enumDe, etiquetaSubtipo, listaDe, numeroDe, superficiesDe, type PropiedadConCaracteristicas } from './caracteristicas'
 
 /* ── Normalización de texto ───────────────────────────────────────────────── */
 

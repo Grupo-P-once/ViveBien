@@ -13,7 +13,6 @@ import {
   type Overrides,
 } from '@/lib/acceso/capacidades'
 import { leerExtrasDePublicadores } from '@/lib/citas/asesores'
-import { leerFlags } from '@/lib/config/flags-servidor'
 
 /**
  * Gestión de usuarios. Sólo administradores.

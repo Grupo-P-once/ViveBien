@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -72,6 +72,10 @@ interface Propiedad {
 // Ahora el rol lo dice sólo el servidor (`/api/usuarios/me`).
 
 /** Cabeceras con el ID token de Firebase para las rutas de administración. */
+// Filas que devuelven /api/leads y /api/admin/contactos (el servidor decide los campos; todos pueden faltar).
+type FilaLead = { id: number | string; nombre?: string | null; telefono?: string | null; email?: string | null; mensaje?: string | null; interes?: string | null; origen?: string | null; propiedad_id?: string | number | null; created_at?: string | null }
+type FilaContacto = { id: number | string; nombre?: string | null; telefono?: string | null; email?: string | null; mensaje?: string | null; created_at?: string | null }
+
 async function authHeaders(): Promise<HeadersInit> {
   const token = await auth.currentUser?.getIdToken()
   return {
@@ -113,8 +117,8 @@ export default function DashboardPage() {
   const router = useRouter()
   const [tab, setTab] = useState<Tab>('metricas')
   const [propiedades, setPropiedades] = useState<Propiedad[]>([])
-  const [leads, setLeads] = useState<any[]>([])
-  const [contactos, setContactos] = useState<any[]>([])
+  const [leads, setLeads] = useState<FilaLead[]>([])
+  const [contactos, setContactos] = useState<FilaContacto[]>([])
   const [editando, setEditando] = useState<Partial<Propiedad> | null>(null)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
@@ -138,6 +142,38 @@ export default function DashboardPage() {
     const aqui = typeof window === 'undefined' ? '/dashboard' : window.location.pathname + busqueda
     router.replace(rutaDeEntrada(aqui))
   }, [authLoading, user, router])
+
+  const cargarPropiedades = useCallback(async () => {
+    try {
+      // E-35: la ruta de administración exige sesión (antes devolvía solo lo público a cualquiera).
+      const res = await fetch('/api/admin/propiedades', { headers: await authHeaders() })
+      const data = await res.json()
+      setPropiedades(Array.isArray(data) ? data as Propiedad[] : [])
+    } catch { setPropiedades([]) }
+  }, [])
+
+  // El servidor decide qué devuelve según el token: todo si eres admin, sólo
+  // lo tuyo si no. La tabla ya no se lee desde el navegador.
+  const cargarLeads = useCallback(async () => {
+    try {
+      const res = await fetch('/api/leads', { headers: await authHeaders() })
+      const data = await res.json()
+      setLeads(Array.isArray(data) ? data : [])
+    } catch { setLeads([]) }
+  }, [])
+
+  // El correo sale del token verificado en el servidor, no de aquí.
+  const cargarLeadsCliente = useCallback(async () => {
+    await cargarLeads()
+  }, [cargarLeads])
+
+  const cargarContactos = useCallback(async () => {
+    try {
+      const res = await fetch('/api/admin/contactos', { headers: await authHeaders() })
+      const data = await res.json()
+      setContactos(Array.isArray(data) ? data : [])
+    } catch { setContactos([]) }
+  }, [])
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, u => {
@@ -180,17 +216,17 @@ export default function DashboardPage() {
             cargarLeads()
             cargarContactos()
           } else {
-            cargarLeadsCliente(u.email || '')
+            cargarLeadsCliente()
           }
         })
         .catch(() => {
           // La petición terminó y no hay perfil: estado RESUELTO, no espera.
           setPerfil('sin_perfil')
-          cargarLeadsCliente(u.email || '')
+          cargarLeadsCliente()
         })
     })
     return unsub
-  }, [])
+  }, [router, cargarPropiedades, cargarLeads, cargarContactos, cargarLeadsCliente])
 
   async function login(e: React.FormEvent) {
     e.preventDefault()
@@ -216,47 +252,16 @@ export default function DashboardPage() {
         // El rol no viaja: todos entran como cliente.
         body: JSON.stringify({ nombre: regName }),
       }).catch(() => { })
-    } catch (err: any) {
-      console.warn('[registro con correo]', err?.code)
-      setLoginErr(mensajeDeRegistro(err?.code))
+    } catch (err) {
+      const codigo = (err as { code?: string } | null)?.code
+      console.warn('[registro con correo]', codigo)
+      setLoginErr(mensajeDeRegistro(codigo))
     }
   }
 
   function loginConGoogle() {
     setLoginErr('')
     google.entrar()
-  }
-
-  async function cargarPropiedades() {
-    try {
-      // E-35: la ruta de administración exige sesión (antes devolvía solo lo público a cualquiera).
-      const res = await fetch('/api/admin/propiedades', { headers: await authHeaders() })
-      const data = await res.json()
-      setPropiedades(Array.isArray(data) ? data as Propiedad[] : [])
-    } catch { setPropiedades([]) }
-  }
-
-  // El servidor decide qué devuelve según el token: todo si eres admin, sólo
-  // lo tuyo si no. La tabla ya no se lee desde el navegador.
-  async function cargarLeads() {
-    try {
-      const res = await fetch('/api/leads', { headers: await authHeaders() })
-      const data = await res.json()
-      setLeads(Array.isArray(data) ? data : [])
-    } catch { setLeads([]) }
-  }
-
-  // El correo sale del token verificado en el servidor, no de aquí.
-  async function cargarLeadsCliente(_correo: string) {
-    await cargarLeads()
-  }
-
-  async function cargarContactos() {
-    try {
-      const res = await fetch('/api/admin/contactos', { headers: await authHeaders() })
-      const data = await res.json()
-      setContactos(Array.isArray(data) ? data : [])
-    } catch { setContactos([]) }
   }
 
   async function guardar() {
@@ -298,8 +303,8 @@ export default function DashboardPage() {
       }
       setSaveSuccess('✓ Propiedad guardada correctamente')
       setTimeout(() => setSaveSuccess(''), 4000)
-    } catch (err: any) {
-      setSaveError(err.message || 'Error de red')
+    } catch (err) {
+      setSaveError((err as Error | null)?.message || 'Error de red')
     }
     setSaving(false)
   }
@@ -648,7 +653,7 @@ export default function DashboardPage() {
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {leads.map((l: any) => (
+              {leads.map((l) => (
                 <div key={l.id} style={{
                   background: 'var(--superficie)', borderRadius: '12px', padding: '1.2rem 1.5rem',
                   borderLeft: '4px solid var(--azul)', display: 'flex', justifyContent: 'space-between',
@@ -662,7 +667,7 @@ export default function DashboardPage() {
                       <i className="fa fa-calendar" style={{ marginRight: '.3rem' }} />
                       {l.created_at ? new Date(l.created_at).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Fecha no disponible'}
                     </div>
-                    {l.mensaje && <div style={{ fontSize: '.85rem', color: '#555', marginTop: '.3rem', fontStyle: 'italic' }}>"{l.mensaje}"</div>}
+                    {l.mensaje && <div style={{ fontSize: '.85rem', color: '#555', marginTop: '.3rem', fontStyle: 'italic' }}>&quot;{l.mensaje}&quot;</div>}
                   </div>
                   <span style={{ background: '#e6f4ea', color: 'var(--exito)', padding: '4px 12px', borderRadius: '20px', fontSize: '.78rem', fontWeight: 700 }}>
                     <i className="fa fa-check" style={{ marginRight: '.3rem' }} />Recibida
@@ -820,7 +825,7 @@ export default function DashboardPage() {
                   <button
                     onClick={() => {
                       const headers = ['Nombre', 'Teléfono', 'Email', 'Mensaje', 'Propiedad', 'Fecha']
-                      const rows = leads.map((l: any) => [
+                      const rows = leads.map((l) => [
                         l.nombre || '', l.telefono || '', l.email || '',
                         (l.mensaje || l.interes || '').replace(/,/g, ';'),
                         l.propiedad_id || l.origen || '',
@@ -848,7 +853,7 @@ export default function DashboardPage() {
                 <tbody>
                   {leads.length === 0 ? (
                     <tr><td colSpan={6} style={{ textAlign: 'center', padding: '2rem', color: '#999' }}>No hay leads registrados aún.</td></tr>
-                  ) : leads.map((l: any) => (
+                  ) : leads.map((l) => (
                     <tr key={l.id} style={{ borderTop: '1px solid #eee' }}>
                       <td style={{ padding: '12px 15px', fontSize: '.9rem' }}>{l.nombre}</td>
                       <td style={{ padding: '12px 15px', fontSize: '.9rem' }}>
@@ -861,7 +866,7 @@ export default function DashboardPage() {
                       <td style={{ padding: '12px 15px', fontSize: '.85rem', color: '#888' }}>
                         {/* El código interno («ficha») no le dice nada a quien atiende el
                             lead; de dónde vino y, si aplica, qué propiedad miraba, sí. */}
-                        {ORIGENES_LEAD[l.origen] ?? l.origen ?? '—'}
+                        {ORIGENES_LEAD[l.origen ?? ''] ?? l.origen ?? '—'}
                         {l.propiedad_id && (
                           <a href={`/propiedades/${encodeURIComponent(l.propiedad_id)}`} target="_blank" rel="noopener noreferrer"
                             style={{ display: 'block', color: 'var(--azul)', fontWeight: 600, fontSize: '.78rem' }}>
@@ -888,7 +893,7 @@ export default function DashboardPage() {
                   <button
                     onClick={() => {
                       const headers = ['Nombre', 'Teléfono', 'Email', 'Mensaje', 'Fecha']
-                      const rows = contactos.map((c: any) => [
+                      const rows = contactos.map((c) => [
                         c.nombre || '', c.telefono || '', c.email || '',
                         (c.mensaje || '').replace(/,/g, ';'),
                         c.created_at ? new Date(c.created_at).toLocaleDateString('es-MX') : '',
@@ -915,7 +920,7 @@ export default function DashboardPage() {
                 <tbody>
                   {contactos.length === 0 ? (
                     <tr><td colSpan={5} style={{ textAlign: 'center', padding: '2rem', color: '#999' }}>No hay contactos registrados aún.</td></tr>
-                  ) : contactos.map((c: any) => (
+                  ) : contactos.map((c) => (
                     <tr key={c.id} style={{ borderTop: '1px solid #eee' }}>
                       <td style={{ padding: '12px 15px', fontSize: '.9rem' }}>{c.nombre}</td>
                       <td style={{ padding: '12px 15px', fontSize: '.9rem' }}>{c.telefono}</td>
@@ -1149,7 +1154,7 @@ export default function DashboardPage() {
                   <input
                     type={f.type}
                     step={f.key === 'metros' ? '0.01' : undefined}
-                    value={(editando as any)[f.key] ?? ''}
+                    value={(editando as unknown as Record<string, string | number | undefined>)[f.key] ?? ''}
                     placeholder={f.placeholder}
                     onChange={e => setEditando(d => ({ ...d, [f.key]: f.type === 'number' ? (parseFloat(e.target.value) || undefined) : e.target.value }))}
                     style={{ width: '100%', padding: '.75rem 1rem', borderRadius: '8px', border: '1.5px solid #DDE', fontSize: '.92rem', boxSizing: 'border-box' }}

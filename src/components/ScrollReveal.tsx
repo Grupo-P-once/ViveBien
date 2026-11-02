@@ -92,7 +92,7 @@ const ScrollReveal = ({
 
   return (
     <Tag
-      ref={containerRef as any}
+      ref={containerRef as React.Ref<never>}
       className={containerClassName}
     >
       <span className={textClassName}>{splitText}</span>
