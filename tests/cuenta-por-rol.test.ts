@@ -203,7 +203,9 @@ describe('10–14 · /mi-cuenta reparte por rol', () => {
     const src = sinComentarios(leer(RUTA_MI_CUENTA))
     // Se reparte antes de pintar…
     expect(src).toMatch(/repartoDeMiCuenta\(perfil\?\.rol\)/)
-    expect(src).toMatch(/router\.replace\(reparto\.a\)/)
+    // LINT-1: el destino se extrae a `irA` (la regla de hooks no admite expresiones complejas en las dependencias); es el mismo `reparto.a`.
+    expect(src).toMatch(/const irA = reparto\.tipo === 'ir' \? reparto\.a : null/)
+    expect(src).toMatch(/router\.replace\(irA\)/)
     // …y mientras se va no se pinta el asistente.
     expect(src).toMatch(/if \(cargando \|\| seVa\)/)
     // Y la salida ya no está cableada al dashboard viejo.
