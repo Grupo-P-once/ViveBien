@@ -3,17 +3,20 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { calcularComision, LIMITES, REGLA_BORRADOR_2026_10_24 } from '../src/lib/comision-calculo'
 import { ATAJOS, ESCALAS, PCT_VENTA_REGLA } from '../src/lib/comision-formulario'
+import { debeAceptar, type TextoComision } from '../src/lib/comision-aceptacion'
 import { AVISO_SIN_ACUERDO } from '../src/lib/origen-declarado'
 
 /**
- * Cierre de la fase legal (4-nov-2026). Garantías:
- *  1. La comisión de venta es 3.5 % por defecto y editable SOLO entre 3 % y 4 % (decisión del propietario con el abogado), en el cálculo, en los atajos y en la regleta.
- *  2. Con el motor encendido pero SIN texto vigente (estado real de Producción) nada se presenta como acordado ni se registra como cobrable.
- *  3. El Aviso describe con exactitud qué borra el proceso diario y qué no, y los artículos del Centro de Ayuda dicen lo mismo que el Aviso.
+ * Cierre de la fase legal (4-nov-2026). Garantías, cada una por separado:
+ *  1. La comisión de venta es 3.5 % por defecto y editable SOLO entre 3 % y 4 %, con motivo y auditoría (cálculo, atajos, regleta y servidor).
+ *  2. INTERNO (Admin): el motor es una herramienta de cálculo y contabilidad por propiedad; registrar una operación NO depende de que exista un acuerdo con quien publica.
+ *  3. PÚBLICO (publicador): sin texto vigente lo económico es una PROPUESTA y el sitio no registra ni presenta una aceptación inexistente.
+ *  4. El Aviso describe con exactitud qué borra el proceso diario y qué no, y los artículos del Centro de Ayuda dicen lo mismo que el Aviso.
  */
 const leer = (...r: string[]) => readFileSync(path.join(__dirname, '..', ...r), 'utf8')
+const TEXTO = { id: 't1', version: 'v1', titulo: 'Propuesta', cuerpo: 'x', hash: 'h' } as unknown as TextoComision
 
-describe('comisión de venta: 3.5 % predeterminado, editable de 3 % a 4 %', () => {
+describe('1 · comisión de venta: 3.5 % predeterminado, editable de 3 % a 4 %', () => {
   it('el valor por defecto es 3.5 % y está dentro del rango', () => {
     expect(PCT_VENTA_REGLA).toBe('3.5')
     expect(REGLA_BORRADOR_2026_10_24.ventaPuntosBase).toBe(350)
@@ -28,33 +31,51 @@ describe('comisión de venta: 3.5 % predeterminado, editable de 3 % a 4 %', () =
     expect(ESCALAS.venta.habitualDesde * 100).toBe(LIMITES.ventaPuntosBase.min)
     expect(ESCALAS.venta.habitualHasta * 100).toBe(LIMITES.ventaPuntosBase.max)
   })
-  it('solo el equipo registra operaciones y el ajuste exige motivo escrito que queda en la operación', () => {
+  it('solo el equipo registra operaciones; el ajuste exige motivo escrito que queda en la operación y la acción queda auditada', () => {
     const ruta = leer('src', 'app', 'api', 'admin', 'comision', 'operaciones', 'route.ts')
     expect(ruta.match(/exigir\(req, 'propiedad\.moderar'\)/g)?.length).toBe(2)
     expect(ruta).toContain("accion: 'comision.operacion_registrada'")
+    expect(ruta).toContain('actor_uid: perfil.uid')
     expect(leer('src', 'lib', 'comision-operaciones-servidor.ts')).toContain('ajuste_motivo: separaDeLaRegla ? motivo : null')
     expect(LIMITES.motivo).toEqual({ min: 10, max: 300 })
   })
 })
 
-describe('motor de comisiones encendido y SIN texto vigente: estado seguro', () => {
+describe('2 · INTERNO (Admin): calcular y registrar para contabilidad no depende de un acuerdo con el publicador', () => {
   const ops = leer('src', 'lib', 'comision-operaciones-servidor.ts')
   const preparar = ops.slice(ops.indexOf('export async function prepararOperacion'))
-  it('no se registra ninguna operación sin texto vigente, y si no se puede comprobar tampoco (falla cerrado), ANTES de leer nada más', () => {
-    expect(preparar).toContain('await hayTextoVigente()')
-    expect(preparar).toContain("codigo: 'sin_acuerdo_vigente'")
-    expect(preparar).toMatch(/vigente === null\) return \{ ok: false, status: 503/)
-    expect(preparar.indexOf('hayTextoVigente()')).toBeLessThan(preparar.indexOf('leerContexto('))
+  it('Admin calcula sin ningún acuerdo: el cálculo es una función pura de la regla y los ajustes', () => {
+    const r = calcularComision({ operacion: 'venta', baseCentavos: 200_000_000 })
+    expect(r.ok && r.totalCentavos).toBe(7_000_000) // 3.5 % de $2,000,000
   })
-  it('hayTextoVigente consulta el texto con estado «vigente» y ante un error devuelve null', () => {
-    const s = leer('src', 'lib', 'comision-servidor.ts')
-    expect(s).toContain(".from('comision_textos').select('id').eq('estado', 'vigente')")
-    expect(s).toMatch(/if \(t\.error\) return null/)
+  it('prepararOperacion NO consulta ni exige un texto vigente ni devuelve «sin acuerdo»', () => {
+    expect(ops).not.toContain('hayTextoVigente')
+    expect(ops).not.toContain('sin_acuerdo_vigente')
+    expect(preparar).not.toContain('comision_textos')
   })
-  it('la aceptación del publicador no se exige ni se presenta como hecha si no hay texto (ya era así; se fija)', () => {
-    const s = leer('src', 'lib', 'comision-servidor.ts')
-    expect(s).toContain('Sin texto vigente no hay nada que aceptar: no se exige.')
-    expect(s).toContain("if (!debeAceptar({ flagEncendida: true, esEquipo, exenta, texto })) return { ok: true, estado: SIN_ACEPTACION }")
+  it('la ruta administrativa solo se detiene por el interruptor del módulo (motor apagado), no por falta de texto de acuerdo', () => {
+    const ruta = leer('src', 'app', 'api', 'admin', 'comision', 'operaciones', 'route.ts')
+    expect(ruta).toContain("codigo: 'motor_apagado'")
+    expect(ruta).not.toContain('comision_textos')
+    expect(ruta).not.toContain('sin_acuerdo_vigente')
+  })
+})
+
+describe('3 · PÚBLICO (publicador): sin texto vigente es una propuesta y no hay aceptación', () => {
+  it('sin texto vigente nadie debe aceptar nada; con texto vigente, el publicador sí (el equipo y los exentos, nunca)', () => {
+    expect(debeAceptar({ flagEncendida: true, esEquipo: false, exenta: false, texto: null })).toBe(false)
+    expect(debeAceptar({ flagEncendida: true, esEquipo: false, exenta: false, texto: TEXTO })).toBe(true)
+    expect(debeAceptar({ flagEncendida: true, esEquipo: true, exenta: false, texto: TEXTO })).toBe(false)
+    expect(debeAceptar({ flagEncendida: true, esEquipo: false, exenta: true, texto: TEXTO })).toBe(false)
+    expect(debeAceptar({ flagEncendida: false, esEquipo: false, exenta: false, texto: TEXTO })).toBe(false)
+  })
+  it('la ruta de aceptación NO registra nada si no hay texto vigente (no inventa una aceptación)', () => {
+    const ruta = leer('src', 'app', 'api', 'comision', 'aceptacion', 'route.ts')
+    const post = ruta.slice(ruta.indexOf('export async function POST'))
+    expect(post).toContain('if (!requerida || !texto) return NextResponse.json({ ok: true, requerida: false })')
+    const srv = leer('src', 'lib', 'comision-servidor.ts')
+    expect(srv).toContain('Sin texto vigente no hay nada que aceptar: no se exige.')
+    expect(srv).toContain('if (!debeAceptar({ flagEncendida: true, esEquipo, exenta, texto })) return { ok: true, estado: SIN_ACEPTACION }')
   })
   it('la pantalla del publicador rotula lo económico como PROPUESTA y lo dice, mientras no haya acuerdo vigente', () => {
     expect(AVISO_SIN_ACUERDO).toContain('todavía no hay un acuerdo vigente')
@@ -65,9 +86,14 @@ describe('motor de comisiones encendido y SIN texto vigente: estado seguro', () 
     expect(ui).toContain("e.acuerdoVigente === true ? 'Comisión' : 'Comisión (propuesta)'")
     expect(ui).toContain('data-aviso-sin-acuerdo')
   })
+  it('hayTextoVigente solo alimenta lo público: consulta el texto «vigente» y ante un error devuelve null', () => {
+    const s = leer('src', 'lib', 'comision-servidor.ts')
+    expect(s).toContain(".from('comision_textos').select('id').eq('estado', 'vigente')")
+    expect(s).toMatch(/if \(t\.error\) return null/)
+  })
 })
 
-describe('retención: el Aviso dice lo que de verdad se borra', () => {
+describe('4a · retención: el Aviso dice lo que de verdad se borra', () => {
   const aviso = leer('src', 'app', 'privacidad', 'page.tsx')
   const sql = leer('supabase', '67-correo-eventos-pendientes.sql')
   it('los plazos del registro de correos del Aviso son los de la función diaria de purga', () => {
@@ -88,7 +114,7 @@ describe('retención: el Aviso dice lo que de verdad se borra', () => {
   })
 })
 
-describe('Centro de Ayuda (migración 68) coincide con el Aviso y con el producto', () => {
+describe('4b · Centro de Ayuda (migración 68) coincide con el Aviso y con el producto', () => {
   const ayuda = leer('supabase', '68-ayuda-privacidad-medicion-consultas-arco.sql')
   const aviso = leer('src', 'app', 'privacidad', 'page.tsx')
   it('la medición: lo que dice el artículo es lo que dice el Aviso y hace el aviso del sitio', () => {

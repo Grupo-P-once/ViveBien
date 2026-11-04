@@ -32,8 +32,8 @@ export async function estadoDeAceptacion(perfil: PerfilUsuario): Promise<{ ok: t
 }
 
 /**
- * ¿Existe un texto de comisión VIGENTE? Sin él no hay acuerdo que aceptar ni obligaciones que activar. `null` = no se pudo comprobar (falla cerrado).
- * Un módulo encendido sin texto vigente es un estado seguro solo si NADA se presenta como acordado ni se registra como cobrable.
+ * ¿Existe un texto de comisión VIGENTE? Solo alimenta lo que se le MUESTRA al publicador: sin texto vigente lo económico es una propuesta y nada figura como aceptado. `null` = no se
+ * pudo comprobar (se trata como «sin acuerdo»). NO gobierna el registro contable interno de Admin (herramienta de cálculo y contabilidad por propiedad).
  */
 export async function hayTextoVigente(): Promise<boolean | null> {
   const t = await supabaseAdmin().from('comision_textos').select('id').eq('estado', 'vigente').maybeSingle()
