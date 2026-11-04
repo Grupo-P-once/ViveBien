@@ -46,7 +46,7 @@ function crearDb(): DbCorreo {
 }
 const opciones = () => ({ entorno: ENV, fetch: (async (_u: string, i: RequestInit) => { enviados.push(JSON.parse(String(i.body))); return new Response('{"id":"re_1"}', { status: 200 }) }) as unknown as typeof fetch })
 
-const DUENO = { uid: 'u-dueno', email: 'Dueno@Ejemplo.test', nombre: 'Dora Dueña', estado: 'activo', email_verificado: true }
+const DUENO = { uid: 'u-dueno', email: 'Dueno@Ejemplo.test', nombre: 'Dora Dueña', estado: 'activo', email_verificado: true, email_verificado_para: 'dueno@ejemplo.test' }
 const PROP = { id: 'p-1', owner_id: 'u-dueno', titulo: 'Casa de prueba', folio: 'VB-0042', tipo: 'casa', operacion: 'venta', precio: 2_000_000, moneda: 'MXN', ciudad: 'León', completitud: 85, fotos: [] }
 
 beforeEach(() => {
@@ -60,6 +60,8 @@ beforeEach(() => {
 describe('personaVerificada: a quién se le puede escribir', () => {
   it('cuenta activa con correo verificado: sí, con el correo normalizado', async () => {
     expect(await personaVerificada(crearDb(), 'u-dueno')).toEqual({ uid: 'u-dueno', correo: 'dueno@ejemplo.test', nombre: 'Dora Dueña' })
+    datos.usuarios = [{ ...DUENO, email: ' DUENO@ejemplo.test ', email_verificado_para: 'Dueno@Ejemplo.test' }] // mayúsculas y espacios no cuentan como otra dirección
+    expect((await personaVerificada(crearDb(), 'u-dueno'))?.correo).toBe('dueno@ejemplo.test')
   })
   it.each([
     ['sin verificar', { email_verificado: false }],
@@ -67,6 +69,9 @@ describe('personaVerificada: a quién se le puede escribir', () => {
     ['cuenta suspendida', { estado: 'suspendido' }],
     ['cuenta eliminada', { estado: 'eliminada' }],
     ['correo vacío', { email: '' }],
+    ['el correo de la cuenta cambió después de verificarse', { email: 'nuevo@ejemplo.test' }],
+    ['sin registro de qué dirección se verificó', { email_verificado_para: null }],
+    ['verificó otra dirección', { email_verificado_para: 'otra@ejemplo.test' }],
   ])('%s: nunca', async (_n, cambio) => {
     datos.usuarios = [{ ...DUENO, ...cambio }]
     expect(await personaVerificada(crearDb(), 'u-dueno')).toBeNull()
@@ -179,7 +184,7 @@ describe('estatus y disponibilidad', () => {
     expect(enviados[0].subject).toContain('vendida')
   })
   it('disponibilidad: solo a quien guardó la propiedad Y activó los avisos, con correo verificado y sin el dueño', async () => {
-    datos.usuarios = [DUENO, { uid: 'u-a', email: 'a@ejemplo.test', nombre: 'A', estado: 'activo', email_verificado: true }, { uid: 'u-b', email: 'b@ejemplo.test', nombre: 'B', estado: 'activo', email_verificado: true }, { uid: 'u-c', email: 'c@ejemplo.test', nombre: 'C', estado: 'activo', email_verificado: false }]
+    datos.usuarios = [DUENO, { uid: 'u-a', email: 'a@ejemplo.test', nombre: 'A', estado: 'activo', email_verificado: true, email_verificado_para: 'a@ejemplo.test' }, { uid: 'u-b', email: 'b@ejemplo.test', nombre: 'B', estado: 'activo', email_verificado: true, email_verificado_para: 'b@ejemplo.test' }, { uid: 'u-c', email: 'c@ejemplo.test', nombre: 'C', estado: 'activo', email_verificado: false, email_verificado_para: 'c@ejemplo.test' }]
     datos.favoritos = [{ uid: 'u-a', propiedad_id: 'p-1' }, { uid: 'u-b', propiedad_id: 'p-1' }, { uid: 'u-c', propiedad_id: 'p-1' }, { uid: 'u-dueno', propiedad_id: 'p-1' }]
     datos.preferencias_notificacion = [{ uid: 'u-a', correo_precio: true }, { uid: 'u-c', correo_precio: true }, { uid: 'u-dueno', correo_precio: true }]
     const r = await avisarDisponibilidadDeFavorita(crearDb(), { prop: PROP, estatus: 'vendida', version: 'v1' }, opciones())
@@ -189,7 +194,7 @@ describe('estatus y disponibilidad', () => {
   })
   it(`nunca más de ${MAX_AVISOS_DE_DISPONIBILIDAD} personas por cambio`, async () => {
     const quienes = Array.from({ length: MAX_AVISOS_DE_DISPONIBILIDAD + 20 }, (_, i) => `u-${i}`)
-    datos.usuarios = quienes.map((uid) => ({ uid, email: `${uid}@ejemplo.test`, nombre: uid, estado: 'activo', email_verificado: true }))
+    datos.usuarios = quienes.map((uid) => ({ uid, email: `${uid}@ejemplo.test`, nombre: uid, estado: 'activo', email_verificado: true, email_verificado_para: `${uid}@ejemplo.test` }))
     datos.favoritos = quienes.map((uid) => ({ uid, propiedad_id: 'p-1' }))
     datos.preferencias_notificacion = quienes.map((uid) => ({ uid, correo_precio: true }))
     const r = await avisarDisponibilidadDeFavorita(crearDb(), { prop: PROP, estatus: 'pausada', version: 'v1' }, opciones())

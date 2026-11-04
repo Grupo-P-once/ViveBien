@@ -162,8 +162,11 @@ async function leerMiPerfil(req: Request) {
 
     // Migración 69: anota que el correo de ESTA cuenta ya está verificado (lo dice el token de Firebase de quien entra, no una tercera persona). Los correos de eventos
     // dirigidos a otra persona solo salen si esta marca existe. Sin la columna (migración sin aplicar) el error se ignora y esos correos simplemente no salen.
-    if (user.emailVerified === true) {
-      try { await db.from('usuarios').update({ email_verificado: true }).eq('uid', user.uid).eq('email_verificado', false) } catch { /* falla cerrado */ }
+    // Se guarda QUÉ dirección quedó verificada (`email_verificado_para`): si el correo de la cuenta cambia después, ya no coincide y los correos de eventos dejan de salir
+    // hasta que la nueva dirección se verifique y la persona vuelva a entrar.
+    const correoVerificado = (user.email ?? '').trim().toLowerCase()
+    if (user.emailVerified === true && correoVerificado) {
+      try { await db.from('usuarios').update({ email_verificado: true, email_verificado_para: correoVerificado }).eq('uid', user.uid) } catch { /* falla cerrado */ }
     }
 
     // D-80: cuenta NUEVA → bienvenida transaccional (apagada por defecto; después de responder; nunca tumba el alta).

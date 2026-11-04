@@ -41,12 +41,13 @@ describe('conexión: cada correo de evento sale de la ruta que corresponde', () 
   it('migración 69: aditiva, con valor por omisión falso y con reversa', () => {
     const sql = leer('supabase/69-usuarios-correo-verificado.sql')
     expect(sql).toMatch(/add column if not exists email_verificado boolean not null default false/)
+    expect(sql).toMatch(/add column if not exists email_verificado_para text/)
     expect(sql).not.toMatch(/drop |delete |truncate /i)
     expect(leer('supabase/69-usuarios-correo-verificado.REVERTIR.sql')).toMatch(/drop column if exists email_verificado/)
   })
   it('/api/usuarios/me solo marca el correo como verificado cuando el token de la sesión lo dice', () => {
     const src = leer('src/app/api/usuarios/me/route.ts')
-    expect(src).toMatch(/if \(user\.emailVerified === true\)[\s\S]{0,200}email_verificado: true/)
+    expect(src).toMatch(/if \(user\.emailVerified === true && correoVerificado\)[\s\S]{0,200}email_verificado: true, email_verificado_para: correoVerificado/)
   })
 })
 

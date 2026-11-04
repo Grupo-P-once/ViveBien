@@ -13,7 +13,7 @@ import { urlPreferencias } from './suscripcion'
  * Correos de EVENTOS dirigidos a una cuenta (4-nov-2026): propiedad recibida, en revisión, publicada y rechazada, y los que siguen en este módulo.
  *
  * Reglas (las mismas de la bienvenida y la solicitud de publicador, `transaccionales.ts`):
- *  · solo al correo VERIFICADO de la cuenta destinataria (columna `usuarios.email_verificado`, migración 69), con la cuenta activa. Quien dispara el evento puede ser otra persona
+ *  · solo al correo VERIFICADO de la cuenta destinataria (columnas `usuarios.email_verificado` y `email_verificado_para`, migración 69: la marca vale solo para la dirección verificada), con la cuenta activa. Quien dispara el evento puede ser otra persona
  *    (un administrador, un visitante): su sesión nunca decide a dónde va el correo ni si está verificado;
  *  · una sola vez por hecho: clave idempotente `propiedad/<id>/<estado>/<versión del hecho>`; un reintento o un doble clic no duplican;
  *  · sin la migración, sin la marca o con la cuenta suspendida no sale nada (falla cerrado) y el flujo que lo dispara sigue igual;
@@ -27,13 +27,15 @@ export type Persona = { uid: string; correo: string; nombre: string | null }
 export async function personaVerificada(db: DbCorreo, uid: string | null | undefined): Promise<Persona | null> {
   if (!uid || typeof uid !== 'string') return null
   try {
-    const { data, error } = await db.from('usuarios').select('uid, email, nombre, estado, email_verificado').eq('uid', uid).maybeSingle()
+    const { data, error } = await db.from('usuarios').select('uid, email, nombre, estado, email_verificado, email_verificado_para').eq('uid', uid).maybeSingle()
     if (error || !data) return null
-    const f = data as { email?: unknown; nombre?: unknown; estado?: unknown; email_verificado?: unknown }
+    const f = data as { email?: unknown; nombre?: unknown; estado?: unknown; email_verificado?: unknown; email_verificado_para?: unknown }
     if (f.email_verificado !== true) return null
     if (typeof f.estado === 'string' && f.estado !== 'activo') return null
     const correo = normalizarCorreo(typeof f.email === 'string' ? f.email : null)
     if (!correo) return null
+    // La verificación vale SOLO para la dirección que se verificó: si el correo de la cuenta cambió después, la marca vieja no sirve.
+    if (normalizarCorreo(typeof f.email_verificado_para === 'string' ? f.email_verificado_para : null) !== correo) return null
     return { uid, correo, nombre: typeof f.nombre === 'string' && f.nombre.trim() ? f.nombre : null }
   } catch {
     return null
