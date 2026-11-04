@@ -119,3 +119,37 @@ export function guardiaInicial(ids: readonly string[]): string {
 export function configuracionGtag(ids: readonly string[]): string {
   return ids.map((id) => `gtag('config','${id}');`).join('')
 }
+
+// ── Elección de analítica (2-nov-2026) ─────────────────────────────────────────────────────────────────────────────────────────
+// El Aviso de Privacidad promete que la analítica no esencial permanece desactivada hasta que la persona la acepte. Antes GA4 cargaba SIEMPRE;
+// ahora `gtag.js` ni se descarga y `window.gtag` ni existe (así nada se encola para mandarse después) hasta que el navegador tenga 'si'.
+
+/** Clave de almacenamiento local con la elección: 'si' | 'no'. Sin clave = no ha elegido = GA NO carga. */
+export const CLAVE_ANALITICA = 'vb_analitica'
+/** Evento del `window` con el que el pie de página pide volver a mostrar la elección. */
+export const EVENTO_ABRIR_ANALITICA = 'vb-analitica-abrir'
+/** Evento del `window` que avisa que la elección cambió. */
+export const EVENTO_CAMBIO_ANALITICA = 'vb-analitica-cambio'
+
+/**
+ * Texto para el `<script>` del `<head>`. Cadena fija y sin datos del usuario. Define `window.vbCargarGa()` —que descarga `gtag.js`, crea `gtag` y configura cada
+ * propiedad— y solo la llama si la elección guardada es 'si'. En rutas privadas GA nace apagado (`guardiaInicial`), con o sin elección.
+ */
+export function arranqueGa(ids: readonly string[]): string {
+  const [principal] = ids
+  return `${guardiaInicial(ids)}window.vbCargarGa=function(){if(window.vbGaCargado)return;window.vbGaCargado=1;window.dataLayer=window.dataLayer||[];var gtag=window.gtag=function(){window.dataLayer.push(arguments);};var s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id=${principal}';document.head.appendChild(s);gtag('js',new Date());${configuracionGtag(ids)}};try{if(localStorage.getItem('${CLAVE_ANALITICA}')==='si')window.vbCargarGa();}catch(e){}`
+}
+
+/** Al rechazar: apaga GA para lo que queda de la visita y borra sus cookies (`_ga`, `_ga_XXXX`, `_gid`) si ya las había puesto. */
+export function apagarYBorrarGa(ids: readonly string[]): void {
+  try {
+    for (const id of ids) (window as unknown as Record<string, unknown>)[`ga-disable-${id}`] = true
+    const host = window.location.hostname
+    const dominios = ['', `;domain=${host}`, `;domain=.${host.replace(/^www\./, '')}`]
+    for (const par of document.cookie.split(';')) {
+      const nombre = par.split('=')[0]?.trim()
+      if (!nombre || !/^_g(a|id|at)(_|$)/.test(nombre)) continue
+      for (const d of dominios) document.cookie = `${nombre}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/${d}`
+    }
+  } catch { /* sin cookies: nada que borrar */ }
+}

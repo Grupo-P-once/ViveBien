@@ -46,6 +46,8 @@ describe('el HTML de las páginas legales y de la vista previa no cambia con la 
 // Se rellenan con la salida de la primera corrida sobre 5bda322 (ver `LINT-1` en Obsidian).
 const GOLDEN = {
   terminos: { largo: 16239, huella: 'a6e70381e1d74809281184c1' },
-  privacidad: { largo: 19865, huella: '5b4689d21f3284e3683862a8' },
+  // Privacidad: 19865 / 5b4689d21f3284e3683862a8 era el texto de la limpieza de lint (323098c). El 3-nov-2026 se alineó DELIBERADAMENTE el Aviso con el producto real
+  // (consulta sin anunciante, analítica con elección, proveedores, encabezado); desde entonces esta es la referencia: cualquier cambio posterior debe ser a propósito.
+  privacidad: { largo: 21294, huella: '5830cc6be9c489e6a716046c' },
   vista: { vacia: [1542, '3e9aec9a7dd433947f70cf9c'], completa: [1671, 'bb0ae8ee6f77aa2dba096a35'] },
 } as { terminos: { largo: number; huella: string }; privacidad: { largo: number; huella: string }; vista: { vacia: [number, string]; completa: [number, string] } }

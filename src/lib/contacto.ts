@@ -15,7 +15,7 @@ import { NEGOCIO } from './config/negocio'
  * viejas conservan la versión que aceptaron en su momento, que es
  * justamente lo que permite demostrar qué se consintió.
  */
-export const VERSION_CONSENTIMIENTO = '2026-09-16'
+export const VERSION_CONSENTIMIENTO = '2026-11-03'
 
 /**
  * El texto exacto que se acepta, y que queda asociado a la versión.
@@ -24,10 +24,14 @@ export const VERSION_CONSENTIMIENTO = '2026-09-16'
  * persona reconoce de un vistazo. El texto anterior («…con el anunciante de
  * esta propiedad») sólo tenía sentido en la ficha, y se usaba también en el
  * formulario general y en el valuador, donde no hay anunciante.
+ *
+ * 2026-11-03 — se quita la promesa «se compartirán con su anunciante»: la consulta es de VIVE BIEN y el anunciante no recibe ningún dato (ADR-0006; así lo
+ * verifica el código de `/api/contacto`), y el Aviso de Privacidad (sección 4) exige una autorización APARTE, desmarcada y con el anunciante identificado para
+ * cualquier entrega futura. Una sola casilla no puede aceptar el Aviso y autorizar una transferencia. Texto PENDIENTE de validación del abogado (MKT-36).
  */
 export const TEXTO_CONSENTIMIENTO =
   'Acepto el aviso de privacidad. Mis datos se usarán para atender mi ' +
-  'solicitud y, si es sobre una propiedad, se compartirán con su anunciante.'
+  'solicitud. VIVE BIEN no los entrega al anunciante de la propiedad sin pedirme antes una autorización aparte.'
 
 /** Ventana en la que dos solicitudes iguales se consideran la misma. */
 export const MINUTOS_DEDUPE = 30

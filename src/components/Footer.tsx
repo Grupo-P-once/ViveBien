@@ -3,6 +3,7 @@ import { CORREO_CONTACTO } from '@/lib/contacto'
 import Link from 'next/link'
 import Image from 'next/image'
 import { NEGOCIO, enlaceWhatsApp } from '@/lib/config/negocio'
+import { EVENTO_ABRIR_ANALITICA } from '@/lib/ga'
 
 const linkStyle = {
   fontSize: '.875rem', lineHeight: '2',
@@ -170,6 +171,11 @@ export default function Footer() {
             <Link href="/terminos" style={{ color: 'rgba(255,255,255,.7)', textDecoration: 'none' }}>
               Términos y condiciones
             </Link>
+            <span style={{ color: 'rgba(255,255,255,.25)', margin: '0 .6rem' }}>·</span>
+            <button type="button" onClick={() => window.dispatchEvent(new Event(EVENTO_ABRIR_ANALITICA))}
+              style={{ background: 'none', border: 'none', padding: 0, font: 'inherit', color: 'rgba(255,255,255,.7)', cursor: 'pointer' }}>
+              Preferencias de analítica
+            </button>
           </p>
           <p style={{ fontSize: '.8rem', color: 'rgba(255,255,255,.45)' }}>
             © {new Date().getFullYear()} Vive Bien Grupo Inmobiliario. Todos los derechos reservados. | León, Guanajuato, México.

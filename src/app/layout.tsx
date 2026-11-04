@@ -3,7 +3,8 @@ import type { Metadata } from 'next'
 import './globals.css'
 import WAFloat from '@/components/WAFloat'
 import MedicionGa from '@/components/MedicionGa'
-import { configuracionGtag, guardiaInicial } from '@/lib/ga'
+import { arranqueGa } from '@/lib/ga'
+import AvisoAnalitica from '@/components/AvisoAnalitica'
 import { grafo, negocioJsonLd, sitioJsonLd, jsonLdSeguro } from '@/lib/seo'
 import { SITIO } from '@/lib/sitio'
 import { NEGOCIO } from '@/lib/config/negocio'
@@ -61,13 +62,9 @@ export default function RootLayout({
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
         />
         <script
-          async
-          src={`https://www.googletagmanager.com/gtag/js?id=${NEGOCIO.ga4}`}
-        />
-        <script
           dangerouslySetInnerHTML={{
-            // `guardiaInicial`: si la primera página ya es un área privada (panel, cuenta, portal…), GA nace apagado. El resto lo cubre `MedicionGa` al navegar.
-            __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}${guardiaInicial([NEGOCIO.ga4, NEGOCIO.ga4Adicional])}gtag('js',new Date());${configuracionGtag([NEGOCIO.ga4, NEGOCIO.ga4Adicional])}`,
+            // Google Analytics NO carga hasta que la persona lo acepte (`AvisoAnalitica`); `arranqueGa` solo lo arranca si ya había aceptado, y en áreas privadas nace apagado.
+            __html: arranqueGa([NEGOCIO.ga4, NEGOCIO.ga4Adicional]),
           }}
         />
         <script
@@ -79,7 +76,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: jsonLdSeguro(grafo(negocioJsonLd(), sitioJsonLd())) }}
         />
       </head>
-      <body>{children}<WAFloat /><MedicionGa /></body>
+      <body>{children}<WAFloat /><MedicionGa /><AvisoAnalitica /></body>
     </html>
   )
 }

@@ -47,7 +47,13 @@ describe('consentimiento', () => {
   it('cambiar el texto obliga a cambiar la versión', () => {
     // Si alguien edita el texto y no la fecha, los registros dejan de demostrar
     // qué se aceptó. Este par se revisa junto.
-    expect(VERSION_CONSENTIMIENTO).toBe('2026-09-16')
+    expect(VERSION_CONSENTIMIENTO).toBe('2026-11-03')
+    expect(TEXTO_CONSENTIMIENTO).toBe('Acepto el aviso de privacidad. Mis datos se usarán para atender mi solicitud. VIVE BIEN no los entrega al anunciante de la propiedad sin pedirme antes una autorización aparte.')
+  })
+
+  it('la casilla no promete entregar datos al anunciante: una sola casilla no puede aceptar el Aviso y autorizar una transferencia', () => {
+    expect(TEXTO_CONSENTIMIENTO).not.toMatch(/se compartirán con su anunciante/)
+    expect(TEXTO_CONSENTIMIENTO).toMatch(/no los entrega al anunciante/)
   })
 })
 
