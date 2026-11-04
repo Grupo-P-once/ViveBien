@@ -80,8 +80,11 @@ describe('fuentes alojadas en el sitio (LINT-2)', () => {
     for (const f of ['OFL-Montserrat.txt', 'OFL-Open-Sans.txt', 'OFL-Playfair-Display.txt']) expect(readFileSync(join(dir, f), 'utf8')).toMatch(/SIL OPEN FONT LICENSE Version 1\.1/i)
   })
 
-  it('la política de seguridad de contenido no se ha tocado: sigue permitiendo las fuentes propias', () => {
-    const csp = readFileSync(join(raiz, 'src/lib/csp.ts'), 'utf8')
-    expect(csp).toMatch(/font-src[^\n]*'self'|fuentes/)
+  it('CSP-1: la política permite las fuentes propias y ya no autoriza los dominios de Google Fonts', async () => {
+    const { CSP } = await import('../src/lib/csp')
+    const directiva = (n: string) => CSP.split(';').map((s) => s.trim()).find((s) => s.startsWith(n + ' ')) ?? ''
+    expect(directiva('font-src')).toContain("'self'")
+    for (const n of ['style-src', 'font-src']) { expect(directiva(n), n).not.toMatch(/fonts\.googleapis|fonts\.gstatic/); expect(directiva(n), n).toContain('https://cdnjs.cloudflare.com') }
+    expect(readFileSync(join(raiz, 'src/lib/csp.ts'), 'utf8')).not.toMatch(/https:\/\/fonts\.g/)
   })
 })

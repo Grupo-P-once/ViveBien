@@ -19,8 +19,7 @@
 const ORIGENES = {
   /** Google Analytics y su gestor de etiquetas. */
   analitica: ['https://www.googletagmanager.com', 'https://www.google-analytics.com'],
-  /** Tipografías de Google. El CSS viene de una, los archivos de la otra. */
-  fuentes: ['https://fonts.googleapis.com', 'https://fonts.gstatic.com'],
+  // CSP-1 (4-nov-2026): las tipografías se sirven desde `/fuentes` (LINT-2); ya no se permiten los dominios de Google Fonts.
   /** Font Awesome, los iconos de todo el sitio. */
   iconos: ['https://cdnjs.cloudflare.com'],
   /** Las fotos de las propiedades y las de relleno. */
@@ -73,8 +72,8 @@ export const CSP = [
   // R-05 (D-62): SIN 'unsafe-eval'. Medido con Chromium en 17 páginas del build de producción: cero violaciones con y sin él (el `eval` era
   // del modo desarrollo de React/Next). 'unsafe-inline' sigue por el arranque que Next inyecta; se quita el día que se usen nonces.
   `script-src 'self' 'unsafe-inline' ${unir(ORIGENES.analitica, ['https://apis.google.com'])}`,
-  `style-src 'self' 'unsafe-inline' ${unir(ORIGENES.fuentes, ORIGENES.iconos)}`,
-  `font-src 'self' data: ${unir(ORIGENES.fuentes, ORIGENES.iconos)}`,
+  `style-src 'self' 'unsafe-inline' ${unir(ORIGENES.iconos)}`,
+  `font-src 'self' data: ${unir(ORIGENES.iconos)}`,
   `img-src 'self' data: blob: ${unir(ORIGENES.imagenes, ORIGENES.analitica)}`,
   `connect-src 'self' ${unir(ORIGENES.datos, ORIGENES.mapas, ORIGENES.analitica)}`,
   `frame-src ${unir(ORIGENES.incrustado)}`,
