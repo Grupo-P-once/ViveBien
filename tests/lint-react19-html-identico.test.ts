@@ -48,6 +48,7 @@ const GOLDEN = {
   terminos: { largo: 16239, huella: 'a6e70381e1d74809281184c1' },
   // Privacidad: 19865 / 5b4689d21f3284e3683862a8 era el texto de la limpieza de lint (323098c). El 3-nov-2026 se alineó DELIBERADAMENTE el Aviso con el producto real
   // (consulta sin anunciante, analítica con elección, proveedores, encabezado); desde entonces esta es la referencia: cualquier cambio posterior debe ser a propósito.
-  privacidad: { largo: 21294, huella: '5830cc6be9c489e6a716046c' },
+  // 3-nov-2026 (segunda alineación): se añadió el párrafo de datos de propietarios, representantes y agentes que aporta quien publica (pantalla de origen, en vivo).
+  privacidad: { largo: 21933, huella: '9009395b0c62ef9654742f74' },
   vista: { vacia: [1542, '3e9aec9a7dd433947f70cf9c'], completa: [1671, 'bb0ae8ee6f77aa2dba096a35'] },
 } as { terminos: { largo: number; huella: string }; privacidad: { largo: number; huella: string }; vista: { vacia: [number, string]; completa: [number, string] } }
