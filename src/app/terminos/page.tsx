@@ -29,7 +29,7 @@ export default function TerminosPage() {
         <h1 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: 'clamp(1.6rem,3vw,2.4rem)', marginBottom: '.6rem' }}>
           Términos y Condiciones
         </h1>
-        <p style={{ opacity: .75, fontSize: '.95rem' }}>Última actualización: 22 de octubre de 2026</p>
+        <p style={{ opacity: .75, fontSize: '.95rem' }}>Última actualización: 3 de noviembre de 2026</p>
       </section>
 
       <main style={{ background: '#fff', padding: '3rem 2rem' }}>

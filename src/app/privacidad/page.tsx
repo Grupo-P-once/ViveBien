@@ -12,10 +12,9 @@ export const metadata: Metadata = paginaSeo({
 })
 
 /*
- * Estado (2-nov-2026): este texto YA está en el sitio, pero su fecha visible («22 de octubre de 2026») NO cambió cuando se añadió lo de correos (30-oct) ni con esta alineación:
- * está PENDIENTE de validación del abogado (expediente de MKT-36). Al publicar la versión aprobada se suben JUNTAS la fecha de arriba y `VERSIONES.privacidad` en src/lib/aceptacion-legal.ts
- * (subir la versión dispara el aviso legal por correo a quien aceptó la anterior, cuando el envío esté abierto). Describe lo que el producto hace en el código; si el código cambia, hay que
- * cambiar este texto. Ver «Resolución del expediente legal» en Obsidian.
+ * Estado (3-nov-2026): versión 2026-11-03, APROBADA por el abogado (comunicado por el dueño el 3-nov-2026; el documento escrito del abogado debe guardarse en Obsidian con su hash).
+ * La fecha visible de abajo y `VERSIONES.privacidad` en src/lib/aceptacion-legal.ts cambian JUNTAS: una prueba lo vigila. Cualquier cambio posterior de texto exige nueva aprobación y nueva versión.
+ * Describe lo que el producto hace en el código; si el código cambia, hay que cambiar este texto. Ver «Resolución del expediente legal» en Obsidian.
  */
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <div style={{ marginBottom: '2.5rem' }}>
@@ -35,7 +34,7 @@ export default function PrivacidadPage() {
         <h1 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: 'clamp(1.6rem,3vw,2.4rem)', marginBottom: '.6rem' }}>
           Aviso de Privacidad Integral
         </h1>
-        <p style={{ opacity: .75, fontSize: '.95rem' }}>Última actualización: 22 de octubre de 2026</p>
+        <p style={{ opacity: .75, fontSize: '.95rem' }}>Última actualización: 3 de noviembre de 2026</p>
       </section>
 
       <main style={{ background: '#fff', padding: '3rem 2rem' }}>

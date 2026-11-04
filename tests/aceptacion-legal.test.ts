@@ -32,7 +32,7 @@ describe('estadoLegal', () => {
     const e = estadoLegal({ flagEncendida: true, esEquipo: false, aceptadas: [] })
     expect(e.requerida).toBe(true)
     expect(e.pendientes).toEqual(['terminos', 'privacidad'])
-    expect(e.documentos.map((d) => d.fecha)).toEqual(['22 de octubre de 2026', '22 de octubre de 2026'])
+    expect(e.documentos.map((d) => d.fecha)).toEqual(['3 de noviembre de 2026', '3 de noviembre de 2026'])
   })
   it('solo cuenta la versión VIGENTE de cada documento', () => {
     expect(estadoLegal({ flagEncendida: true, esEquipo: false, aceptadas: [ok('terminos', VERSIONES.terminos)] }).pendientes).toEqual(['privacidad'])

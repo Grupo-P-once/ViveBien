@@ -104,11 +104,11 @@ describe('borrador del Aviso de Privacidad (correos)', () => {
   it('describe los correos de servicio, la baja con supresión, el registro de envíos y a Resend', () => {
     for (const frag of ['Correos de servicio y seguridad', 'Hoy no enviamos correos promocionales', 'una huella derivada del correo', 'hasta por dos años desde el envío', 'No registramos si usted abre un correo', 'Resend:</strong> envío de los correos de VIVE BIEN']) expect(p, frag).toContain(frag)
   })
-  it('está marcado como PENDIENTE de validación del abogado y NO sube la versión legal (eso lo decide el dueño con asesoría)', () => {
-    // 2-nov-2026: el encabezado dejó de decir «NO está publicado» (el texto SÍ está en el sitio) y ahora dice el estado real: pendiente de abogado, sin cambio de fecha.
-    expect(p).toContain('Estado (2-nov-2026)')
-    expect(p).toContain('PENDIENTE de validación del abogado')
-    expect(p).toContain('«22 de octubre de 2026»')
-    expect(leer('src/lib/aceptacion-legal.ts')).toContain("privacidad: '2026-10-22'")
+  it('lleva la versión aprobada por el abogado y la fecha visible coincide con la versión legal (van juntas)', () => {
+    // 3-nov-2026: el abogado aprobó la versión (comunicado por el dueño). Fecha visible y `VERSIONES` cambian juntas; un texto sin aprobar no puede llevar esta fecha.
+    expect(p).toContain('Estado (3-nov-2026)')
+    expect(p).toContain('APROBADA por el abogado')
+    expect(p).toContain('Última actualización: 3 de noviembre de 2026')
+    expect(leer('src/lib/aceptacion-legal.ts')).toContain("privacidad: '2026-11-03'")
   })
 })
