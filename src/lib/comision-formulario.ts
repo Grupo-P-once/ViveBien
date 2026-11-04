@@ -29,8 +29,8 @@ export type EntradaCalculadora = {
 export const PCT_VENTA_REGLA = String(REGLA_BORRADOR_2026_10_24.ventaPuntosBase / 100)
 export const MESES_RENTA_REGLA = String(REGLA_BORRADOR_2026_10_24.rentaMeses)
 export const PCT_COLABORADOR_REGLA = String(REGLA_BORRADOR_2026_10_24.colaboradorPuntosBase / 100)
-/** Atajos de la pantalla: valores comunes en México (venta 3–5 %; renta de uno a dos meses; el reparto entre agentes se pacta caso por caso). */
-export const ATAJOS = Object.freeze({ pctVenta: ['3', '3.5', '4', '5'], mesesRenta: ['0.5', '1', '1.5', '2'], pctColaborador: ['30', '40', '50', '60'] })
+/** Atajos de la pantalla: el rango aprobado (venta 3–4 %; renta de uno a dos meses; el reparto entre agentes se pacta caso por caso). */
+export const ATAJOS = Object.freeze({ pctVenta: ['3', '3.5', '4'], mesesRenta: ['0.5', '1', '1.5', '2'], pctColaborador: ['30', '40', '50', '60'] })
 export const CONCEPTOS_SUGERIDOS = Object.freeze(['Fotografía', 'Publicidad', 'Gestoría', 'Otro'])
 
 export const entradaInicial = (tipo: 'venta' | 'renta', base: string, comparte: boolean): EntradaCalculadora => ({
@@ -126,9 +126,9 @@ export function descripcionDeComision(c: Extract<ResultadoCalculo, { ok: true }>
   return `${m} ${m === 1 ? 'mes' : 'meses'} de renta (${pesosTexto(c.baseCentavos)} al mes)`
 }
 
-/** Escalas de la pantalla: dónde cae lo escrito frente a lo habitual en México (venta 3–5 %, renta de 1 a 2 meses). `max` es solo el largo de la regleta. */
+/** Escalas de la pantalla: dónde cae lo escrito frente a lo habitual en México (venta 3–4 %, el rango aprobado; renta de 1 a 2 meses). `max` es solo el largo de la regleta. */
 export const ESCALAS = Object.freeze({
-  venta: Object.freeze({ min: 0, max: 8, habitualDesde: 3, habitualHasta: 5, regla: 3.5, unidad: '%' }),
+  venta: Object.freeze({ min: 0, max: 6, habitualDesde: 3, habitualHasta: 4, regla: 3.5, unidad: '%' }),
   renta: Object.freeze({ min: 0, max: 3, habitualDesde: 1, habitualHasta: 2, regla: 1, unidad: 'meses' }),
 })
 

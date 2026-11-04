@@ -40,11 +40,11 @@ export const REGLA_BORRADOR_2026_10_24: ReglaComision = Object.freeze({
 
 /**
  * Límites de lo que una persona del equipo puede AJUSTAR en una operación concreta (la regla es el punto de partida; el trato real se negocia).
- * Venta: de 0.50 % a 15 %. Renta: de un cuarto de mes a 3 meses. Reparto con el colaborador: de 0 % a 100 %. Hasta 10 gastos.
+ * Venta: de 3 % a 4 % (decisión del propietario con el abogado, 3-nov-2026; el valor predeterminado es 3.5 %). Renta: de un cuarto de mes a 3 meses. Reparto con el colaborador: de 0 % a 100 %. Hasta 10 gastos.
  * Cualquier ajuste distinto de la regla exige un motivo escrito (queda en la operación, que no se edita).
  */
 export const LIMITES = Object.freeze({
-  ventaPuntosBase: Object.freeze({ min: 50, max: 1500 }),
+  ventaPuntosBase: Object.freeze({ min: 300, max: 400 }),
   rentaMesesCent: Object.freeze({ min: 25, max: 300 }),
   colaboradorPuntosBase: Object.freeze({ min: 0, max: 10000 }),
   gastosMax: 10,
@@ -142,7 +142,7 @@ export function calcularComision(entrada: {
   const mesesCent = aj.rentaMesesCent ?? regla.rentaMeses * 100
   const colBp = aj.colaboradorPuntosBase ?? regla.colaboradorPuntosBase
   const enRango = (v: number, l: { min: number; max: number }) => Number.isSafeInteger(v) && v >= l.min && v <= l.max
-  if (entrada.operacion === 'venta' && !enRango(ventaBp, LIMITES.ventaPuntosBase)) return { ok: false, error: 'El porcentaje de la venta debe estar entre 0.5 % y 15 %.' }
+  if (entrada.operacion === 'venta' && !enRango(ventaBp, LIMITES.ventaPuntosBase)) return { ok: false, error: 'El porcentaje de la venta debe estar entre 3 % y 4 %.' }
   if (entrada.operacion === 'renta' && !enRango(mesesCent, LIMITES.rentaMesesCent)) return { ok: false, error: 'Los meses de renta deben estar entre 0.25 y 3.' }
   if (!enRango(colBp, LIMITES.colaboradorPuntosBase)) return { ok: false, error: 'El reparto del colaborador debe estar entre 0 % y 100 %.' }
   const gastos = aj.gastos ?? []

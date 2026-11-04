@@ -51,6 +51,7 @@ const GOLDEN = {
   // (consulta sin anunciante, analítica con elección, proveedores, encabezado); desde entonces esta es la referencia: cualquier cambio posterior debe ser a propósito.
   // 3-nov-2026 (segunda alineación): se añadió el párrafo de datos de propietarios, representantes y agentes que aporta quien publica (pantalla de origen, en vivo).
   // Misma publicación (solo cambia la fecha visible). Era 21933 / 9009395b0c62ef9654742f74.
-  privacidad: { largo: 21934, huella: '28525a2361cd327138d46f64' },
+  // 4-nov-2026: sección 7 dice qué borra de verdad el proceso diario y qué no (cuentas, consultas, formularios y datos de propietarios: sin borrado automático). Era 21934 / 28525a2361cd327138d46f64.
+  privacidad: { largo: 22186, huella: 'f22aedd3ee971b3e11f4564c' },
   vista: { vacia: [1542, '3e9aec9a7dd433947f70cf9c'], completa: [1671, 'bb0ae8ee6f77aa2dba096a35'] },
 } as { terminos: { largo: number; huella: string }; privacidad: { largo: number; huella: string }; vista: { vacia: [number, string]; completa: [number, string] } }

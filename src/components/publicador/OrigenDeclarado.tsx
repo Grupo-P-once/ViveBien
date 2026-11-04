@@ -23,6 +23,8 @@ type Estado = {
   acreditacion?: { estado: string; etiqueta: string } | null
   comoFunciona?: string[]
   resumen?: { borrador: boolean; lineas: string[] }
+  acuerdoVigente?: boolean | null
+  avisoSinAcuerdo?: string | null
 }
 
 async function cabeceras(): Promise<HeadersInit> {
@@ -135,7 +137,8 @@ export default function OrigenDeclarado({ propiedadId, editable = true }: { prop
           )}
 
           <div data-resumen-economico style={{ padding: '10px 12px', background: '#fff', border: '1px solid var(--borde-frio)', borderRadius: 8 }}>
-            <p style={{ margin: '0 0 6px', fontSize: '.86rem', fontWeight: 700 }}>Comisión</p>
+            <p style={{ margin: '0 0 6px', fontSize: '.86rem', fontWeight: 700 }}>{e.acuerdoVigente === true ? 'Comisión' : 'Comisión (propuesta)'}</p>
+            {e.avisoSinAcuerdo && <p data-aviso-sin-acuerdo style={{ margin: '0 0 8px', padding: '8px 10px', background: 'var(--superficie)', border: '1px solid var(--borde-frio)', borderRadius: 6, fontSize: '.82rem', lineHeight: 1.5 }}>{e.avisoSinAcuerdo}</p>}
             <ul style={{ margin: 0, paddingLeft: 20, fontSize: '.85rem', lineHeight: 1.6 }}>{(e.resumen?.lineas ?? []).map((t) => <li key={t}>{t}</li>)}</ul>
           </div>
 

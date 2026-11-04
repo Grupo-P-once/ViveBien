@@ -6,7 +6,8 @@ import { tieneCapacidad } from '@/lib/acceso/capacidades'
 import { leerFlags } from '@/lib/config/flags-servidor'
 import { registrar } from '@/lib/auditoria'
 import { frenarAsync, TOPES } from '@/lib/limites'
-import { COMO_FUNCIONA, origenListo, resumenEconomico, sanearOrigenDeclarado } from '@/lib/origen-declarado'
+import { AVISO_SIN_ACUERDO, COMO_FUNCIONA, origenListo, resumenEconomico, sanearOrigenDeclarado } from '@/lib/origen-declarado'
+import { hayTextoVigente } from '@/lib/comision-servidor'
 import { estadoAcreditacion, ETIQUETA_ACREDITACION } from '@/lib/comision-acreditacion'
 import { MENSAJE_COMISION_NO_DISPONIBLE } from '@/lib/comision-aceptacion'
 
@@ -62,6 +63,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     ? { folio: f.acreditacion_folio, resultado: (f.acreditacion_resultado as 'coincide' | 'no_coincide' | null) ?? null, vigenteHasta: f.acreditacion_vigente_hasta ?? null, verificadoPor: f.acreditacion_verificado_por ?? null }
     : null, hoy())
   const resumen = resumenEconomico()
+  const acuerdoVigente = await hayTextoVigente()
   // Lo que la persona ya dio en su perfil no se le pide dos veces: se ofrece como punto de partida (puede cambiarlo si vende otra persona).
   let prefill = { nombre: c.perfil.nombre ?? '', telefono: '', correo: c.perfil.email ?? '' }
   if (!f || f.origen_tipo !== 'trato_directo') {
@@ -86,6 +88,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     acreditacion: f?.acreditacion_folio !== undefined && f?.origen_tipo !== 'trato_directo' ? { estado, etiqueta: ETIQUETA_ACREDITACION[estado] } : null,
     comoFunciona: COMO_FUNCIONA,
     resumen,
+    acuerdoVigente,
+    avisoSinAcuerdo: acuerdoVigente === true ? null : AVISO_SIN_ACUERDO,
   })
 }
 

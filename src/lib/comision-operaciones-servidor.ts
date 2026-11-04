@@ -3,6 +3,7 @@ import { resolverPerfil, supabaseAdmin, type AuthUser } from './auth-server'
 import { tieneCapacidad } from './acceso/capacidades'
 import { calcularComision, centavosDePesos, centesimasDeMeses, LIMITES, puntosBaseDePorcentaje, REGLA_BORRADOR_2026_10_24, type Ajustes, type EstadoAcreditacion, type Gasto, type ResultadoCalculo, type TipoOperacion } from './comision-calculo'
 import { estadoAcreditacion } from './comision-acreditacion'
+import { hayTextoVigente } from './comision-servidor'
 
 /**
  * Registro de operaciones de comisión (Etapa C). Solo servidor.
@@ -82,6 +83,10 @@ export async function prepararOperacion(e: EntradaOperacion, actor: string): Pro
   const propiedadId = typeof e.propiedad_id === 'string' ? e.propiedad_id : ''
   if (!propiedadId) return { ok: false, status: 400, error: 'Falta la propiedad.' }
   if (e.tipo !== 'venta' && e.tipo !== 'renta') return { ok: false, status: 400, error: 'La operación debe ser venta o renta.' }
+  // Sin un texto de comisión VIGENTE no hay acuerdo: no se registra ninguna operación cobrable (y si no se puede comprobar, tampoco: falla cerrado).
+  const vigente = await hayTextoVigente()
+  if (vigente === null) return { ok: false, status: 503, error: 'No se pudo comprobar el acuerdo de comisión.', codigo: 'no_disponible' }
+  if (!vigente) return { ok: false, status: 409, error: 'Todavía no hay un acuerdo de comisión vigente, así que no se registra ninguna operación de comisión.', codigo: 'sin_acuerdo_vigente' }
   const base = centavosDePesos(e.base_pesos)
   if (base === null) return { ok: false, status: 400, error: e.tipo === 'venta' ? 'Escribe el precio final firmado (pesos, hasta 2 decimales).' : 'Escribe la renta mensual base (pesos, hasta 2 decimales).' }
   if (typeof e.atribuible !== 'boolean') return { ok: false, status: 400, error: 'Indica si la operación es atribuible a VIVE BIEN.' }

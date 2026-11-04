@@ -118,6 +118,9 @@ export function origenListo(o: FilaOrigen): boolean {
 
 export const MENSAJE_REQUIERE_ORIGEN = 'Antes de enviar tu propiedad dinos cómo la manejas (trato directo o agente/inmobiliaria).'
 
+/** Mientras no exista un texto de comisión vigente, lo económico es una PROPUESTA: no se acepta ni se cobra nada. */
+export const AVISO_SIN_ACUERDO = 'Propuesta comercial: todavía no hay un acuerdo vigente. Por ahora no aceptas nada ni se te cobra comisión; el acuerdo definitivo se te presentará para que lo aceptes antes de que estas condiciones apliquen.'
+
 /** Lo que hace VIVE BIEN, solo lo que hoy se cumple. Mismas palabras para las dos opciones. */
 export const COMO_FUNCIONA: readonly string[] = [
   'VIVE BIEN recibe las consultas que genera tu anuncio y las canaliza.',

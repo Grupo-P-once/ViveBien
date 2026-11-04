@@ -25,8 +25,9 @@ describe('ajustes · porcentaje de venta', () => {
     const r = venta({ ajustes: { ventaPuntosBase: 350 } })
     expect(r.ok && r.ajustada).toBe(false)
   })
-  it('fuera de 0.5 %–15 % se rechaza', () => {
-    for (const bp of [0, 49, 1501, -5, 3.5]) expect(venta({ ajustes: { ventaPuntosBase: bp } }).ok).toBe(false)
+  it('fuera de 3 %–4 % se rechaza (rango aprobado el 3-nov-2026) y los extremos se aceptan', () => {
+    for (const bp of [0, 49, 299, 401, 500, 1500, 1501, -5, 3.5]) expect(venta({ ajustes: { ventaPuntosBase: bp } }).ok, String(bp)).toBe(false)
+    for (const bp of [300, 350, 400]) expect(venta({ ajustes: { ventaPuntosBase: bp } }).ok, String(bp)).toBe(true)
   })
 })
 

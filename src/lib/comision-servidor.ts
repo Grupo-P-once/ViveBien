@@ -32,6 +32,16 @@ export async function estadoDeAceptacion(perfil: PerfilUsuario): Promise<{ ok: t
 }
 
 /**
+ * ¿Existe un texto de comisión VIGENTE? Sin él no hay acuerdo que aceptar ni obligaciones que activar. `null` = no se pudo comprobar (falla cerrado).
+ * Un módulo encendido sin texto vigente es un estado seguro solo si NADA se presenta como acordado ni se registra como cobrable.
+ */
+export async function hayTextoVigente(): Promise<boolean | null> {
+  const t = await supabaseAdmin().from('comision_textos').select('id').eq('estado', 'vigente').maybeSingle()
+  if (t.error) return null
+  return Boolean(t.data)
+}
+
+/**
  * ¿Esta persona tiene que declarar el origen de ESTA propiedad antes de enviarla, y ya lo hizo? Solo servidor.
  *
  * Aplica con el mismo criterio que la aceptación (módulo encendido, ni equipo ni exenta `sin_comision`), pero NO depende de que exista un
