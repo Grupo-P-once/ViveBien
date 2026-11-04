@@ -14,7 +14,7 @@ import { calcular, datosDeDemostracion, DEFINICIONES, diaLocal, NO_DISPONIBLES, 
  */
 export const dynamic = 'force-dynamic'
 
-const DIAS_PERMITIDOS = new Set([7, 30, 90])
+const DIAS_PERMITIDOS = new Set([7, 30, 90, 365])
 const TIPO = /^[a-z0-9_.-]{1,60}$/
 const PAGINA = 1000
 const MAX_PAGINAS = 10
@@ -62,7 +62,7 @@ export async function GET(req: Request) {
     if (!v.ok) return NextResponse.json({ error: v.error }, { status: 400 })
   } else {
     const n = dias === null ? 30 : Number(dias)
-    if (!DIAS_PERMITIDOS.has(n)) return NextResponse.json({ error: 'El periodo debe ser de 7, 30 o 90 días, o un rango de fechas.' }, { status: 400 })
+    if (!DIAS_PERMITIDOS.has(n)) return NextResponse.json({ error: 'El periodo debe ser de 7, 30, 90 o 365 días, o un rango de fechas.' }, { status: 400 })
     rango = rangoDeUltimosDias(n, ahora)
   }
 

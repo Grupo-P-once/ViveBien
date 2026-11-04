@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Bar, BarChart, CartesianGrid, ComposedChart, Legend, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { useSesion } from '@/components/admin/sesion'
-import type { Bloque, Celda, DiaDeSerie, FiltroGrupo, Resultado, Tasa } from '@/lib/correo/metricas'
+import { agruparPorMes, type Bloque, type Celda, type DiaDeSerie, type FiltroGrupo, type Resultado, type Tasa } from '@/lib/correo/metricas'
 
 /**
  * «Resultados de correo»: tarjetas arriba, gráficas por día y tablas de detalle debajo. Todo viene de /api/admin/marketing/metricas (el servidor calcula y decide
@@ -83,7 +83,7 @@ function Tabla({ cabeceras, filas, nombre }: { cabeceras: string[]; filas: Array
   )
 }
 
-function BloqueDeCorreo({ b, demo, sinWebhook }: { b: Bloque; demo: boolean; sinWebhook: boolean }) {
+function BloqueDeCorreo({ b, demo, sinWebhook, hoy }: { b: Bloque; demo: boolean; sinWebhook: boolean; hoy: string }) {
   const t = b.totales
   const info = TITULO[b.grupo]
   const sinEnvios = t.enviados === 0 && t.fallos === 0 && t.omitidos === 0 && t.pendientes === 0
@@ -91,6 +91,9 @@ function BloqueDeCorreo({ b, demo, sinWebhook }: { b: Bloque; demo: boolean; sin
   const rotulo = demo ? 'Datos de ejemplo (sintéticos)' : 'Datos reales de esta base'
   const aviso = (que: string) => (sinWebhook ? [`${que}: no disponible. Resend no está entregando eventos a este entorno (webhook sin configurar o aún sin ningún evento); no se dibuja como cero porque no es una medición.`] : [])
   const vacio = sinEnvios ? ['Sin envíos en este periodo: las barras están en cero porque no hubo actividad.'] : []
+  const meses = serie ? agruparPorMes(serie) : []
+  const ultimo = serie?.[serie.length - 1]
+  const delMes = ultimo ? meses.find((m) => m.mes === ultimo.dia.slice(0, 7)) : undefined
   const conBajas = b.grupo === 'promocional' && serie?.some((d) => d.bajas !== undefined)
   return (
     <section aria-labelledby={`r-${b.grupo}`} data-grupo={b.grupo} className="rounded-xl border bg-card p-5">
@@ -98,7 +101,9 @@ function BloqueDeCorreo({ b, demo, sinWebhook }: { b: Bloque; demo: boolean; sin
       <p className="mt-1 text-sm text-muted-foreground">{info.texto}</p>
       {b.detalleOculto && <p role="status" className="mt-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">Hay menos de 5 correos en este grupo: se ocultan las cifras y el detalle por día para no identificar a nadie.</p>}
       <dl className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Tarjeta etiqueta="Enviados" valor={v(t.enviados)} ayuda="Aceptados por Resend" />
+        <Tarjeta etiqueta="Enviados" valor={v(t.enviados)} ayuda="Aceptados por Resend en el periodo" />
+        {ultimo && <Tarjeta etiqueta={ultimo.dia === hoy ? 'Enviados hoy' : `Enviados el ${dia(ultimo.dia)}`} valor={String(ultimo.enviados)} ayuda="Último día del periodo" />}
+        {delMes && <Tarjeta etiqueta="Enviados en el mes" valor={String(delMes.enviados)} ayuda={`Mes ${delMes.mes}: ${delMes.dias} ${delMes.dias === 1 ? 'día' : 'días'} dentro del periodo`} />}
         <Tarjeta etiqueta="Entregados" valor={v(t.entregados)} ayuda="Llegaron al servidor del destinatario" />
         <Tarjeta etiqueta="Rebotes" valor={v(t.rebotes)} ayuda="Rechazos permanentes" />
         <Tarjeta etiqueta="Fallos" valor={v(t.fallos)} ayuda="No salieron por un error" />
@@ -118,6 +123,13 @@ function BloqueDeCorreo({ b, demo, sinWebhook }: { b: Bloque; demo: boolean; sin
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={serie}><CartesianGrid strokeDasharray="3 3" vertical={false} /><XAxis dataKey="dia" tickFormatter={dia} tick={TICK} minTickGap={16} /><YAxis allowDecimals={false} tick={TICK} width={32} domain={[0, (max: number) => Math.max(max, 4)]} /><Tooltip /><Legend />
                 <Bar dataKey="enviados" name="Enviados" fill="var(--serie-1)" />{!sinWebhook && <Bar dataKey="entregados" name="Entregados" fill="var(--serie-2)" />}</BarChart>
+            </ResponsiveContainer>
+          </Grafico>
+          <Grafico titulo="Enviados por mes" rotulo={rotulo} avisos={[...vacio, 'El primer mes (o el último) puede estar incompleto si el periodo no abarca todo el mes; la tabla indica cuántos días entran. Para un año completo elige «Últimos 12 meses».']} resumen={`${suma(meses.map((m) => m.enviados))} enviados en ${meses.length} ${meses.length === 1 ? 'mes' : 'meses'}.`}
+            tabla={<Tabla nombre="Enviados por mes" cabeceras={['Mes', 'Días del periodo', 'Enviados', 'Entregados', 'Fallos', 'Omitidos']} filas={meses.map((m) => [m.mes, m.dias, m.enviados, celdaTabla(m.entregados), m.fallos, m.omitidos])} />}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={meses}><CartesianGrid strokeDasharray="3 3" vertical={false} /><XAxis dataKey="mes" tick={TICK} minTickGap={8} /><YAxis allowDecimals={false} tick={TICK} width={32} domain={[0, (max: number) => Math.max(max, 4)]} /><Tooltip /><Legend />
+                <Bar dataKey="enviados" name="Enviados" fill="var(--serie-1)" /></BarChart>
             </ResponsiveContainer>
           </Grafico>
           <Grafico titulo="Rebotes, fallos y omitidos por día" rotulo={rotulo} avisos={[...vacio, ...aviso('Rebotes')]} resumen={`${sinWebhook ? 'Rebotes no disponible' : `${suma(serie.map((d) => d.rebotes))} rebotes`}, ${suma(serie.map((d) => d.fallos))} fallos y ${suma(serie.map((d) => d.omitidos))} omitidos.`}
@@ -145,7 +157,7 @@ function BloqueDeCorreo({ b, demo, sinWebhook }: { b: Bloque; demo: boolean; sin
 
 export default function Resultados({ entorno }: { entorno: string | null }) {
   const { pedir } = useSesion()
-  const [rango, setRango] = useState<'7' | '30' | '90' | 'custom'>('30')
+  const [rango, setRango] = useState<'7' | '30' | '90' | '365' | 'custom'>('30')
   const [desde, setDesde] = useState('')
   const [hasta, setHasta] = useState('')
   const [tipo, setTipo] = useState('')
@@ -184,7 +196,7 @@ export default function Resultados({ entorno }: { entorno: string | null }) {
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" role="group" aria-label="Filtros de resultados">
         <label className="text-sm">Periodo
           <select className={campo} value={rango} onChange={(e) => setRango(e.target.value as typeof rango)}>
-            <option value="7">Últimos 7 días</option><option value="30">Últimos 30 días</option><option value="90">Últimos 90 días</option><option value="custom">Fechas personalizadas</option>
+            <option value="7">Últimos 7 días</option><option value="30">Últimos 30 días</option><option value="90">Últimos 90 días</option><option value="365">Últimos 12 meses</option><option value="custom">Fechas personalizadas</option>
           </select>
         </label>
         <label className="text-sm">Grupo de correo
@@ -227,7 +239,7 @@ export default function Resultados({ entorno }: { entorno: string | null }) {
           {datos.fuentes?.eventosDelProveedor !== null && datos.fuentes?.eventosDelProveedor !== undefined && <p className="text-xs text-muted-foreground">Eventos del proveedor recibidos (últimos 90 días): {datos.fuentes.eventosDelProveedor}.</p>}
           {datos.fuentes?.truncado && <p role="note" className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">El periodo tiene tantas filas que se leyó solo una parte: acórtalo para ver cifras completas.</p>}
           {datos.disponible === false && <p role="status" className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">{datos.explicacion}</p>}
-          {r && r.bloques.map((b) => <BloqueDeCorreo key={b.grupo} b={b} demo={esDemo} sinWebhook={sinWebhook} />)}
+          {r && r.bloques.map((b) => <BloqueDeCorreo key={b.grupo} b={b} demo={esDemo} sinWebhook={sinWebhook} hoy={datos?.hoy ?? ''} />)}
           <div className="rounded-lg border bg-background p-3 text-sm">
             <h3 className="font-semibold">Lo que todavía no se puede medir</h3>
             <ul className="mt-2 list-disc space-y-1 pl-5">{datos.noDisponibles.map((n) => <li key={n.metrica}><strong>{n.metrica}:</strong> {n.motivo}</li>)}</ul>

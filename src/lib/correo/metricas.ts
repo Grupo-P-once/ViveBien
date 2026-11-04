@@ -158,6 +158,28 @@ export function calcular(filas: FilaEnvio[], bajas: ContextoBajas | null, filtro
   }
 }
 
+export type MesDeSerie = { mes: string; enviados: number; entregados: number | null; fallos: number; omitidos: number; dias: number }
+
+/**
+ * Suma la serie diaria por mes calendario (AAAA-MM, zona de VIVE BIEN). Es la misma cifra de «Enviados» por día, solo agrupada: no lee nada nuevo.
+ * El primer mes (y el último, si el periodo termina antes de fin de mes) puede salir incompleto: `dias` dice cuántos días del mes entran en el periodo.
+ * `entregados` es `null` si algún día no lo tiene (sin webhook del proveedor): no es cero.
+ */
+export function agruparPorMes(serie: DiaDeSerie[]): MesDeSerie[] {
+  const meses = new Map<string, MesDeSerie>()
+  for (const d of serie) {
+    const mes = d.dia.slice(0, 7)
+    const m = meses.get(mes) ?? { mes, enviados: 0, entregados: 0, fallos: 0, omitidos: 0, dias: 0 }
+    m.enviados += d.enviados
+    m.entregados = m.entregados === null || d.entregados === null ? null : m.entregados + d.entregados
+    m.fallos += d.fallos
+    m.omitidos += d.omitidos
+    m.dias++
+    meses.set(mes, m)
+  }
+  return [...meses.values()].sort((a, b) => a.mes.localeCompare(b.mes))
+}
+
 export const SIN_WEBHOOK = 'Falta el webhook de Resend en este entorno: sin él no llegan las entregas, los rebotes ni las quejas, así que no se puede medir (no es cero).'
 /** El secreto existe pero Resend todavía no ha entregado NINGÚN evento verificado: un cero aquí sería indistinguible de «el webhook no está llegando». */
 export const SIN_EVENTOS = 'El secreto del webhook está configurado, pero Resend todavía no ha entregado ningún evento verificado a este sistema (revisa que el webhook esté registrado en Resend y apunte a esta dirección): entregas, rebotes y quejas no se pueden medir todavía (no es cero).'
