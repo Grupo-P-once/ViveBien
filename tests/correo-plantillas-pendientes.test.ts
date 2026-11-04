@@ -88,11 +88,11 @@ describe('estado: plantilla lista · evento pendiente; ninguna se envía', () =>
     expect(c.find((e) => e.id === 'recuperar_contrasena')).toMatchObject({ existencia: 'lo_manda_firebase', rastro: null, conVista: true })
     for (const id of [...ids, 'recuperar_contrasena']) expect(vistaPrevia(id, MUESTRA_POR_OMISION), id).not.toBeNull()
   })
-  it('ningún código de envío importa estas plantillas (solo la biblioteca y las pruebas)', () => {
+  it('solo el módulo de eventos de cuenta (eventos-cuenta.ts) las manda: ningún otro código de envío las importa', () => {
     const nombres = /plantillaCambioCorreo|plantillaBajaCuenta|plantillaConsultaRespuesta|plantillaPropiedadRecibida|plantillaPropiedadEnRevision|plantillaPropiedadRechazada|plantillaNuevoInteresado|plantillaNovedades|plantillaRecuperarContrasena/
     const usos: string[] = []
     const recorrer = (dir: string) => { for (const f of readdirSync(dir)) { const p = path.join(dir, f); if (statSync(p).isDirectory()) recorrer(p); else if (/\.(ts|tsx)$/.test(f) && nombres.test(readFileSync(p, 'utf8'))) usos.push(path.relative(raiz, p).replace(/\\/g, '/')) } }
     recorrer(path.join(raiz, 'src'))
-    expect(usos.sort()).toEqual(['src/lib/correo/biblioteca.ts', 'src/lib/correo/plantillas/eventos-pendientes.ts', 'src/lib/correo/plantillas/index.ts'])
+    expect(usos.sort()).toEqual(['src/lib/correo/biblioteca.ts', 'src/lib/correo/eventos-cuenta.ts', 'src/lib/correo/plantillas/eventos-pendientes.ts', 'src/lib/correo/plantillas/index.ts'])
   })
 })

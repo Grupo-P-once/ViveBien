@@ -100,21 +100,47 @@ export function plantillaNuevoInteresado(d: { nombre?: string | null; propiedad:
 }
 
 /** Artículos del blog y novedades (PROMOCIONAL: solo con consentimiento vigente, con baja de un clic). EVENTO PENDIENTE y apagado por falta de texto legal. */
-export function plantillaNovedades(d: { nombre?: string | null; articulos: Array<{ titulo: string; resumen: string; url: string; foto: string | null }>; propiedades: TarjetaCorreo[]; urlBlog: string; urlBaja: string; urlPreferencias: string }): Correo {
-  const asunto = 'Novedades del blog y propiedades de VIVE BIEN'
-  const arts = d.articulos.slice(0, 3).map((a) => {
-    const u = escapar(urlSegura(a.url))
-    const foto = a.foto ? `<tr><td><a href="${u}" target="_blank"><img src="${escapar(urlSegura(a.foto))}" width="556" alt="${escapar(a.titulo)}" style="display:block;width:100%;height:auto;border:0;background:${COLORES.fondo}"></a></td></tr>` : ''
-    return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 16px;border:1px solid #E7E3DD">${foto}<tr><td style="padding:16px 18px"><p style="margin:0 0 6px;font-family:${FUENTE};font-size:17px;line-height:23px;font-weight:700;color:${COLORES.negro}"><a href="${u}" target="_blank" style="color:${COLORES.negro};text-decoration:none">${escapar(a.titulo)}</a></p><p style="margin:0 0 10px;font-family:${TEXTO};font-size:14px;line-height:22px;color:#535761">${escapar(a.resumen)}</p><a href="${u}" target="_blank" style="font-family:${FUENTE};font-size:14px;font-weight:700;color:${COLORES.rojo};text-decoration:none">Leer artículo →</a></td></tr></table>`
-  }).join('')
+export type ArticuloDeCorreo = { titulo: string; resumen: string; url: string; foto: string | null; categoria?: string | null; minutos?: number | null }
+
+/** «CATEGORÍA · 5 min de lectura» (lo que falte se omite). */
+function etiquetaDeArticulo(a: ArticuloDeCorreo): string {
+  const min = typeof a.minutos === 'number' && Number.isFinite(a.minutos) && a.minutos > 0 ? `${Math.round(a.minutos)} min de lectura` : ''
+  return [a.categoria?.trim(), min].filter(Boolean).join(' · ')
+}
+
+/** El artículo destacado: portada a todo lo ancho, titular grande, resumen y un botón que invita a leer. */
+function articuloDestacado(a: ArticuloDeCorreo, saludo: string): string {
+  const u = escapar(urlSegura(a.url))
+  const portada = a.foto
+    ? `<tr><td style="padding:0"><a href="${u}" target="_blank"><img class="property-image" src="${escapar(urlSegura(a.foto))}" width="640" alt="${escapar(a.titulo)}" style="display:block;width:100%;max-width:640px;height:auto;border:0;background:${COLORES.fondo};font-family:${FUENTE};font-size:18px;font-weight:700;line-height:1.4;color:${COLORES.negro}"></a></td></tr>`
+    : ''
+  const etiqueta = etiquetaDeArticulo(a)
+  return `<tr><td style="padding:0;background:${COLORES.blanco}"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${portada}<tr><td class="mobile-pad" style="padding:30px 42px 34px;background:${COLORES.blanco}"><p style="margin:0 0 16px;font-family:${TEXTO};font-size:15px;line-height:24px;color:#535761">${escapar(saludo)} esto es lo nuevo que preparamos para ti.</p><p style="margin:0 0 12px;font-family:${FUENTE};font-size:11px;line-height:16px;font-weight:800;letter-spacing:1.8px;text-transform:uppercase;color:${COLORES.rojo}">El blog de VIVE BIEN${etiqueta ? ` · ${escapar(etiqueta)}` : ''}</p><h2 class="headline" style="margin:0 0 14px;font-family:${FUENTE};font-size:30px;line-height:38px;font-weight:800;letter-spacing:-.5px;color:${COLORES.negro}"><a href="${u}" target="_blank" style="color:${COLORES.negro};text-decoration:none">${escapar(a.titulo)}</a></h2><p style="margin:0 0 24px;font-family:${TEXTO};font-size:17px;line-height:28px;color:#535761">${escapar(a.resumen)}</p>${botonLleno('Leer el artículo →', a.url)}</td></tr></table></td></tr>`
+}
+
+/** Un artículo secundario: miniatura y texto lado a lado (se apilan en el teléfono). */
+function articuloSecundario(a: ArticuloDeCorreo): string {
+  const u = escapar(urlSegura(a.url))
+  const foto = a.foto
+    ? `<td class="stack" width="38%" valign="top" style="width:38%"><a href="${u}" target="_blank"><img src="${escapar(urlSegura(a.foto))}" width="220" alt="${escapar(a.titulo)}" style="display:block;width:100%;height:auto;border:0;background:${COLORES.fondo}"></a></td>`
+    : ''
+  const etiqueta = etiquetaDeArticulo(a)
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 16px;border:1px solid #E7E3DD"><tr>${foto}<td class="stack" valign="top" style="padding:18px 20px">${etiqueta ? `<p style="margin:0 0 6px;font-family:${FUENTE};font-size:10px;line-height:15px;font-weight:700;letter-spacing:1.3px;text-transform:uppercase;color:${COLORES.rojo}">${escapar(etiqueta)}</p>` : ''}<p style="margin:0 0 8px;font-family:${FUENTE};font-size:18px;line-height:25px;font-weight:700;color:${COLORES.negro}"><a href="${u}" target="_blank" style="color:${COLORES.negro};text-decoration:none">${escapar(a.titulo)}</a></p><p style="margin:0 0 12px;font-family:${TEXTO};font-size:14px;line-height:22px;color:#535761">${escapar(a.resumen)}</p><a href="${u}" target="_blank" style="font-family:${FUENTE};font-size:14px;font-weight:700;color:${COLORES.rojo};text-decoration:none">Seguir leyendo →</a></td></tr></table>`
+}
+
+export function plantillaNovedades(d: { nombre?: string | null; articulos: ArticuloDeCorreo[]; propiedades: TarjetaCorreo[]; urlBlog: string; urlBaja: string; urlPreferencias: string }): Correo {
+  const [destacado, ...resto] = d.articulos.slice(0, 3)
+  // El asunto y el preheader son el título y el resumen del artículo destacado: es lo que hace abrir el correo. Sin artículos, el texto genérico de siempre.
+  const asunto = destacado ? corto(destacado.titulo, 78) : 'Novedades del blog y propiedades de VIVE BIEN'
+  const preheader = destacado ? corto(destacado.resumen, 110) : 'Artículos nuevos del blog y propiedades recientes.'
   const filas =
-    filaTexto({ kicker: 'Novedades', titulo: hola(d.nombre), grande: true, parrafos: ['Esto es lo nuevo en el blog y en el catálogo de VIVE BIEN.'] }) +
-    fila(arts, 4, 8) +
+    (destacado ? articuloDestacado(destacado, hola(d.nombre)) : filaTexto({ kicker: 'Novedades', titulo: hola(d.nombre), grande: true, parrafos: ['Esto es lo nuevo en el blog y en el catálogo de VIVE BIEN.'] })) +
+    (resto.length ? fila(`<h2 style="margin:0 0 16px;font-family:${FUENTE};font-size:20px;line-height:27px;font-weight:700;color:${COLORES.negro}">Más para leer</h2>${resto.map(articuloSecundario).join('')}`, 6, 8) : '') +
     (d.propiedades.length ? fila(`<h2 style="margin:0 0 14px;font-family:${FUENTE};font-size:20px;line-height:27px;font-weight:700;color:${COLORES.negro};text-align:center">Propiedades recientes</h2>${rejillaPropiedades(d.propiedades.slice(0, 4))}`, 6, 6) : '') +
-    fila(botonContorno('Ir al blog', d.urlBlog), 8, 30)
+    fila(botonLleno('Ver todos los artículos', d.urlBlog), 8, 30)
   const pie = `Recibes este correo porque aceptaste recibir novedades de VIVE BIEN. <a href="${escapar(urlSegura(d.urlBaja))}" style="color:${AZUL};text-decoration:underline">Darme de baja con un clic</a> · <a href="${escapar(urlSegura(d.urlPreferencias))}" style="color:${AZUL};text-decoration:underline">Mis preferencias</a>.`
   const texto = `${hola(d.nombre)}\n\nEsto es lo nuevo en el blog y en el catálogo de VIVE BIEN.\n\n${d.articulos.slice(0, 3).map((a, i) => `${i + 1}. ${a.titulo}\n   ${a.resumen}\n   ${a.url}`).join('\n')}\n${d.propiedades.length ? `\nPropiedades recientes:\n${d.propiedades.slice(0, 4).map((p, i) => `${i + 1}. ${texto1(p)}`).join('\n')}\n` : ''}\nIr al blog: ${d.urlBlog}\n\nRecibes este correo porque aceptaste recibir novedades de VIVE BIEN.\nDarme de baja con un clic: ${d.urlBaja}\nMis preferencias: ${d.urlPreferencias}${pieTexto()}`
-  return { asunto, html: marcoCorreo({ preheader: 'Artículos nuevos del blog y propiedades recientes.', filas, pie }), texto }
+  return { asunto, html: marcoCorreo({ preheader, filas, pie }), texto }
 }
 
 /** Recuperar o cambiar contraseña. LO MANDA FIREBASE: este es el DISEÑO PROPUESTO para configurarlo en su consola (no está conectado). */

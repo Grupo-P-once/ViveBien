@@ -86,12 +86,12 @@ describe('estado de las plantillas nuevas: ninguna se envía todavía', () => {
     for (const id of ['contacto_whatsapp', 'evaluacion_atencion', 'propiedad_aprobada']) expect(c.find((e) => e.id === id), id).toMatchObject({ existencia: 'plantilla_sin_evento', rastro: null, conVista: true })
     expect(c.find((e) => e.id === 'verificacion_correo')).toMatchObject({ existencia: 'lo_manda_firebase', rastro: null, conVista: true })
   })
-  it('ningún código de envío importa las plantillas nuevas (solo la biblioteca y las pruebas)', () => {
+  it('solo el módulo de eventos de cuenta (eventos-cuenta.ts) manda las plantillas nuevas: ningún otro código de envío las importa', () => {
     const nombres = /plantillaContactoWhatsApp|plantillaEvaluacionAtencion|plantillaPublicadorPublicada|plantillaVerificacionCuenta/
     const usos: string[] = []
     const recorrer = (dir: string) => { for (const n of readdirSync(dir)) { const p = path.join(dir, n); if (statSync(p).isDirectory()) recorrer(p); else if (/\.(ts|tsx)$/.test(n) && nombres.test(readFileSync(p, 'utf8'))) usos.push(path.relative(raiz, p).replace(/\\/g, '/')) } }
     recorrer(path.join(raiz, 'src'))
-    expect(usos.sort()).toEqual(['src/lib/correo/biblioteca.ts', 'src/lib/correo/plantillas/eventos.ts', 'src/lib/correo/plantillas/index.ts'])
+    expect(usos.sort()).toEqual(['src/lib/correo/biblioteca.ts', 'src/lib/correo/eventos-cuenta.ts', 'src/lib/correo/plantillas/eventos.ts', 'src/lib/correo/plantillas/index.ts'])
   })
   it('la vista previa usa exactamente la plantilla (mismo HTML y mismo texto)', () => {
     const v = vistaPrevia('evaluacion_atencion', { ...MUESTRA_POR_OMISION, imagenes: false })!

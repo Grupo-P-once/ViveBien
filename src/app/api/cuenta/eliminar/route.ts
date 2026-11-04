@@ -4,6 +4,8 @@ import { frenarAsync, TOPES } from '@/lib/limites'
 import { registrar } from '@/lib/auditoria'
 import { olvidarCorreoDeCuenta } from '@/lib/correo/retencion'
 import type { DbCorreo } from '@/lib/correo/enviar'
+import { despuesDeResponder } from '@/lib/correo/transaccionales'
+import { avisarBajaDeCuenta } from '@/lib/correo/eventos-cuenta'
 import { borrarIdentidad, revocarSesiones } from '@/lib/firebase-admin'
 import {
   ANTERIORES, ejecutarBaja, reautenticacionReciente,
@@ -105,6 +107,9 @@ export async function POST(req: Request) {
       { status: 500 },
     )
   }
+
+  // Confirmación por correo (después de responder; solo al correo verificado de la sesión; apagado por defecto; nunca afecta la baja).
+  despuesDeResponder(() => avisarBajaDeCuenta(supabaseAdmin() as unknown as DbCorreo, { uid: perfil.uid, correo: perfil.email, verificado: perfil.emailVerified, nombre: perfil.nombre }))
 
   return NextResponse.json({
     estado: r.estado,

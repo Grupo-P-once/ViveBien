@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { exigir, supabaseAdmin } from '@/lib/auth-server'
 import { frenarAsync, TOPES } from '@/lib/limites'
 import { entornoCorreo, entornoDeCupo } from '@/lib/correo/config'
-import { BIBLIOTECA } from '@/lib/correo/biblioteca'
+import { nombresDeTipoRegistrado } from '@/lib/correo/biblioteca'
 import { calcular, datosDeDemostracion, DEFINICIONES, diaLocal, NO_DISPONIBLES, rangoDeUltimosDias, SIN_EVENTOS, sinDatosDelProveedor, validarRango, ZONA, type FilaBaja, type FilaEnvio, type FiltroGrupo, type Rango } from '@/lib/correo/metricas'
 
 /**
@@ -77,7 +77,7 @@ export async function GET(req: Request) {
 
   const filtro = { ...rango, tipo, grupo }
   const cabeceras = { 'Cache-Control': 'private, no-store' }
-  const comun = { generado: ahora.toISOString(), zona: ZONA, hoy: diaLocal(ahora), definiciones: DEFINICIONES, noDisponibles: NO_DISPONIBLES, nombresDeTipo: Object.fromEntries(BIBLIOTECA.map((t) => [t.id, t.nombre])) }
+  const comun = { generado: ahora.toISOString(), zona: ZONA, hoy: diaLocal(ahora), definiciones: DEFINICIONES, noDisponibles: NO_DISPONIBLES, nombresDeTipo: nombresDeTipoRegistrado() }
 
   if (demo) {
     const d = datosDeDemostracion(rango)

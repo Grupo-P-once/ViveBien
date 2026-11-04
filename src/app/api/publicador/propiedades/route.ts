@@ -4,6 +4,9 @@ import { registrar } from '@/lib/auditoria'
 import { MAXIMO_BORRADORES_POR_CUENTA, calcularCompletitud, camposProtegidosEn, paraPublicador, quitarCamposReservados } from '@/lib/publicacion'
 import { sanearContenido } from '@/lib/sanear-propiedad'
 import { frenarAsync, TOPES } from '@/lib/limites'
+import { despuesDeResponder } from '@/lib/correo/transaccionales'
+import { avisarPropiedad } from '@/lib/correo/eventos-cuenta'
+import type { DbCorreo } from '@/lib/correo/enviar'
 import { escribirTolerante } from '@/lib/columnas'
 import { esRelleno } from '@/lib/slug'
 import { puede } from '@/lib/acceso/permisos'
@@ -160,6 +163,13 @@ export async function POST(req: Request) {
     entidad: 'propiedades',
     entidadId: fila.id,
     despues: { estado_pub: 'borrador', titulo: fila.titulo },
+  })
+
+  // Correo «Recibimos tu propiedad» (borrador guardado). Después de responder, solo al correo verificado de la cuenta dueña, una vez por propiedad y sin tumbar el alta.
+  // Se relee la fila: el folio lo genera la base, no está en lo que se insertó.
+  despuesDeResponder(async () => {
+    const { data } = await db.from('propiedades').select('*').eq('id', fila.id).maybeSingle()
+    if (data) await avisarPropiedad(db as unknown as DbCorreo, { evento: 'recibida', prop: data as Record<string, unknown>, version: '1' })
   })
 
   return NextResponse.json({ ok: true, id: fila.id })

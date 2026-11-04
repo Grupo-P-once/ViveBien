@@ -11,6 +11,9 @@ import { puede } from '@/lib/acceso/permisos'
 import { diferenciasDeContenido, sanearContenido, sanearPies } from '@/lib/sanear-propiedad'
 import { frenarAsync, TOPES } from '@/lib/limites'
 import { tieneCapacidad } from '@/lib/acceso/capacidades'
+import { despuesDeResponder } from '@/lib/correo/transaccionales'
+import { avisarDisponibilidadDeFavorita, avisarEstatusPropiedad, estatusAvisable } from '@/lib/correo/eventos-cuenta'
+import type { DbCorreo } from '@/lib/correo/enviar'
 
 /**
  * Rehace la tabla `fotos` para que diga lo mismo que el array.
@@ -236,6 +239,18 @@ export async function PATCH(
     ...(detalle ? { antes: dif.antes } : {}),
     despues: { campos: Object.keys(datos), sinColumna: r.omitidas.length ? r.omitidas : undefined, ...(detalle ? dif.despues : {}) },
   })
+
+  // Cambio de situación comercial de una propiedad PUBLICADA (pausa, vendida, rentada, disponible otra vez): correo al dueño (si no fue quien lo hizo) y a quienes la guardaron y
+  // activaron los avisos de guardadas. Después de responder, solo a correos verificados, una vez por cambio y sin tumbar el guardado.
+  if ('estatus' in datos && datos.estatus !== prop.estatus && estatusAvisable(datos.estatus) && prop.estado_pub === 'publicada') {
+    const estatus = datos.estatus
+    const version = new Date().toISOString()
+    const completa = { ...(prop as Record<string, unknown>), ...datos } as Record<string, unknown>
+    if (prop.owner_id && prop.owner_id !== perfil.uid) {
+      despuesDeResponder(() => avisarEstatusPropiedad(db as unknown as DbCorreo, { prop: completa, estatus, version }))
+    }
+    despuesDeResponder(() => avisarDisponibilidadDeFavorita(db as unknown as DbCorreo, { prop: completa, estatus, version }))
+  }
 
   return NextResponse.json(
     r.omitidas.length

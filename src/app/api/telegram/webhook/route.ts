@@ -22,6 +22,9 @@ import {
 import { SITIO } from '@/lib/sitio'
 import { refrescarCatalogo } from '@/lib/refrescar'
 import { asignarSlugAlPublicar } from '@/lib/asignar-slug'
+import { despuesDeResponder } from '@/lib/correo/transaccionales'
+import { avisarPropiedad } from '@/lib/correo/eventos-cuenta'
+import type { DbCorreo } from '@/lib/correo/enviar'
 import { nombreDe } from '@/lib/propiedad-publica'
 import { CUENTA_PROPIETARIO } from '@/lib/config/negocio-interno'
 import { FORMATOS_PERMITIDOS, subirDesdeServidor } from '@/lib/medios/firma'
@@ -646,6 +649,9 @@ export async function POST(req: Request) {
       const ruta = destino === 'publicada' ? await asignarSlugAlPublicar(db, borrador as Record<string, unknown>) : null
 
       refrescarCatalogo()
+
+      // Mismo correo al dueño que al enviar o publicar desde la web (solo con cuenta, correo verificado y una vez por hecho).
+      despuesDeResponder(() => avisarPropiedad(db as unknown as DbCorreo, { evento: destino === 'publicada' ? 'publicada' : 'en_revision', prop: borrador as Record<string, unknown>, version: ahora }))
 
       if (destino === 'en_revision') {
         void avisar({

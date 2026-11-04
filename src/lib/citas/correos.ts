@@ -1,5 +1,7 @@
 import { fechaLarga, horaCorta } from './zona'
-import { bloqueGrupoPOnce, PONCE_URL } from '../correo/plantillas/marca'
+import { filaHero, marcoCorreo, TEXTO } from '../correo/plantillas/bloques'
+import { botonContorno, botonLleno, fila } from '../correo/plantillas/eventos'
+import { COLORES, PONCE_URL } from '../correo/plantillas/marca'
 
 /**
  * Qué correo sale con cada cambio de una cita, a quién, y qué dice.
@@ -203,40 +205,35 @@ function contenido(tipo: TipoCorreo, d: DatosPlantilla): Contenido {
 export function plantilla(tipo: TipoCorreo, para: Para, d: DatosPlantilla): Correo {
   const k = contenido(tipo, d)
   const saludo = d.destinatario?.trim() ? `Hola ${d.destinatario.trim()}:` : 'Hola:'
-  const lugar = d.lugar ? `<p style="margin:6px 0 0;font-size:14px;color:#5C5B57">📍 ${escaparHtml(d.lugar)}</p>` : ''
-  const datosCliente = para === 'asesor' && d.cliente
-    ? `<p style="margin:12px 0 0;font-size:14px;color:#374151">Cliente: <b>${escaparHtml(d.cliente.nombre)}</b>${d.cliente.telefono ? ` · ${escaparHtml(d.cliente.telefono)}` : ''}</p>`
-      + (d.notasCliente ? `<p style="margin:6px 0 0;font-size:14px;color:#374151">Nota del cliente: «${escaparHtml(d.notasCliente)}»</p>` : '')
-    : ''
-  const botones = d.acciones.map((a, i) =>
-    `<a href="${escaparHtml(a.url)}" style="display:inline-block;margin:0 8px 8px 0;padding:12px 20px;border-radius:9px;font-weight:700;font-size:14px;text-decoration:none;${
-      i === 0 ? 'background:#971010;color:#ffffff' : 'background:#ffffff;color:#971010;border:1px solid #971010'}">${ETIQUETA_BOTON[a.accion]}</a>`).join('')
-  const google = d.enlaceGoogle
-    ? `<a href="${escaparHtml(d.enlaceGoogle)}" style="display:inline-block;margin:0 8px 8px 0;padding:12px 20px;border-radius:9px;font-weight:600;font-size:14px;text-decoration:none;background:#ffffff;color:#1c1c1f;border:1px solid #d6d3cd">Agregar a Google Calendar</a>`
-    : ''
-
-  const html = `<!doctype html><html lang="es"><body style="margin:0;background:#f5f4f2">
-<div style="max-width:560px;margin:0 auto;padding:24px 16px;font-family:'Open Sans',system-ui,-apple-system,'Segoe UI',sans-serif">
-  <div style="background:#971010;border-radius:14px 14px 0 0;padding:18px 24px">
-    <span style="color:#ffffff;font-family:Montserrat,system-ui,sans-serif;font-weight:700;letter-spacing:.08em;font-size:15px">VIVE BIEN</span>
-    <span style="color:#f7eaea;font-size:12px;margin-left:8px">Grupo Inmobiliario</span>
-  </div>
-  <div style="background:#ffffff;border-radius:0 0 14px 14px;padding:24px;border:1px solid #ece9e4;border-top:0">
-    <p style="margin:0 0 4px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#8A8882">Visita</p>
-    <h1 style="margin:0 0 14px;font-size:21px;color:#1c1c1f;font-family:Montserrat,system-ui,sans-serif">${escaparHtml(k.titulo)}</h1>
-    <p style="margin:0 0 10px;font-size:15px;color:#374151">${escaparHtml(saludo)}</p>
-    ${k.parrafos.map((p) => `<p style="margin:0 0 10px;font-size:15px;line-height:1.6;color:#374151">${p}</p>`).join('')}
-    ${lugar}
-    ${datosCliente}
-    <div style="margin:20px 0 4px">${botones}${google}</div>
-    <p style="margin:12px 0 0;font-size:13px;color:#5C5B57">
-      <a href="${escaparHtml(d.enlacePanel)}" style="color:#971010">Ver la visita${para === 'asesor' ? ' en el panel' : ' en tu portal'}</a>
-    </p>
-    ${d.acciones.length ? '<p style="margin:14px 0 0;font-size:12px;line-height:1.5;color:#8A8882">Abrir este correo o el enlace no cambia nada: la acción sólo cuenta cuando pulses el botón en la página. Los enlaces sirven una vez y caducan.</p>' : ''}
-  </div>
-  <p style="margin:16px 0 0;text-align:center;font-size:12px;color:#8A8882">Vive Bien Grupo Inmobiliario · León, Gto. · Horarios en hora de León</p>
-  ${bloqueGrupoPOnce()}
-</div></body></html>`
+  // Mismo marco que el resto de los correos de VIVE BIEN (logotipo, bloque de color, pie con Grupo P-ONCE). Sin emojis: Outlook los dibuja como cuadros.
+  const dato = (etiqueta: string, valor: string) =>
+    `<tr><td valign="top" style="padding:5px 14px 5px 0;font-family:${TEXTO};font-size:13px;line-height:20px;color:#4B5563;white-space:nowrap">${etiqueta}</td><td valign="top" style="padding:5px 0;font-family:${TEXTO};font-size:14px;line-height:21px;color:${COLORES.negro}"><strong>${valor}</strong></td></tr>`
+  const filasDeDatos = [
+    dato('Propiedad', escaparHtml(d.propiedad)),
+    dato(d.propuesto && tipo === 'cambio_propuesto' ? 'Horario actual' : 'Cuándo', escaparHtml(cuando(d.inicio, d.ahora))),
+    ...(d.propuesto && tipo === 'cambio_propuesto' ? [dato('Horario propuesto', escaparHtml(cuando(d.propuesto, d.ahora)))] : []),
+    ...(d.lugar ? [dato('Lugar', escaparHtml(d.lugar))] : []),
+    ...(para === 'asesor' && d.cliente ? [dato('Cliente', escaparHtml(d.cliente.nombre) + (d.cliente.telefono ? ` · ${escaparHtml(d.cliente.telefono)}` : ''))] : []),
+    ...(para === 'asesor' && d.notasCliente ? [dato('Nota del cliente', `«${escaparHtml(d.notasCliente)}»`)] : []),
+  ].join('')
+  const parrafos = [saludo, ...k.parrafos].map((t, i) => `<p style="margin:0 0 12px;font-family:${TEXTO};font-size:${i === 0 ? 15 : 16}px;line-height:26px;color:${i === 0 ? '#535761' : '#303339'}">${i === 0 ? escaparHtml(t) : t}</p>`).join('')
+  const acciones = d.acciones.map((a, i) => fila(i === 0 ? botonLleno(ETIQUETA_BOTON[a.accion], a.url) : botonContorno(ETIQUETA_BOTON[a.accion], a.url), 4, 10)).join('')
+  const calendario = d.enlaceGoogle ? fila(botonContorno('Agregar a Google Calendar', d.enlaceGoogle), 4, 10) : ''
+  const verVisita = fila(`<p style="margin:6px 0 0;text-align:center;font-family:${TEXTO};font-size:14px;line-height:22px"><a href="${escaparHtml(d.enlacePanel)}" style="color:${COLORES.rojo};font-weight:700">Ver la visita${para === 'asesor' ? ' en el panel' : ' en tu portal'}</a></p>`, 8, 10)
+  const aviso = d.acciones.length
+    ? fila(`<p style="margin:0;font-family:${TEXTO};font-size:12px;line-height:19px;color:#6B7280;text-align:center">Abrir este correo o el enlace no cambia nada: la acción solo cuenta cuando pulses el botón en la página. Los enlaces sirven una vez y caducan.</p>`, 6, 28)
+    : fila('', 0, 14)
+  const filas =
+    filaHero({ kicker: 'Visita', titulo: k.titulo }) +
+    fila(parrafos, 28, 6) +
+    fila(`<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td bgcolor="${COLORES.fondo}" style="background:${COLORES.fondo};border-radius:8px;padding:14px 20px"><table role="presentation" cellpadding="0" cellspacing="0" border="0">${filasDeDatos}</table></td></tr></table>`, 4, 18) +
+    acciones + calendario + verVisita + aviso
+  const html = marcoCorreo({
+    preheader: `${k.titulo} · ${d.propiedad}`.slice(0, 110),
+    filas,
+    avisoPropiedades: false,
+    pie: 'Mensaje de servicio sobre tu visita en VIVE BIEN; no es publicidad. Horarios en hora de León.',
+  })
 
   const quitarEtiquetas = (t: string) => t.replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'")
   const texto = [

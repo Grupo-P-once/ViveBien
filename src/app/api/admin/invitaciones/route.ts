@@ -4,6 +4,9 @@ import { registrar } from '@/lib/auditoria'
 import { enviarInvitacion } from '@/lib/invitacion-correo'
 import { decidirInvitacion, esAscenso } from '@/lib/acceso/roles'
 import { escaparLike, normalizarCorreo } from '@/lib/invitaciones'
+import { despuesDeResponder } from '@/lib/correo/transaccionales'
+import { avisarInvitacion } from '@/lib/correo/eventos-cuenta'
+import type { DbCorreo } from '@/lib/correo/enviar'
 
 /**
  * Invitaciones al panel. Sólo administradores.
@@ -135,7 +138,7 @@ export async function PATCH(req: Request) {
   if (!Number.isFinite(id)) return NextResponse.json({ error: 'Falta la invitación.' }, { status: 400 })
 
   const db = supabaseAdmin()
-  const { data: invitacion } = await db.from('invitaciones').select('id, email, rol, estado').eq('id', id).maybeSingle()
+  const { data: invitacion } = await db.from('invitaciones').select('id, email, rol, estado, invitado_por').eq('id', id).maybeSingle()
   if (!invitacion) return NextResponse.json({ error: 'Esa invitación no existe.' }, { status: 404 })
   if (invitacion.estado !== 'pendiente') {
     return NextResponse.json({ error: 'Esa invitación ya no está pendiente.' }, { status: 409 })
@@ -143,6 +146,9 @@ export async function PATCH(req: Request) {
 
   const { error } = await db.from('invitaciones').update({ estado: 'cancelada' }).eq('id', id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // Correo a quien invitó (si no es quien la canceló): después de responder, a su correo verificado, una vez por invitación.
+  despuesDeResponder(() => avisarInvitacion(db as unknown as DbCorreo, { invitacionId: id, estado: 'cancelada', correoInvitado: String(invitacion.email), rol: String(invitacion.rol), invitadoPor: invitacion.invitado_por as string | null, actorUid: perfil.uid }))
 
   await registrar({
     actor: perfil,

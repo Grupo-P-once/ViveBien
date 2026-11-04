@@ -36,7 +36,7 @@ describe('catálogo: estructura y rastro', () => {
 
   it('lo PENDIENTE no tiene rastro ni vista previa y lo dice; lo de Firebase tampoco finge una vista', () => {
     const pend = catalogo.filter((e) => e.existencia === 'pendiente')
-    expect(catalogo.filter((e) => e.existencia === 'plantilla_sin_evento').length).toBeGreaterThanOrEqual(11) // todo lo pendiente ya tiene plantilla; ninguna se envía
+    expect(catalogo.filter((e) => e.existencia === 'plantilla_sin_evento').map((e) => e.id).sort()).toEqual(['articulos_blog', 'cambio_correo', 'evaluacion_atencion']) // lo único con plantilla y sin evento: el blog (sin campañas ni texto legal), el cambio de correo (la app no lo permite) y la evaluación (sin tarea programada ni rutas Sí/No)
     for (const e of pend) { expect(e.rastro, e.id).toBeNull(); expect(e.conVista, e.id).toBe(false); expect(e.motivoSinVista, e.id).toMatch(/Pendiente de implementación/); expect(vistaPrevia(e.id), e.id).toBeNull() }
     for (const e of catalogo.filter((x) => x.existencia === 'lo_manda_firebase')) expect(e.rastro).toBeNull() // lo manda Firebase: no hay rastro de envío en este código
   })
@@ -80,9 +80,8 @@ describe('vistas previas completas', () => {
     const v = vistaPrevia('bienvenida')!
     expect(v.preencabezado).toBeTruthy()
     expect(v.extracto.startsWith(v.preencabezado!.slice(0, 40))).toBe(true)
-    // Alertas, bajas de precio y avisos legales ya usan el marco de marca (con preencabezado); las citas siguen con HTML propio sin marco (pendiente MKT-29).
-    for (const id of ['alertas', 'baja_de_precio', 'legal']) expect(vistaPrevia(id)!.preencabezado, id).toBeTruthy()
-    expect(vistaPrevia('cita_confirmada')!.preencabezado).toBeNull()
+    // Alertas, bajas de precio, avisos legales y (desde el 4-nov-2026, MKT-29) las citas usan el marco de marca, con preencabezado.
+    for (const id of ['alertas', 'baja_de_precio', 'legal', 'cita_confirmada', 'cita_solicitud_nueva', 'cita_recordatorio_24h']) expect(vistaPrevia(id)!.preencabezado, id).toBeTruthy()
   })
 
   it('la bandeja lista exactamente los correos con vista, ordenados por grupo, con remitente, asunto y extracto', () => {
@@ -97,7 +96,8 @@ describe('vistas previas completas', () => {
     const v = vistaPrevia('cita_solicitud_nueva')!
     expect(v.html).toContain('Casa de ejemplo B')
     expect(v.html).toContain('Persona Sintética')
-    expect(v.html).not.toMatch(/@(?!ejemplo)/)
+    // Sin la regla CSS @media ni el correo institucional del pie, ninguna dirección que no sea de ejemplo.
+    expect(v.html.replace(/@media/g, '').replace(/informes@vivebienn.com/g, '')).not.toMatch(/@(?!ejemplo)/)
   })
 })
 

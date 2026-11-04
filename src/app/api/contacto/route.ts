@@ -4,6 +4,9 @@ import { verifyIdToken, getPerfil, supabaseAdmin, exigir } from '@/lib/auth-serv
 import { registrar } from '@/lib/auditoria'
 import { notificarAtencion } from '@/lib/whatsapp'
 import { avisarDeLead } from '@/lib/aviso-lead'
+import { despuesDeResponder } from '@/lib/correo/transaccionales'
+import { avisarConsultaRecibida, avisarNuevoInteresado } from '@/lib/correo/eventos-cuenta'
+import type { DbCorreo } from '@/lib/correo/enviar'
 import {
   validarSolicitud,
   VERSION_CONSENTIMIENTO,
@@ -173,6 +176,14 @@ export async function POST(req: Request) {
       propiedadId,
     }),
   ])
+
+  // Correos del evento (después de responder, apagados por defecto, sin tumbar la solicitud): confirmación a QUIEN consultó (solo a su correo verificado de sesión) y aviso al dueño
+  // únicamente si puede ver los datos del interesado. Una sola vez por consulta.
+  if (creada?.id) {
+    const solicitudId = creada.id as string | number
+    despuesDeResponder(() => avisarConsultaRecibida(db as unknown as DbCorreo, { solicitudId, propiedadId, correo: user.email, verificado: user.emailVerified, nombre: perfil.nombre }))
+    despuesDeResponder(() => avisarNuevoInteresado(db as unknown as DbCorreo, { solicitudId, propiedadId, canal: 'formulario' }))
+  }
 
   // Ni el estado del aviso ni ningún enlace de WhatsApp vuelven al navegador:
   // antes se devolvía uno al teléfono del dueño.

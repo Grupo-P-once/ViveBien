@@ -27,6 +27,9 @@ import { urlDe } from '@/lib/sitio'
 import { puede } from '@/lib/acceso/permisos'
 import { tieneCapacidad } from '@/lib/acceso/capacidades'
 import { frenarAsync, TOPES } from '@/lib/limites'
+import { despuesDeResponder } from '@/lib/correo/transaccionales'
+import { avisarPropiedad, type EventoPropiedad } from '@/lib/correo/eventos-cuenta'
+import type { DbCorreo } from '@/lib/correo/enviar'
 
 /**
  * POST /api/propiedades/[id]/estado — mueve una propiedad por su ciclo de vida.
@@ -203,6 +206,13 @@ export async function POST(
     : null
 
   refrescarCatalogo()
+
+  // Correo al DUEÑO de la propiedad (en revisión, publicada, rechazada o con cambios). Después de responder, solo a su correo verificado, una vez por hecho y sin tumbar el flujo.
+  // Quien dispara puede ser el propio dueño o un revisor: el destinatario siempre es `owner_id`, nunca quien hace la petición.
+  if (destino === 'en_revision' || destino === 'publicada' || destino === 'rechazada' || destino === 'cambios_solicitados') {
+    const evento: EventoPropiedad = destino
+    despuesDeResponder(() => avisarPropiedad(db as unknown as DbCorreo, { evento, prop: prop as Record<string, unknown>, version: cambios.enviada_en ?? cambios.publicada_en ?? cambios.revisado_en ?? ahora, motivo: cambios.nota_moderacion ?? null }))
+  }
 
   if (destino === 'publicada') {
     void avisar({

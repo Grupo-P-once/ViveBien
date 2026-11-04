@@ -13,6 +13,7 @@ import { normalizarOperacion, normalizarPresupuesto, normalizarTipos, normalizar
 import { leerFlags } from '@/lib/config/flags-servidor'
 import { portalAbiertoPara } from '@/lib/portal/apertura'
 import { despuesDeResponder, enviarBienvenida } from '@/lib/correo/transaccionales'
+import { avisarInvitacion } from '@/lib/correo/eventos-cuenta'
 import type { DbCorreo } from '@/lib/correo/enviar'
 
 /** Columnas del perfil que puede no haber si 06-perfil.sql no está aplicado. */
@@ -126,6 +127,11 @@ async function leerMiPerfil(req: Request) {
       if (r?.estado === 'aplicada') {
         invitado = r.rol
         rolInicial = r.rol
+        // Correo a quien invitó: su invitación se aceptó (después de responder; a su correo verificado; una vez por invitación).
+        despuesDeResponder(async () => {
+          const { data: inv } = await db.from('invitaciones').select('id, email, rol, invitado_por').eq('aceptada_por', user.uid).eq('estado', 'aceptada').order('aceptada_en', { ascending: false }).limit(1).maybeSingle()
+          if (inv) await avisarInvitacion(db as unknown as DbCorreo, { invitacionId: inv.id as number, estado: 'aceptada', correoInvitado: String(inv.email), rol: String(inv.rol), invitadoPor: inv.invitado_por as string | null, actorUid: user.uid })
+        })
       } else if (r?.estado === 'omitida') {
         await registrarOmision(perfil, r.motivo)
       }
@@ -153,6 +159,12 @@ async function leerMiPerfil(req: Request) {
     fila = (data as Record<string, unknown> | null) ?? null
 
     await registrarAcceso(db, user.uid)
+
+    // Migración 69: anota que el correo de ESTA cuenta ya está verificado (lo dice el token de Firebase de quien entra, no una tercera persona). Los correos de eventos
+    // dirigidos a otra persona solo salen si esta marca existe. Sin la columna (migración sin aplicar) el error se ignora y esos correos simplemente no salen.
+    if (user.emailVerified === true) {
+      try { await db.from('usuarios').update({ email_verificado: true }).eq('uid', user.uid).eq('email_verificado', false) } catch { /* falla cerrado */ }
+    }
 
     // D-80: cuenta NUEVA → bienvenida transaccional (apagada por defecto; después de responder; nunca tumba el alta).
     if (!yaExiste) {

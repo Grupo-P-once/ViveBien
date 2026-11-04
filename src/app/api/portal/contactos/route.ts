@@ -3,6 +3,9 @@ import { supabaseAdmin } from '@/lib/auth-server'
 import { exigirPortal } from '@/lib/portal/exigir-portal'
 import { frenarAsync, TOPES } from '@/lib/limites'
 import { rutaDe } from '@/lib/propiedad-publica'
+import { despuesDeResponder } from '@/lib/correo/transaccionales'
+import { avisarContactoWhatsApp } from '@/lib/correo/eventos-cuenta'
+import type { DbCorreo } from '@/lib/correo/enviar'
 import { COLUMNAS_CONTACTO_CLIENTE, aContactoCliente, filasDeHistorial, sanearContacto, type FilaContacto, type PropiedadDeHistorial } from '@/lib/contactos-cliente'
 
 /**
@@ -41,6 +44,10 @@ export async function POST(req: Request) {
     uid: perfil.uid, propiedad_id: fila.id, propiedad_titulo: (fila.titulo ?? '').slice(0, 200) || null, propiedad_folio: (fila.folio ?? '').slice(0, 40) || null, canal: c.canal, destino: 'vivebien',
   })
   if (w.error) return tablaAusente(w.error) ? NO_DISPONIBLE() : NextResponse.json({ error: 'No se pudo registrar.' }, { status: 500 })
+  // Correo «Contacto por WhatsApp» (solo si el contacto fue por WhatsApp): después de responder, al correo verificado de la sesión, una vez por persona y propiedad.
+  if (c.canal === 'whatsapp') {
+    despuesDeResponder(() => avisarContactoWhatsApp(db as unknown as DbCorreo, { uid: perfil.uid, propiedadId: fila.id, correo: perfil.email, verificado: perfil.emailVerified, nombre: perfil.nombre }))
+  }
   return NextResponse.json({ ok: true }, { status: 201 })
 }
 

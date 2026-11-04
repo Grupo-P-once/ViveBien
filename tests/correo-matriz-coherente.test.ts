@@ -13,10 +13,7 @@ describe('matriz de eventos ↔ catálogo', () => {
     expect(nombradas.length).toBeGreaterThan(10)
     const porCrear = MATRIZ_DE_EVENTOS.filter((e) => /^por crear/.test(e.plantilla)).map((e) => e.evento)
     // Lo único que sigue «por crear» es lo que de verdad no tiene plantilla.
-    expect(porCrear.sort()).toEqual([
-      'Cambio de disponibilidad de una propiedad guardada', 'Campañas y promociones manuales', 'Inicio de sesión inusual',
-      'Invitación aceptada / vencida / revocada', 'Pausa, vencimiento, reactivación o venta', 'Resumen opcional de búsqueda',
-    ].sort())
+    expect(porCrear.sort()).toEqual(['Campañas y promociones manuales', 'Inicio de sesión inusual', 'Resumen opcional de búsqueda'].sort())
     for (const e of MATRIZ_DE_EVENTOS.filter((x) => /^por crear/.test(x.plantilla))) expect(['no_existe'], e.evento).toContain(e.estado)
   })
 
