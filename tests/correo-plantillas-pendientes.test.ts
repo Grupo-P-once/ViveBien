@@ -84,7 +84,9 @@ describe('estado: plantilla lista · evento pendiente; ninguna se envía', () =>
   const ids = ['cambio_correo', 'baja_cuenta', 'consulta_respuesta', 'propiedad_recibida', 'propiedad_en_revision', 'propiedad_rechazada', 'nuevo_interesado', 'articulos_blog']
   it('el catálogo las marca «plantilla_sin_evento» (y la de contraseña como diseño para Firebase), sin rastro de envío y con vista', () => {
     const c = catalogoCompleto()
-    for (const id of ids) expect(c.find((e) => e.id === id), id).toMatchObject({ existencia: 'plantilla_sin_evento', rastro: null, conVista: true })
+    // Sin evento que las dispare: el cambio de correo (la app no lo permite) y el blog (sin campañas ni texto legal). El resto ya está conectado (4-nov-2026), apagado.
+    for (const id of ['cambio_correo', 'articulos_blog']) expect(c.find((e) => e.id === id), id).toMatchObject({ existencia: 'plantilla_sin_evento', rastro: null, conVista: true })
+    for (const id of ids.filter((x) => x !== 'cambio_correo' && x !== 'articulos_blog')) expect(c.find((e) => e.id === id), id).toMatchObject({ existencia: 'codigo_apagado', rastro: 'src/lib/correo/eventos-cuenta.ts', conVista: true })
     expect(c.find((e) => e.id === 'recuperar_contrasena')).toMatchObject({ existencia: 'lo_manda_firebase', rastro: null, conVista: true })
     for (const id of [...ids, 'recuperar_contrasena']) expect(vistaPrevia(id, MUESTRA_POR_OMISION), id).not.toBeNull()
   })

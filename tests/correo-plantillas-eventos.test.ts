@@ -83,7 +83,9 @@ describe('contenido por evento', () => {
 describe('estado de las plantillas nuevas: ninguna se envía todavía', () => {
   it('el catálogo las marca «plantilla lista · evento pendiente» (o Firebase) y sin rastro de envío', () => {
     const c = catalogoCompleto()
-    for (const id of ['contacto_whatsapp', 'evaluacion_atencion', 'propiedad_aprobada']) expect(c.find((e) => e.id === id), id).toMatchObject({ existencia: 'plantilla_sin_evento', rastro: null, conVista: true })
+    expect(c.find((e) => e.id === 'evaluacion_atencion')).toMatchObject({ existencia: 'plantilla_sin_evento', rastro: null, conVista: true }) // sin tarea programada ni rutas Sí/No
+    // Conectadas a su evento (4-nov-2026): código listo, apagado por CORREO_TRANSACCIONAL y CORREO_ENVIO, con el archivo que las manda como rastro.
+    for (const id of ['contacto_whatsapp', 'propiedad_aprobada']) expect(c.find((e) => e.id === id), id).toMatchObject({ existencia: 'codigo_apagado', rastro: 'src/lib/correo/eventos-cuenta.ts', conVista: true })
     expect(c.find((e) => e.id === 'verificacion_correo')).toMatchObject({ existencia: 'lo_manda_firebase', rastro: null, conVista: true })
   })
   it('solo el módulo de eventos de cuenta (eventos-cuenta.ts) manda las plantillas nuevas: ningún otro código de envío las importa', () => {
