@@ -197,3 +197,23 @@ describe('citas: los 15 correos con el marco de marca (MKT-29)', () => {
     expect(c.html).toContain('Agregar a Google Calendar')
   })
 })
+
+describe('diseño de los mockups del dueño (carpeta MKT/correos, 30-oct-2026)', () => {
+  const visibles = BIBLIOTECA.filter((t) => t.id !== 'bienvenida').map((t) => [t.id, vistaPrevia(t.id, { ...MUESTRA_POR_OMISION, imagenes: false })!] as const)
+  it.each(visibles)('%s: etiqueta de sección en el encabezado, sin marcadores sueltos y con enlace al Aviso', (_id, v) => {
+    expect(v.html).not.toContain('<!--et:') // el marcador interno nunca llega al correo
+    expect(v.html).toContain('/privacidad')
+    expect(v.html).toContain('Aviso de privacidad')
+    expect(v.html).toMatch(/text-transform:uppercase;color:#A30D12">[^<]{3,}<\/td><\/tr><\/table><\/td><\/tr>/) // etiqueta a la derecha del logotipo
+  })
+  it('el titular lleva la segunda mitad en rojo y el saludo va gris, sin partir', () => {
+    const v = vistaPrevia('propiedad_en_revision', { ...MUESTRA_POR_OMISION, imagenes: false })!
+    expect(v.html).toMatch(/<h1 class="hero-title"[^>]*>[^<]+ <span style="color:#A30D12">[^<]+<\/span><\/h1>/)
+    const saludo = vistaPrevia('cambio_correo', { ...MUESTRA_POR_OMISION, imagenes: false })!
+    expect(saludo.html).toMatch(/color:#66709F">Hola [^<]+,<\/p>/)
+  })
+  it('el botón principal va rojo a todo el ancho', () => {
+    const v = vistaPrevia('propiedad_aprobada', { ...MUESTRA_POR_OMISION, imagenes: false })!
+    expect(v.html).toMatch(/<table role="presentation" width="100%"[^>]*><tr><td align="center" bgcolor="#A30D12"[^>]*><a [^>]*display:block;padding:17px 20px/)
+  })
+})

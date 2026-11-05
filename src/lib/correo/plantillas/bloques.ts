@@ -23,19 +23,47 @@ function botonLleno(b: Boton, fondo: string, color: string): string {
   return `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td bgcolor="${fondo}" style="background:${fondo};border-radius:3px"><a href="${escapar(urlSegura(b.url))}" target="_blank" style="display:inline-block;padding:15px 23px;font-family:${FUENTE};font-size:12px;line-height:16px;font-weight:800;letter-spacing:.4px;color:${color};text-decoration:none">${escapar(b.texto)}</a></td></tr></table>`
 }
 
-/** Bloque de color con el titular grande y un botón blanco (la bienvenida y la solicitud abren así). */
-export function filaHero(o: { kicker: string; titulo: string; texto?: string; boton?: Boton; nota?: string }): string {
-  const texto = o.texto ? `<p style="margin:0 auto 25px;max-width:460px;font-family:${TEXTO};font-size:16px;line-height:26px;color:#FFF3F1">${escapar(o.texto)}</p>` : ''
-  const boton = o.boton ? botonLleno(o.boton, COLORES.blanco, COLORES.rojo) : ''
-  const nota = o.nota ? `<p style="margin:22px 0 0;font-family:${FUENTE};font-size:12px;line-height:18px;font-weight:600;color:#F8D9D7">${escapar(o.nota)}</p>` : ''
-  return `<tr><td align="center" ${PAD} style="padding:38px 42px 40px;background:${COLORES.rojo}"><p style="margin:0 0 15px;font-family:${FUENTE};font-size:11px;line-height:16px;font-weight:700;letter-spacing:2.2px;text-transform:uppercase;color:#F8D9D7">${escapar(o.kicker)}</p><h1 class="hero-title" style="margin:0 0 17px;font-family:${FUENTE};font-size:38px;line-height:45px;font-weight:800;letter-spacing:-1px;color:${COLORES.blanco}">${escapar(o.titulo)}</h1>${texto}${boton}${nota}</td></tr>`
+/**
+ * Titular, etiqueta de sección y botón a todo el ancho: el estilo de los mockups del dueño (carpeta MKT/correos, 30-oct-2026): regla roja arriba, logotipo con la etiqueta de la
+ * sección a la derecha, saludo gris, titular enorme con la segunda mitad en rojo, subtítulo y un botón rojo a todo el ancho. Todo el que usa `filaHero`, `filaTexto` y `marcoCorreo`
+ * lo adopta a la vez.
+ */
+
+/** Parte un titular en dos tramos: el segundo va en rojo. */
+function partirTitulo(t: string): [string, string] {
+  const p = t.trim().split(/\s+/)
+  if (p.length < 2) return [t.trim(), '']
+  const n = Math.ceil(p.length / 2)
+  return [p.slice(0, n).join(' '), p.slice(n).join(' ')]
 }
 
-/** Encabezado claro (kicker azul, titular, párrafos). `parrafos` ya viene escapado. */
+/** La etiqueta de sección del encabezado (a la derecha del logotipo). La pone el primer bloque que la trae y `marcoCorreo` la recoge (el comentario no se ve en el correo). */
+const etiquetaDeSeccion = (e?: string) => (e ? `<!--et:${escapar(e)}-->` : '')
+
+/** Un saludo («Hola Ana,») va gris y sin partir; cualquier otro titular va grande, con la segunda mitad en rojo. */
+function tituloGrande(titulo: string, px: number): string {
+  if (/^Hola\b/i.test(titulo.trim())) return `<p style="margin:0 0 12px;font-family:${TEXTO};font-size:22px;line-height:30px;color:${AZUL}">${escapar(titulo)}</p>`
+  const [a, b] = partirTitulo(titulo)
+  return `<h1 class="hero-title" style="margin:0 0 16px;font-family:${FUENTE};font-size:${px}px;line-height:${px + 6}px;font-weight:800;letter-spacing:-1px;color:${COLORES.negro}">${escapar(a)}${b ? ` <span style="color:${COLORES.rojo}">${escapar(b)}</span>` : ''}</h1>`
+}
+
+/** Botón rojo a todo el ancho (el de las maquetas). */
+function botonAncho(b: Boton): string {
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" bgcolor="${COLORES.rojo}" style="background:${COLORES.rojo};border-radius:8px"><a href="${escapar(urlSegura(b.url))}" target="_blank" style="display:block;padding:17px 20px;font-family:${FUENTE};font-size:17px;line-height:22px;font-weight:700;color:${COLORES.blanco};text-decoration:none;text-align:center">${escapar(b.texto)}</a></td></tr></table>`
+}
+
+/** Titular grande con subtítulo, botón a todo el ancho y una nota opcional (la bienvenida, la solicitud y los avisos de propiedad abren así). */
+export function filaHero(o: { kicker: string; titulo: string; texto?: string; boton?: Boton; nota?: string }): string {
+  const texto = o.texto ? `<p style="margin:0 0 8px;font-family:${TEXTO};font-size:19px;line-height:30px;color:${AZUL}">${escapar(o.texto)}</p>` : ''
+  const cta = o.boton ? `<tr><td ${PAD} style="padding:16px 42px 6px;background:${COLORES.blanco}">${botonAncho(o.boton)}</td></tr>` : ''
+  const nota = o.nota ? `<tr><td ${PAD} style="padding:8px 42px 6px;background:${COLORES.blanco}"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" style="background:${COLORES.fondo};padding:10px 14px;font-family:${FUENTE};font-size:14px;line-height:20px;font-weight:700;color:${COLORES.negro}">${escapar(o.nota)}</td></tr></table></td></tr>` : ''
+  return `<tr><td ${PAD} style="padding:38px 42px 12px;background:${COLORES.blanco}">${etiquetaDeSeccion(o.kicker)}${tituloGrande(o.titulo, 42)}${texto}</td></tr>${cta}${nota}`
+}
+
+/** Encabezado claro (etiqueta en el encabezado, titular, párrafos). `parrafos` ya viene escapado. */
 export function filaTexto(o: { kicker?: string; titulo: string; parrafos: string[]; grande?: boolean }): string {
-  const kicker = o.kicker ? `<p style="margin:0 0 9px;font-family:${FUENTE};font-size:10px;line-height:15px;font-weight:800;letter-spacing:1.7px;text-transform:uppercase;color:${AZUL}">${escapar(o.kicker)}</p>` : ''
-  const ps = o.parrafos.map((p) => `<p style="margin:0 0 12px;font-family:${TEXTO};font-size:15px;line-height:25px;color:#535761">${p}</p>`).join('')
-  return `<tr><td ${PAD} style="padding:34px 42px 13px;background:${COLORES.blanco}">${kicker}<h2 style="margin:0 0 12px;font-family:${FUENTE};font-size:${o.grande ? 26 : 24}px;line-height:${o.grande ? 33 : 31}px;font-weight:800;color:${COLORES.negro}">${escapar(o.titulo)}</h2>${ps}</td></tr>`
+  const ps = o.parrafos.map((p) => `<p style="margin:0 0 12px;font-family:${TEXTO};font-size:16px;line-height:26px;color:#535761">${p}</p>`).join('')
+  return `<tr><td ${PAD} style="padding:36px 42px 13px;background:${COLORES.blanco}">${etiquetaDeSeccion(o.kicker)}${tituloGrande(o.titulo, o.grande ? 34 : 30)}${ps}</td></tr>`
 }
 
 /** Tres tarjetas (se apilan en el teléfono). Cada una lleva un número, no un símbolo. */
@@ -83,12 +111,11 @@ export function marcoCorreo(o: { preheader: string; filas: string; pie?: string;
 <div style="display:none;max-height:0;overflow:hidden;font-size:1px;line-height:1px;color:${COLORES.fondo}">${escapar(o.preheader)}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${COLORES.fondo}" style="background:${COLORES.fondo}"><tr><td align="center" style="padding:26px 12px 34px">
   <table role="presentation" width="640" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:640px;background:${COLORES.blanco}">
-    <tr><td align="center" style="padding:26px 24px 20px;background:${COLORES.blanco};border-bottom:1px solid #E9E5DE;border-top:4px solid ${COLORES.rojo}">
-      <a href="${escapar(SITIO)}" target="_blank" style="text-decoration:none"><img src="${escapar(LOGO_URL)}" width="178" alt="VIVE BIEN Grupo Inmobiliario" style="display:block;border:0;outline:none;height:auto;width:178px;max-width:178px;margin:0 auto;font-family:${FUENTE};font-size:16px;font-weight:800;color:${COLORES.rojo}"></a>
-    </td></tr>
-    ${o.filas}
+    <tr><td style="padding:24px 40px 16px;background:${COLORES.blanco};border-bottom:1px solid #E9E5DE;border-top:4px solid ${COLORES.rojo}"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td valign="middle"><a href="${escapar(SITIO)}" target="_blank" style="text-decoration:none"><img src="${escapar(LOGO_URL)}" width="150" alt="VIVE BIEN Grupo Inmobiliario" style="display:block;border:0;outline:none;height:auto;width:150px;max-width:150px;font-family:${FUENTE};font-size:16px;font-weight:800;color:${COLORES.rojo}"></a></td><td valign="middle" align="right" style="padding-left:12px;font-family:${FUENTE};font-size:12px;line-height:17px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:${COLORES.rojo}">${(/<!\-\-et:(.*?)\-\->/.exec(o.filas) ?? [])[1] ?? ''}</td></tr></table></td></tr>
+    ${o.filas.replace(/<!\-\-et:.*?\-\->/g, '')}
     <tr><td align="center" style="padding:27px 24px 25px;background:${COLORES.fondo};border-top:1px solid #E5E0D8;font-family:${TEXTO};font-size:12px;line-height:19px;color:#4B5563">
-      <p style="margin:0 0 8px;font-family:${FUENTE};font-size:15px;line-height:21px;font-weight:700;color:${COLORES.negro}">VIVE BIEN <span style="font-weight:400;color:${AZUL}">Grupo Inmobiliario</span></p>
+      <p style="margin:0 0 6px;font-family:${FUENTE};font-size:16px;line-height:22px;font-weight:700;color:${COLORES.negro}">VIVE BIEN <span style="font-weight:400;color:${AZUL}">· ${escapar(NEGOCIO.ciudad)}, ${escapar(NEGOCIO.estado)}</span></p>
+      <p style="margin:0 0 12px"><a href="${escapar(SITIO)}/privacidad" target="_blank" style="color:${AZUL};text-decoration:underline">Aviso de privacidad</a></p>
       <p style="margin:0 0 14px">Más que propiedades, mejores historias.</p>
       <p style="margin:0 0 6px"><a href="${escapar(SITIO)}" target="_blank" style="color:${COLORES.rojo};text-decoration:none">vivebienn.com</a> · <a href="mailto:${escapar(NEGOCIO.email)}" style="color:#4B5563">${escapar(NEGOCIO.email)}</a> · ${escapar(NEGOCIO.telefonoVisible)}</p>
       <p style="margin:0 0 15px;font-size:11px;line-height:17px;color:#4B5563">${escapar(DIRECCION_CORTA)}, ${escapar(NEGOCIO.ciudad)}, ${escapar(NEGOCIO.estado)}.</p>

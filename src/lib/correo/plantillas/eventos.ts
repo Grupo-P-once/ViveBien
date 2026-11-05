@@ -24,12 +24,13 @@ const fila = (contenido: string, arriba = 6, abajo = 12) => `<tr><td ${PAD} styl
 
 function botonContorno(texto: string, url: string, ancho?: number): string {
   const w = ancho ? `width:${ancho}px;` : ''
-  const relleno = ancho ? '13px 0' : '13px 26px' // con ancho fijo (Sí / No) no se suma relleno lateral: así caben dos botones en un teléfono de 375 px
-  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto"><tr><td align="center" style="border:1px solid ${COLORES.rojo};border-radius:8px;background:${COLORES.blanco}"><a href="${escapar(urlSegura(url))}" target="_blank" style="display:block;${w}padding:${relleno};font-family:${FUENTE};font-size:14px;line-height:20px;font-weight:700;color:${COLORES.rojo};text-decoration:none;text-align:center">${escapar(texto)}</a></td></tr></table>`
+  const relleno = ancho ? '13px 0' : '15px 20px' // con ancho fijo (Sí / No) no se suma relleno lateral: así caben dos botones en un teléfono de 375 px
+  const tabla = ancho ? 'cellpadding="0" cellspacing="0" border="0" style="margin:0 auto"' : 'width="100%" cellpadding="0" cellspacing="0" border="0"' // sin ancho fijo: a todo el ancho, como en las maquetas
+  return `<table role="presentation" ${tabla}><tr><td align="center" style="border:1px solid ${COLORES.rojo};border-radius:8px;background:${COLORES.blanco}"><a href="${escapar(urlSegura(url))}" target="_blank" style="display:block;${w}padding:${relleno};font-family:${FUENTE};font-size:15px;line-height:20px;font-weight:700;color:${COLORES.rojo};text-decoration:none;text-align:center">${escapar(texto)}</a></td></tr></table>`
 }
 
 function botonLleno(texto: string, url: string): string {
-  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto"><tr><td align="center" bgcolor="${COLORES.rojo}" style="background:${COLORES.rojo};border-radius:8px"><a href="${escapar(urlSegura(url))}" target="_blank" style="display:inline-block;padding:14px 30px;font-family:${FUENTE};font-size:15px;line-height:20px;font-weight:700;color:${COLORES.blanco};text-decoration:none">${escapar(texto)}</a></td></tr></table>`
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" bgcolor="${COLORES.rojo}" style="background:${COLORES.rojo};border-radius:8px"><a href="${escapar(urlSegura(url))}" target="_blank" style="display:block;padding:17px 20px;font-family:${FUENTE};font-size:17px;line-height:22px;font-weight:700;color:${COLORES.blanco};text-decoration:none;text-align:center">${escapar(texto)}</a></td></tr></table>`
 }
 
 /** Propiedad en una sola fila (foto a la izquierda, datos a la derecha), como en la encuesta de atención. */

@@ -85,7 +85,7 @@ export function layoutCampana(o: OpcionesCampana): string {
   const resumen = o.resumen ? `<p style="margin:0;font-family:${TEXTO};font-size:14px;line-height:23px;color:#4B5563">Según tu búsqueda: <strong style="color:#24262B">${escapar(o.resumen)}</strong></p>` : ''
   const filas =
     `<tr><td class="mobile-pad" style="padding:36px 42px 22px;background:${COLORES.blanco}">
-      <p style="margin:0 0 13px;font-family:${FUENTE};font-size:11px;line-height:16px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:${COLORES.rojo}">${escapar(o.kicker)}</p>
+      <!--et:${escapar(o.kicker)}-->
       <h1 class="headline" style="margin:0 0 18px;font-family:${FUENTE};font-size:34px;line-height:41px;font-weight:700;letter-spacing:-.7px;color:${COLORES.negro}">${escapar(o.saludo)}</h1>
       ${intro}${resumen}
     </td></tr>

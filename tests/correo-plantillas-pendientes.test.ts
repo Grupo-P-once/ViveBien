@@ -59,6 +59,8 @@ describe.each(correos)('%s', (_n, c) => {
   })
 })
 
+const visible = (h: string) => h.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ') // el titular lleva la segunda mitad en rojo (otro <span>): se compara el texto que se ve
+
 describe('contenido por evento', () => {
   const get = (nombre: string) => correos.find(([x]) => x === nombre)![1]
   it('cada correo trae lo que su evento necesita', () => {
@@ -67,9 +69,9 @@ describe('contenido por evento', () => {
     expect(get('respuesta a una consulta').html).toContain('Más propiedades que podrían gustarte')
     expect(get('propiedad recibida').html).toContain('62 %')
     expect(get('propiedad recibida').html).toContain('Folio:')
-    expect(get('propiedad en revisión').html).toContain('Estamos revisando tu propiedad')
+    expect(visible(get('propiedad en revisión').html)).toContain('Estamos revisando tu propiedad')
     expect(get('propiedad con cambios').html).toContain('Corregir mi propiedad')
-    expect(get('propiedad rechazada').html).toContain('No pudimos publicar tu propiedad')
+    expect(visible(get('propiedad rechazada').html)).toContain('No pudimos publicar tu propiedad')
     expect(get('nuevo interesado').html).toContain('no en este correo') // sin datos personales del interesado
     expect(get('novedades del blog').html).toContain('Darme de baja con un clic')
     expect(get('recuperar contraseña').html).toContain('copia y pega esta dirección')

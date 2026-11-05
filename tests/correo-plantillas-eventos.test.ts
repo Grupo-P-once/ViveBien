@@ -59,13 +59,15 @@ describe.each(correos)('%s', (_n, c) => {
   })
 })
 
+const visible = (h: string) => h.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ') // el titular lleva la segunda mitad en rojo (otro <span>): se compara el texto que se ve
+
 describe('contenido por evento', () => {
   const [wa, ev, ver, pub] = correos.map(([, c]) => c)
   it('contacto por WhatsApp: propiedad con foto, precio, zona y operación; datos del anunciante; propiedades parecidas y botón', () => {
     for (const frag of ['Te contactaste por WhatsApp con', 'Datos del anunciante', 'Teléfono:', 'Código de aviso:', 'Más propiedades que podrían gustarte', 'Encontrar más opciones', '$3,200,000', 'Colonia de ejemplo, León', 'Casa · En venta', 'propiedad-b.svg']) expect(wa.html, frag).toContain(frag)
   })
   it('evaluación: saludo con nombre, propiedad en una fila, pregunta, Sí y No, y «Mi actividad»', () => {
-    for (const frag of ['Ana, tu opinión nos importa', 'se contactó contigo?', '>Sí<', '>No<', 'Mi actividad', '$3,200,000']) expect(ev.html, frag).toContain(frag)
+    for (const frag of ['Ana, tu opinión nos importa', 'se contactó contigo?', '>Sí<', '>No<', 'Mi actividad', '$3,200,000']) expect(frag.includes('<') ? ev.html : visible(ev.html), frag).toContain(frag)
   })
   it('verificación: botón, enlace de respaldo visible y aviso de qué hacer si no creó la cuenta', () => {
     for (const frag of ['Verificar mi correo', 'copia y pega esta dirección', 'Si no creaste una cuenta']) expect(ver.html, frag).toContain(frag)
@@ -97,7 +99,7 @@ describe('estado de las plantillas nuevas: ninguna se envía todavía', () => {
   })
   it('la vista previa usa exactamente la plantilla (mismo HTML y mismo texto)', () => {
     const v = vistaPrevia('evaluacion_atencion', { ...MUESTRA_POR_OMISION, imagenes: false })!
-    expect(v.html).toContain('tu opinión nos importa')
+    expect(visible(v.html)).toContain('tu opinión nos importa')
     expect(v.texto).toContain('se contactó contigo?')
     expect(v.categoria).toBe('servicio')
   })
