@@ -9,7 +9,7 @@ import type { EntornoCorreo } from '../src/lib/correo/config'
  */
 const LLAVE = 're_llave_inventada_para_pruebas'
 
-/** Doble de `from('correo_envios').select(…).eq().eq().gte()` que termina en `{ count }` (los envíos «pendiente» en vuelo). */
+/** Doble de `from('correo_envios').select(…).eq().gte()` que termina en `{ count }` (los envíos recientes). */
 const enVuelo = (count: number | null, error: { message: string } | null = null, rastro?: { tabla?: string; filtros: Array<[string, unknown]> }) => (tabla: string) => {
   if (rastro) rastro.tabla = tabla
   const c = { select: () => c, eq: (k: string, v: unknown) => { rastro?.filtros.push([k, v]); return c }, gte: async (k: string, v: unknown) => { rastro?.filtros.push([k, typeof v]); return { count, error } } }
@@ -59,14 +59,14 @@ describe('registrarCuotaVista (cada envío real exitoso)', () => {
     falla = false
     expect(await registrarCuotaVista(db, CABECERAS, 9_000_001)).toBe(true)
   })
-  it('P1 (Codex): SUMA a la lectura los envíos de producción «pendiente» en vuelo, para que ninguno quede sin contar', async () => {
+  it('P1 (Codex): SUMA a la lectura los envíos de producción de los últimos 10 min (pendientes O ya terminados), para que ninguno quede sin contar', async () => {
     const rpc = vi.fn(async () => ({ data: { id: 3 }, error: null }))
     const rastro = { filtros: [] as Array<[string, unknown]> } as { tabla?: string; filtros: Array<[string, unknown]> }
     const db: DbCorreo = { rpc: rpc as unknown as DbCorreo['rpc'], from: enVuelo(3, null, rastro) as unknown as DbCorreo['from'] }
     expect(await registrarCuotaVista(db, CABECERAS, 2_000_000)).toBe(true)
     expect(rpc).toHaveBeenCalledWith('correo_conciliar', { p_dia: 5 + 3, p_mes: 50 + 3, p_actor: ACTOR_DE_ENVIO, p_nota: NOTA_DE_ENVIO })
     expect(rastro.tabla).toBe('correo_envios')
-    expect(rastro.filtros).toEqual([['entorno', 'produccion'], ['estado', 'pendiente'], ['creado_en', 'string']])
+    expect(rastro.filtros).toEqual([['entorno', 'produccion'], ['creado_en', 'string']])
   })
   it('P1: si no se puede contar lo que está en vuelo (error, sin conteo o excepción) NO guarda nada', async () => {
     const rpc = vi.fn(async () => ({ data: { id: 3 }, error: null }))

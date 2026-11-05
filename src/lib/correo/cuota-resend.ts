@@ -24,11 +24,15 @@ export const ESTRANGULADOR_MS = 10 * 60 * 1000
 export const TOPE_DE_ESCRITURA_MS = 2500
 const VENTANA_EN_VUELO_MS = 10 * 60 * 1000
 
-/** Envíos de producción reservados que todavía no terminaron (nulo si no se pudo contar: entonces no se guarda). */
+/**
+ * Envíos de producción reservados en los últimos 10 minutos, en CUALQUIER estado (nulo si no se pudo contar: entonces no se guarda). Revisión de Codex (D-83): uno que terminó
+ * DESPUÉS de que Resend tomó su foto pero ANTES de guardar ya no está «pendiente» y tampoco lo ve la compuerta (`creado_en` anterior a la lectura): por eso se cuentan todos.
+ * Sobra (si Resend ya lo contó se cuenta dos veces), nunca falta.
+ */
 async function enVuelo(db: DbCorreo, ahora: number): Promise<number | null> {
   try {
     const desde = new Date(ahora - VENTANA_EN_VUELO_MS).toISOString()
-    const r = await db.from('correo_envios').select('id', { count: 'exact', head: true }).eq('entorno', 'produccion').eq('estado', 'pendiente').gte('creado_en', desde)
+    const r = await db.from('correo_envios').select('id', { count: 'exact', head: true }).eq('entorno', 'produccion').gte('creado_en', desde)
     return !r?.error && typeof r?.count === 'number' && r.count >= 0 ? r.count : null
   } catch {
     return null
