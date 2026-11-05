@@ -204,6 +204,7 @@ describe('diseño de los mockups del dueño (carpeta MKT/correos, 30-oct-2026)',
     expect(v.html).not.toContain('<!--et:') // el marcador interno nunca llega al correo
     expect(v.html).toContain('/privacidad')
     expect(v.html).toContain('Aviso de privacidad')
+    expect(v.html).toMatch(/<tr><td class="mobile-pad" style="padding:24px 40px 16px;/) // en móvil el encabezado reduce el relleno lateral y no se sale del ancho
     expect(v.html).toMatch(/text-transform:uppercase;color:#A30D12">[^<]{3,}<\/td><\/tr><\/table><\/td><\/tr>/) // etiqueta a la derecha del logotipo
   })
   it('el titular lleva la segunda mitad en rojo y el saludo va gris, sin partir', () => {
