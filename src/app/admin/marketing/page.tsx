@@ -93,7 +93,7 @@ export default function PanelMarketing() {
               Última lectura del panel de Resend:{' '}
               {resumen.conciliacion ? <strong>{new Date(resumen.conciliacion.leido_en).toLocaleString('es-MX')} — {resumen.conciliacion.resend_dia_usado} hoy, {resumen.conciliacion.resend_mes_usado} en el ciclo ({resumen.conciliacion.periodo}). {resumen.conciliacion.vigente ? `Vigente hasta ${resumen.conciliacion.vence_en ? new Date(resumen.conciliacion.vence_en).toLocaleString('es-MX') : '—'}.` : 'CADUCADA: ya no habilita envíos.'}</strong> : <strong>ninguna (sin una lectura de los últimos 8 días no sale ningún correo en producción)</strong>}.
             </p>
-            <p className="text-muted-foreground">El sistema intenta registrar esta lectura solo, cada día (con las cabeceras de cuota que devuelve Resend). Si aparece «CADUCADA» o llega una alerta de que no se pudo, regístrala aquí a mano.</p>
+            <p className="text-muted-foreground">Cada correo real que sale con éxito puede refrescar esta lectura solo (con las cabeceras de cuota que devuelve Resend), pero no hay una lectura diaria: si pasan días sin envíos, o aparece «CADUCADA», regístrala aquí a mano.</p>
             {perfil.superAdmin ? (
               <form onSubmit={conciliar} className="grid gap-3 rounded-lg border bg-background p-4 sm:grid-cols-[repeat(3,minmax(0,1fr))_auto]" aria-label="Registrar lectura de Resend">
                 <label className="text-sm">Enviados hoy (panel de Resend)<input required inputMode="numeric" className="mt-1 w-full rounded-md border px-3 py-2" value={dia} onChange={(e) => setDia(e.target.value)} /></label>

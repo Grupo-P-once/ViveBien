@@ -1,23 +1,20 @@
-import { entornoCorreo } from './config'
 import type { DbCorreo } from './enviar'
-import { cuotaDeCabeceras, leerCuotaDeResend, type LecturaDeCuota } from './resend'
+import { cuotaDeCabeceras } from './resend'
 
 /**
- * Registro AUTOMÁTICO de la lectura del consumo de Resend (D-82): lo que hacía a mano el Super Admin en Marketing → «Estado y cupo de Resend», pero tomando los
- * números de las cabeceras de cuota que devuelve el propio proveedor. Pasa por la MISMA función SQL (`correo_conciliar`), con el actor `automatico:…`
- * y una nota que lo dice, así que la pantalla y la compuerta lo ven igual que una lectura manual. Una lectura manual sigue siendo posible.
+ * Registro AUTOMÁTICO de la lectura del consumo de Resend tras un envío real exitoso (D-82): lo que hace a mano el Super Admin en Marketing → «Estado y cupo de
+ * Resend», pero con los números de las cabeceras de cuota de la respuesta del propio envío. Pasa por la MISMA función SQL (`correo_conciliar`), con el actor
+ * `automatico:cuota-en-envio` y una nota que lo dice, así que la pantalla y la compuerta lo ven igual que una lectura manual. La lectura manual sigue siendo posible
+ * y necesaria cuando no hay envíos.
  *
- * Dos caminos, los dos fallan cerrado (sin cabeceras, con valores raros o sin base NO guardan nada; se queda la última lectura, que vence a los 8 días):
- *  · la tarea diaria (`conciliarCuotaDeResend`), que mantiene la lectura fresca aunque no salga ningún correo;
- *  · cada envío real exitoso (`registrarCuotaVista`), que la refresca con la respuesta del propio envío. Nunca lanza y tiene tope de tiempo.
+ * Falla cerrado (sin cabeceras, con valores raros o sin base NO guarda nada; se queda la última lectura, que vence a los 8 días). Nunca lanza y tiene tope de tiempo.
+ * La tarea diaria con una petición vacía se retiró: Resend no devolvió las cabeceras en la prueba de Producción del 5-nov-2026.
  *
  * ENVÍOS EN VUELO (revisión de Codex): la compuerta suma a la lectura los envíos del libro con `creado_en >= leido_en`. Un envío ya reservado pero que todavía no llegó
  * a Resend tiene `creado_en` ANTERIOR a la lectura y Resend aún no lo cuenta: quedaría sin contar. Por eso, antes de guardar, se SUMAN a los dos números los envíos
  * de producción que siguen «pendiente» (últimos 10 minutos). Es conservador: si alguno ya lo había contado Resend, se cuenta dos veces (sobra, nunca falta). Si no
  * se puede contar, no se guarda.
  */
-export const ACTOR_AUTOMATICO = 'automatico:cuota-resend'
-export const NOTA_AUTOMATICA = 'Lectura automática: cabeceras de cuota de Resend'
 export const ACTOR_DE_ENVIO = 'automatico:cuota-en-envio'
 export const NOTA_DE_ENVIO = 'Lectura automática: cabeceras de cuota de la respuesta de un envío'
 /** Como mucho una lectura por envío cada 10 minutos por instancia: la tabla no crece por cada correo. */
@@ -25,10 +22,6 @@ export const ESTRANGULADOR_MS = 10 * 60 * 1000
 /** Tope de tiempo de guardar una lectura desde la ruta de un envío: las escrituras a la base no tienen tiempo límite propio. */
 export const TOPE_DE_ESCRITURA_MS = 2500
 const VENTANA_EN_VUELO_MS = 10 * 60 * 1000
-
-export type ResultadoConciliacion =
-  | { ok: true; dia: number; mes: number }
-  | { ok: false; motivo: string; detalle?: Omit<Extract<LecturaDeCuota, { ok: false }>, 'ok' | 'motivo'> }
 
 /** Envíos de producción reservados que todavía no terminaron (nulo si no se pudo contar: entonces no se guarda). */
 async function enVuelo(db: DbCorreo, ahora: number): Promise<number | null> {
@@ -50,14 +43,6 @@ async function guardar(db: DbCorreo, dia: number, mes: number, actor: string, no
   } catch {
     return false
   }
-}
-
-export async function conciliarCuotaDeResend(db: DbCorreo, o: { apiKey?: string; fetch?: typeof fetch; env?: Record<string, string | undefined> } = {}): Promise<ResultadoConciliacion> {
-  // La llave sólo se lee en el módulo de configuración (una prueba lo obliga).
-  const lectura = await leerCuotaDeResend({ apiKey: o.apiKey ?? entornoCorreo(o.env).resendKey, fetch: o.fetch, env: o.env })
-  if (!lectura.ok) return { ok: false, motivo: lectura.motivo, detalle: { estado: lectura.estado, cabeceras: lectura.cabeceras, crudo: lectura.crudo } }
-  if (!(await guardar(db, lectura.dia, lectura.mes, ACTOR_AUTOMATICO, NOTA_AUTOMATICA, Date.now()))) return { ok: false, motivo: 'no_se_guardo' }
-  return { ok: true, dia: lectura.dia, mes: lectura.mes }
 }
 
 let ultimaEscritura = 0

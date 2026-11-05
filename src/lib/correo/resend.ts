@@ -145,15 +145,13 @@ export async function llamarResend(l: Llamada): Promise<Response> {
 }
 
 /**
- * Lectura AUTOMÁTICA del consumo de Resend (D-82). La llave de la aplicación es de SOLO ENVÍO: la API de uso (`GET /usage`) exige acceso completo, y una llave así
- * (que puede borrar dominios y llaves) no se guarda en el servidor para esto. Lo que SÍ devuelve Resend son las cabeceras de cuota `x-resend-daily-quota` (día UTC;
- * sólo plan gratuito) y `x-resend-monthly-quota` (ciclo mensual): el consumo YA usado de la cuenta, de TODOS sus servicios.
- *
- * Se piden con un `POST /emails` de cuerpo VACÍO: Resend lo rechaza por validación (faltan remitente, destinatario y asunto) ANTES de enviar nada, así que no
- * sale ningún correo ni se gasta cupo. FUERA DE PRODUCCIÓN no toca la red (misma barrera que `llamarResend`). Si falta una cabecera o no es un entero, NO inventa
- * nada: devuelve el motivo y los nombres de cabecera vistos (sin valores sensibles) para poder corregir.
+ * Lectura del consumo de Resend a partir de las cabeceras de cuota de un envío real exitoso (D-82). La llave de la aplicación es de SOLO ENVÍO: la API de uso
+ * (`GET /usage`) exige acceso completo, y una llave así (que puede borrar dominios y llaves) no se guarda en el servidor para esto. Las cabeceras
+ * `x-resend-daily-quota` (día UTC; sólo plan gratuito) y `x-resend-monthly-quota` (ciclo mensual) NO llegan en la respuesta de validación de una petición
+ * vacía (comprobado en Producción el 5-nov-2026: «sin_cabecera_diaria»), así que ya no hay sonda; sólo se leen en la respuesta de un envío exitoso.
+ * Si falta una cabecera o no es un entero, NO inventa nada: devuelve el motivo y los nombres de cabecera vistos (sin valores sensibles).
  */
-export type MotivoSinLectura = 'fuera_de_produccion' | 'sin_llave' | 'red' | 'sin_cabecera_diaria' | 'sin_cabecera_mensual' | 'cabecera_invalida'
+export type MotivoSinLectura = 'sin_cabecera_diaria' | 'sin_cabecera_mensual' | 'cabecera_invalida'
 export type LecturaDeCuota =
   | { ok: true; dia: number; mes: number }
   | { ok: false; motivo: MotivoSinLectura; estado?: number; cabeceras?: string[]; crudo?: { dia: string | null; mes: string | null } }
@@ -162,27 +160,8 @@ const ENTERO_DE_CUOTA = /^\d{1,7}$/
 // Sólo para diagnóstico: lo que hay en la cabecera, recortado y sin nada que no sea un número o su separador.
 const muestraDeCabecera = (v: string | null) => (v === null ? null : v.replace(/[^0-9a-zA-Z/.,; -]/g, '?').slice(0, 24))
 
-export async function leerCuotaDeResend(l: { apiKey?: string; fetch?: typeof fetch; env?: Record<string, string | undefined> } = {}): Promise<LecturaDeCuota> {
-  if (entornoDeCupo(l.env) !== 'produccion') return { ok: false, motivo: 'fuera_de_produccion' }
-  const apiKey = (l.apiKey ?? '').trim()
-  if (!apiKey) return { ok: false, motivo: 'sin_llave' }
-  let r: Response
-  try {
-    r = await (l.fetch ?? fetch)(URL_RESEND, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: '{}',
-      signal: AbortSignal.timeout(8000),
-    })
-    await r.arrayBuffer().catch(() => null)
-  } catch {
-    return { ok: false, motivo: 'red' }
-  }
-  return cuotaDeCabeceras(r.headers, r.status)
-}
-
 /**
- * Interpreta las cabeceras de cuota de CUALQUIER respuesta de Resend (la sonda de arriba o la de un envío real). Pura: no toca la red ni la base.
+ * Interpreta las cabeceras de cuota de la respuesta de un envío real exitoso. Pura: no toca la red ni la base.
  * Sólo acepta enteros limpios; cualquier otra cosa es «sin lectura» con el motivo, nunca un número inventado.
  */
 export function cuotaDeCabeceras(h: Headers, estado?: number): LecturaDeCuota {

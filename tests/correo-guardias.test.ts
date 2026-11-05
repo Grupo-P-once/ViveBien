@@ -86,11 +86,11 @@ describe('las rutas /api/correo', () => {
     expect(c).toMatch(/status: 401/)
   })
 
-  it('CRON: se queda el cron diario existente (el del parte), ninguno apunta a /api/correo/tarea y el ÚNICO añadido para el correo es la lectura diaria del consumo de Resend (D-82, 5-nov)', () => {
+  it('CRON: se queda el cron diario existente (el del parte), ninguno apunta a /api/correo/tarea y no queda ninguna tarea programada del correo (la lectura diaria de la cuota se retiró: D-82, 5-nov)', () => {
     const v = JSON.parse(leer('vercel.json')) as { crons: Array<{ path: string; schedule: string }> }
-    // Los dos que ya existían en producción + la lectura automática de la cuota de Resend (una vez al día).
-    expect(v.crons.map((x) => x.path)).toEqual(['/api/alertas/resumen', '/api/alertas/contabilidad-quincenal', '/api/alertas/cuota-resend'])
-    expect(v.crons.find((x) => x.path === '/api/alertas/cuota-resend')!.schedule).toBe('0 6 * * *')
+    // Sólo los dos que ya existían en producción.
+    expect(v.crons.map((x) => x.path)).toEqual(['/api/alertas/resumen', '/api/alertas/contabilidad-quincenal'])
+    expect(JSON.stringify(v)).not.toContain('cuota-resend') // D-82: la sonda diaria falló en Producción y se retiró
     expect(v.crons.find((x) => x.path === '/api/alertas/resumen')!.schedule).toBe('0 15 * * *') // una vez al día: lo que admite Vercel Hobby
   })
 })
@@ -263,7 +263,7 @@ describe('F1 · privacidad, retención y panel (guardias estáticas)', () => {
     expect(t).toMatch(/purgarCorreo\(/)
     expect(t.indexOf('purgarCorreo(')).toBeGreaterThan(t.indexOf('avisosDeClientes()'))
     const v = JSON.parse(leer('vercel.json')) as { crons: Array<{ path: string }> }
-    expect(v.crons.map((c) => c.path)).toEqual(['/api/alertas/resumen', '/api/alertas/contabilidad-quincenal', '/api/alertas/cuota-resend'])
+    expect(v.crons.map((c) => c.path)).toEqual(['/api/alertas/resumen', '/api/alertas/contabilidad-quincenal'])
   })
 
   it('el modo de pruebas DESCARTA el contenido real salvo que quien llama garantice que es sintético', () => {
