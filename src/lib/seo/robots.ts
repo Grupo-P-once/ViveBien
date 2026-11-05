@@ -35,10 +35,25 @@ export function leerRobots(texto: string): Robots {
   return { grupos, sitemaps }
 }
 
-function aRegex(patron: string): RegExp {
+/**
+ * ¿La ruta cumple el patrón de robots.txt? («*» = cualquier cosa, «$» final = fin de la ruta.) Sin construir una expresión regular a partir de texto ajeno
+ * (Semgrep: detect-non-literal-regexp) y sin retroceso: con varios «*» una regex `.*.*.*` es cuadrática o peor. Equivale a `^p0.*p1.*…pn` (con `$` si el patrón termina en `$`):
+ * cada fragmento se busca a partir de donde terminó el anterior, lo más a la izquierda posible, que es lo óptimo para que quepan los siguientes.
+ */
+export function coincidePatron(patron: string, ruta: string): boolean {
   const fin = patron.endsWith('$')
-  const cuerpo = (fin ? patron.slice(0, -1) : patron).replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*')
-  return new RegExp('^' + cuerpo + (fin ? '$' : ''))
+  const partes = (fin ? patron.slice(0, -1) : patron).split('*')
+  if (partes.length === 1) return fin ? ruta === partes[0] : ruta.startsWith(partes[0])
+  if (!ruta.startsWith(partes[0])) return false
+  let pos = partes[0].length
+  for (let i = 1; i < partes.length; i++) {
+    const parte = partes[i]
+    if (fin && i === partes.length - 1) return ruta.length - parte.length >= pos && ruta.endsWith(parte)
+    const j = ruta.indexOf(parte, pos)
+    if (j < 0) return false
+    pos = j + parte.length
+  }
+  return true
 }
 
 /** El grupo que manda para un agente: el de nombre más específico que lo contiene; si no, «*». */
@@ -59,7 +74,7 @@ export function puedeRastrear(r: Robots, agente: string, ruta: string): boolean 
   for (const [lista, permite] of [[g.permite, true], [g.niega, false]] as const) {
     for (const p of lista) {
       if (p === '') continue                      // «Disallow:» vacío = todo permitido
-      if (aRegex(p).test(ruta) && (p.length > mejor.largo || (p.length === mejor.largo && permite))) mejor = { largo: p.length, permite }
+      if (coincidePatron(p, ruta) && (p.length > mejor.largo || (p.length === mejor.largo && permite))) mejor = { largo: p.length, permite }
     }
   }
   return mejor.permite
@@ -89,8 +104,11 @@ export function estadoRastreadores(r: Robots, rutasClave: string[] = ['/', '/pro
 export type EntradaSitemap = { loc: string; lastmod: string | null }
 export type Sitemap = { tipo: 'urlset' | 'index' | 'desconocido'; urls: EntradaSitemap[]; hijos: string[] }
 
+// Dos expresiones FIJAS (no se arman con texto): sólo se piden estas dos etiquetas.
+const ETIQUETAS_DE_SITEMAP = { loc: /<loc>\s*([\s\S]*?)\s*<\/loc>/i, lastmod: /<lastmod>\s*([\s\S]*?)\s*<\/lastmod>/i }
+
 export function leerSitemap(xml: string): Sitemap {
-  const etiqueta = (bloque: string, nombre: string) => new RegExp(`<${nombre}>\\s*([\\s\\S]*?)\\s*</${nombre}>`, 'i').exec(bloque)?.[1]?.trim() ?? null
+  const etiqueta = (bloque: string, nombre: 'loc' | 'lastmod') => ETIQUETAS_DE_SITEMAP[nombre].exec(bloque)?.[1]?.trim() ?? null
   const decod = (s: string) => s.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'")
   if (/<sitemapindex\b/i.test(xml)) {
     const hijos = [...xml.matchAll(/<sitemap>([\s\S]*?)<\/sitemap>/gi)].map((m) => etiqueta(m[1], 'loc')).filter((x): x is string => !!x).map(decod)
