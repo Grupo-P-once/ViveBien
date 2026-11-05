@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { DESTINO_PRUEBAS, entornoCorreo, entornoDeCupo, envioHabilitado, envioPermitido, type EntornoDeCupo } from './config'
 import { marcarEnvio, reservarCupo, type CategoriaCorreo, type DbCorreo } from './enviar'
+import { registrarCuotaVista } from './cuota-resend'
 import { dbDelLibro } from './libro'
 import { normalizarCorreo } from './seguridad'
 import { llamarResend, modoPruebasActivo } from './resend'
@@ -101,6 +102,7 @@ export async function enviarPorEmisorUnico(p: PedidoEmisor): Promise<ResultadoEm
     let resendId: string | null = null
     try { const id = (JSON.parse(texto) as { id?: unknown }).id; resendId = typeof id === 'string' ? id : null } catch { /* sin id */ }
     await marcarEnvio(db, r.id, 'enviado', resendId, null)
+    await registrarCuotaVista(db, res.headers) // D-82: la respuesta trae el consumo de la cuenta; nunca lanza ni cambia el resultado
     return { ok: true, estado: 'enviado', status: res.status, resendId }
   } catch (e) {
     const motivo = e instanceof Error && e.message === 'fuga_modo_pruebas' ? 'fuga_modo_pruebas' : 'red'

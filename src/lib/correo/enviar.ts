@@ -1,5 +1,6 @@
 import { NEGOCIO } from '../config/negocio'
 import { DESTINO_PRUEBAS, entornoCorreo, entornoDeCupo, envioHabilitado, envioPermitido, type EntornoCorreo, type EntornoDeCupo } from './config'
+import { registrarCuotaVista } from './cuota-resend'
 import { normalizarCorreo } from './seguridad'
 import { cuerpoDePruebas, exigirSoloDestinoDePruebas, idDePrueba, llamarResend, MARCA_PRUEBA, prefijoDePrueba } from './resend'
 
@@ -173,6 +174,7 @@ export async function enviarCorreo(db: DbCorreo, s: SolicitudCorreo, o: Opciones
     if (res.ok) {
       const cuerpo = (await res.json().catch(() => null)) as { id?: unknown } | null
       await marcar('enviado', typeof cuerpo?.id === 'string' ? cuerpo.id : null, null)
+      await registrarCuotaVista(db, res.headers) // D-82: la respuesta trae el consumo de la cuenta; nunca lanza ni cambia el resultado
       return { estado: 'enviado' }
     }
     // Nada del cuerpo del error llega al usuario ni a los registros: sólo el código HTTP.

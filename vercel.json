@@ -7,6 +7,10 @@
     {
       "path": "/api/alertas/contabilidad-quincenal",
       "schedule": "0 15 1,2,16,17 * *"
+    },
+    {
+      "path": "/api/alertas/cuota-resend",
+      "schedule": "0 6 * * *"
     }
   ]
 }
