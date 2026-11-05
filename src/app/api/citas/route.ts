@@ -17,9 +17,12 @@ import { flagEncendido } from '@/lib/config/flags-servidor'
 
 export const dynamic = 'force-dynamic'
 
-const VISTAS: VistaCalendario[] = ['cliente', 'asesor', 'admin']
+const VISTAS: VistaCalendario[] = ['cliente', 'asesor', 'propietario', 'admin']
 const DIAS_MAXIMOS = 100
 const RE_CLAVE = /^[A-Za-z0-9_-]{8,100}$/
+const RE_PROPIEDAD = /^[A-Za-z0-9_-]{1,120}$/
+const RE_UID = /^[A-Za-z0-9_-]{3,200}$/
+const ESTADOS_VALIDOS = ['REQUESTED', 'PENDING_CONFIRMATION', 'CONFIRMED', 'RESCHEDULE_REQUESTED', 'RESCHEDULED', 'CANCELLED', 'REJECTED', 'EXPIRED', 'COMPLETED', 'NO_SHOW']
 
 export async function GET(req: Request) {
   const auth = await exigir(req, 'cuenta.propia')
@@ -43,12 +46,22 @@ export async function GET(req: Request) {
   }
 
   // «Citas recibidas»: sólo quien atiende citas (el equipo, o un publicador con
-  // `recibir_citas`). «Mis visitas» (vista cliente) es de cualquier cuenta.
+  // `recibir_citas`). «Mis citas» (vista cliente) es de cualquier cuenta.
   if (vista === 'asesor' && !atiendeCitas(perfil)) {
     return NextResponse.json({ error: 'Tu cuenta no recibe citas.' }, { status: 403 })
   }
+  // «Mis propiedades» (D-1): solo un publicador, dueño de propiedades; ve las citas que otra persona atiende, sin acciones.
+  if (vista === 'propietario' && perfil.rol !== 'publicador') {
+    return NextResponse.json({ error: 'Tu cuenta no tiene propiedades con citas.' }, { status: 403 })
+  }
 
   const limite = Number(url.searchParams.get('limite') ?? '') || undefined
+
+  // Filtros (todos opcionales y validados; la vista ya limita QUÉ citas puede ver cada rol, esto solo las acota).
+  const estados = (url.searchParams.get('estados') ?? '').split(',').map((s) => s.trim()).filter((s) => ESTADOS_VALIDOS.includes(s)).slice(0, 10)
+  const propiedadPedida = url.searchParams.get('propiedad')
+  const asesorPedido = url.searchParams.get('asesor')
+  const tipoCita = url.searchParams.get('tipoCita')
 
   try {
     const citas = await listAppointments({
@@ -56,8 +69,11 @@ export async function GET(req: Request) {
       vista,
       desde,
       hasta,
-      asesorUid: vista === 'admin' ? url.searchParams.get('asesor') : null,
+      asesorUid: vista === 'admin' && asesorPedido && RE_UID.test(asesorPedido) ? asesorPedido : null,
       tipo: url.searchParams.get('tipo'),
+      estados: estados.length ? estados : null,
+      propiedadId: propiedadPedida && RE_PROPIEDAD.test(propiedadPedida) ? propiedadPedida : null,
+      tipoCita: tipoCita === 'solicitada' || tipoCita === 'propia' ? tipoCita : null,
       incluirCanceladas: url.searchParams.get('canceladas') === '1',
       limite,
     })

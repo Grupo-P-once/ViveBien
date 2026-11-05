@@ -654,6 +654,32 @@ export async function transicionar(opts: {
   return actual ? { ok: true, valor: aVista(actual, papel, ahora, await contextoDe(db, [actual], opts.perfil)) } : falla(500, 'No se pudo leer la visita.')
 }
 
+/**
+ * Hace expirar las solicitudes que nadie respondió antes de la hora, y las propuestas de cambio cuyo horario ya pasó.
+ * Lo ejecuta la tarea programada como `sistema`. Devuelve los ids que quedaron `EXPIRED` (a esas, y solo a esas, se les avisa:
+ * una propuesta de cambio vencida deja la cita como estaba y no merece un «expiró»).
+ */
+export async function vencerCitas(ahora = new Date(), limite = 100): Promise<{ revisadas: number; expiradas: string[] }> {
+  const db = supabaseAdmin()
+  const t = ahora.toISOString()
+  const { data, error } = await db.from('citas').select('id, version')
+    .or(`and(estado.in.(REQUESTED,PENDING_CONFIRMATION),inicio.lte.${t}),and(estado.eq.RESCHEDULE_REQUESTED,or(inicio.lte.${t},propuesta_inicio.lte.${t}))`)
+    .order('inicio', { ascending: true }).limit(limite)
+  if (error) throw error
+  const filas = (data ?? []) as Array<{ id: string; version: number }>
+  const expiradas: string[] = []
+  for (const c of filas) {
+    const r = await db.rpc('cita_transicionar', { p_id: c.id, p_version: c.version, p_accion: 'vencer', p_actor_uid: null, p_actor_rol: 'sistema', p_via: 'sistema', p_datos: {} })
+    if (r.error) {
+      // Otra persona la cambió justo antes: no es un fallo.
+      if (r.error.message !== 'version' && r.error.message !== 'transicion_invalida') console.error('[citas] no se pudo expirar una cita', r.error.code ?? '')
+      continue
+    }
+    if ((r.data as { estado?: string } | null)?.estado === 'EXPIRED') expiradas.push(c.id)
+  }
+  return { revisadas: filas.length, expiradas }
+}
+
 // Los nombres del encargo, para que el código se pueda cotejar con él.
 type Base = { id: string; version: number; perfil: PerfilUsuario; via?: 'panel' | 'correo' }
 export const confirmAppointment = (o: Base) => transicionar({ ...o, accion: 'confirmar' })

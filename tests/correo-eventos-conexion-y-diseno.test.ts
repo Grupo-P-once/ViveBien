@@ -165,13 +165,13 @@ describe('plantillas nuevas', () => {
   })
 })
 
-describe('citas: los 15 correos con el marco de marca (MKT-29)', () => {
-  const TIPOS = ['solicitud_recibida', 'solicitud_nueva', 'por_confirmar', 'registrada_asesor', 'confirmada', 'confirmada_asesor', 'cambio_propuesto', 'reprogramada', 'reprogramada_asesor', 'cambio_rechazado', 'cambio_retirado', 'cancelada', 'vencida', 'recordatorio_24h', 'recordatorio_2h'] as const
+describe('citas: los 17 correos con el marco de marca (MKT-29; modelo v2: + rechazada y horario_no_disponible, recordatorio de 1 h)', () => {
+  const TIPOS = ['solicitud_recibida', 'solicitud_nueva', 'por_confirmar', 'registrada_asesor', 'confirmada', 'confirmada_asesor', 'rechazada', 'cambio_propuesto', 'reprogramada', 'reprogramada_asesor', 'cambio_rechazado', 'cambio_retirado', 'cancelada', 'vencida', 'horario_no_disponible', 'recordatorio_24h', 'recordatorio_1h'] as const
   const datos = {
     destinatario: 'Sara Prueba', propiedad: 'Casa <b>Jardín</b>', lugar: 'Colonia Centro, León', inicio: new Date('2026-11-10T17:00:00Z'), propuesto: new Date('2026-11-11T18:00:00Z'),
     motivo: 'Cambio de planes', cliente: { nombre: 'Luis Cliente', telefono: '477 000 0000' }, notasCliente: 'Llego con mi esposa',
-    acciones: [{ accion: 'confirmar' as const, url: 'https://vivebienn.com/citas/accion#t1' }, { accion: 'cancelar' as const, url: 'https://vivebienn.com/citas/accion#t2' }],
-    enlacePanel: 'https://vivebienn.com/portal/visitas', enlaceGoogle: 'https://calendar.google.com/calendar/render?x=1', ahora: new Date('2026-11-04T18:00:00Z'),
+    alternativas: [new Date('2026-11-12T17:00:00Z')],
+    enlacePanel: 'https://vivebienn.com/portal/citas', enlaceGoogle: 'https://calendar.google.com/calendar/render?x=1', ahora: new Date('2026-11-04T18:00:00Z'),
   }
   it.each(TIPOS.flatMap((t) => (['cliente', 'asesor'] as const).map((p) => [t, p] as const)))('%s para %s: logotipo, preencabezado, sin emojis ni HTML ajeno', async (tipo, para) => {
     const { plantilla } = await import('../src/lib/citas/correos')
@@ -181,19 +181,22 @@ describe('citas: los 15 correos con el marco de marca (MKT-29)', () => {
     expect(c.html).not.toContain('📍')
     expect(c.html).not.toContain('<b>Jardín</b>') // el nombre de la propiedad se escapa
     expect(c.html).toContain('Casa &lt;b&gt;Jardín&lt;/b&gt;')
-    expect(c.html).toContain('Ver la visita')
+    // D-3: un botón principal lleva a la cita en el panel (con la etiqueta de su caso); ningún enlace de acción.
+    expect(c.texto).toMatch(/(Ver mi cita|Abrir en mi panel|Responder en mi panel|Responder en mi portal|Confirmar en mi portal|Elegir otro horario|Ver horarios disponibles): https:\/\/vivebienn\.com\/portal\/citas/)
+    expect(c.html).not.toContain('citas/accion')
     expect(c.html).toContain('Grupo P-ONCE')
-    expect(c.texto).toContain('Ver la visita: https://vivebienn.com/portal/visitas')
     // Los datos del cliente solo van al asesor.
     expect(c.html.includes('477 000 0000')).toBe(para === 'asesor')
   })
-  it('un cambio de horario muestra el horario actual y el propuesto, y los botones de acción', async () => {
+  it('un cambio de horario muestra el horario actual y el propuesto, un botón que lleva al portal y el aviso de que no cambia nada solo', async () => {
     const { plantilla } = await import('../src/lib/citas/correos')
     const c = plantilla('cambio_propuesto', 'cliente', datos)
     expect(c.html).toContain('Horario actual')
     expect(c.html).toContain('Horario propuesto')
-    expect(c.html).toContain('Confirmar visita')
-    expect(c.html).toContain('Cancelar visita')
+    expect(c.html).toContain('Responder en mi portal')
+    expect(c.html).not.toContain('Confirmar visita')
+    expect(c.html).not.toContain('Cancelar visita')
+    expect(c.html).toContain('la acción se completa dentro de VIVE BIEN, con tu sesión')
     expect(c.html).toContain('Agregar a Google Calendar')
   })
 })

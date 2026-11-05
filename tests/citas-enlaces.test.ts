@@ -36,19 +36,25 @@ function archivos(dir: string): string[] {
 }
 const existePagina = (ruta: string) => existsSync(join(SRC, 'app', ruta.replace(/^\//, ''), 'page.tsx'))
 
-describe('las rutas de visitas salen de un solo lugar', () => {
-  it('cliente → /portal/visitas (con la cita marcada); equipo → /admin', () => {
-    expect(rutaDeVisitas('cliente')).toBe('/portal/visitas')
-    expect(rutaDeVisitas('cliente', 'c 1')).toBe('/portal/visitas?cita=c%201')
-    expect(rutaDeVisitas('equipo', 'c1')).toBe('/admin')
+describe('las rutas de citas salen de un solo lugar', () => {
+  it('cliente → /portal/citas; equipo → /admin/citas; publicador y propietario → /publicador/citas (con la cita marcada)', () => {
+    expect(rutaDeVisitas('cliente')).toBe('/portal/citas')
+    expect(rutaDeVisitas('cliente', 'c 1')).toBe('/portal/citas?cita=c%201')
+    expect(rutaDeVisitas('equipo')).toBe('/admin/citas')
+    expect(rutaDeVisitas('equipo', 'c1')).toBe('/admin/citas?cita=c1')
+    expect(rutaDeVisitas('publicador', 'c1')).toBe('/publicador/citas?cita=c1')
+    // El propietario (D-1) cae en su pestaña de solo lectura.
+    expect(rutaDeVisitas('propietario')).toBe('/publicador/citas?vista=propiedades')
+    expect(rutaDeVisitas('propietario', 'c1')).toBe('/publicador/citas?vista=propiedades&cita=c1')
   })
 
   it('los correos usan esas rutas', () => {
-    expect(enlaceParaVer('c1', 'cliente')).toMatch(/\/portal\/visitas\?cita=c1$/)
-    expect(enlaceParaVer('c1', 'asesor')).toMatch(/\/admin$/)
+    expect(enlaceParaVer('c1', 'cliente')).toMatch(/\/portal\/citas\?cita=c1$/)
+    expect(enlaceParaVer('c1', 'asesor')).toMatch(/\/admin\/citas\?cita=c1$/)
+    expect(enlaceParaVer('c1', 'asesor', true)).toMatch(/\/publicador\/citas\?cita=c1$/)
   })
 
-  it('nadie más escribe la ruta a mano, y /admin/calendario ya no aparece', () => {
+  it('nadie más escribe la ruta vieja a mano: /portal/visitas y /admin/calendario ya no aparecen', () => {
     const culpables = archivos(SRC)
       .filter((p) => !p.replace(/\\/g, '/').endsWith('lib/citas/enlaces.ts'))
       .filter((p) => readFileSync(p, 'utf8').split('\n').some((l) =>
@@ -59,12 +65,19 @@ describe('las rutas de visitas salen de un solo lugar', () => {
 })
 
 describe('ningún enlace puede apuntar a una pantalla que no existe', () => {
-  it('la del equipo existe hoy', () => {
-    expect(existePagina(RUTAS_DE_VISITAS.equipo)).toBe(true)
+  it('cada ruta de RUTAS_DE_VISITAS tiene su pantalla (un correo o aviso nunca lleva a un 404)', () => {
+    for (const [quien, ruta] of Object.entries(RUTAS_DE_VISITAS)) {
+      expect(existePagina(ruta), `${quien} → ${ruta}`).toBe(true)
+    }
   })
 
-  it('mientras «Mis visitas» no exista, `citasEnLinea` nace apagado y crear citas está cerrado', () => {
-    if (existePagina(RUTAS_DE_VISITAS.cliente)) return // fase 3b en adelante: la pantalla ya existe
+  it('la ruta vieja /portal/visitas sigue existiendo solo para redirigir a /portal/citas', () => {
+    const p = join(SRC, 'app', 'portal', 'visitas', 'page.tsx')
+    expect(existsSync(p)).toBe(true)
+    expect(readFileSync(p, 'utf8')).toMatch(/redirect\(['"`]\/portal\/citas/)
+  })
+
+  it('`citasEnLinea` nace apagado: crear citas está cerrado hasta que el dueño lo encienda', () => {
     expect(FLAGS as readonly string[]).toContain('citasEnLinea')
     expect(FLAGS_APAGADOS.citasEnLinea).toBe(false)
   })

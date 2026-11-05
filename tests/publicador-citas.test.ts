@@ -470,7 +470,7 @@ describe('correos y enlaces: no filtran datos personales ni ofrecen lo que no se
     expect(c.text).not.toMatch(/vivebienn\.com\/admin/)
   })
 
-  it('sólo trae botones (y sólo guarda tokens) de lo que el permiso autoriza', async () => {
+  it('sin `aceptar_citas` el correo no trae ningún botón de acción ni se guarda ningún token', async () => {
     mundo.tablas.usuarios.find((u) => u.uid === 'B')!.permisos_override = { aceptar_citas: false }
     await avisarCambio(ID(2), 'CREATED', 'X')
     const [c] = alAsesor('b@ejemplo.test')
@@ -478,10 +478,14 @@ describe('correos y enlaces: no filtran datos personales ni ofrecen lo que no se
     expect(mundo.tablas.citas_tokens.filter((t) => t.para_rol === 'asesor' && t.accion === 'confirmar')).toHaveLength(0)
   })
 
-  it('con el permiso, el botón sí sale y el token se guarda', async () => {
+  it('D-3: ni CON el permiso el correo trae botón de acción ni guarda tokens: lleva a «Citas recibidas» y ahí se confirma con sesión', async () => {
     await avisarCambio(ID(2), 'CREATED', 'X')
-    expect(alAsesor('b@ejemplo.test')[0].text).toContain('Confirmar visita')
-    expect(mundo.tablas.citas_tokens.some((t) => t.para_rol === 'asesor' && t.accion === 'confirmar')).toBe(true)
+    const c = alAsesor('b@ejemplo.test')[0]
+    expect(c.text).not.toContain('Confirmar visita')
+    expect(c.text).not.toContain('citas/accion')
+    expect(c.text).toContain('Responder en mi panel: ')
+    expect(c.text).toContain('/publicador/citas?cita=')
+    expect(mundo.tablas.citas_tokens).toHaveLength(0)
   })
 
   it('un PUBLICADOR sin `recibir_citas` es el asesor de nadie: no recibe correos de citas ajenas', async () => {

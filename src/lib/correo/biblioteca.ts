@@ -134,26 +134,29 @@ export const DESTINATARIO_DE_EJEMPLO = 'persona.ejemplo@ejemplo.invalid'
 const AHORA_DE_EJEMPLO = new Date('2026-10-30T18:00:00Z')
 const INICIO_DE_EJEMPLO = new Date('2026-11-05T17:00:00Z')
 const CITAS: Array<{ tipo: TipoDeCita; para: ParaDeCita; nombre: string }> = [
-  { tipo: 'solicitud_recibida', para: 'cliente', nombre: 'Recibimos tu solicitud de visita' },
-  { tipo: 'por_confirmar', para: 'cliente', nombre: 'Confirma tu visita (la agendó el asesor)' },
-  { tipo: 'confirmada', para: 'cliente', nombre: 'Tu visita está confirmada' },
-  { tipo: 'cambio_propuesto', para: 'cliente', nombre: 'Proponen otro horario para la visita' },
-  { tipo: 'reprogramada', para: 'cliente', nombre: 'Tu visita cambió de horario' },
-  { tipo: 'cambio_rechazado', para: 'cliente', nombre: 'Se mantiene el horario de la visita' },
+  { tipo: 'solicitud_recibida', para: 'cliente', nombre: 'Solicitud de cita enviada' },
+  { tipo: 'por_confirmar', para: 'cliente', nombre: 'Confirma tu cita (la agendó el asesor)' },
+  { tipo: 'confirmada', para: 'cliente', nombre: 'Tu cita está confirmada' },
+  { tipo: 'rechazada', para: 'cliente', nombre: 'Tu solicitud de cita fue rechazada' },
+  { tipo: 'cambio_propuesto', para: 'cliente', nombre: 'Proponen otro horario para la cita' },
+  { tipo: 'reprogramada', para: 'cliente', nombre: 'Tu cita cambió de horario' },
+  { tipo: 'cambio_rechazado', para: 'cliente', nombre: 'Se mantiene el horario de la cita' },
   { tipo: 'cambio_retirado', para: 'cliente', nombre: 'Se retiró el cambio de horario' },
-  { tipo: 'cancelada', para: 'cliente', nombre: 'Visita cancelada' },
-  { tipo: 'vencida', para: 'cliente', nombre: 'La solicitud de visita venció' },
-  { tipo: 'recordatorio_24h', para: 'cliente', nombre: 'Recordatorio: tu visita es mañana' },
-  { tipo: 'recordatorio_2h', para: 'cliente', nombre: 'Recordatorio: tu visita es en 2 horas' },
-  { tipo: 'solicitud_nueva', para: 'asesor', nombre: 'Aviso al asesor: nueva solicitud de visita' },
-  { tipo: 'registrada_asesor', para: 'asesor', nombre: 'Aviso al asesor: se registró una visita' },
-  { tipo: 'confirmada_asesor', para: 'asesor', nombre: 'Aviso al asesor: visita confirmada' },
-  { tipo: 'reprogramada_asesor', para: 'asesor', nombre: 'Aviso al asesor: visita reprogramada' },
+  { tipo: 'cancelada', para: 'cliente', nombre: 'Cita cancelada' },
+  { tipo: 'vencida', para: 'cliente', nombre: 'La solicitud de cita expiró' },
+  { tipo: 'horario_no_disponible', para: 'cliente', nombre: 'Ese horario ya no está disponible (con alternativas)' },
+  { tipo: 'recordatorio_24h', para: 'cliente', nombre: 'Recordatorio: tu cita es mañana' },
+  { tipo: 'recordatorio_1h', para: 'cliente', nombre: 'Recordatorio: tu cita es en 1 hora' },
+  { tipo: 'solicitud_nueva', para: 'asesor', nombre: 'Aviso al asesor: nueva solicitud de cita' },
+  { tipo: 'registrada_asesor', para: 'asesor', nombre: 'Aviso al asesor: se registró una cita' },
+  { tipo: 'confirmada_asesor', para: 'asesor', nombre: 'Aviso al asesor: cita confirmada' },
+  { tipo: 'reprogramada_asesor', para: 'asesor', nombre: 'Aviso al asesor: cita reprogramada' },
 ]
 const datosDeCita = (m: Muestra, para: ParaDeCita): DatosDeCita => ({
   destinatario: m.nombre, propiedad: 'Casa de ejemplo B', lugar: 'Colonia de ejemplo, León', inicio: INICIO_DE_EJEMPLO, propuesto: new Date(INICIO_DE_EJEMPLO.getTime() + 86_400_000),
   motivo: 'Motivo de ejemplo', cliente: para === 'asesor' ? { nombre: 'Persona Sintética', telefono: null } : null, notasCliente: null,
-  acciones: [{ accion: 'confirmar', url: BAJA_INERTE }], enlacePanel: `${SITIO}/?enlace=deshabilitado-en-pruebas`, enlaceGoogle: null, ahora: AHORA_DE_EJEMPLO,
+  alternativas: [new Date(INICIO_DE_EJEMPLO.getTime() + 2 * 86_400_000), new Date(INICIO_DE_EJEMPLO.getTime() + 3 * 86_400_000)],
+  enlacePanel: `${SITIO}/?enlace=deshabilitado-en-pruebas`, enlaceGoogle: null, ahora: AHORA_DE_EJEMPLO,
 })
 
 function renderizar(id: string, m: Muestra): { categoria: Categoria; para: string; c: { asunto: string; html: string; texto: string } } | null {

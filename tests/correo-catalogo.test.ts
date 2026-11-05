@@ -54,9 +54,10 @@ describe('catálogo: estructura y rastro', () => {
 
 describe('vistas previas completas', () => {
   const conVista = catalogo.filter((e) => e.conVista)
-  it('hay vistas para los correos existentes, incluidas las 15 de citas', () => {
+  it('hay vistas para los correos existentes, incluidas las 17 de citas', () => {
     expect(conVista.length).toBeGreaterThanOrEqual(22)
-    expect(conVista.filter((e) => e.id.startsWith('cita_'))).toHaveLength(15)
+    // 15 de antes del modelo v2, menos el recordatorio de 2 h, más «rechazada», «horario_no_disponible» y el recordatorio de 1 h (D-4, D-7, D-12).
+    expect(conVista.filter((e) => e.id.startsWith('cita_'))).toHaveLength(17)
   })
 
   it('cada vista trae asunto, remitente, destinatario de ejemplo, extracto y enlaces https/mailto sin token ni persona real', () => {
