@@ -4,7 +4,7 @@ import { normalizarTelefono, VERSION_CONSENTIMIENTO } from '../contacto'
 import { nombreDe, rutaDe } from '../propiedad-publica'
 import { AJUSTES_POR_DEFECTO, HORARIO_POR_DEFECTO, type AjustesCitas, type BloqueHorario } from './ajustes'
 import { esHorarioOfrecido, horariosDelRango, type Rango } from './disponibilidad'
-import { ESTADOS_ACTIVOS, explicar, type AccionCita, type PapelCita } from './estados'
+import { ESTADOS_ACTIVOS, explicar, type AccionCita, type PapelVista } from './estados'
 import { papelEn, recortar, type CitaFila, type CitaVista, type PropiedadDeCita } from './vista'
 import { instanteLocal, sumarDias } from './zona'
 import { hashDe, pareceToken } from './tokens'
@@ -40,7 +40,7 @@ const falla = (status: number, error: string, cita?: CitaVista): { ok: false; st
 /** Estatus con los que una propiedad ya no recibe visitas (los mismos que ocultan una búsqueda). */
 const ESTATUS_FUERA = ['pausada', 'vendida', 'rentada', 'eliminada']
 
-const COLUMNAS_PROPIEDAD = 'id, titulo, tipo, operacion, ubicacion, colonia, ciudad, owner_id, estado_pub, estatus, slug, fotos'
+const COLUMNAS_PROPIEDAD = 'id, titulo, tipo, operacion, ubicacion, colonia, ciudad, owner_id, responsable_citas_uid, estado_pub, estatus, slug, fotos'
 
 type FilaPropiedad = {
   id: string
@@ -51,10 +51,47 @@ type FilaPropiedad = {
   colonia: string | null
   ciudad: string | null
   owner_id: string | null
+  /** Quien atiende las citas de esta propiedad, si un admin lo asignó (migración 70). Nulo: lo decide `responsableDeCitas`. */
+  responsable_citas_uid: string | null
   estado_pub: string | null
   estatus: string | null
   slug: string | null
   fotos: string[] | null
+}
+
+/** La propiedad con su responsable de citas ya resuelto. */
+type PropiedadAgendable = FilaPropiedad & { responsable_uid: string }
+
+/**
+ * Quién atiende las citas de una propiedad (D-1, 5-nov-2026). En este orden:
+ *   1. el responsable que un admin asignó a la propiedad (`responsable_citas_uid`) — el caso del Asociado con propiedades asignadas;
+ *   2. el dueño, si PUEDE atender citas: el equipo de VIVE BIEN, o un publicador con `recibir_citas` (un asociado);
+ *   3. el responsable del equipo configurado (`configuracion.citas.responsable_equipo_uid`): así las solicitudes de las
+ *      propiedades de un Publicador las administra VIVE BIEN, y el Publicador solo las ve.
+ * Cada candidato se comprueba contra su cuenta real: alguien que ya no atiende citas se salta. Si nadie sirve, `null`
+ * (falla cerrado: «esta propiedad todavía no tiene asesor»), no se inventa un responsable.
+ */
+export async function responsableDeCitas(db: Db, p: Pick<FilaPropiedad, 'owner_id' | 'responsable_citas_uid'>): Promise<string | null> {
+  const candidatos: Array<string | null | undefined> = [p.responsable_citas_uid, p.owner_id]
+  const equipo = await responsableDelEquipo(db)
+  candidatos.push(equipo)
+  const uids = [...new Set(candidatos.filter((x): x is string => !!x))]
+  if (!uids.length) return null
+  const cuentas = await cuentasDeCitas(db, uids)
+  for (const uid of candidatos) {
+    if (!uid) continue
+    const c = cuentas.get(uid)
+    if (c && atiendeCitas(c)) return uid
+  }
+  return null
+}
+
+/** El responsable del equipo para las propiedades cuyo dueño no atiende citas. Lo configura un admin; sin él, falla cerrado. */
+async function responsableDelEquipo(db: Db): Promise<string | null> {
+  const { data, error } = await db.from('configuracion').select('valor').eq('clave', 'citas').maybeSingle()
+  if (error || !data) return null
+  const v = (data as { valor?: { responsable_equipo_uid?: unknown } }).valor?.responsable_equipo_uid
+  return typeof v === 'string' && v.length >= 3 && v.length <= 200 ? v : null
 }
 
 // ── Lecturas de apoyo ────────────────────────────────────────────
@@ -100,13 +137,17 @@ export async function agendaDelAsesor(db: Db, asesorUid: string): Promise<{ hora
 
 const aRango = (desde: string, hasta: string): Rango => ({ desde: new Date(desde), hasta: new Date(hasta) })
 
+/** PostgREST: las citas que APARTAN horario (D-2). Mismo criterio que la restricción de exclusión de la migración 70. */
+const FILTRO_APARTAN_HORARIO = 'estado.in.(CONFIRMED,RESCHEDULED,PENDING_CONFIRMATION),and(estado.eq.RESCHEDULE_REQUESTED,estado_previo.in.(CONFIRMED,RESCHEDULED,PENDING_CONFIRMATION))'
+
 async function ocupado(db: Db, filtro: { asesorUid?: string; clienteUid?: string }, desde: Date, hasta: Date, excluirId?: string) {
   let q = db.from('citas').select('id, inicio, fin, ocupa_desde, ocupa_hasta')
-    .in('estado', ESTADOS_ACTIVOS as string[])
     .lt('ocupa_desde', hasta.toISOString())
     .gt('ocupa_hasta', desde.toISOString())
-  if (filtro.asesorUid) q = q.eq('asesor_uid', filtro.asesorUid)
-  if (filtro.clienteUid) q = q.eq('cliente_uid', filtro.clienteUid)
+  // El responsable solo tiene ocupado lo firme: una solicitud pendiente no aparta el horario (D-2).
+  // Una persona, en cambio, no puede estar en dos visitas activas a la vez.
+  if (filtro.asesorUid) q = q.eq('asesor_uid', filtro.asesorUid).or(FILTRO_APARTAN_HORARIO)
+  if (filtro.clienteUid) q = q.eq('cliente_uid', filtro.clienteUid).in('estado', ESTADOS_ACTIVOS as string[])
   const { data, error } = await q
   if (error) throw error
   return (data ?? []).filter((c) => c.id !== excluirId)
@@ -136,29 +177,21 @@ async function entradaDisponibilidad(db: Db, asesorUid: string, clienteUid: stri
   }
 }
 
-/** La propiedad, si se le pueden agendar visitas. */
-async function propiedadAgendable(db: Db, propiedadId: string, soloPublicadas: boolean): Promise<Resultado<FilaPropiedad>> {
+/** La propiedad, si se le pueden agendar visitas, con su responsable de citas ya resuelto. */
+async function propiedadAgendable(db: Db, propiedadId: string, soloPublicadas: boolean): Promise<Resultado<PropiedadAgendable>> {
   const { data, error } = await db.from('propiedades').select(COLUMNAS_PROPIEDAD).eq('id', propiedadId).maybeSingle()
   if (error) return falla(500, 'No se pudo leer la propiedad.')
   const p = data as FilaPropiedad | null
   if (!p) return falla(404, 'No encontramos esa propiedad.')
   if (ESTATUS_FUERA.includes(p.estatus ?? '')) return falla(409, 'Esta propiedad ya no recibe visitas.')
   if (soloPublicadas && p.estado_pub !== 'publicada') return falla(404, 'No encontramos esa propiedad.')
-  if (!p.owner_id) return falla(409, SIN_ASESOR)
-  // El «asesor» de una cita es el DUEÑO de la propiedad (`owner_id`) si puede
-  // atender citas: el equipo de VIVE BIEN siempre, o un publicador con
-  // `recibir_citas` (p. ej. un asociado; ADR-0013, que enmienda D-08/ADR-0006
-  // punto 3). Todavía NO existe una asignación de asesor distinta del dueño
-  // (tarea 08.01): si el dueño es un publicador SIN `recibir_citas`, la visita no
-  // se agenda y tampoco se reasigna al equipo. Atender no es ver al interesado:
-  // eso es `ver_datos_interesado` (apagado por defecto) y lo recorta `recortar`.
-  // ADR-0013: un publicador con `recibir_citas` (p. ej. un asociado) también las
-  // atiende. Sin ese permiso —o si el dueño no existe— no se agenda, y la
-  // persona recibe el mismo aviso de siempre.
-  const cuentas = await cuentasDeCitas(db, [p.owner_id])
-  const asesor = cuentas.get(p.owner_id)
-  if (!asesor || !atiendeCitas(asesor)) return falla(409, SIN_ASESOR)
-  return { ok: true, valor: p }
+  // D-1 (5-nov-2026, enmienda del ADR-0013): el responsable de las citas ya NO es siempre el dueño. Las de un
+  // Publicador las administra VIVE BIEN y él solo las ve (es el «propietario» de la cita, ver `papelEn`); las de un
+  // Asociado, el Asociado; y un admin puede asignar a otra persona (`propiedades.responsable_citas_uid`).
+  // Atender no es ver al interesado: eso es `ver_datos_interesado` (apagado por defecto) y lo recorta `recortar`.
+  const responsable = await responsableDeCitas(db, p)
+  if (!responsable) return falla(409, SIN_ASESOR)
+  return { ok: true, valor: { ...p, responsable_uid: responsable } }
 }
 
 const SIN_ASESOR = 'Esta propiedad todavía no tiene asesor. Escríbenos y te ayudamos a agendar.'
@@ -183,7 +216,7 @@ export async function checkAvailability(opts: {
   const db = supabaseAdmin()
   const prop = await propiedadAgendable(db, opts.propiedadId, true)
   if (!prop.ok) return prop
-  const asesorUid = prop.valor.owner_id!
+  const asesorUid = prop.valor.responsable_uid
 
   const inicioRango = instanteLocal(opts.desde, '00:00')
   const finRango = instanteLocal(sumarDias(opts.desde, opts.dias), '00:00')
@@ -216,6 +249,7 @@ function traducir(e: ErrorDb, accion?: AccionCita): { status: number; error: str
     case 'no_permitido': return { status: 403, error: explicar('no_permitido'), motivo: m }
     case 'transicion_invalida': return { status: 409, error: explicar('transicion_invalida'), motivo: m }
     case 'fuera_de_tiempo': return { status: 409, error: explicar('fuera_de_tiempo', accion), motivo: m }
+    case 'menos_de_2_horas': return { status: 409, error: explicar('menos_de_2_horas'), motivo: m }
     case 'motivo_requerido': return { status: 400, error: explicar('motivo_requerido'), motivo: m }
   }
   console.error('[citas] error de base', e)
@@ -238,13 +272,13 @@ async function contextoDe(db: Db, filas: Array<{ asesor_uid: string }>, perfil: 
   return { perfil, asesores: await cuentasDeCitas(db, filas.map((f) => f.asesor_uid)) }
 }
 
-function aVista(fila: FilaConExtras, papel: Exclude<PapelCita, 'sistema'>, ahora: Date, ctx: Contexto): CitaVista {
+function aVista(fila: FilaConExtras, papel: PapelVista, ahora: Date, ctx: Contexto): CitaVista {
   const { propiedad, asesor, ...cita } = fila
 
-  // Al CLIENTE: por defecto el contacto es VIVE BIEN. Un publicador sólo se
+  // Al CLIENTE y al PROPIETARIO: por defecto el contacto es VIVE BIEN. Un publicador sólo se
   // nombra si un admin le dio perfil y nombre públicos.
   const cuentaAsesor = ctx.asesores.get(fila.asesor_uid)
-  const nombreVisible = papel !== 'cliente' || (cuentaAsesor ? nombreDelAsesorVisible(cuentaAsesor) : false)
+  const nombreVisible = (papel !== 'cliente' && papel !== 'propietario') || (cuentaAsesor ? nombreDelAsesorVisible(cuentaAsesor) : false)
 
   // Si quien mira es un PUBLICADOR atendiendo la cita, se le recorta lo del
   // interesado y lo interno, y sólo se le ofrecen las acciones que puede hacer.
@@ -253,11 +287,15 @@ function aVista(fila: FilaConExtras, papel: Exclude<PapelCita, 'sistema'>, ahora
     ? { verInteresado: veDatosDelInteresado(mira), puedeAccion: (a: AccionCita) => puedeActuarEnCita(mira, a, fila.estado) }
     : undefined
 
+  // El PROPIETARIO (D-1) solo lee: sin el permiso `ver_datos_interesado` no recibe nombre, teléfono, correo ni notas.
+  const propietario = papel === 'propietario' ? { verInteresado: veDatosDelInteresado(mira) } : undefined
+
   return recortar(cita, papel, {
     propiedad: propiedadDeCita(propiedad),
     asesorNombre: nombreVisible ? asesor?.nombre ?? null : 'Vive Bien',
     asesorTelefono: asesor?.telefono ?? null,
     ...(publicador ? { publicador } : {}),
+    ...(propietario ? { propietario } : {}),
   }, ahora)
 }
 
@@ -273,10 +311,22 @@ export async function getAppointment(id: string, perfil: PerfilUsuario, ahora = 
   const fila = await leerFila(db, id)
   if (!fila) return null
   const papel = papelEn(fila, perfil)
-  return papel ? aVista(fila, papel, ahora, await contextoDe(db, [fila], perfil)) : null
+  if (!papel) return null
+  const vista = aVista(fila, papel, ahora, await contextoDe(db, [fila], perfil))
+  return (await marcarConflictos(db, [fila], [vista]))[0]
 }
 
-export type VistaCalendario = 'cliente' | 'asesor' | 'admin'
+/**
+ * Desde dónde se mira el calendario:
+ *   · `cliente`     — mis citas como quien va a la visita (incluye las «propias» de un publicador, asociado o miembro del equipo);
+ *   · `asesor`      — las que atiendo como responsable;
+ *   · `propietario` — las de MIS propiedades que atiende otra persona (solo lectura; D-1);
+ *   · `admin`       — todas (solo admin y super admin).
+ */
+export type VistaCalendario = 'cliente' | 'asesor' | 'propietario' | 'admin'
+
+/** Estados que dejaron de ser una cita viva: solo aparecen en el historial. */
+const ESTADOS_INACTIVOS = ['CANCELLED', 'REJECTED', 'EXPIRED']
 
 /** Citas que se cruzan con [desde, hasta), según desde dónde se mira. */
 export async function listAppointments(opts: {
@@ -286,6 +336,13 @@ export async function listAppointments(opts: {
   hasta: Date
   asesorUid?: string | null
   tipo?: string | null
+  /** Filtra por estado (historial). */
+  estados?: string[] | null
+  /** Filtra por propiedad. */
+  propiedadId?: string | null
+  /** `solicitada` | `propia`. */
+  tipoCita?: 'solicitada' | 'propia' | null
+  /** Incluye canceladas, rechazadas y expiradas (el historial). */
   incluirCanceladas?: boolean
   limite?: number
   ahora?: Date
@@ -294,6 +351,8 @@ export async function listAppointments(opts: {
   // «Citas recibidas» sólo existen para quien atiende citas. Un publicador sin
   // `recibir_citas` no recibe nada, ni vacío fingido de otra cosa.
   if (opts.vista === 'asesor' && !atiendeCitas(opts.perfil)) return []
+  // «Mis propiedades» solo para un publicador (el dueño): cualquier otro rol no tiene citas como propietario.
+  if (opts.vista === 'propietario' && opts.perfil.rol !== 'publicador') return []
   const db = supabaseAdmin()
   let q = db.from('citas').select(SELECT_CITA)
     .lt('inicio', opts.hasta.toISOString())
@@ -303,21 +362,49 @@ export async function listAppointments(opts: {
 
   if (opts.vista === 'cliente') q = q.eq('cliente_uid', opts.perfil.uid)
   else if (opts.vista === 'asesor') q = q.eq('asesor_uid', opts.perfil.uid)
+  else if (opts.vista === 'propietario') q = q.eq('propietario_uid', opts.perfil.uid).neq('asesor_uid', opts.perfil.uid).neq('cliente_uid', opts.perfil.uid)
   else if (opts.asesorUid) q = q.eq('asesor_uid', opts.asesorUid)
-  if (!opts.incluirCanceladas) q = q.neq('estado', 'CANCELLED')
+  if (opts.propiedadId) q = q.eq('propiedad_id', opts.propiedadId)
+  if (opts.tipoCita) q = q.eq('tipo', opts.tipoCita)
+  if (opts.estados?.length) q = q.in('estado', opts.estados)
+  else if (!opts.incluirCanceladas) q = q.not('estado', 'in', `(${ESTADOS_INACTIVOS.join(',')})`)
 
   const { data, error } = await q
   if (error) throw error
   const filas = (data ?? []) as FilaConExtras[]
   const ctx = await contextoDe(db, filas, opts.perfil)
-  return filas
+  const vistas = filas
     .filter((f) => !opts.tipo || f.propiedad?.tipo === opts.tipo)
     .map((f) => {
       // En la vista de cliente, aunque sea admin, se mira como cliente de sus propias visitas.
-      const papel = opts.vista === 'cliente' ? 'cliente' : papelEn(f, opts.perfil)
+      const papel = opts.vista === 'cliente' ? 'cliente' : opts.vista === 'propietario' ? 'propietario' : papelEn(f, opts.perfil)
       return papel ? aVista(f, papel, ahora, ctx) : null
     })
     .filter((c): c is CitaVista => c !== null)
+  return marcarConflictos(db, filas, vistas)
+}
+
+/**
+ * D-2/D-12: una solicitud pendiente cuyo horario ya ocupa una cita confirmada del mismo responsable queda «en conflicto».
+ * Se calcula, no se guarda: la verdad es la restricción de la base. Solo se marca a quien atiende (el responsable y el equipo);
+ * el cliente y el propietario no reciben la marca.
+ */
+async function marcarConflictos(db: Db, filas: FilaConExtras[], vistas: CitaVista[]): Promise<CitaVista[]> {
+  const pendientes = filas.filter((f) => f.estado === 'REQUESTED')
+  if (!pendientes.length) return vistas
+  const asesores = [...new Set(pendientes.map((f) => f.asesor_uid))]
+  const minimo = new Date(Math.min(...pendientes.map((f) => new Date(f.ocupa_desde).getTime())))
+  const maximo = new Date(Math.max(...pendientes.map((f) => new Date(f.ocupa_hasta).getTime())))
+  const { data, error } = await db.from('citas').select('id, asesor_uid, ocupa_desde, ocupa_hasta')
+    .in('asesor_uid', asesores).or(FILTRO_APARTAN_HORARIO)
+    .lt('ocupa_desde', maximo.toISOString()).gt('ocupa_hasta', minimo.toISOString())
+  if (error) return vistas      // si no se puede calcular, no se inventa nada: sin marca
+  const firmes = (data ?? []) as Array<{ id: string; asesor_uid: string; ocupa_desde: string; ocupa_hasta: string }>
+  const enConflicto = new Set(pendientes.filter((p) => firmes.some((o) =>
+    o.id !== p.id && o.asesor_uid === p.asesor_uid &&
+    new Date(o.ocupa_desde).getTime() < new Date(p.ocupa_hasta).getTime() && new Date(o.ocupa_hasta).getTime() > new Date(p.ocupa_desde).getTime(),
+  )).map((p) => p.id))
+  return vistas.map((v) => (enConflicto.has(v.id) && (v.papel === 'asesor' || v.papel === 'admin') ? { ...v, conflicto: true } : v))
 }
 
 // ── Crear ────────────────────────────────────────────────────────
@@ -358,7 +445,8 @@ export async function createAppointment(perfil: PerfilUsuario, entrada: EntradaC
   const prop = await propiedadAgendable(db, entrada.propiedadId, !paraOtro)
   if (!prop.ok) return prop
   const propiedad = prop.valor
-  const asesorUid = propiedad.owner_id!
+  // El RESPONSABLE de las citas de la propiedad (D-1): no siempre es el dueño.
+  const asesorUid = propiedad.responsable_uid
 
   // Quién la crea: el cliente para sí mismo, o el asesor/admin para un cliente con cuenta.
   let creador: 'cliente' | 'asesor' | 'admin' = 'cliente'
@@ -370,7 +458,10 @@ export async function createAppointment(perfil: PerfilUsuario, entrada: EntradaC
     else return falla(403, 'Sólo puedes agendar visitas para ti.')
   }
   const clienteUid = paraOtro ? entrada.clienteUid! : perfil.uid
-  if (clienteUid === asesorUid) return falla(400, 'No se puede agendar una visita a una propiedad propia.')
+  // Nadie visita su propia propiedad, salvo el equipo (D-8: un miembro del equipo puede ir a ver una propiedad que atiende).
+  const esDelEquipo = puede(perfil, 'panel.admin')
+  if (clienteUid === propiedad.owner_id && !esDelEquipo) return falla(400, 'No se puede agendar una visita a una propiedad propia.')
+  if (clienteUid === asesorUid && !esDelEquipo) return falla(400, 'No se puede agendar una visita a una propiedad que tú mismo atiendes.')
 
   // Sólo agenda quien tiene cuenta creada: una fila en `usuarios`, activa.
   // Quien sólo llenó el formulario de registro no la tiene.
@@ -405,9 +496,17 @@ export async function createAppointment(perfil: PerfilUsuario, entrada: EntradaC
     }
   }
 
+  // D-8: lo que un miembro del equipo agenda PARA SÍ MISMO se confirma solo si es el responsable asignado de esa propiedad
+  // (nadie más tiene que autorizarlo) y el horario está disponible (ya se comprobó arriba contra la oferta del responsable).
+  // Si el responsable es otra persona, necesita su aprobación y queda pendiente. Lo que registra el equipo para un cliente
+  // queda pendiente de que el cliente lo confirme.
+  const seAgendaASiMismo = !paraOtro && clienteUid === asesorUid
   const estado = creador === 'cliente'
-    ? (ajustes.confirmacion === 'automatica' ? 'CONFIRMED' : 'REQUESTED')
+    ? (seAgendaASiMismo || ajustes.confirmacion === 'automatica' ? 'CONFIRMED' : 'REQUESTED')
     : 'PENDING_CONFIRMATION'
+  // «Visita propia»: un publicador, asociado o miembro del equipo que agenda para ir a ver. «Solicitada»: la pide un cliente
+  // (o el equipo la registra para un cliente).
+  const tipoDeCita = !paraOtro && perfil.rol !== 'cliente' ? 'propia' : 'solicitada'
 
   const { data, error } = await db.rpc('cita_crear', {
     p: {
@@ -430,6 +529,8 @@ export async function createAppointment(perfil: PerfilUsuario, entrada: EntradaC
       creada_por: perfil.uid,
       actor_rol: creador,
       via: 'panel',
+      tipo: tipoDeCita,
+      propietario_uid: propiedad.owner_id,
     },
   })
 
@@ -456,6 +557,7 @@ export async function createAppointment(perfil: PerfilUsuario, entrada: EntradaC
 /** Qué evento del historial deja cada acción (y qué correos manda). */
 export const EVENTO_DE: Partial<Record<AccionCita, string>> = {
   confirmar: 'CONFIRMED',
+  rechazar: 'REJECTED',
   proponer: 'RESCHEDULE_PROPOSED',
   aceptar_cambio: 'RESCHEDULE_ACCEPTED',
   rechazar_cambio: 'RESCHEDULE_REJECTED',
@@ -486,8 +588,14 @@ export async function transicionar(opts: {
   const ahora = opts.ahora ?? new Date()
   const fila = await leerFila(db, opts.id)
   if (!fila) return falla(404, explicar('no_encontrada'))
-  const papel = papelEn(fila, opts.perfil)
-  if (!papel) return falla(404, explicar('no_encontrada'))
+  const papelVista = papelEn(fila, opts.perfil)
+  if (!papelVista) return falla(404, explicar('no_encontrada'))
+  // D-1: el propietario de la propiedad VE la cita pero no la administra; las solicitudes de su propiedad las atiende
+  // VIVE BIEN. Se corta aquí, antes de la base: ni siquiera se intenta.
+  if (papelVista === 'propietario') {
+    return falla(403, 'Las citas de tus propiedades las administra VIVE BIEN. Escríbenos si necesitas un cambio.')
+  }
+  const papel = papelVista
 
   // Un publicador atendiendo la cita sólo hace lo que su permiso efectivo
   // autoriza: aceptar, rechazar, reprogramar y cancelar son cuatro permisos

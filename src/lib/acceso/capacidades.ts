@@ -223,6 +223,7 @@ export function capacidadDeAccionDeCita(accion: string, estado: string): Capacid
     case 'aceptar_cambio':
       return 'aceptar_citas'
     case 'rechazar_cambio':
+    case 'rechazar':
       return 'rechazar_citas'
     case 'proponer':
     case 'retirar_cambio':

@@ -1,4 +1,4 @@
-import { accionesDisponibles, ETIQUETA_ESTADO, type AccionCita, type EstadoCita, type PapelCita } from './estados'
+import { accionesDisponibles, ETIQUETA_ESTADO, type AccionCita, type EstadoCita, type PapelVista } from './estados'
 import { puede } from '../acceso/permisos'
 import { atiendeCitas, type MapaCapacidades } from '../acceso/capacidades'
 
@@ -46,6 +46,10 @@ export type CitaFila = {
   creada_por: string
   creada_en: string
   actualizada_en: string
+  /** `solicitada`: la pidió un cliente. `propia`: un publicador, asociado o miembro del equipo la agendó para ir a ver la propiedad. */
+  tipo: 'solicitada' | 'propia'
+  /** Dueño de la propiedad al crear la cita: la VE (sin acciones); la gestiona el responsable (D-1). */
+  propietario_uid: string | null
 }
 
 /** Lo público de la propiedad, para pintar la tarjeta. */
@@ -62,7 +66,13 @@ export type CitaVista = {
   version: number
   estado: EstadoCita
   etiqueta: string
-  papel: Exclude<PapelCita, 'sistema'>
+  papel: PapelVista
+  tipo: CitaFila['tipo']
+  /**
+   * Una solicitud PENDIENTE cuyo horario ya ocupa otra cita confirmada del mismo responsable (D-2/D-12): ya no se puede
+   * confirmar; se ofrecen alternativas o se rechaza. Solo lo calcula el servicio para quien atiende; nunca para el cliente.
+   */
+  conflicto?: boolean
   inicio: string
   fin: string
   zona: string
@@ -95,32 +105,47 @@ export type Extras = {
    *  · `puedeAccion`: sólo se ofrecen las acciones para las que tiene permiso.
    */
   publicador?: { verInteresado: boolean; puedeAccion: (a: AccionCita) => boolean }
+  /**
+   * Presente sólo cuando quien mira es el PROPIETARIO de la propiedad y no la atiende (D-1): solo lectura.
+   * Sin `verInteresado` (permiso `ver_datos_interesado`, apagado por defecto) no se manda nombre, teléfono, correo ni notas.
+   */
+  propietario?: { verInteresado: boolean }
 }
 
-/** Qué papel tiene esta persona en esta cita, o null si no tiene nada que ver. */
+/**
+ * Qué papel tiene esta persona en esta cita, o null si no tiene nada que ver.
+ *
+ * Orden: admin > asesor (responsable) > cliente (quien va a la visita) > propietario (solo lectura).
+ * El PROPIETARIO es el dueño de la propiedad que no la atiende: ve la cita, no la gestiona (D-1).
+ */
 export function papelEn(
-  cita: Pick<CitaFila, 'cliente_uid' | 'asesor_uid'>,
+  cita: Pick<CitaFila, 'cliente_uid' | 'asesor_uid'> & { propietario_uid?: string | null },
   perfil: { uid: string; rol: 'cliente' | 'publicador' | 'admin'; capacidades?: Partial<MapaCapacidades> },
-): Exclude<PapelCita, 'sistema'> | null {
+): PapelVista | null {
   if (puede(perfil, 'citas.ver_todas')) return 'admin'
   // Asesor: el equipo, o un publicador CON `recibir_citas`. Quien dejó de poder
   // atender citas (rol cambiado, permiso apagado) no las ve como asesor.
   if (perfil.uid === cita.asesor_uid && atiendeCitas(perfil)) return 'asesor'
   if (perfil.uid === cita.cliente_uid) return 'cliente'
+  // Solo un publicador es «propietario» en este sentido; falla cerrado para cualquier otro rol.
+  if (perfil.rol === 'publicador' && cita.propietario_uid && perfil.uid === cita.propietario_uid) return 'propietario'
   return null
 }
 
-export function recortar(fila: CitaFila, papel: Exclude<PapelCita, 'sistema'>, extras: Extras, ahora: Date): CitaVista {
+export function recortar(fila: CitaFila, papel: PapelVista, extras: Extras, ahora: Date): CitaVista {
   const equipo = papel === 'asesor' || papel === 'admin'
   const pub = papel === 'asesor' ? extras.publicador : undefined
-  const verInteresado = !pub || pub.verInteresado
-  const acciones = accionesDisponibles(fila, papel, ahora)
+  const prop = papel === 'propietario' ? (extras.propietario ?? { verInteresado: false }) : undefined
+  const verInteresado = prop ? prop.verInteresado : !pub || pub.verInteresado
+  // El propietario no tiene ninguna acción: las solicitudes de sus propiedades las administra VIVE BIEN.
+  const acciones = papel === 'propietario' ? [] : accionesDisponibles(fila, papel, ahora)
   return {
     id: fila.id,
     version: fila.version,
     estado: fila.estado,
     etiqueta: ETIQUETA_ESTADO[fila.estado],
     papel,
+    tipo: fila.tipo,
     inicio: fila.inicio,
     fin: fila.fin,
     zona: fila.zona_horaria,

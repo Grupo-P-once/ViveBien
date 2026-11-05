@@ -5,14 +5,20 @@
  * DÓNDE MANDA ESTO
  *
  * Quien decide de verdad es la función `cita_transicionar` de Postgres
- * (supabase/15-citas.sql): comprueba estado, papel, hora y versión en la misma
- * transacción que hace el cambio. Esta copia en TypeScript sirve para que la
- * pantalla ofrezca sólo los botones que van a funcionar y para explicar por
- * qué no.
+ * (supabase/70-citas-v2.sql, que reemplaza a la de la 15): comprueba estado,
+ * papel, hora y versión en la misma transacción que hace el cambio. Esta copia
+ * en TypeScript sirve para que la pantalla ofrezca sólo los botones que van a
+ * funcionar y para explicar por qué no.
  *
  * Las dos tienen que decir lo mismo. `tests/citas-db.test.ts` recorre TODAS
  * las combinaciones estado × acción × papel contra la función real y compara.
  * Si cambias una regla aquí, cámbiala allá (o la prueba te lo recuerda).
+ *
+ * Decisiones del dueño (5-nov-2026) que viven aquí:
+ *   · D-2  sólo la cita CONFIRMADA ocupa horario (`ocupaHorario`);
+ *   · D-5  el cliente cancela o pide otro horario hasta 2 h antes (`HORAS_MINIMAS_CLIENTE`);
+ *   · D-7  vocabulario: Pendiente, Confirmada, Rechazada, Cancelada, Reprogramación solicitada,
+ *          Realizada, No asistió y Expirada.
  *
  * Ver docs/appointment-state-machine.md.
  * ─────────────────────────────────────────────────────────────
@@ -25,12 +31,14 @@ export const ESTADOS = [
   'RESCHEDULE_REQUESTED',
   'RESCHEDULED',
   'CANCELLED',
+  'REJECTED',
+  'EXPIRED',
   'COMPLETED',
   'NO_SHOW',
 ] as const
 export type EstadoCita = (typeof ESTADOS)[number]
 
-/** Los que apartan horario en la agenda (la restricción de exclusión usa los mismos). */
+/** Los que siguen vivos para la persona que pidió la visita (una persona no puede estar en dos visitas a la vez). */
 export const ESTADOS_ACTIVOS: readonly EstadoCita[] = [
   'REQUESTED',
   'PENDING_CONFIRMATION',
@@ -39,7 +47,16 @@ export const ESTADOS_ACTIVOS: readonly EstadoCita[] = [
   'RESCHEDULED',
 ]
 
-export const ESTADOS_FINALES: readonly EstadoCita[] = ['CANCELLED', 'COMPLETED', 'NO_SHOW']
+export const ESTADOS_FINALES: readonly EstadoCita[] = ['CANCELLED', 'REJECTED', 'EXPIRED', 'COMPLETED', 'NO_SHOW']
+
+/** Estados que apartan horario en la agenda del responsable (D-2). Una solicitud pendiente NO lo aparta. */
+export const ESTADOS_QUE_OCUPAN: readonly EstadoCita[] = ['CONFIRMED', 'RESCHEDULED', 'PENDING_CONFIRMATION']
+
+/** Estados «firmes» antes de que un cambio de horario esté a prueba: los mismos que ocupan. */
+const FIRMES: readonly EstadoCita[] = ESTADOS_QUE_OCUPAN
+
+/** Horas mínimas de anticipación para que el CLIENTE cancele o pida otro horario de una cita firme (D-5). */
+export const HORAS_MINIMAS_CLIENTE = 2
 
 export function esEstado(v: unknown): v is EstadoCita {
   return typeof v === 'string' && (ESTADOS as readonly string[]).includes(v)
@@ -49,22 +66,30 @@ export function esActiva(estado: EstadoCita): boolean {
   return ESTADOS_ACTIVOS.includes(estado)
 }
 
-/** Cómo se llama cada estado en pantalla. */
+/** Cómo se llama cada estado en pantalla (vocabulario del dueño, D-7). */
 export const ETIQUETA_ESTADO: Record<EstadoCita, string> = {
-  REQUESTED: 'Por confirmar',
-  PENDING_CONFIRMATION: 'Por confirmar',
+  REQUESTED: 'Pendiente',
+  PENDING_CONFIRMATION: 'Pendiente',
   CONFIRMED: 'Confirmada',
-  RESCHEDULE_REQUESTED: 'Cambio propuesto',
-  RESCHEDULED: 'Reprogramada',
+  RESCHEDULE_REQUESTED: 'Reprogramación solicitada',
+  // Una cita cuyo horario cambió y fue aceptado es, para quien la ve, una cita confirmada.
+  RESCHEDULED: 'Confirmada',
   CANCELLED: 'Cancelada',
-  COMPLETED: 'Visitada',
+  REJECTED: 'Rechazada',
+  EXPIRED: 'Expirada',
+  COMPLETED: 'Realizada',
   NO_SHOW: 'No asistió',
 }
 
+/** Papeles que ACTÚAN sobre una cita (los que escribe `cita_transicionar`). */
 export type PapelCita = 'cliente' | 'asesor' | 'admin' | 'sistema'
+
+/** Papeles que VEN una cita: los de arriba (menos el sistema) y el propietario de la propiedad, que sólo lee (D-1). */
+export type PapelVista = Exclude<PapelCita, 'sistema'> | 'propietario'
 
 export const ACCIONES = [
   'confirmar',
+  'rechazar',
   'proponer',
   'aceptar_cambio',
   'rechazar_cambio',
@@ -82,14 +107,15 @@ export function esAccion(v: unknown): v is AccionCita {
 }
 
 export const ETIQUETA_ACCION: Record<AccionCita, string> = {
-  confirmar: 'Confirmar visita',
+  confirmar: 'Confirmar cita',
+  rechazar: 'Rechazar solicitud',
   proponer: 'Proponer otro horario',
   aceptar_cambio: 'Aceptar el nuevo horario',
   rechazar_cambio: 'Rechazar el cambio',
   retirar_cambio: 'Retirar mi propuesta',
-  cancelar: 'Cancelar visita',
-  vencer: 'Vencer',
-  completar: 'Marcar como visitada',
+  cancelar: 'Cancelar cita',
+  vencer: 'Expirar',
+  completar: 'Marcar como realizada',
   no_asistio: 'No asistió',
   corregir: 'Corregir resultado',
 }
@@ -103,7 +129,7 @@ export type CitaParaReglas = {
   propuesta_por?: 'cliente' | 'asesor' | 'admin' | null
 }
 
-export type MotivoRechazo = 'transicion_invalida' | 'no_permitido' | 'fuera_de_tiempo'
+export type MotivoRechazo = 'transicion_invalida' | 'no_permitido' | 'fuera_de_tiempo' | 'menos_de_2_horas'
 
 export type Evaluacion =
   | { ok: true; destino: EstadoCita }
@@ -113,6 +139,17 @@ const t = (v: string | Date) => (v instanceof Date ? v.getTime() : new Date(v).g
 
 const no = (motivo: MotivoRechazo): Evaluacion => ({ ok: false, motivo })
 const si = (destino: EstadoCita): Evaluacion => ({ ok: true, destino })
+
+/** ¿Está la cita acordada? (confirmada, o a la espera de que el cliente confirme lo que registró el equipo). Un cambio pedido sobre una cita firme no le quita lo firme. */
+export function esFirme(cita: Pick<CitaParaReglas, 'estado' | 'estado_previo'>): boolean {
+  return FIRMES.includes(cita.estado) || (cita.estado === 'RESCHEDULE_REQUESTED' && !!cita.estado_previo && FIRMES.includes(cita.estado_previo))
+}
+
+/**
+ * ¿Aparta esta cita el horario del responsable? (D-2). Sólo la firme. Una solicitud pendiente, aunque
+ * esté en `RESCHEDULE_REQUESTED` sobre una solicitud, no aparta nada.
+ */
+export const ocupaHorario = esFirme
 
 /** ¿Es la parte que NO propuso el cambio? (el admin cuenta siempre). */
 function esLaOtraParte(cita: CitaParaReglas, papel: PapelCita): boolean {
@@ -140,6 +177,12 @@ export function evaluar(
 ): Evaluacion {
   const yaEmpezo = t(cita.inicio) <= ahora.getTime()
 
+  // D-5: el cliente cancela o pide otro horario hasta 2 horas antes de una cita firme. Va primero, igual que en SQL.
+  if (papel === 'cliente' && (accion === 'cancelar' || accion === 'proponer') && esFirme(cita)
+      && t(cita.inicio) < ahora.getTime() + HORAS_MINIMAS_CLIENTE * 3_600_000) {
+    return no('menos_de_2_horas')
+  }
+
   switch (accion) {
     case 'confirmar': {
       const puede =
@@ -151,6 +194,12 @@ export function evaluar(
           : no('transicion_invalida')
       }
       return yaEmpezo ? no('fuera_de_tiempo') : si('CONFIRMED')
+    }
+
+    case 'rechazar': {
+      if (cita.estado !== 'REQUESTED') return no('transicion_invalida')
+      if (papel !== 'asesor' && papel !== 'admin') return no('no_permitido')
+      return si('REJECTED')
     }
 
     case 'proponer': {
@@ -189,13 +238,13 @@ export function evaluar(
     case 'vencer': {
       if (papel !== 'sistema') return no('no_permitido')
       if ((cita.estado === 'REQUESTED' || cita.estado === 'PENDING_CONFIRMATION') && yaEmpezo) {
-        return si('CANCELLED')
+        return si('EXPIRED')
       }
       if (cita.estado === 'RESCHEDULE_REQUESTED') {
         const propuestaVencida = cita.propuesta_inicio != null && t(cita.propuesta_inicio) <= ahora.getTime()
         if (propuestaVencida || yaEmpezo) {
           const previaSinConfirmar = cita.estado_previo === 'REQUESTED' || cita.estado_previo === 'PENDING_CONFIRMATION'
-          if (previaSinConfirmar && yaEmpezo) return si('CANCELLED')
+          if (previaSinConfirmar && yaEmpezo) return si('EXPIRED')
           return cita.estado_previo ? si(cita.estado_previo) : no('transicion_invalida')
         }
       }
@@ -218,29 +267,38 @@ export function evaluar(
   }
 }
 
-/** Las acciones que la pantalla debe ofrecer a este papel (nunca «vencer», que es del sistema). */
+/**
+ * Las acciones que la pantalla debe ofrecer a este papel (nunca «vencer», que es del sistema).
+ * Para el equipo, una solicitud pendiente se RECHAZA (con motivo) y no se «cancela»: un solo botón por idea.
+ */
 export function accionesDisponibles(cita: CitaParaReglas, papel: PapelCita, ahora: Date): AccionCita[] {
-  return ACCIONES.filter((a) => a !== 'vencer' && evaluar(a, cita, papel, ahora).ok)
+  return ACCIONES.filter((a) => {
+    if (a === 'vencer') return false
+    if (a === 'cancelar' && cita.estado === 'REQUESTED' && (papel === 'asesor' || papel === 'admin')) return false
+    return evaluar(a, cita, papel, ahora).ok
+  })
 }
 
 /** El motivo, dicho para una persona. Depende de la acción cuando se trata del tiempo. */
 export function explicar(motivo: MotivoRechazo | 'version' | 'horario_ocupado' | 'motivo_requerido' | 'no_encontrada', accion?: AccionCita): string {
   switch (motivo) {
     case 'version':
-      return 'La visita cambió mientras la veías. Ya te mostramos cómo quedó.'
+      return 'La cita cambió mientras la veías. Ya te mostramos cómo quedó.'
     case 'horario_ocupado':
-      return 'Ese horario se acaba de ocupar. Elige otro.'
+      return 'Ese horario ya no está disponible. Elige otro.'
     case 'motivo_requerido':
-      return 'Escribe el motivo de la cancelación: el cliente lo va a leer.'
+      return 'Escribe el motivo: la otra persona lo va a leer.'
     case 'no_encontrada':
-      return 'No encontramos esa visita.'
+      return 'No encontramos esa cita.'
     case 'no_permitido':
-      return 'No puedes hacer eso con esta visita.'
+      return 'No puedes hacer eso con esta cita.'
     case 'transicion_invalida':
-      return 'Esa acción ya no aplica a esta visita.'
+      return 'Esa acción ya no aplica a esta cita.'
+    case 'menos_de_2_horas':
+      return 'Faltan menos de 2 horas para la cita. Para cambiarla o cancelarla, contacta a VIVE BIEN.'
     case 'fuera_de_tiempo':
       return accion === 'completar' || accion === 'no_asistio'
-        ? 'Todavía no llega la hora de la visita.'
-        : 'Ya pasó la hora de esa visita.'
+        ? 'Todavía no llega la hora de la cita.'
+        : 'Ya pasó la hora de esa cita.'
   }
 }
