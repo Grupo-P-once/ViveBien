@@ -174,3 +174,41 @@ export function cuotaDeCabeceras(h: Headers, estado?: number): LecturaDeCuota {
   if (!ENTERO_DE_CUOTA.test(dia.trim()) || !ENTERO_DE_CUOTA.test(mes.trim())) return { ok: false, motivo: 'cabecera_invalida', ...base, crudo: { dia: muestraDeCabecera(dia), mes: muestraDeCabecera(mes) } }
   return { ok: true, dia: Number(dia.trim()), mes: Number(mes.trim()) }
 }
+
+export const URL_USO_RESEND = 'https://api.resend.com/usage'
+
+export type MotivoSinUso = 'sin_llave' | 'red' | 'http' | 'respuesta_invalida'
+export type LecturaDeUso = { ok: true; dia: number; mes: number } | { ok: false; motivo: MotivoSinUso; estado?: number }
+
+const ENTERO_DE_USO = (v: unknown): v is number => typeof v === 'number' && Number.isInteger(v) && v >= 0 && v <= 9_999_999
+
+/**
+ * Consulta de SÓLO LECTURA del consumo (`GET /usage`, D-83) con la llave aparte de acceso completo (se la pasa quien llama; este módulo no la lee del entorno).
+ * Devuelve lo ya usado del día UTC y del ciclo (`emails.daily.used`, `emails.monthly.used`: enviados + recibidos, de TODA la cuenta). No sigue redirecciones
+ * (la llave no viaja a otro sitio), tiene tope de tiempo y NUNCA devuelve ni registra la llave ni el cuerpo de la respuesta: si algo no es un entero limpio, no hay lectura.
+ */
+export async function leerUsoDeResend(l: { apiKey?: string; fetch?: typeof fetch } = {}): Promise<LecturaDeUso> {
+  const apiKey = (l.apiKey ?? '').trim()
+  if (!apiKey) return { ok: false, motivo: 'sin_llave' }
+  let r: Response
+  let texto: string
+  try {
+    r = await (l.fetch ?? fetch)(URL_USO_RESEND, {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${apiKey}`, Accept: 'application/json' },
+      redirect: 'error',
+      signal: AbortSignal.timeout(8000),
+    })
+    texto = (await r.text()).slice(0, 100_000)
+  } catch {
+    return { ok: false, motivo: 'red' }
+  }
+  if (!r.ok) return { ok: false, motivo: 'http', estado: r.status }
+  try {
+    const j = JSON.parse(texto) as { emails?: { daily?: { used?: unknown }; monthly?: { used?: unknown } } }
+    const dia = j?.emails?.daily?.used
+    const mes = j?.emails?.monthly?.used
+    if (ENTERO_DE_USO(dia) && ENTERO_DE_USO(mes)) return { ok: true, dia, mes }
+  } catch { /* cuerpo que no es JSON */ }
+  return { ok: false, motivo: 'respuesta_invalida', estado: r.status }
+}

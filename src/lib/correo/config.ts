@@ -133,3 +133,12 @@ export const envioHabilitado = (env: Record<string, string | undefined> = proces
 
 /** El secreto de los enlaces firmados debe ser largo: uno corto o ausente deja el marketing apagado. */
 export const SECRETO_MINIMO = 32
+
+/**
+ * Llave de Resend de ACCESO COMPLETO, guardada aparte y usada SOLO para consultar `GET /usage` (D-83). Resend no ofrece una llave de solo lectura: esta llave podría
+ * crear, modificar y borrar recursos de la cuenta, así que NO es parte de `EntornoCorreo` (el objeto que ven los emisores) y una prueba impide que cualquier archivo
+ * distinto de la lectura de consumo la pida. Sin la variable, la lectura automática simplemente no corre.
+ */
+export function claveDeUsoResend(env: Record<string, string | undefined> = process.env): string {
+  return (env.RESEND_USAGE_KEY ?? '').trim()
+}

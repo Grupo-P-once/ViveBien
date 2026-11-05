@@ -1,5 +1,6 @@
 import type { DbCorreo } from './enviar'
-import { cuotaDeCabeceras } from './resend'
+import { claveDeUsoResend, entornoDeCupo } from './config'
+import { cuotaDeCabeceras, leerUsoDeResend } from './resend'
 
 /**
  * Registro AUTOMÁTICO de la lectura del consumo de Resend tras un envío real exitoso (D-82): lo que hace a mano el Super Admin en Marketing → «Estado y cupo de
@@ -74,4 +75,22 @@ export async function registrarCuotaVista(db: DbCorreo, cabeceras: Headers, ahor
   } catch {
     return false
   }
+}
+
+export const ACTOR_USO = 'automatico:uso-resend'
+export const NOTA_USO = 'Lectura automática: GET /usage de Resend'
+
+export type ResultadoUso = { ok: true; dia: number; mes: number } | { ok: false; motivo: string; estado?: number }
+
+/**
+ * Lectura diaria y automática del consumo (D-83): consulta `GET /usage` con la llave aparte y la guarda por la MISMA función SQL que el panel (`correo_conciliar`),
+ * con actor automático. Fuera de producción no toca la red. Sin llave no hace nada. Si no se puede leer o guardar, no guarda nada (queda la última lectura, que vence a los 8 días).
+ */
+export async function conciliarUsoDeResend(db: DbCorreo, o: { apiKey?: string; fetch?: typeof fetch; env?: Record<string, string | undefined> } = {}): Promise<ResultadoUso> {
+  if (entornoDeCupo(o.env) !== 'produccion') return { ok: false, motivo: 'fuera_de_produccion' }
+  // La llave sólo se pide a `config.ts`, y sólo desde aquí.
+  const lectura = await leerUsoDeResend({ apiKey: o.apiKey ?? claveDeUsoResend(o.env), fetch: o.fetch })
+  if (!lectura.ok) return { ok: false, motivo: lectura.motivo, estado: lectura.estado }
+  if (!(await guardar(db, lectura.dia, lectura.mes, ACTOR_USO, NOTA_USO, Date.now()))) return { ok: false, motivo: 'no_se_guardo' }
+  return { ok: true, dia: lectura.dia, mes: lectura.mes }
 }
