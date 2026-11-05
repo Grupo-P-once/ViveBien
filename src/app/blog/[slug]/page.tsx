@@ -38,6 +38,7 @@ export default async function Pagina({ params }: Props) {
   const url = urlDe(`/blog/${a.slug}`)
   return (
     <>
+      {/* nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml.react-dangerouslysetinnerhtml -- JSON-LD de datos propios; `jsonLdSeguro` escapa < > & y U+2028/9 (prueba en tests/seo.test.ts). */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdSeguro(grafo(...jsonLdArticulo(a))) }} />
       <Header />
       <main className="blog" id="contenido">

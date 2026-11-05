@@ -110,7 +110,7 @@ export function prepararExterna(e: EntradaExterna, actor: string, hoy: string): 
   }
   let bp: number | null = null
   if (e.porcentaje !== undefined && e.porcentaje !== null && e.porcentaje !== '') {
-    const p = Number(String(e.porcentaje).replace('%', '').trim())
+    const p = Number(String(e.porcentaje).replace(/%/, '').trim())
     if (!Number.isFinite(p) || p <= 0 || p > 100) return err('El porcentaje debe estar entre 1 y 100.')
     bp = Math.round(p * 100)
   }

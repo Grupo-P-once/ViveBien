@@ -36,6 +36,7 @@ export default async function Pagina({ params, searchParams }: Props) {
   const n = Number(sp.pagina) || 1
   return (
     <>
+      {/* nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml.react-dangerouslysetinnerhtml -- JSON-LD de datos propios; `jsonLdSeguro` escapa < > & y U+2028/9 (prueba en tests/seo.test.ts). */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdSeguro(grafo(migasJsonLd([{ nombre: 'Blog', ruta: '/blog' }, { nombre: cat.nombre }]))) }} />
       <Listado articulos={deCategoria(cat.slug)} categoria={cat.slug} numero={n} base={`/blog/categoria/${cat.slug}`} consulta={limpiarConsulta(sp.q)} />
     </>

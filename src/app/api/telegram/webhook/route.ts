@@ -151,7 +151,7 @@ async function responder(chatId: string, texto: string, botones?: [string, strin
     })
     if (!res.ok) {
       const cuerpo = await res.text().catch(() => '')
-      console.error(`[telegram] Telegram rechazó el mensaje (${res.status}):`, limpiarTexto(cuerpo, 200))
+      console.error('[telegram] Telegram rechazó el mensaje:', res.status, limpiarTexto(cuerpo, 200))
     }
   } catch (e) {
     console.error('[telegram] no se pudo responder:', limpiarTexto(e))

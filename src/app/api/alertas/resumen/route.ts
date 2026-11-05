@@ -53,12 +53,12 @@ async function contar(tabla: string, columnaFecha: string, desde: string): Promi
       .gte(columnaFecha, desde)
       .limit(1000)
     if (err2) {
-      console.error(`[parte] no se pudo contar ${tabla}:`, err2.message)
+      console.error('[parte] no se pudo contar:', tabla, err2.message)
       return null
     }
     return (data ?? []).length
   } catch (e) {
-    console.error(`[parte] fallo al contar ${tabla}:`, e instanceof Error ? e.message : e)
+    console.error('[parte] fallo al contar:', tabla, e instanceof Error ? e.message : e)
     return null
   }
 }

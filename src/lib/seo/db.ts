@@ -13,7 +13,7 @@ export function faltaLaMigracion(e: ErrorBase): boolean {
 }
 
 export function respuestaDeErrorBase(e: ErrorBase, contexto: string): NextResponse {
-  console.error(`seo/${contexto}`, e?.code ?? '', e?.message ?? '')
+  console.error('seo/contexto:', contexto, e?.code ?? '', e?.message ?? '')
   if (faltaLaMigracion(e)) {
     return NextResponse.json({ error: 'Esta función necesita la migración 37 de la base de datos, que todavía no está aplicada.', codigo: 'migracion_pendiente' }, { status: 503 })
   }

@@ -29,11 +29,13 @@ export type DatosFicha = {
 /** Número suelto tras una etiqueta: «Recámaras: 3», «3 recámaras», «Baños 2.5». */
 function tras(texto: string, etiquetas: string[]): number | null {
   for (const e of etiquetas) {
+    // nosemgrep: javascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp -- `e` sale de las cuatro listas LITERALES de este archivo (recámaras, baños, altura, andenes); nunca del texto del usuario, que sólo es el sujeto de la búsqueda.
     const despues = texto.match(new RegExp(`${e}\\s*[:\\-]?\\s*(\\d+(?:[.,]\\d+)?)`, 'i'))
     if (despues) {
       const n = Number(despues[1].replace(',', '.'))
       if (Number.isFinite(n) && n > 0) return n
     }
+    // nosemgrep: javascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp -- mismo caso que la línea anterior: `e` es un literal de las listas de este archivo.
     const antes = texto.match(new RegExp(`(\\d+(?:[.,]\\d+)?)\\s*${e}`, 'i'))
     if (antes) {
       const n = Number(antes[1].replace(',', '.'))

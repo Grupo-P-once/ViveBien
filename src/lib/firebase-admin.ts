@@ -215,7 +215,7 @@ async function llamar(
       body: JSON.stringify(cuerpo),
     })
   } catch (e) {
-    console.error(`[firebase] ${operacion} no llegó a Google:`, codigoSeguro(e), e)
+    console.error('[firebase] la operación no llegó a Google:', operacion, codigoSeguro(e), e)
     return { ok: false, codigo: 'sin_red' }
   }
 
@@ -229,7 +229,7 @@ async function llamar(
   // Detalle completo SÓLO en el registro del servidor. Nunca en la base, nunca
   // en la bitácora, nunca en la respuesta al navegador. Sin cabeceras: ahí va
   // el token.
-  console.error(`[firebase] ${operacion} falló: HTTP ${respuesta.status} · ${codigo} ·`, texto.slice(0, 500))
+  console.error('[firebase] la operación falló:', operacion, 'HTTP', respuesta.status, codigo, texto.slice(0, 500))
   return { ok: false, codigo }
 }
 

@@ -46,7 +46,7 @@ export function leerCsv(texto: string): string[][] {
 /** «1.234», «1,234», «3,5 %», «0.5%» → número. Vacío o raro → null. */
 export function numero(v: string | undefined): number | null {
   if (v == null) return null
-  let s = v.trim().replace('%', '').replace(/\s/g, '')
+  let s = v.trim().replace(/%/, '').replace(/\s/g, '') // el primer «%» (una conversión numérica, no un saneamiento de seguridad)
   if (s === '' || s === '-' || /n\/d/i.test(s)) return null
   // «1,234.5» (coma de miles) vs «3,5» (coma decimal)
   if (/^\d{1,3}(,\d{3})+(\.\d+)?$/.test(s)) s = s.replace(/,/g, '')

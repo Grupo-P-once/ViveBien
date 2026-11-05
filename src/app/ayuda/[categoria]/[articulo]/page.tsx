@@ -93,6 +93,7 @@ export default async function Articulo({ params }: Props) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
+          // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml.react-dangerouslysetinnerhtml -- JSON-LD de datos propios; `jsonLdSeguro` escapa < > & y U+2028/9 (prueba en tests/seo.test.ts).
           __html: jsonLdSeguro(grafo(migasJsonLd([
             { nombre: d.categoria.nombre, ruta: `/ayuda/${d.categoria.slug}` },
             { nombre: d.articulo.titulo },

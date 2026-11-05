@@ -89,11 +89,19 @@ export async function mandar(opts: {
         ...(opts.ics ? { attachments: [{ filename: 'visita-vive-bien.ics', content: Buffer.from(opts.ics, 'utf8').toString('base64') }] } : {}),
       },
     })
-    if (!res.ok) return { ok: false, error: res.status ? `Resend ${res.status}: ${(res.detalle ?? '').slice(0, 200)}` : `no se envió (${res.estado})` }
+    if (!res.ok) return { ok: false, error: res.status ? `Resend ${res.status}: ${sinCorreos((res.detalle ?? '').slice(0, 200))}` : `no se envió (${res.estado})` }
     return { ok: true, id: res.resendId ?? null }
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : 'fallo de red' }
+    return { ok: false, error: sinCorreos(e instanceof Error ? e.message : 'fallo de red') }
   }
+}
+
+/**
+ * El texto de error del proveedor o de la red podría repetir la dirección del destinatario; ese texto va a un registro de la plataforma y a `citas_correos.error`.
+ * Las direcciones se sustituyen por «[correo]» ANTES de salir de `mandar` (revisión de Semgrep, 5-nov-2026).
+ */
+export function sinCorreos(texto: string): string {
+  return texto.replace(/[^\s<>"'`,;()]+@[^\s<>"'`,;()]+/g, '[correo]')
 }
 
 async function uno(db: Db, f: Filas, m: CorreoPlaneado, ahora: Date): Promise<void> {
@@ -174,7 +182,7 @@ async function uno(db: Db, f: Filas, m: CorreoPlaneado, ahora: Date): Promise<vo
     ? { estado: 'enviado', resend_id: r.id, enviado_en: new Date().toISOString(), intentos: 1, error: null }
     : { estado: 'error', error: r.error.slice(0, 500), intentos: 1 },
   ).eq('id', fila.id)
-  if (!r.ok) console.error(`[citas] correo ${m.tipo} a ${m.para} no salió:`, r.error)
+  if (!r.ok) console.error('[citas] el correo no salió:', m.tipo, m.para, r.error) // `m.para` es el ROL (cliente/asesor), nunca la dirección
 }
 
 /** Manda los correos de este cambio. Se llama después de responder (`after()`). */

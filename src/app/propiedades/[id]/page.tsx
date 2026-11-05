@@ -176,6 +176,7 @@ export default async function Page({ params }: Props) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
+          // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml.react-dangerouslysetinnerhtml -- JSON-LD; `jsonLdSeguro` escapa < > & y U+2028/9 (prueba en tests/seo.test.ts), así que una descripción con «</script>» no cierra la etiqueta.
           __html: jsonLdSeguro(schemaData ? grafo(schemaData, migas) : grafo(migas)),
         }}
       />
