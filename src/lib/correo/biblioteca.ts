@@ -248,10 +248,22 @@ const CATALOGO_FIJO: EntradaDeCatalogo[] = [
 
 const ESTADO_A_EXISTENCIA: Record<EstadoDeEnvio, Existencia> = { envia_hoy: 'envia_hoy', codigo_apagado: 'codigo_apagado', apagado_por_texto_legal: 'apagado_por_texto_legal', plantilla_sin_evento: 'plantilla_sin_evento', lo_manda_firebase: 'lo_manda_firebase' }
 
+/**
+ * Qué hace que salga cada correo de citas (verificado en el código, 6-nov-2026). Todos pasan por `avisarCambio`/`procesarRecordatorios` (src/lib/citas/enviar.ts), por la compuerta común `CORREO_ENVIO` y por
+ * `CORREO_TRANSACCIONAL`; ninguno trae botones de acción (D-3): el enlace lleva al panel con sesión. Mientras `citasEnLinea` esté apagado no se crea ninguna cita y por tanto no sale ninguno.
+ */
+function disparadorDeCita(tipo: TipoDeCita): string {
+  const base = ' Requiere `citasEnLinea` encendido, `CORREO_TRANSACCIONAL` y la compuerta `CORREO_ENVIO`; sin botones de acción (el enlace lleva al panel con sesión).'
+  if (tipo === 'recordatorio_24h' || tipo === 'recordatorio_1h') return 'Tarea programada cada minuto (pg_cron + pg_net → POST /api/citas/tareas, firma HMAC): 24 h o 1 h antes de una cita CONFIRMADA, una sola vez por cita y versión (cola citas_recordatorios, hasta 5 intentos).' + base
+  if (tipo === 'vencida') return 'Tarea programada cada minuto: una solicitud sin respuesta hasta el plazo pasa a Expirada y se avisa a las dos partes.' + base
+  if (tipo === 'solicitud_recibida' || tipo === 'solicitud_nueva') return 'POST /api/citas: la persona con cuenta pide una cita desde la ficha.' + base
+  return 'Cambio de estado de la cita desde el panel (POST /api/citas/[id]/transicion).' + base
+}
+
 /** Todos los tipos de correo conocidos, por grupo. Cada uno con su rastro (archivo que lo manda) o su motivo de no tenerlo: nada se afirma sin rastro. */
 export function catalogoCompleto(): EntradaDeCatalogo[] {
   const desdeBiblioteca = BIBLIOTECA.map((t) => ({ id: t.id, nombre: t.nombre, grupo: META_BIBLIOTECA[t.id].grupo, categoria: t.categoria, existencia: ESTADO_A_EXISTENCIA[t.estado], disparador: t.disparador, rastro: META_BIBLIOTECA[t.id].rastro, conVista: true, motivoSinVista: null }) as EntradaDeCatalogo)
-  const desdeCitas = CITAS.map((x) => E2(`cita_${x.tipo}`, x.nombre, 'Visitas a propiedades (citas)', 'transaccional', 'codigo_apagado', 'Cambio de una cita (citas en línea apagadas: flag citasEnLinea)', 'src/lib/citas/enviar.ts'))
+  const desdeCitas = CITAS.map((x) => E2(`cita_${x.tipo}`, x.nombre, 'Visitas a propiedades (citas)', 'transaccional', 'codigo_apagado', disparadorDeCita(x.tipo), 'src/lib/citas/enviar.ts'))
   const todo = [...desdeBiblioteca, ...desdeCitas, ...CATALOGO_FIJO]
   return GRUPOS_DE_CATALOGO.flatMap((g) => todo.filter((e) => e.grupo === g))
 }
