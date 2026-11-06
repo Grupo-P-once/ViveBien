@@ -22,7 +22,9 @@ async function ampliarCatalogo(page: Page) {
   await page.route('**/api/catalogo', async (ruta) => {
     const r = await ruta.fetch()
     const j = await r.json() as { propiedades: Fila[] }
-    const base = j.propiedades.find((p) => p.tipo === 'casa') ?? j.propiedades[0]
+    // La base de los clones es SIEMPRE la propiedad original de la fixtura (por su slug), no «la primera casa»: con la fixtura v2 (que traen las pruebas e48) la primera casa es
+    // una sintética de título más largo y la tarjeta de 768 px mide 473 px frente al tope de 470 (la altura depende del contenido, no del diseño).
+    const base = j.propiedades.find((p) => p.slug === 'casa-en-venta-canada-del-regugio-norte-540-m2-leon-n8tl') ?? j.propiedades.find((p) => p.tipo === 'casa') ?? j.propiedades[0]
     const casas = Array.from({ length: TOTAL_CASAS }, (_, i) => ({ ...base, id: `c-${i}`, slug: `casa-prueba-${i}`, folio: `VB-2026-${String(i + 1).padStart(5, '0')}`, tipo: 'casa', operacion: 'venta', titulo: `Casa de prueba ${i + 1}`, precio: 4_000_000 + i * 250_000 }))
     const otras = j.propiedades.filter((p) => p.tipo !== 'casa')
     const todas = [...casas, ...otras].map((p, i) => ({

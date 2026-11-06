@@ -79,7 +79,7 @@ async function arrancarReplica(fixtura) {
   spawn('node', [path.join('tests', 'performance', 'mock-supabase.mjs')], { cwd: RAIZ, stdio: 'ignore', env: entorno({
     MOCK_PORT: REPLICA, REAL_SUPABASE_URL: PUBLICO.NEXT_PUBLIC_SUPABASE_URL ?? '', REAL_SUPABASE_ANON_KEY: PUBLICO.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '',
     MOCK_FLAGS_JSON: '{"portalCliente":true,"citasEnLinea":false,"publisherPortal":false}',
-    ...(fixtura ? { MOCK_FIXTURA: path.join(RAIZ, 'tests-visual', 'fixtura', 'publico.json') } : {}),
+    ...(fixtura ? { MOCK_FIXTURA: path.join(RAIZ, 'tests-visual', 'fixtura', 'publico-e48-v2.json') } : {}),
   }) })
   await new Promise((a) => setTimeout(a, 1500))
 }
@@ -124,7 +124,8 @@ const existentes = (l) => l.filter((f) => fs.existsSync(path.join(RAIZ, f)))
   if (RAPIDO) { resumen(); console.log('\nqa:gate (rápido): TODO OK'); return }
 
   await paso('build (next build contra la réplica)', async () => {
-    await arrancarReplica(false) // reenvía solo lecturas anónimas; las páginas de ayuda se prerenderizan con datos de solo lectura
+    // 6-nov-2026: el build se hace CONTRA LA FIXTURA v2 (superconjunto de la original: 7 claves iguales + los anuncios sintéticos que piden e48-publico, e48-consultas, ga-eventos…); sus cabeceras dicen «requiere un build hecho CON esa fixtura». Sin esto, ~100 pruebas fallaban en cualquier rama, también en Producción.
+    await arrancarReplica(true)
     const r = ejecutar('npx', ['next', 'build'], entornoApp())
     matarPuertos()
     return r

@@ -109,6 +109,9 @@ async function entrar(page: Page, rol: Rol) {
 
 const sinDesborde = async (page: Page) => expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(1)
 async function axeSerio(page: Page, contexto: string, incluir?: string) {
+  // axe mide el color calculado al instante: con el diálogo todavía en su transición de apertura (fade/zoom) compone colores parciales y marca un falso «color-contrast»
+  // (intermitente según el ancho y la carga). Se espera a que no quede ninguna animación corriendo; la regla NO se desactiva.
+  await page.waitForFunction(() => document.getAnimations().every((a) => a.playState !== 'running'))
   const b = new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa'])
   const r = await (incluir ? b.include(incluir) : b).analyze()
   const graves = r.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical')
