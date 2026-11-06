@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { CalendarPlus, Clock, ExternalLink, Loader2, MapPin, Phone, TriangleAlert, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -29,16 +29,19 @@ const TEXTO_EVENTO: Record<string, string> = {
 /** Acciones que piden un motivo escrito (el servidor lo exige para rechazar y para que el equipo cancele). */
 const PIDEN_MOTIVO: AccionCita[] = ['rechazar', 'cancelar', 'rechazar_cambio']
 
+/**
+ * Se monta SOLO mientras hay una cita abierta y con `key={cita.id}`: al abrir otra cita el componente nace de cero, así que no
+ * hace falta ningún efecto que "reinicie" el estado (y no hay estado de una cita pegándose a la siguiente).
+ */
 export default function DetalleCita({
-  cita, abierta, onCerrar, onCambio,
+  cita, onCerrar, onCambio,
 }: {
-  cita: CitaVista | null
-  abierta: boolean
+  cita: CitaVista
   onCerrar: () => void
   /** Avisa que la cita cambió (o que otra persona la cambió antes) para que la pantalla recargue. */
   onCambio: () => void
 }) {
-  const [actual, setActual] = useState<CitaVista | null>(cita)
+  const [actual, setActual] = useState<CitaVista>(cita)
   const [historial, setHistorial] = useState<Evento[] | null>(null)
   const [accion, setAccion] = useState<AccionCita | null>(null)
   const [motivo, setMotivo] = useState('')
@@ -46,38 +49,40 @@ export default function DetalleCita({
   const [error, setError] = useState<string | null>(null)
   const [aviso, setAviso] = useState<string | null>(null)
   const [huecos, setHuecos] = useState<Disponibilidad | null>(null)
-  const [cargandoHuecos, setCargandoHuecos] = useState(false)
+  const [huecosFallo, setHuecosFallo] = useState(false)
   const [elegido, setElegido] = useState<string | null>(null)
   const refMotivo = useRef<HTMLTextAreaElement>(null)
+  const id = cita.id
+  // «Buscando horarios» se DERIVA: se está buscando mientras se quiere proponer y todavía no llegó nada (ni falló).
+  const cargandoHuecos = accion === 'proponer' && huecos === null && !huecosFallo
 
-  const id = cita?.id
-  // Al abrir otra cita se empieza de cero.
+  // Lectura fresca (con el historial) al abrir. El estado solo se toca cuando llega la respuesta.
   useEffect(() => {
-    setActual(cita); setAccion(null); setMotivo(''); setError(null); setAviso(null); setHuecos(null); setElegido(null); setHistorial(null)
-  }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
-  // Si la lista se refresca con una versión más nueva de la misma cita, se toma.
-  useEffect(() => { if (cita && cita.id === actual?.id && cita.version >= (actual?.version ?? 0)) setActual(cita) }, [cita]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  const cargar = useCallback(async () => {
-    if (!id) return
-    const r = await llamarApi<{ cita: CitaVista; historial: Evento[] }>(`/api/citas/${id}`)
-    if (r.ok) { setActual(r.data.cita); setHistorial(r.data.historial) } else setHistorial([])
+    let vivo = true
+    void llamarApi<{ cita: CitaVista; historial: Evento[] }>(`/api/citas/${id}`).then((r) => {
+      if (!vivo) return
+      if (r.ok) { setActual(r.data.cita); setHistorial(r.data.historial) } else setHistorial([])
+    })
+    return () => { vivo = false }
   }, [id])
-  useEffect(() => { if (abierta && id) void cargar() }, [abierta, id, cargar])
+  async function recargar() {
+    const r = await llamarApi<{ cita: CitaVista; historial: Evento[] }>(`/api/citas/${id}`)
+    if (r.ok) { setActual(r.data.cita); setHistorial(r.data.historial) }
+  }
 
   // Proponer otro horario: los huecos REALES (la propia cita no se cuenta como ocupada).
   useEffect(() => {
-    if (accion !== 'proponer' || !id || huecos) return
-    setCargandoHuecos(true)
+    if (accion !== 'proponer' || huecos) return
+    let vivo = true
     void llamarApi<Disponibilidad>(`/api/citas/disponibilidad?cita=${id}&dias=14`).then((r) => {
-      if (r.ok) setHuecos(r.data); else setError(r.error)
-      setCargandoHuecos(false)
+      if (!vivo) return
+      if (r.ok) setHuecos(r.data); else { setHuecosFallo(true); setError(r.error) }
     })
+    return () => { vivo = false }
   }, [accion, id, huecos])
 
   useEffect(() => { if (accion && PIDEN_MOTIVO.includes(accion)) refMotivo.current?.focus() }, [accion])
 
-  if (!actual) return null
   const c = actual
   const equipo = c.papel === 'asesor' || c.papel === 'admin'
   const acciones = c.acciones.filter((a) => a !== 'vencer')
@@ -96,15 +101,15 @@ export default function DetalleCita({
     })
     setEnviando(false)
     if (r.ok) {
-      setActual(r.data.cita); setAccion(null); setMotivo(''); setElegido(null); setHuecos(null)
+      setActual(r.data.cita); setAccion(null); setMotivo(''); setElegido(null); setHuecos(null); setHuecosFallo(false)
       setAviso('Listo: el cambio quedó registrado y se avisó a la otra parte.')
-      onCambio(); void cargar()
+      onCambio(); void recargar()
       return
     }
     setError(r.error)
     // Otra persona cambió la cita antes: se muestra cómo quedó y se recarga la lista.
     const nueva = (r.data as { cita?: CitaVista } | undefined)?.cita
-    if (r.status === 409) { if (nueva) setActual(nueva); setAccion(null); onCambio(); void cargar() }
+    if (r.status === 409) { if (nueva) setActual(nueva); setAccion(null); onCambio(); void recargar() }
   }
 
   async function descargar() {
@@ -117,7 +122,7 @@ export default function DetalleCita({
   const variante = (a: AccionCita) => (a === 'confirmar' || a === 'aceptar_cambio' || a === 'completar' ? 'default' : 'outline')
 
   return (
-    <Dialog open={abierta} onOpenChange={(o) => { if (!o) onCerrar() }}>
+    <Dialog open onOpenChange={(o) => { if (!o) onCerrar() }}>
       <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-xl" data-detalle-cita>
         <DialogHeader>
           <DialogTitle className="pr-6">{c.propiedad?.titulo ?? 'Cita'}</DialogTitle>

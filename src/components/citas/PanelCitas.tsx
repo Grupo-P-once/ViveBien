@@ -44,41 +44,53 @@ export default function PanelCitas({
 }) {
   const [pestana, setPestana] = useState<Pestana>('agenda')
   const [citas, setCitas] = useState<CitaVista[]>([])
-  const [cargando, setCargando] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [sinPermiso, setSinPermiso] = useState(false)
   const [filtros, setFiltros] = useState<Filtros>(SIN_FILTROS)
   const [rango, setRango] = useState<RangoVisible | null>(null)
+  // «Cargando» se DERIVA: la clave de lo que se ve (pestaña, vista, rango) contra la clave de lo último que llegó. Sin cambiar estado al pedir.
+  const [listoPara, setListoPara] = useState<string | null>(null)
+  const [refrescando, setRefrescando] = useState(false)
+  const clave = `${pestana}|${vista}|${rango?.desde.getTime() ?? ''}`
+  const cargando = listoPara !== clave
   const [abierta, setAbierta] = useState<CitaVista | null>(null)
-  const [detalleAbierto, setDetalleAbierto] = useState(false)
   const [actualizada, setActualizada] = useState<Date | null>(null)
   const turno = useRef(0)
 
-  const ventana = useMemo(() => {
+  type Llegada = { mio: number; miClave: string; r: Awaited<ReturnType<typeof llamarApi<{ citas: CitaVista[] }>>> }
+  /** Pide las citas. NO toca el estado: devuelve lo que llegó (y a qué pedido corresponde). */
+  const pedir = useCallback(async (): Promise<Llegada | null> => {
+    // La ventana de fechas se calcula AL PEDIR (no al pintar): "ahora" cambia y cada refresco debe usar el de ese momento.
     const ahora = Date.now()
-    if (pestana === 'calendario') return rango ? { desde: rango.desde, hasta: rango.hasta, canceladas: false } : null
-    if (pestana === 'agenda') return { desde: new Date(ahora - DIA), hasta: new Date(ahora + 99 * DIA), canceladas: false }
-    return { desde: new Date(ahora - 99 * DIA), hasta: new Date(ahora + DIA), canceladas: true }
-  }, [pestana, rango])
-
-  const cargar = useCallback(async (silencioso = false) => {
-    if (!ventana) return
+    const ventana = pestana === 'calendario'
+      ? (rango ? { desde: rango.desde, hasta: rango.hasta, canceladas: false } : null)
+      : pestana === 'agenda'
+        ? { desde: new Date(ahora - DIA), hasta: new Date(ahora + 99 * DIA), canceladas: false }
+        : { desde: new Date(ahora - 99 * DIA), hasta: new Date(ahora + DIA), canceladas: true }
+    if (!ventana) return null
     const mio = ++turno.current
-    if (!silencioso) setCargando(true)
+    const miClave = `${pestana}|${vista}|${rango?.desde.getTime() ?? ''}`
     const q = new URLSearchParams({ vista, desde: ventana.desde.toISOString(), hasta: ventana.hasta.toISOString(), ...(ventana.canceladas ? { canceladas: '1' } : {}) })
-    const r = await llamarApi<{ citas: CitaVista[] }>(`/api/citas?${q}`)
-    if (mio !== turno.current) return           // llegó tarde: ya se pidió otra cosa
+    return { mio, miClave, r: await llamarApi<{ citas: CitaVista[] }>(`/api/citas?${q}`) }
+  }, [pestana, rango, vista])
+
+  /** Aplica lo que llegó, salvo que ya se haya pedido otra cosa después (respuesta tardía). */
+  const aplicar = useCallback((l: Llegada | null) => {
+    if (!l || l.mio !== turno.current) return
+    const { r } = l
     if (r.ok) { setCitas(r.data.citas); setError(null); setSinPermiso(false); setActualizada(new Date()) }
     else { setError(r.error); setSinPermiso(r.status === 403); if (r.status === 403) setCitas([]) }
-    setCargando(false)
-  }, [ventana, vista])
+    setListoPara(l.miClave)
+  }, [])
+  const cargar = useCallback(async () => { aplicar(await pedir()) }, [pedir, aplicar])
 
-  useEffect(() => { void cargar() }, [cargar])
+  // Primera carga y cada cambio de pestaña, vista o rango. El estado solo cambia cuando llega la respuesta.
+  useEffect(() => { void pedir().then(aplicar) }, [pedir, aplicar])
 
   // Refresco: cada 45 s si la pestaña se ve, y al volver a ella.
   useEffect(() => {
-    const t = setInterval(() => { if (document.visibilityState === 'visible') void cargar(true) }, REFRESCO_MS)
-    const volver = () => { if (document.visibilityState === 'visible') void cargar(true) }
+    const t = setInterval(() => { if (document.visibilityState === 'visible') void cargar() }, REFRESCO_MS)
+    const volver = () => { if (document.visibilityState === 'visible') void cargar() }
     document.addEventListener('visibilitychange', volver)
     window.addEventListener('focus', volver)
     return () => { clearInterval(t); document.removeEventListener('visibilitychange', volver); window.removeEventListener('focus', volver) }
@@ -88,7 +100,7 @@ export default function PanelCitas({
   useEffect(() => {
     if (!citaInicial) return
     void llamarApi<{ cita: CitaVista }>(`/api/citas/${citaInicial}`).then((r) => {
-      if (r.ok) { setAbierta(r.data.cita); setDetalleAbierto(true) } else setError(r.status === 404 ? 'No encontramos esa cita en tu cuenta.' : r.error)
+      if (r.ok) setAbierta(r.data.cita); else setError(r.status === 404 ? 'No encontramos esa cita en tu cuenta.' : r.error)
     })
   }, [citaInicial])
 
@@ -100,13 +112,13 @@ export default function PanelCitas({
     return aplicarFiltros(base, filtros)
   }, [citas, pestana, filtros])
 
-  // El calendario solo pinta lo acordado; las solicitudes sin confirmar viven en «Agenda» (no aparten horario, D-2).
+  // El calendario pinta lo acordado y lo que espera respuesta; una solicitud pendiente NO aparta horario (D-2) y por eso se rotula como «Pendiente».
   const paraCalendario = useMemo(() => visibles.filter((c) => c.firme || c.estado === 'REQUESTED' || c.estado === 'PENDING_CONFIRMATION' || c.estado === 'RESCHEDULE_REQUESTED'), [visibles])
   const ind = useMemo(() => indicadores(citas), [citas])
 
-  const abrir = (c: CitaVista) => { setAbierta(c); setDetalleAbierto(true) }
+  const abrir = (c: CitaVista) => setAbierta(c)
   const cerrar = () => {
-    setDetalleAbierto(false)
+    setAbierta(null)
     // Quita ?cita= para que recargar la página no vuelva a abrirla.
     if (typeof window !== 'undefined' && window.location.search.includes('cita=')) {
       const u = new URL(window.location.href); u.searchParams.delete('cita'); window.history.replaceState(null, '', u.toString())
@@ -140,7 +152,7 @@ export default function PanelCitas({
         </div>
         <div className="flex items-center gap-3 text-xs text-muted-foreground">
           {actualizada && <span>Actualizado {actualizada.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Mexico_City' })}</span>}
-          <Button type="button" variant="outline" className="h-11" onClick={() => void cargar()} aria-label="Actualizar citas"><RefreshCw className={cn(cargando && 'animate-spin')} aria-hidden />Actualizar</Button>
+          <Button type="button" variant="outline" className="h-11" onClick={() => { setRefrescando(true); void cargar().finally(() => setRefrescando(false)) }} aria-label="Actualizar citas"><RefreshCw className={cn((cargando || refrescando) && 'animate-spin')} aria-hidden />Actualizar</Button>
         </div>
       </div>
 
@@ -155,14 +167,14 @@ export default function PanelCitas({
 
       {pestana === 'calendario' ? (
         <CalendarioCitas citas={paraCalendario} cargando={cargando} onSeleccionar={abrir} onRango={setRango} />
-      ) : cargando && citas.length === 0 ? (
+      ) : cargando ? (
         <div className="space-y-2" role="status" aria-label="Cargando citas">{[0, 1, 2].map((i) => <div key={i} className="h-24 animate-pulse rounded-xl bg-muted" />)}</div>
       ) : (
         <ListaCitas citas={visibles} onSeleccionar={abrir} orden={pestana === 'historial' ? 'desc' : 'asc'} resaltarId={abierta?.id}
           vacio={error ? 'No se pudieron cargar las citas.' : pestana === 'historial' ? 'Aquí aparecerán las citas realizadas, canceladas, rechazadas o expiradas.' : vacioAgenda} />
       )}
 
-      <DetalleCita cita={abierta} abierta={detalleAbierto} onCerrar={cerrar} onCambio={() => void cargar(true)} />
+      {abierta && <DetalleCita key={abierta.id} cita={abierta} onCerrar={cerrar} onCambio={() => void cargar()} />}
     </div>
   )
 }

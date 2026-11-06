@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import FullCalendar, { type CalendarRef } from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/react/daygrid'
@@ -46,16 +46,10 @@ export default function CalendarioCitas({
   cargando?: boolean
 }) {
   const ref = useRef<CalendarRef>(null)
-  const [vista, setVista] = useState<Vista>('dayGridMonth')
+  // Pantalla angosta: la agenda en lista es lo legible (una cuadrícula mensual de escritorio encogida no se lee). Se decide UNA vez,
+  // al nacer el componente. Solo se monta tras elegir la pestaña «Calendario» en el navegador, nunca en el render del servidor.
+  const [vista, setVista] = useState<Vista>(() => (typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches ? 'listWeek' : 'dayGridMonth'))
   const [titulo, setTitulo] = useState('')
-
-  // Pantalla angosta: la agenda en lista es lo legible. Se decide una sola vez al montar.
-  useEffect(() => {
-    if (typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches) {
-      setVista('listWeek')
-      ref.current?.getApi().changeView('listWeek')
-    }
-  }, [])
 
   const eventos = useMemo(() => citas.map((c) => ({
     id: c.id,

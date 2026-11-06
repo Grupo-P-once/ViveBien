@@ -9,6 +9,7 @@ import { auth } from '@/lib/firebase'
 import { rutaDeEntrada } from '@/lib/pantalla/plegables'
 import { cn } from '@/lib/utils'
 import PanelCitasPagina from '@/components/citas/PanelCitasPagina'
+import ConfigDisponibilidad from '@/components/citas/ConfigDisponibilidad'
 import type { VistaCalendario } from '@/lib/citas/servicio'
 
 /**
@@ -22,13 +23,15 @@ const PESTANAS: Array<{ id: VistaCalendario; texto: string; vacio: string }> = [
   { id: 'propietario', texto: 'Mis propiedades', vacio: 'Aún no hay citas en tus propiedades. VIVE BIEN administra las solicitudes y aquí las consultas.' },
   { id: 'cliente', texto: 'Mis citas', vacio: 'Aún no has agendado visitas a otras propiedades.' },
 ]
+/** Cuarta pestaña: su disponibilidad (solo si atiende citas; si no, el servidor lo explica con un 403). */
+type PestanaId = VistaCalendario | 'disponibilidad'
 
 function Interior() {
   const params = useSearchParams()
   const [user, setUser] = useState<User | null>(null)
   const [lista, setLista] = useState(false)
-  const inicial: VistaCalendario = params.get('vista') === 'propiedades' ? 'propietario' : params.get('vista') === 'mias' ? 'cliente' : 'asesor'
-  const [vista, setVista] = useState<VistaCalendario>(inicial)
+  const inicial: PestanaId = params.get('vista') === 'propiedades' ? 'propietario' : params.get('vista') === 'mias' ? 'cliente' : params.get('vista') === 'disponibilidad' ? 'disponibilidad' : 'asesor'
+  const [vista, setVista] = useState<PestanaId>(inicial)
   useEffect(() => onAuthStateChanged(auth, (u) => { setUser(u); setLista(true) }), [])
 
   if (!lista) return <div className="px-4 py-24 text-center" role="status">Cargando…</div>
@@ -40,6 +43,7 @@ function Interior() {
     </div>
   )
   const activa = PESTANAS.find((p) => p.id === vista) ?? PESTANAS[0]
+  const todas: Array<{ id: PestanaId; texto: string }> = [...PESTANAS, { id: 'disponibilidad', texto: 'Mi disponibilidad' }]
   return (
     <main className="mx-auto w-full max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
       <header className="flex items-start gap-3">
@@ -50,14 +54,16 @@ function Interior() {
         </div>
       </header>
       <div role="group" aria-label="Tipo de citas" className="mt-5 inline-flex max-w-full overflow-x-auto rounded-lg border">
-        {PESTANAS.map((p) => (
+        {todas.map((p) => (
           <button key={p.id} type="button" aria-pressed={vista === p.id} onClick={() => setVista(p.id)}
             className={cn('h-11 shrink-0 px-4 text-sm font-semibold', vista === p.id ? 'bg-[#8B1A1A] text-white' : 'bg-card hover:bg-muted')}>{p.texto}</button>
         ))}
       </div>
       <div className="mt-5">
         {/* `key`: al cambiar de pestaña el panel empieza limpio (filtros, citas y detalle de la pestaña anterior no se mezclan). */}
-        <PanelCitasPagina key={vista} vista={vista} vacioAgenda={activa.vacio} />
+        {vista === 'disponibilidad'
+          ? <ConfigDisponibilidad />
+          : <PanelCitasPagina key={vista} vista={vista} vacioAgenda={activa.vacio} />}
       </div>
     </main>
   )
