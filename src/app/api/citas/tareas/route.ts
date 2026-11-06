@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/auth-server'
 import { vencerCitas } from '@/lib/citas/servicio'
 import { avisarCambio, procesarRecordatorios } from '@/lib/citas/enviar'
+import { frenarAsync, origenDe, TOPES } from '@/lib/limites'
 
 /**
  * POST /api/citas/tareas — la tarea de las citas, cada minuto (D-4): hace expirar lo que nadie respondió y manda los
@@ -32,6 +33,10 @@ const FORMA_TIEMPO = /^\d{10}$/
 const FORMA_FIRMA = /^[0-9a-f]{64}$/
 
 export async function POST(req: Request) {
+  // Sin sesión: lo primero es el límite por origen, para que adivinar firmas no sea gratis (guardia e39).
+  const frenado = await frenarAsync(`citas-tareas:${origenDe(req)}`, TOPES.citasTareas)
+  if (frenado) return frenado
+
   const tiempo = (req.headers.get('x-citas-tiempo') ?? '').trim()
   const firma = (req.headers.get('x-citas-firma') ?? '').trim()
   // Antes de ir a la base: lo que no tiene forma de firma no merece una consulta.

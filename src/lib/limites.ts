@@ -88,6 +88,8 @@ export const TOPES = {
   busquedas: { maximo: 30, ventanaMs: 10 * 60 * 1000 },
   /** Agendar, confirmar, cancelar, proponer horario: gestos de persona, no de script. */
   citas: { maximo: 40, ventanaMs: 10 * 60 * 1000 },
+  /** La tarea de citas la llama la base cada minuto (≈10 en 10 min): este tope solo frena a quien intente adivinar firmas. */
+  citasTareas: { maximo: 60, ventanaMs: 10 * 60 * 1000 },
   /** Firmas de subida: una por foto. Un anuncio lleva 30; nadie firma 150 en diez minutos. */
   medios: { maximo: 150, ventanaMs: 10 * 60 * 1000 },
   /** D-80: pedir recomendaciones por correo. Cada envío cuesta presupuesto y, si alguien escribe el correo de OTRA persona, le llega un mensaje: pocas veces por hora y por origen. */
