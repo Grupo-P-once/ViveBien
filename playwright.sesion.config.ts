@@ -20,6 +20,8 @@ export default defineConfig({
   // que abre un contexto limpio; las pruebas de eventos de GA guardan 'si' en su beforeEach.
   use: {
     baseURL: 'http://localhost:3131', locale: 'es-MX', timezoneId: 'America/Mexico_City',
+    // Solo cuando una prueba FALLA queda la traza (red, consola, DOM paso a paso): permite diagnosticar fallos intermitentes del gate sin repetir 2 horas de corrida.
+    trace: 'retain-on-failure',
     storageState: { cookies: [], origins: [{ origin: 'http://localhost:3131', localStorage: [{ name: 'vb_analitica', value: 'no' }] }] },
   },
   webServer: { command: 'npx next start -p 3131', url: 'http://localhost:3131', reuseExistingServer: false, timeout: 120_000 },
