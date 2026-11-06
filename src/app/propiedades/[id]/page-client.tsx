@@ -25,6 +25,7 @@ import { contarFichaVista, debeOfrecerRegistro, marcarOfrecido } from '@/lib/mom
 import { nombreDe } from '@/lib/propiedad-publica'
 import { textoDeInformes } from '@/lib/whatsapp-propiedad'
 import AvisoBajaDePrecio from '@/components/AvisoBajaDePrecio'
+import AgendarCita from '@/components/AgendarCita'
 import CorazonDeGuardadas from '@/components/CorazonDeGuardadas'
 import { SITIO } from '@/lib/sitio'
 import { NEGOCIO } from '@/lib/config/negocio'
@@ -602,7 +603,7 @@ export default function DetallePropiedad({ params, idInterno, inicial }: { param
           </div>
 
           {/* Right: Sticky contact panel */}
-          <div id="contacto-ficha" style={{ position: 'sticky', top: '100px', scrollMarginTop: '90px', alignSelf: 'start' }}>
+          <div id="contacto-ficha" style={{ position: 'sticky', top: '100px', scrollMarginTop: '90px', alignSelf: 'start', maxHeight: 'calc(100dvh - 116px)', overflowY: 'auto', overscrollBehavior: 'contain', padding: '0 12px 12px', margin: '0 -12px' }}>
             <div style={{ background: '#fff', borderRadius: '20px', overflow: 'hidden', boxShadow: '0 8px 30px rgba(0,0,0,.12)' }}>
               <div style={{ background: 'linear-gradient(135deg, #0d1a2e 0%, var(--azul) 100%)', borderTop: '4px solid var(--rojo-marca)', padding: '1.5rem', color: '#fff', textAlign: 'center' }}>
                 <div style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: '1.8rem' }}>
@@ -694,6 +695,10 @@ export default function DetallePropiedad({ params, idInterno, inicial }: { param
                 </form>
               )}
             </div>
+            {/* «Agenda una cita» (solo con cuenta y con `citasEnLinea` encendido; ella misma se oculta si está apagado) va ARRIBA de la campana */}
+            {(prop.estatus ?? 'disponible') === 'disponible' && (
+              <AgendarCita propiedadId={prop.id} isLoggedIn={isLoggedIn} />
+            )}
             {/* La campana: avisar si baja de precio (solo con cuenta; abajo de la caja de precio y contacto) */}
             {prop.precio > 0 && (prop.estatus ?? 'disponible') === 'disponible' && (
               <AvisoBajaDePrecio propiedadId={prop.id} isLoggedIn={isLoggedIn} />

@@ -101,6 +101,9 @@ describe('visitas: quién puede ser asesor (D-08, enmendada por ADR-0013)', () =
   })
 
   it('la propiedad agendable comprueba los permisos efectivos del dueño', () => {
-    expect(leer('lib/citas/servicio.ts')).toMatch(/if \(!asesor \|\| !atiendeCitas\(asesor\)\) return falla\(409/)
+    const codigo = leer('lib/citas/servicio.ts')
+    // El responsable solo puede ser alguien que ATIENDE citas (permisos efectivos), y si no hay ninguno la propiedad no se agenda (409, falla cerrado).
+    expect(codigo).toContain('if (c && atiendeCitas(c)) return uid')
+    expect(codigo).toContain('if (!responsable) return falla(409, SIN_ASESOR)')
   })
 })
