@@ -51,13 +51,9 @@ function doblar(linea: string): string {
   return partes.join('\r\n ')
 }
 
-export function generarIcs(c: DatosIcs): string {
-  const lineas = [
-    'BEGIN:VCALENDAR',
-    'VERSION:2.0',
-    'PRODID:-//Vive Bien Grupo Inmobiliario//Visitas//ES',
-    'CALSCALE:GREGORIAN',
-    'METHOD:PUBLISH',
+/** Las líneas de UN evento (sin el envoltorio de calendario). */
+function lineasDeEvento(c: DatosIcs): string[] {
+  return [
     'BEGIN:VEVENT',
     `UID:${c.id}@vivebienn.com`,
     `SEQUENCE:${c.version}`,
@@ -71,8 +67,28 @@ export function generarIcs(c: DatosIcs): string {
     `STATUS:${c.cancelada ? 'CANCELLED' : 'CONFIRMED'}`,
     'TRANSP:OPAQUE',
     'END:VEVENT',
-    'END:VCALENDAR',
   ]
+}
+
+const ENCABEZADO_ICS = [
+  'BEGIN:VCALENDAR',
+  'VERSION:2.0',
+  'PRODID:-//Vive Bien Grupo Inmobiliario//Visitas//ES',
+  'CALSCALE:GREGORIAN',
+  'METHOD:PUBLISH',
+]
+
+export function generarIcs(c: DatosIcs): string {
+  const lineas = [...ENCABEZADO_ICS, ...lineasDeEvento(c), 'END:VCALENDAR']
+  return lineas.map(doblar).join('\r\n') + '\r\n'
+}
+
+/**
+ * Varias citas en UN archivo («Descargar mi calendario»). Mismos UID y SEQUENCE que el archivo de una sola cita: si ya la añadiste suelta y luego importas
+ * este archivo, el calendario ACTUALIZA el evento en vez de duplicarlo. Sin datos personales.
+ */
+export function generarIcsVarios(citas: DatosIcs[]): string {
+  const lineas = [...ENCABEZADO_ICS, ...citas.flatMap(lineasDeEvento), 'END:VCALENDAR']
   return lineas.map(doblar).join('\r\n') + '\r\n'
 }
 
