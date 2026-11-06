@@ -99,20 +99,22 @@ describe('lo que los documentos afirman del código es cierto', () => {
     expect(usos).toEqual(['src/app/admin/configuracion/page.tsx', 'src/lib/config/flags.ts'])
   })
 
-  it('el asesor sigue siendo el dueño de la propiedad (no hay una asignación distinta, 08.01)', () => {
+  it('el asesor lo decide D-1 (5-nov-2026: asignado → dueño que atiende → responsable del equipo) y FALLA CERRADO si nadie puede atender', () => {
     const s = leer('src/lib/citas/servicio.ts')
-    expect(s).toMatch(/const asesorUid = propiedad\.owner_id!/)
-    expect(s).toMatch(/if \(!asesor \|\| !atiendeCitas\(asesor\)\) return falla\(409/)
+    expect(s).toMatch(/const responsable = await responsableDeCitas\(db, p\)/)
+    expect(s).toMatch(/if \(!responsable\) return falla\(409, SIN_ASESOR\)/)
+    expect(s).toMatch(/if \(c && atiendeCitas\(c\)\) return uid/)   // solo atiende quien tiene el permiso efectivo
   })
 
   it('la ayuda no dice que el portal de clientes «se abre por etapas» (portalCliente está encendido)', () => {
     expect(leer('supabase/29-ayuda-publicador-asociado.sql')).not.toMatch(/se abre por etapas/)
   })
 
-  it('la pantalla de citas recibidas no promete que VIVE BIEN atiende lo que el servidor no agenda', () => {
+  it('la pantalla de citas del publicador dice lo que el servidor hace (D-1): VIVE BIEN administra las de un publicador y él solo las consulta', () => {
     const t = leer('src/app/publicador/citas/page.tsx')
+    expect(t).toMatch(/VIVE BIEN administra las solicitudes y aquí las consultas/)   // pestaña «Mis propiedades» (solo lectura)
     expect(t).not.toMatch(/las atiende VIVE BIEN/)
-    expect(t).toMatch(/no se pueden agendar visitas en línea a tus propiedades/)
+    expect(t).not.toMatch(/Aceptar visita|Mantener el horario/)   // acciones del diseño anterior: ahora las ofrece el servidor en cita.acciones
   })
 })
 
