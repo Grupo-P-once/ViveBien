@@ -104,11 +104,13 @@ describe('borrador del Aviso de Privacidad (correos)', () => {
   it('describe los correos de servicio, la baja con supresión, el registro de envíos y a Resend', () => {
     for (const frag of ['Correos de servicio y seguridad', 'Hoy no enviamos correos promocionales', 'una huella derivada del correo', 'hasta por dos años desde el envío', 'No registramos si usted abre un correo', 'Resend:</strong> envío de los correos de VIVE BIEN']) expect(p, frag).toContain(frag)
   })
-  it('lleva la versión aprobada por el abogado y la fecha visible coincide con la versión legal (van juntas)', () => {
-    // 3-nov-2026: el abogado aprobó la versión (comunicado por el dueño). Fecha visible y `VERSIONES` cambian juntas; un texto sin aprobar no puede llevar esta fecha.
-    expect(p).toContain('Estado (3-nov-2026)')
-    expect(p).toContain('APROBADA por el abogado')
-    expect(p).toContain('Última actualización: 3 de noviembre de 2026')
-    expect(leer('src/lib/aceptacion-legal.ts')).toContain("privacidad: '2026-11-03'")
+  it('la fecha visible coincide con la versión legal (van juntas) y el estado del texto es honesto', () => {
+    // 6-nov-2026: la versión 2026-11-06 añade las citas y es un BORRADOR sujeto a aprobación del abogado (la 2026-11-03 sí fue aprobada). Fecha visible y `VERSIONES` cambian juntas;
+    // el comentario de estado debe decir que NO se publique sin aprobación: cuando el abogado apruebe, este bloque se actualiza a «APROBADA» con su fecha.
+    expect(p).toContain('Estado (6-nov-2026)')
+    expect(p).toContain('BORRADOR sujeto a aprobación del abogado; NO publicar sin ella')
+    expect(p).toContain('la versión 2026-11-03, que SÍ fue APROBADA por el abogado')
+    expect(p).toContain('Última actualización: 6 de noviembre de 2026')
+    expect(leer('src/lib/aceptacion-legal.ts')).toContain("privacidad: '2026-11-06'")
   })
 })

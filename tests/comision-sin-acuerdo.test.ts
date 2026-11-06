@@ -107,10 +107,11 @@ describe('4a · retención: el Aviso dice lo que de verdad se borra', () => {
   })
   it('la purga diaria NO toca cuentas, consultas, formularios ni datos de propietarios, y el Aviso no afirma que sí', () => {
     const f = sql.slice(sql.indexOf('create or replace function public.correo_purgar'))
-    for (const tabla of ['usuarios', 'leads', 'solicitudes_contacto', 'propiedad_origen']) expect(f).not.toContain(`from public.${tabla}`)
+    // 6-nov-2026: se añade `citas` (y `citas_correos`): el Aviso las pone bajo el plazo general SIN borrado automático, y la purga de correos no las toca.
+    for (const tabla of ['usuarios', 'leads', 'solicitudes_contacto', 'propiedad_origen', 'citas', 'citas_correos', 'citas_recordatorios']) expect(f).not.toContain(`from public.${tabla}`)
     expect(aviso).toContain('Hoy esa supresión no es automática:')
     expect(aviso).toContain('solo el registro de correos, descrito a continuación, se elimina de forma automática')
-    expect(aviso).toContain('consultas y de propietarios, representantes y agentes')
+    expect(aviso).toContain('consultas, citas y de propietarios, representantes y agentes')
   })
 })
 

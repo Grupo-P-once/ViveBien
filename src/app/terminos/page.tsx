@@ -29,7 +29,7 @@ export default function TerminosPage() {
         <h1 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: 'clamp(1.6rem,3vw,2.4rem)', marginBottom: '.6rem' }}>
           Términos y Condiciones
         </h1>
-        <p style={{ opacity: .75, fontSize: '.95rem' }}>Última actualización: 3 de noviembre de 2026</p>
+        <p style={{ opacity: .75, fontSize: '.95rem' }}>Última actualización: 6 de noviembre de 2026</p>
       </section>
 
       <main style={{ background: '#fff', padding: '3rem 2rem' }}>
@@ -45,7 +45,7 @@ export default function TerminosPage() {
           </Section>
 
           <Section title="2. Qué ofrece la plataforma">
-            <p style={{ marginBottom: '1rem' }}>VIVE BIEN permite consultar propiedades en venta o renta, revisar información y fotografías, guardar propiedades o búsquedas cuando la función esté disponible, solicitar información o una visita, y utilizar herramientas informativas como el valuador.</p>
+            <p style={{ marginBottom: '1rem' }}>VIVE BIEN permite consultar propiedades en venta o renta, revisar información y fotografías, guardar propiedades o búsquedas cuando la función esté disponible, solicitar información, agendar una cita para visitar una propiedad y utilizar herramientas informativas como el valuador.</p>
             <p style={{ marginBottom: '1rem' }}>La disponibilidad de funciones puede cambiar. La plataforma puede incluir casas, departamentos, terrenos, oficinas, locales comerciales, naves industriales, bodegas y otros inmuebles que VIVE BIEN decida incorporar.</p>
             <p style={{ marginBottom: '1rem' }}>VIVE BIEN facilita información y contacto inmobiliario. La participación de VIVE BIEN en una operación concreta dependerá del servicio acordado para esa propiedad. La plataforma por sí sola no crea un contrato de compraventa, arrendamiento, representación o intermediación entre el usuario y VIVE BIEN o el anunciante.</p>
           </Section>
@@ -69,10 +69,17 @@ export default function TerminosPage() {
             <p style={{ marginBottom: '1rem' }}>El programa de <strong>Asociado sin compartir comisión</strong> está desactivado y no está disponible actualmente. La mención “Próximamente” no constituye una invitación abierta, aprobación, promesa de ingreso ni acuerdo de comisiones. Si el programa se habilita, sus requisitos y condiciones se comunicarán por separado antes del registro.</p>
           </Section>
 
-          <Section title="5. Solicitudes de información y contacto con anunciantes">
+          <Section title="5. Solicitudes de información, citas y contacto con anunciantes">
             <p style={{ marginBottom: '1rem' }}>Al enviar una solicitud sobre una propiedad y aceptar el aviso de privacidad y la autorización de transferencia que se muestran en el formulario, usted autoriza a VIVE BIEN a recibir sus datos y a compartir manualmente con el anunciante de esa propiedad los datos necesarios para atender la solicitud, como nombre, teléfono, correo, inmueble de interés y mensaje relacionado.</p>
             <p style={{ marginBottom: '1rem' }}>VIVE BIEN recibe primero la solicitud. El equipo canaliza la información al anunciante correspondiente; la plataforma no otorga al anunciante acceso general a la cuenta, búsquedas u otras consultas del usuario. El anunciante debe utilizar los datos únicamente para responder a la solicitud y respetar las obligaciones de protección de datos aplicables.</p>
             <p style={{ marginBottom: '1rem' }}>El tratamiento de datos se explica con más detalle en el <a href="/privacidad" style={{ color: 'var(--azul)', textDecoration: 'underline' }}>Aviso de Privacidad</a>. La autorización para compartir datos no equivale a aceptar promociones de propiedades distintas.</p>
+            <h3 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 700, color: 'var(--azul)', fontSize: '1rem', margin: '1.25rem 0 .5rem' }}>Citas para visitar una propiedad</h3>
+            <p style={{ marginBottom: '1rem' }}>Con una cuenta puede solicitar una cita eligiendo uno de los días y horas que se muestran como disponibles. <strong>Enviar la solicitud no confirma la visita:</strong> queda pendiente hasta que la persona responsable de atender esa propiedad la confirme, la rechace o proponga otro horario. <strong>Solo una cita confirmada aparta el horario.</strong> Varias solicitudes pueden esperar el mismo horario; cuando una se confirma, ese horario queda ocupado, las demás ya no pueden confirmarse en él y se avisará a quien corresponda ofreciendo otros horarios.</p>
+            <p style={{ marginBottom: '1rem' }}>La disponibilidad la define la persona responsable de atender cada propiedad y puede cambiar. VIVE BIEN puede rechazar o cancelar una cita indicando el motivo, por ejemplo cuando la propiedad deje de estar disponible, el responsable tenga un imprevisto, los datos sean incorrectos o se haga un uso indebido de la función (sección 12).</p>
+            <p style={{ marginBottom: '1rem' }}><strong>Cancelar y pedir otro horario.</strong> Usted puede cancelar una cita confirmada, o pedir otro horario, hasta 2 horas antes de la hora de la cita; con menos de 2 horas de anticipación debe contactar a VIVE BIEN. Una solicitud que todavía no se ha confirmado puede retirarse en cualquier momento. Al pedir otro horario, la cita vigente se conserva tal como está hasta que la otra parte acepte la propuesta; si no la acepta o la propuesta vence, sigue la cita original.</p>
+            <p style={{ marginBottom: '1rem' }}><strong>Sin respuesta y no asistencia.</strong> Si nadie confirma una solicitud antes de la hora solicitada, expira automáticamente. Pasada la hora de una cita confirmada, la persona responsable la registra como realizada o como «No asistió».</p>
+            <p style={{ marginBottom: '1rem' }}><strong>Avisos.</strong> Los cambios de una cita se le informan en la plataforma y por correo, y una cita confirmada se le recuerda por correo 24 horas y 1 hora antes. Esos correos no traen botones que cambien la cita: para confirmarla, cambiarla o cancelarla debe iniciar sesión y hacerlo en su panel. Las horas son hora de León, Guanajuato. El archivo de calendario (.ics) y el enlace para añadirla a su calendario son una comodidad: si la cita cambia, lo que cuenta es el estado que muestra la plataforma.</p>
+            <p style={{ marginBottom: '1rem' }}>Una cita es solo una visita acordada: no obliga a contratar ni a comprar o rentar, no garantiza que el inmueble o su precio sigan disponibles y no crea por sí sola ningún contrato, comisión ni exclusividad (sección 8).</p>
           </Section>
 
           <Section title="6. Valuador y contenido informativo">

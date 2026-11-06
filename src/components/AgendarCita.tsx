@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { rutaDeEntrada } from '@/lib/pantalla/plegables'
 import { useAuth } from '@/lib/useAuth'
 import { llamarApi } from '@/lib/citas/cliente'
+import { TEXTO_CONSENTIMIENTO_CITAS } from '@/lib/contacto'
 import { fechaLarga, horaCorta } from '@/lib/citas/zona'
 import type { Disponibilidad } from '@/lib/citas/servicio'
 import type { CitaVista } from '@/lib/citas/vista'
@@ -151,7 +152,7 @@ export default function AgendarCita({ propiedadId, isLoggedIn }: { propiedadId: 
               </label>
               <label style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: '.8rem', color: '#374151' }}>
                 <input type="checkbox" checked={consiente} onChange={(e) => setConsiente(e.target.checked)} style={{ width: 20, height: 20, marginTop: 1, flex: 'none' }} />
-                <span>Acepto que VIVE BIEN comparta mi nombre y teléfono con quien atiende esta visita.</span>
+                <span>{TEXTO_CONSENTIMIENTO_CITAS} Conozco el <Link href="/privacidad" target="_blank" style={{ color: 'var(--azul)', textDecoration: 'underline' }}>Aviso de privacidad</Link>.</span>
               </label>
               <button type="button" onClick={enviar} disabled={paso === 'enviando'}
                 style={{ minHeight: 48, borderRadius: 12, border: 'none', background: 'var(--rojo, #8B1A1A)', color: '#fff', fontWeight: 800, fontSize: '1rem', cursor: 'pointer', opacity: paso === 'enviando' ? 0.7 : 1 }}>
