@@ -93,6 +93,13 @@ const redireccionesDeFichas = Object.entries(nombresRetirados).map(([viejo, nuev
 const enlaceCortoDePropiedad = [{ source: "/p/:folio", destination: "/propiedades/:folio", permanent: false }];
 
 /**
+ * Citas (6-nov-2026): `/portal/visitas` pasó a `/portal/citas`. Los correos y marcadores viejos llevan a la ruta anterior; el redirect de la propia página
+ * viaja por *streaming* (HTTP 200 con la redirección dentro de la respuesta) y un cliente sin JavaScript no lo seguiría. Aquí es un 307 REAL de servidor; el
+ * query (`?cita=`) se conserva. La página vieja sigue existiendo como respaldo (ver tests/citas-enlaces.test.ts). Temporal (307) por si algún día vuelve.
+ */
+const citasRutaVieja = [{ source: "/portal/visitas", destination: "/portal/citas", permanent: false }];
+
+/**
  * Proxy de Firebase Auth en el propio dominio (preparado, inerte hasta que
  * `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` sea `vivebienn.com`).
  *
@@ -153,7 +160,7 @@ const nextConfig: NextConfig = {
     ];
   },
   async redirects() {
-    return [...redireccionesDeDominio, ...redireccionesDeFichas, ...enlaceCortoDePropiedad];
+    return [...redireccionesDeDominio, ...redireccionesDeFichas, ...enlaceCortoDePropiedad, ...citasRutaVieja];
   },
   async rewrites() {
     if (!PROYECTO_FIREBASE) return [];

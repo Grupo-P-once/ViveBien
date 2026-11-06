@@ -70,9 +70,10 @@ const tipoLabel: Record<string, string> = {
   nave: 'Nave Industrial', casa: 'Casa', terreno: 'Terreno',
   comercial: 'Local Comercial', departamento: 'Departamento', oficina: 'Oficina',
 }
+// Insignia del tipo: texto BLANCO encima, así que el fondo debe llegar a 4.5:1 (axe color-contrast). `--exito` (3.84) y `--aviso` (3.19) no llegan; sus variantes «fuerte» sí (5.02 y 7.09).
 const tipoColor: Record<string, string> = {
-  nave: 'var(--azul)', casa: 'var(--rojo)', terreno: 'var(--exito)',
-  comercial: 'var(--aviso)', departamento: 'var(--morado)', oficina: 'var(--azul)',
+  nave: 'var(--azul)', casa: 'var(--rojo)', terreno: 'var(--exito-fuerte)',
+  comercial: 'var(--aviso-fuerte)', departamento: 'var(--morado)', oficina: 'var(--azul)',
 }
 
 export default function DetallePropiedad({ params, idInterno, inicial }: { params: Promise<{ id: string }>; idInterno?: string; inicial?: (Record<string, unknown> & { estado_pub?: string | null; estatus?: string | null }) | null }) {

@@ -31,3 +31,25 @@ describe('D-8 · estado con el que nace una cita', () => {
     expect(estadoInicialDeCita({ ...base, paraOtro: true, clienteUid: 'u-ase', asesorUid: 'u-ase' })).toBe('REQUESTED')
   })
 })
+
+import { motivoParaNoAgendarse } from '../src/lib/citas/estados'
+
+describe('D-8 · quién puede agendarse sobre una propiedad (revisión de Codex: el asociado responsable recibía un 400)', () => {
+  const base = { clienteUid: 'u-x', propietarioUid: 'u-dueno', asesorUid: 'u-ase', esDelEquipo: false }
+  it('el responsable que NO es del equipo (asociado) sí puede agendarse a sí mismo', () => {
+    expect(motivoParaNoAgendarse({ ...base, clienteUid: 'u-ase' })).toBeNull()
+  })
+  it('un asociado que es a la vez dueño y responsable puede agendarse (D-8)', () => {
+    expect(motivoParaNoAgendarse({ ...base, clienteUid: 'u-ase', propietarioUid: 'u-ase' })).toBeNull()
+  })
+  it('un dueño que NO atiende sus citas (p. ej. publicador) no se agenda sobre su propia propiedad', () => {
+    expect(motivoParaNoAgendarse({ ...base, clienteUid: 'u-dueno' })).toBe('propiedad_propia')
+  })
+  it('el equipo siempre puede; un cliente cualquiera también', () => {
+    expect(motivoParaNoAgendarse({ ...base, clienteUid: 'u-dueno', esDelEquipo: true })).toBeNull()
+    expect(motivoParaNoAgendarse(base)).toBeNull()
+  })
+  it('sin dueño registrado no se inventa un rechazo', () => {
+    expect(motivoParaNoAgendarse({ ...base, propietarioUid: null })).toBeNull()
+  })
+})

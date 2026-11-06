@@ -4,7 +4,7 @@ import { normalizarTelefono, VERSION_CONSENTIMIENTO } from '../contacto'
 import { nombreDe, rutaDe } from '../propiedad-publica'
 import { AJUSTES_POR_DEFECTO, HORARIO_POR_DEFECTO, type AjustesCitas, type BloqueHorario } from './ajustes'
 import { esHorarioOfrecido, horariosDelRango, type Rango } from './disponibilidad'
-import { ESTADOS_ACTIVOS, estadoInicialDeCita, explicar, type AccionCita, type PapelVista } from './estados'
+import { ESTADOS_ACTIVOS, estadoInicialDeCita, explicar, motivoParaNoAgendarse, type AccionCita, type PapelVista } from './estados'
 import { papelEn, recortar, type CitaFila, type CitaVista, type PropiedadDeCita } from './vista'
 import { instanteLocal, sumarDias } from './zona'
 import { hashDe, pareceToken } from './tokens'
@@ -460,8 +460,8 @@ export async function createAppointment(perfil: PerfilUsuario, entrada: EntradaC
   const clienteUid = paraOtro ? entrada.clienteUid! : perfil.uid
   // Nadie visita su propia propiedad, salvo el equipo (D-8: un miembro del equipo puede ir a ver una propiedad que atiende).
   const esDelEquipo = puede(perfil, 'panel.admin')
-  if (clienteUid === propiedad.owner_id && !esDelEquipo) return falla(400, 'No se puede agendar una visita a una propiedad propia.')
-  if (clienteUid === asesorUid && !esDelEquipo) return falla(400, 'No se puede agendar una visita a una propiedad que tú mismo atiendes.')
+  // D-8: el responsable (también un asociado) SÍ puede agendarse a sí mismo; antes solo el equipo y el asociado recibía un 400 (revisión de Codex, 6-nov-2026).
+  if (motivoParaNoAgendarse({ clienteUid, propietarioUid: propiedad.owner_id, asesorUid, esDelEquipo }) === 'propiedad_propia') return falla(400, 'No se puede agendar una visita a una propiedad propia.')
 
   // Sólo agenda quien tiene cuenta creada: una fila en `usuarios`, activa.
   // Quien sólo llenó el formulario de registro no la tiene.
@@ -492,6 +492,13 @@ export async function createAppointment(perfil: PerfilUsuario, entrada: EntradaC
     const hasta = new Date(inicio.getTime() + 2 * 86_400_000)
     const e = await entradaDisponibilidad(db, asesorUid, clienteUid, desde, hasta)
     if (!esHorarioOfrecido(inicio, { ...e, horario, ajustes, ahora })) {
+      // Dos envíos simultáneos de la MISMA solicitud (doble clic, reintento de red): el segundo ve su propio horario ya ocupado por el primero. Si la cita que
+      // figura es la de esta misma clave, se devuelve esa y no un falso «horario ocupado» (revisión de Codex, 6-nov-2026).
+      const yaCreada = await db.from('citas').select('id').eq('creada_por', perfil.uid).eq('clave_idempotencia', clave).maybeSingle()
+      if (yaCreada.data) {
+        const vista = await getAppointment(yaCreada.data.id, perfil, ahora)
+        if (vista) return { ok: true, valor: vista }
+      }
       return falla(409, explicar('horario_ocupado'))
     }
   }

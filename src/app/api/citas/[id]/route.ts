@@ -27,7 +27,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 
     // Un publicador atendiendo la cita ve, como el cliente, sólo horarios y
     // motivos: el historial del equipo puede traer notas y datos del interesado.
-    const acotado = cita.papel === 'cliente' || (cita.papel === 'asesor' && auth.perfil.rol === 'publicador')
+    // El PROPIETARIO (dueño que no atiende la cita, D-1) tampoco ve notas ni datos del equipo: solo horarios y motivos (revisión de Codex, 6-nov-2026).
+    const acotado = cita.papel === 'cliente' || cita.papel === 'propietario' || (cita.papel === 'asesor' && auth.perfil.rol === 'publicador')
 
     // Quién hizo cada cambio se dice por su papel, nunca por su uid.
     const historial = (data ?? [])

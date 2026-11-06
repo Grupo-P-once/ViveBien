@@ -88,15 +88,22 @@ test.describe('catálogo: oficinas y filtros de características (datos sintéti
     await resultados(page, 'op=renta')
     await page.getByRole('button', { name: /Más filtros/ }).click()
     await expect(page.getByRole('group', { name: 'Más filtros' })).toBeVisible()
-    await page.getByLabel('Estacionamientos').selectOption('2')
+    // Estacionamientos son fichas «0 · 1+ · 2+ · 3+ · 4+» (antes un selector): se elige «2+» y queda marcada.
+    // (al elegirla aparece además la etiqueta del filtro activo con el mismo nombre: se acota al panel «Más filtros»)
+    const ficha = page.getByRole('group', { name: 'Más filtros' }).getByRole('button', { name: '2+ estacionamientos' })
+    await ficha.click()
+    await expect(ficha).toHaveAttribute('aria-pressed', 'true')
     await page.getByLabel('Amueblado').check()
     await expect(page).toHaveURL(/est=2/)
-    await expect(page).toHaveURL(/amu=1/)
+    await expect(page).toHaveURL(/gen=amueblado/)   // la interfaz ahora escribe el filtro de «Amueblado» como gen=amueblado
+    const esperadas = ['Casa amueblada en renta, 3 recámaras, Cumbres', 'Oficina corporativa en renta, Torre Altus'].sort()
+    expect((await sinteticos(page, 'op=renta&est=2&gen=amueblado')).sort()).toEqual(esperadas)
+    // Compatibilidad: los enlaces viejos con amu=1 (alertas y búsquedas guardadas) dan el MISMO resultado.
     expect((await sinteticos(page, 'op=renta&est=2&amu=1')).sort()).toEqual(['Casa amueblada en renta, 3 recámaras, Cumbres', 'Oficina corporativa en renta, Torre Altus'].sort())
     await capturaDe(page.locator('.barra-filtros'), 'catalogo-barra-mas-filtros')
     // salir de «renta» quita lo que sólo existe en renta
     await page.getByRole('button', { name: 'Todo', exact: true }).click()
-    await expect(page).not.toHaveURL(/amu=1/)
+    await expect(page).not.toHaveURL(/gen=amueblado|amu=1/)
   })
 
   test('axe: la sección «Más filtros» no añade infracciones', async ({ page }) => {

@@ -56,6 +56,16 @@ async function leer(db: Db, id: string): Promise<Filas | null> {
  * `lib/citas/enlaces.ts`). El asesor es el equipo de VIVE BIEN o, si es un
  * publicador con `recibir_citas` (ADR-0013), va a su propia pantalla.
  */
+/** Minutos tras los que un correo en «pendiente» se da por abandonado (el proceso que lo registró ya no lo está mandando). */
+const MINUTOS_ABANDONADO = 10
+
+/** ¿Una fila de `citas_correos` quedó «pendiente» tanto tiempo que quien la registró ya no la está mandando? (puro: lo prueba `tests/citas-correo-abandonado.test.ts`). */
+export function correoAbandonado(estado: string, creadoEn: string, ahora: Date): boolean {
+  if (estado !== 'pendiente') return false
+  const t = new Date(creadoEn).getTime()
+  return Number.isFinite(t) && ahora.getTime() - t > MINUTOS_ABANDONADO * 60_000
+}
+
 export function enlaceParaVer(citaId: string, para: Para, asesorEsPublicador = false): string {
   return `${SITIO}${rutaDeVisitas(para === 'cliente' ? 'cliente' : asesorEsPublicador ? 'publicador' : 'equipo', citaId)}`
 }
@@ -130,11 +140,15 @@ async function uno(db: Db, f: Filas, m: CorreoPlaneado, ahora: Date, opciones: {
     }
     // Ya existía. Si salió, no se repite. Si falló antes, se REINTENTA (un solo proceso toma el relevo de forma atómica).
     // Si está en curso, se deja: otro proceso lo está mandando.
-    const ex = await db.from('citas_correos').select('id, estado, intentos').eq('clave_idempotencia', clave).maybeSingle()
+    const ex = await db.from('citas_correos').select('id, estado, intentos, creado_en').eq('clave_idempotencia', clave).maybeSingle()
     if (ex.error || !ex.data) return { estado: 'en_curso' }
     if (ex.data.estado === 'enviado') return { estado: 'duplicado' }
-    if (ex.data.estado !== 'error') return { estado: 'en_curso' }
-    const toma = await db.from('citas_correos').update({ estado: 'pendiente' }).eq('id', ex.data.id).eq('estado', 'error').select('id')
+    // «pendiente» es la marca de «lo está mandando alguien». Si ese alguien murió tras registrar la fila (el proceso se reinició, se acabó el tiempo), la
+    // fila quedaría así para siempre y el recordatorio se perdería (revisión de Codex, 6-nov-2026). Pasados 10 min (`MINUTOS_ABANDONADO`) se considera abandonada y la toma
+    // UN solo proceso, de forma atómica (compara el `creado_en` que leyó y lo renueva).
+    const abandonado = correoAbandonado(String(ex.data.estado), String(ex.data.creado_en), new Date())
+    if (ex.data.estado !== 'error' && !abandonado) return { estado: 'en_curso' }
+    const toma = await db.from('citas_correos').update({ estado: 'pendiente', creado_en: new Date().toISOString() }).eq('id', ex.data.id).eq('estado', ex.data.estado).eq('creado_en', ex.data.creado_en).select('id')
     if (toma.error || !toma.data?.length) return { estado: 'en_curso' }
     filaId = ex.data.id as number
     intentosPrevios = Number(ex.data.intentos ?? 0)

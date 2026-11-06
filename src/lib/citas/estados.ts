@@ -324,3 +324,14 @@ export function estadoInicialDeCita(o: {
   const seAgendaASiMismo = !o.paraOtro && o.clienteUid === o.asesorUid
   return seAgendaASiMismo || o.confirmacion === 'automatica' ? 'CONFIRMED' : 'REQUESTED'
 }
+
+/**
+ * ¿Puede esta cuenta agendar una visita A SÍ MISMA sobre esta propiedad? (D-8 + regla del dueño). Devuelve el motivo del rechazo o null si puede.
+ *  · El RESPONSABLE de la cita (equipo, asociado o quien el admin asignó) puede agendarse a sí mismo: D-8 lo confirma si el horario está disponible.
+ *  · El equipo siempre puede ir a ver cualquier propiedad.
+ *  · Un dueño que NO atiende sus propias citas (p. ej. un Publicador, cuyas citas administra VIVE BIEN) no se agenda sobre su propia propiedad.
+ */
+export function motivoParaNoAgendarse(o: { clienteUid: string; propietarioUid: string | null; asesorUid: string; esDelEquipo: boolean }): 'propiedad_propia' | null {
+  if (o.esDelEquipo || o.clienteUid === o.asesorUid) return null
+  return o.propietarioUid !== null && o.clienteUid === o.propietarioUid ? 'propiedad_propia' : null
+}

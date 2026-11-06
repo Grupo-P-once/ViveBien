@@ -19,16 +19,16 @@ async function basePublica(page: import('@playwright/test').Page) {
 const atascar = (host: string) => ['**/' + host + '/**', () => { /* nunca responde: el tercero «no contesta» */ }] as const
 
 test.describe('un tercero que no contesta', () => {
-  test('1) SIN límite, UN solo tercero atascado deja la navegación colgada (el timeout de 30 s que se vio), y se ve QUÉ queda pendiente', async ({ page }) => {
+  test('1) Google Fonts ya NO es una dependencia: aunque ese tercero esté atascado, la navegación no se cuelga y no se le pide nada (fuentes alojadas, LINT-2)', async ({ page }) => {
+    // Antes (hasta el 3-nov-2026) un fonts.googleapis.com atascado bloqueaba el renderizado y agotaba los 30 s de `axe · portada`. Desde que las fuentes se alojan en
+    // el sitio ese experimento ya no cuelga la página: el mecanismo quedó eliminado de raíz. Esta prueba falla si alguien vuelve a depender de Google Fonts.
     await basePublica(page)
-    const pendientes = new Set<string>()
-    page.on('request', (r) => pendientes.add(r.url()))
-    page.on('requestfinished', (r) => pendientes.delete(r.url()))
-    page.on('requestfailed', (r) => pendientes.delete(r.url()))
+    const pedidos: string[] = []
+    page.on('request', (r) => pedidos.push(r.url()))
     await page.route(...atascar('fonts.googleapis.com'))
-    // La hoja de estilos de Google Fonts bloquea el renderizado: ni «domcontentloaded» llega. Es el `page.goto` que agotó 30 s en `axe · portada`.
-    await expect(page.goto('/contacto', { waitUntil: 'domcontentloaded', timeout: 6_000 })).rejects.toThrow(/Timeout/)
-    expect([...pendientes].some((u) => /fonts\.googleapis\.com/.test(u))).toBe(true)
+    await page.route(...atascar('fonts.gstatic.com'))
+    await page.goto('/contacto', { waitUntil: 'domcontentloaded', timeout: 15_000 })
+    expect(pedidos.filter((u) => /fonts.(googleapis|gstatic).com/.test(u))).toEqual([])
   })
 
   test('2) CON límite, el mismo tercero atascado se corta y la página llega a red quieta', async ({ page }) => {

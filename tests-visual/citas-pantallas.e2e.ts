@@ -185,6 +185,18 @@ test.describe('cliente · /portal/citas', () => {
   })
 })
 
+test.describe('enlaces viejos', () => {
+  test('/portal/visitas es un 307 REAL de servidor hacia /portal/citas, conservando ?cita= (sirve sin JavaScript)', async ({ request }) => {
+    const r = await request.get('/portal/visitas?cita=' + ID_A, { maxRedirects: 0 })
+    expect(r.status()).toBe(307)
+    const destino = new URL(r.headers()['location'], 'http://x')
+    expect(destino.pathname + destino.search).toBe(`/portal/citas?cita=${ID_A}`)
+    const sin = await request.get('/portal/visitas', { maxRedirects: 0 })
+    expect(sin.status()).toBe(307)
+    expect(new URL(sin.headers()['location'], 'http://x').pathname).toBe('/portal/citas')
+  })
+})
+
 test.describe('equipo · /admin/citas', () => {
   test('una solicitud con horario ocupado muestra el aviso y NO ofrece confirmar', async ({ page }) => {
     const conflicto = PENDIENTE({ papel: 'admin', conflicto: true, acciones: ['confirmar', 'rechazar', 'proponer'], cliente: { nombre: 'Ana Pérez', telefono: '4771234567' } })

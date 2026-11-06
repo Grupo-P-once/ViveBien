@@ -744,7 +744,7 @@ function PropModal({ p, onClose, onContact, isLoggedIn }: { p: Propiedad; onClos
         <div style={{ flex: 1, padding: '2.5rem 2rem', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', gap: '.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
             <span style={{ background: 'var(--azul)', color: '#fff', padding: '3px 12px', borderRadius: '20px', fontSize: '.72rem', fontWeight: 700, textTransform: 'uppercase' }}>{p.tipo}</span>
-            <span style={{ background: p.operacion === 'venta' ? 'var(--rojo)' : 'var(--exito)', color: '#fff', padding: '3px 12px', borderRadius: '20px', fontSize: '.72rem', fontWeight: 700, textTransform: 'uppercase' }}>{p.operacion === 'venta' ? 'VENTA' : 'RENTA'}</span>
+            <span style={{ background: p.operacion === 'venta' ? 'var(--rojo)' : 'var(--exito-fuerte)', color: '#fff', padding: '3px 12px', borderRadius: '20px', fontSize: '.72rem', fontWeight: 700, textTransform: 'uppercase' }}>{p.operacion === 'venta' ? 'VENTA' : 'RENTA'}</span>
           </div>
           <h2 style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '1.5rem', color: 'var(--azul)', marginBottom: '.4rem', fontWeight: 800 }}>{p.titulo}</h2>
           <p style={{ color: '#666', fontSize: '.85rem', marginBottom: '1.5rem' }}>
