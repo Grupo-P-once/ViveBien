@@ -10,7 +10,10 @@ import { acotarTerceros } from './ayudas-red'
  *   2. CON `acotarTerceros`, el mismo tercero atascado se corta al límite y la página queda quieta.
  * Falla si alguien quita el límite de `ayudas-red.ts`/`prepararPaginaPublica`, o vuelve a depender de un tercero sin acotarlo.
  */
+const UN_PIXEL = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64')
 async function basePublica(page: import('@playwright/test').Page) {
+  // Hermético: la fixtura v2 trae fotos sintéticas de res.cloudinary.com; sin esto la prueba dependía de la red real (en frío, 15 s no bastaban para llegar a «red quieta»).
+  await page.route((u) => /(^|\.)cloudinary\.com$/.test(u.hostname), (r) => r.fulfill({ status: 200, contentType: 'image/png', body: UN_PIXEL }))
   await page.route('**/api/eventos', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true}' }))
   await page.route('**/api/registro-lead', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true}' }))
   await page.route('**/api.open-meteo.com/**', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: '{"current_weather":{"temperature":24,"weathercode":1}}' }))
