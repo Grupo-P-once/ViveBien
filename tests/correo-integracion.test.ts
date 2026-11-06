@@ -112,7 +112,7 @@ describe('visitante sin cuenta → confirmar → recomendaciones → baja', () =
     for (const malo of ['borrador', 'pausada', 'casa-renta']) expect(primero.cuerpo.html).not.toContain(malo)
     expect(primero.cuerpo.headers!['List-Unsubscribe-Post']).toBe('List-Unsubscribe=One-Click') // también el primer correo se puede dejar de recibir con un clic
     const [fila] = await q<Record<string, unknown>>(`select * from public.correo_suscriptores`)
-    expect(fila).toMatchObject({ estado: 'pendiente', email_norm: 'ana.visitante@ejemplo.test', consentimiento_version: 'marketing-2026-10-v2', proximo_envio_en: null })
+    expect(fila).toMatchObject({ estado: 'pendiente', email_norm: 'ana.visitante@ejemplo.test', consentimiento_version: 'marketing-2026-11-v3', proximo_envio_en: null })
     const [inicial] = await q<Record<string, unknown>>(`select * from public.correo_envios`)
     expect(inicial).toMatchObject({ categoria: 'transaccional', tipo: 'primeras_propiedades', estado: 'enviado' })
     expect((inicial.propiedades as string[]).sort()).toEqual(['dos', 'uno'])
@@ -138,9 +138,9 @@ describe('visitante sin cuenta → confirmar → recomendaciones → baja', () =
     expect(await ejecutarTareaMarketing(db, { entorno: ENV, fetch: fetchFalso, ahora: dia3 })).toMatchObject({ procesadas: 1, enviadas: 0, sinNovedades: 1 })
     expect(peticiones).toHaveLength(1)
 
-    // 6 · llega una propiedad nueva: a los 3 días siguientes se manda SÓLO la nueva, ya como correo comercial con baja de un clic
+    // 6 · llega una propiedad nueva: a los 7 días siguientes (la frecuencia de la tarea) se manda SÓLO la nueva, ya como correo comercial con baja de un clic
     await insertarPropiedad(NAVE('tres', { publicada_en: hace(19) }))
-    const dia6 = new Date(dia3.getTime() + 3 * 86_400_000 + 60_000)
+    const dia6 = new Date(dia3.getTime() + 7 * 86_400_000 + 60_000)
     expect(await ejecutarTareaMarketing(db, { entorno: ENV, fetch: fetchFalso, ahora: dia6 })).toMatchObject({ enviadas: 1 })
     const reco = peticiones[1]
     expect(reco.cuerpo.subject).toBe('Una propiedad que podría interesarte')
@@ -330,7 +330,7 @@ describe('transaccionales de D-80', () => {
     expect(await fijarMarketingDeCuenta(db, { ...cuenta, verificado: false }, { aceptar: true })).toEqual({ estado: 'correo_sin_verificar' })
     expect(await q(`select 1 from public.correo_suscriptores`)).toEqual([])
     expect(await fijarMarketingDeCuenta(db, cuenta, { aceptar: true, prefs: { tipos: ['casa'] } })).toEqual({ estado: 'activa' })
-    expect((await q(`select estado, fuente, consentimiento_version from public.correo_suscriptores`))[0]).toEqual({ estado: 'activa', fuente: 'cuenta', consentimiento_version: 'marketing-2026-10-v2' })
+    expect((await q(`select estado, fuente, consentimiento_version from public.correo_suscriptores`))[0]).toEqual({ estado: 'activa', fuente: 'cuenta', consentimiento_version: 'marketing-2026-11-v3' })
     expect(await fijarMarketingDeCuenta(db, { ...cuenta, verificado: false }, { aceptar: false })).toEqual({ estado: 'baja' })
   })
 })

@@ -68,9 +68,9 @@ export type LimitesCorreo = {
 
 export const CORREO: LimitesCorreo = {
   /** Un correo comercial por persona, como máximo, cada tantos días. Es un MÁXIMO, no una obligación de enviar. */
-  entreMarketingDias: 3,
+  entreMarketingDias: 7,
   /** Cuántas personas procesa una ejecución diaria (cabe holgadamente en el tiempo de una función). */
-  loteMarketing: 25,
+  loteMarketing: 50,
   /** Propiedades por correo de recomendaciones. */
   propiedadesPorCorreo: 3,
   /** Cuántos envíos anteriores se miran para no repetir propiedades. */
@@ -82,9 +82,9 @@ export const CORREO: LimitesCorreo = {
 }
 
 /** Versión y texto EXACTOS que ve la persona al aceptar. Si cambia el texto, cambia la versión (queda la prueba de qué aceptó). */
-export const VERSION_CONSENTIMIENTO_MARKETING = 'marketing-2026-10-v2'
+export const VERSION_CONSENTIMIENTO_MARKETING = 'marketing-2026-11-v3'
 export const TEXTO_CONSENTIMIENTO_MARKETING =
-  'Al pedirlo, aceptas recibir por correo propiedades de VIVE BIEN que se ajusten a lo que elegiste, como máximo una cada tres días. Si no te interesan, te das de baja con un clic desde cualquier correo. Usamos tu correo sólo para esto.'
+  'Al pedirlo, aceptas recibir por correo propiedades nuevas de VIVE BIEN que se ajusten a lo que elegiste o que se parezcan a la última propiedad que consultaste en nuestro sitio, como máximo una cada siete días. Si no te interesan, te das de baja con un clic desde cualquier correo. Usamos tu correo y tu actividad en el sitio sólo para esto.'
 
 /**
  * MODO DE PRUEBAS (D-80). Con `CORREO_MODO_PRUEBAS=1`, TODO correo que sale por `enviarCorreo` se redirige a este único destino,
