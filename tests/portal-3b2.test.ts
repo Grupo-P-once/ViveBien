@@ -210,7 +210,7 @@ describe('menú y rutas al cerrar 3b-2', () => {
   it('las diez pantallas existen (sólo falta «Mi propiedad», de 3b-3)', () => {
     const existen = new Set(rutasReales())
     for (const r of PANTALLAS_DEL_PORTAL) expect(existen, r).toContain(r)
-    expect(PANTALLAS_DEL_PORTAL).toHaveLength(12) // + `/portal/mis-propiedades` (espacio de Publicador y Asociado, R8.4) y `/portal/mis-metricas` (sus métricas, 24-oct-2026)
+    expect(PANTALLAS_DEL_PORTAL).toHaveLength(13) // + `/portal/mis-propiedades` (espacio de Publicador y Asociado, R8.4), `/portal/mis-metricas` (sus métricas, 24-oct-2026) y la ruta vieja `/portal/visitas` (solo redirige a «Citas», 6-nov-2026)
     expect(pantallaExiste('/portal/mi-propiedad')).toBe(false)
   })
 

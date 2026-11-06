@@ -480,8 +480,11 @@ describe('1 · un solo dominio: vivebienn.com', () => {
     // El enlace corto de una propiedad (`/p/<folio>`) es una regla interna y temporal: se exige tal cual, sin salir del dominio.
     const corto = reglas.find((r) => r.source === '/p/:folio')
     expect(corto).toEqual({ source: '/p/:folio', destination: '/propiedades/:folio', permanent: false })
+    // La ruta vieja de «Mis visitas» (citas v2, 6-nov-2026) es una regla interna y TEMPORAL (307) a «Citas»; se exige tal cual y sin salir del dominio.
+    const citasVieja = reglas.find((r) => r.source === '/portal/visitas')
+    expect(citasVieja).toEqual({ source: '/portal/visitas', destination: '/portal/citas', permanent: false })
     // Lo demás son fichas que cambiaron de nombre público; ninguna lleva a otro dominio.
-    for (const r of reglas.slice(1).filter((x) => x !== corto)) {
+    for (const r of reglas.slice(1).filter((x) => x !== corto && x !== citasVieja)) {
       expect(r.source, r.source).toMatch(/^\/propiedades\//)
       expect(r.destination, r.source).toMatch(/^\/propiedades\//)
       expect(r.permanent).toBe(true)

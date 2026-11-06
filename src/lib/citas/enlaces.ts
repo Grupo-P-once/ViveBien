@@ -27,6 +27,9 @@ export const RUTAS_DE_VISITAS = {
   propietario: '/publicador/citas',
 } as const
 
+/** La ruta VIEJA de «Mis visitas». Ya no es una pantalla: solo redirige a `RUTAS_DE_VISITAS.cliente` (correos y marcadores anteriores). Se escribe AQUÍ y en ningún otro sitio de `src`. */
+export const RUTA_VIEJA_DE_VISITAS = "/portal/visitas"
+
 export type QuienVe = keyof typeof RUTAS_DE_VISITAS
 
 /** Ruta relativa. Marca la cita para que la pantalla la abra; el propietario cae en su pestaña. */

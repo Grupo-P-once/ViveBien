@@ -44,8 +44,9 @@ function Interior() {
   )
   const activa = PESTANAS.find((p) => p.id === vista) ?? PESTANAS[0]
   const todas: Array<{ id: PestanaId; texto: string }> = [...PESTANAS, { id: 'disponibilidad', texto: 'Mi disponibilidad' }]
+  // El marco del rol (MarcoPorRol) ya aporta el landmark principal: aquí un div, para no anidar dos landmarks principales (R8.3).
   return (
-    <main className="mx-auto w-full max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+    <div className="mx-auto w-full max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
       <header className="flex items-start gap-3">
         <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-muted"><CalendarDays className="size-6" aria-hidden /></span>
         <div>
@@ -65,7 +66,7 @@ function Interior() {
           ? <ConfigDisponibilidad />
           : <PanelCitasPagina key={vista} vista={vista} vacioAgenda={activa.vacio} />}
       </div>
-    </main>
+    </div>
   )
 }
 

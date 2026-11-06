@@ -88,7 +88,7 @@ describe('cuenta completa', () => {
   it('avisos: confirmar una visita es urgente y lleva a la visita; las nuevas coincidencias, no', () => {
     const cita = r.avisos.find((a) => a.id === 'cita-c-1')!
     expect(cita.urgente).toBe(true)
-    expect(cita.enlace.startsWith('/portal/visitas')).toBe(true)
+    expect(cita.enlace.startsWith('/portal/citas')).toBe(true)   // «Mis visitas» ahora es «Citas» (D-6)
     expect(r.avisos.find((a) => a.id === 'cita-c-2')).toBeUndefined()
     const nuevas = r.avisos.find((a) => a.id === 'nuevas')!
     expect(nuevas).toMatchObject({ urgente: false, texto: 'Hay 1 propiedad nueva para tus búsquedas' })

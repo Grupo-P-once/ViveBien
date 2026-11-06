@@ -1,4 +1,4 @@
-import { RUTAS_DE_VISITAS } from '../citas/enlaces'
+import { RUTAS_DE_VISITAS, RUTA_VIEJA_DE_VISITAS } from '../citas/enlaces'
 
 /**
  * Qué pantallas del portal existen de verdad (V-1.1.85).
@@ -23,6 +23,7 @@ export const PANTALLAS_DEL_PORTAL = [
   // 3b-2. La de visitas sale de `lib/citas/enlaces.ts`: esa ruta la escriben
   // también los correos, y no puede vivir en dos sitios.
   RUTAS_DE_VISITAS.cliente,
+  RUTA_VIEJA_DE_VISITAS, // ruta VIEJA de «Mis visitas»: solo redirige a «Citas» (correos y marcadores anteriores); 307 en next.config.ts y respaldo en la propia página
   '/portal/perfil',
   '/portal/mi-busqueda', // sólo redirige a «Mis búsquedas»; ya no está en el menú
   '/portal/valuador',

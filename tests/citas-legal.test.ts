@@ -73,7 +73,7 @@ describe('Aviso de Privacidad · citas', () => {
     // El párrafo NUEVO de citas remite al plazo general y no trae ninguna cifra propia (un plazo nuevo lo decide el abogado, no el código).
     const parrafo = t.slice(t.indexOf('Citas. De cada cita se conserva su historial'), t.indexOf('Usted también puede solicitar la cancelación'))
     expect(parrafo).toContain('durante el mismo plazo que la cita')
-    expect(parrafo).not.toMatch(/(d+|un|dos|tres|seis|doce)s+(días|meses|años)/i)
+    expect(parrafo).not.toMatch(/\b(\d+|un|dos|tres|seis|doce)\s+(días|meses|años)\b/i)
   })
   it('no se añadieron proveedores nuevos: la lista de la sección 5 es la aprobada', async () => {
     const t = await pagina('privacidad')
