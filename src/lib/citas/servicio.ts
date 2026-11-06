@@ -4,7 +4,7 @@ import { normalizarTelefono, VERSION_CONSENTIMIENTO } from '../contacto'
 import { nombreDe, rutaDe } from '../propiedad-publica'
 import { AJUSTES_POR_DEFECTO, HORARIO_POR_DEFECTO, type AjustesCitas, type BloqueHorario } from './ajustes'
 import { esHorarioOfrecido, horariosDelRango, type Rango } from './disponibilidad'
-import { ESTADOS_ACTIVOS, explicar, type AccionCita, type PapelVista } from './estados'
+import { ESTADOS_ACTIVOS, estadoInicialDeCita, explicar, type AccionCita, type PapelVista } from './estados'
 import { papelEn, recortar, type CitaFila, type CitaVista, type PropiedadDeCita } from './vista'
 import { instanteLocal, sumarDias } from './zona'
 import { hashDe, pareceToken } from './tokens'
@@ -500,10 +500,7 @@ export async function createAppointment(perfil: PerfilUsuario, entrada: EntradaC
   // (nadie más tiene que autorizarlo) y el horario está disponible (ya se comprobó arriba contra la oferta del responsable).
   // Si el responsable es otra persona, necesita su aprobación y queda pendiente. Lo que registra el equipo para un cliente
   // queda pendiente de que el cliente lo confirme.
-  const seAgendaASiMismo = !paraOtro && clienteUid === asesorUid
-  const estado = creador === 'cliente'
-    ? (seAgendaASiMismo || ajustes.confirmacion === 'automatica' ? 'CONFIRMED' : 'REQUESTED')
-    : 'PENDING_CONFIRMATION'
+  const estado = estadoInicialDeCita({ creador, paraOtro, clienteUid, asesorUid, confirmacion: ajustes.confirmacion })
   // «Visita propia»: un publicador, asociado o miembro del equipo que agenda para ir a ver. «Solicitada»: la pide un cliente
   // (o el equipo la registra para un cliente).
   const tipoDeCita = !paraOtro && perfil.rol !== 'cliente' ? 'propia' : 'solicitada'

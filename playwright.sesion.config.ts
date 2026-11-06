@@ -15,7 +15,13 @@ export default defineConfig({
   workers: 1,
   retries: 0,
   reporter: [['list']],
-  use: { baseURL: 'http://localhost:3131', locale: 'es-MX', timezoneId: 'America/Mexico_City' },
+  // Desde la alineación legal (2-nov-2026) un banner pide elegir la analítica y se pinta ENCIMA de la página; tapa controles y ensucia las capturas de las pruebas
+  // anteriores. El arnés parte de un visitante que YA eligió (rechazó): no hay banner ni GA. El banner y su elección tienen su propia prueba (analitica-aviso.e2e.ts),
+  // que abre un contexto limpio; las pruebas de eventos de GA guardan 'si' en su beforeEach.
+  use: {
+    baseURL: 'http://localhost:3131', locale: 'es-MX', timezoneId: 'America/Mexico_City',
+    storageState: { cookies: [], origins: [{ origin: 'http://localhost:3131', localStorage: [{ name: 'vb_analitica', value: 'no' }] }] },
+  },
   webServer: { command: 'npx next start -p 3131', url: 'http://localhost:3131', reuseExistingServer: false, timeout: 120_000 },
   projects: [
     { name: 'v390', use: { ...devices['Pixel 7'], viewport: { width: 390, height: 844 } } },

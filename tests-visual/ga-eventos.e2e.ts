@@ -6,6 +6,9 @@ import { expect, test } from '@playwright/test'
  * la ubicación, y NUNCA viaja el número ni el correo.
  */
 test.beforeEach(async ({ page }) => {
+  // Desde la alineación legal (2-nov-2026, commit 2a6984c) GA4 solo carga cuando la persona lo aceptó (`vb_analitica` = 'si'). Estas pruebas miden los
+  // eventos de quien SÍ aceptó; la conducta contraria (sin aceptar, nada carga) la comprueba la prueba «sin aceptar» de ga-eventos.e2e.ts.
+  await page.addInitScript(() => { try { localStorage.setItem('vb_analitica', 'si') } catch { /* sin almacenamiento */ } })
   await page.route('**/googletagmanager.com/**', (r) => r.abort())
   await page.route('**/google-analytics.com/**', (r) => r.abort())
 })
@@ -88,4 +91,15 @@ test('un visitante SIN sesión que pulsa WhatsApp o llamar, en la tarjeta, deja 
   expect(enviados.find((x) => x.datos?.lugar === 'tarjeta')?.datos).toEqual({ canal: 'whatsapp', lugar: 'tarjeta' })
   expect((await llamadas(page)).find((a) => a[0] === 'event' && a[1] === 'click_whatsapp')?.[2]).toMatchObject({ item_id: id, link_location: 'tarjeta' })
 
+})
+
+test('sin aceptar la analítica, GA4 NO carga: ni dataLayer, ni gtag, ni petición a Google', async ({ browser, baseURL }) => {
+  const ctx = await browser.newContext({ baseURL, locale: 'es-MX', storageState: { cookies: [], origins: [] } })   // contexto limpio: sin la elección guardada por el beforeEach
+  const page = await ctx.newPage()
+  const pedidos: string[] = []
+  page.on('request', (r) => { if (/googletagmanager.com|google-analytics.com/.test(r.url())) pedidos.push(r.url()) })
+  await page.goto('/contacto')
+  expect(await page.evaluate(() => ({ gtag: typeof (window as unknown as { gtag?: unknown }).gtag, dl: typeof (window as unknown as { dataLayer?: unknown }).dataLayer }))).toEqual({ gtag: 'undefined', dl: 'undefined' })
+  expect(pedidos).toEqual([])
+  await ctx.close()
 })

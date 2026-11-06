@@ -302,3 +302,25 @@ export function explicar(motivo: MotivoRechazo | 'version' | 'horario_ocupado' |
         : 'Ya pasó la hora de esa cita.'
   }
 }
+
+/**
+ * Estado con el que NACE una cita (D-8, decidida por el dueño el 5-nov-2026). Código puro: lo prueba `tests/citas-estado-inicial.test.ts`.
+ *
+ *  · Quien agenda PARA SÍ MISMO y es el responsable asignado de la propiedad no necesita la autorización de nadie: si el horario está
+ *    disponible (se comprobó antes contra la oferta del responsable) la cita nace CONFIRMADA.
+ *  · Si el responsable es otra persona, necesita su aprobación: nace PENDIENTE (`REQUESTED`).
+ *  · Un cliente corriente: PENDIENTE, salvo que el responsable haya elegido confirmar automáticamente.
+ *  · Lo que el equipo registra PARA otra persona nace «por confirmar» por esa persona (`PENDING_CONFIRMATION`).
+ */
+export function estadoInicialDeCita(o: {
+  creador: 'cliente' | 'asesor' | 'admin'
+  /** La cita es para otra persona (la registra el equipo en nombre de un cliente). */
+  paraOtro: boolean
+  clienteUid: string
+  asesorUid: string
+  confirmacion: 'manual' | 'automatica'
+}): 'CONFIRMED' | 'REQUESTED' | 'PENDING_CONFIRMATION' {
+  if (o.creador !== 'cliente') return 'PENDING_CONFIRMATION'
+  const seAgendaASiMismo = !o.paraOtro && o.clienteUid === o.asesorUid
+  return seAgendaASiMismo || o.confirmacion === 'automatica' ? 'CONFIRMED' : 'REQUESTED'
+}

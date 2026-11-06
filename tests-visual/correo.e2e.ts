@@ -1,6 +1,9 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
 import { prepararPaginaPublica } from './ayudas'
+import { MARKETING_AUTORIZADO } from '../src/lib/correo/config'
+
+const CERRADA = 'El correo promocional no está autorizado todavía (MARKETING_AUTORIZADO = false, a la espera del abogado): /recomendaciones responde 404 a propósito. Se ejecuta cuando se autorice.'
 
 /**
  * D-80 — las páginas públicas del correo, en el navegador y en los 4 anchos. La API se simula: NO se manda ningún correo ni se
@@ -25,7 +28,16 @@ async function simular(page: Page) {
   return { llamadas, responder: (status: number, cuerpo: Record<string, unknown>) => { respuesta = { status, cuerpo } } }
 }
 
+test('recomendaciones: mientras el marketing no esté autorizado, la página NO existe (404) y no muestra ningún formulario', async ({ page }) => {
+  test.skip(MARKETING_AUTORIZADO, 'Con la autorización activa la página existe: la comprueban las pruebas de abajo.')
+  const res = await page.goto('/recomendaciones', { waitUntil: 'domcontentloaded' })
+  expect(res?.status()).toBe(404)
+  await expect(page.getByLabel(/Correo electrónico/)).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Enviarme propiedades' })).toHaveCount(0)
+})
+
 test('recomendaciones: sin casilla ni trámite; el aviso de qué recibirá está junto al botón', async ({ page }) => {
+  test.skip(!MARKETING_AUTORIZADO, CERRADA)
   await simular(page)
   await page.goto('/recomendaciones', { waitUntil: 'domcontentloaded' })
   await expect(page.getByLabel(/Correo electrónico/)).toBeVisible({ timeout: 45_000 })
@@ -36,6 +48,7 @@ test('recomendaciones: sin casilla ni trámite; el aviso de qué recibirá está
 })
 
 test('recomendaciones: el enlace «Aviso de privacidad» se subraya (no depende sólo del color) y se alcanza con el teclado', async ({ page }) => {
+  test.skip(!MARKETING_AUTORIZADO, CERRADA)
   await simular(page)
   await page.goto('/recomendaciones', { waitUntil: 'domcontentloaded' })
   const enlace = page.locator('main').getByRole('link', { name: 'Aviso de privacidad' })
@@ -46,6 +59,7 @@ test('recomendaciones: el enlace «Aviso de privacidad» se subraya (no depende 
 })
 
 test('recomendaciones: el botón manda las preferencias y el acto afirmativo, y dice que las propiedades van en camino', async ({ page }) => {
+  test.skip(!MARKETING_AUTORIZADO, CERRADA)
   const { llamadas } = await simular(page)
   await page.goto('/recomendaciones', { waitUntil: 'domcontentloaded' })
   await expect(page.getByLabel(/Correo electrónico/)).toBeVisible({ timeout: 45_000 })
@@ -64,6 +78,7 @@ test('recomendaciones: el botón manda las preferencias y el acto afirmativo, y 
 })
 
 test('recomendaciones: un enlace con parámetros llega con el formulario ya llenado', async ({ page }) => {
+  test.skip(!MARKETING_AUTORIZADO, CERRADA)
   await simular(page)
   await page.goto('/recomendaciones?operacion=renta&tipo=casa,nave&zona=Centro&presupuesto=25000', { waitUntil: 'domcontentloaded' })
   await expect(page.getByLabel('¿Compra o renta?')).toHaveValue('renta', { timeout: 45_000 })
@@ -74,6 +89,7 @@ test('recomendaciones: un enlace con parámetros llega con el formulario ya llen
 })
 
 test('recomendaciones: un error del servidor se dice con claridad y no pierde lo escrito', async ({ page }) => {
+  test.skip(!MARKETING_AUTORIZADO, CERRADA)
   const { responder } = await simular(page)
   responder(400, { error: 'Revisa tu correo electrónico.' })
   await page.goto('/recomendaciones', { waitUntil: 'domcontentloaded' })
