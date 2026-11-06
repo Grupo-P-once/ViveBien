@@ -1,8 +1,10 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
+import { createHmac } from 'node:crypto'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { PGlite } from '@electric-sql/pglite'
 import { btree_gist } from '@electric-sql/pglite/contrib/btree_gist'
+import { pgcrypto } from '@electric-sql/pglite/contrib/pgcrypto'
 import { ESTADOS, ACCIONES, evaluar, type EstadoCita, type PapelCita, type AccionCita } from '../src/lib/citas/estados'
 
 /**
@@ -56,20 +58,25 @@ async function motivoDe(p: Promise<unknown>): Promise<string> {
 const enMin = (min: number) => new Date(Date.now() + min * 60_000)
 
 beforeAll(async () => {
-  db = await PGlite.create({ extensions: { btree_gist } })
+  db = await PGlite.create({ extensions: { btree_gist, pgcrypto } })
   // Lo mínimo de Supabase que las migraciones suponen.
   await db.exec(`
     create role anon; create role authenticated; create role service_role;
     create schema extensions;
+    create extension pgcrypto with schema extensions;
     create table public.usuarios (uid text primary key, nombre text, rol text);
     create table public.propiedades (id text primary key, titulo text);
     insert into public.usuarios values
       ('cli', 'Cliente', 'cliente'), ('ase', 'Asesor', 'publicador'), ('otro', 'Otro cliente', 'cliente'),
       ('admin-x', 'Admin', 'admin'), ('super-x', 'Super admin', 'super_admin'), ('falso-admin', 'No es admin', 'cliente');
     insert into public.propiedades values ('p1', 'Nave');
+    -- Un Vault de mentira: solo la vista que las funciones del token leen.
+    create schema vault;
+    create table vault.decrypted_secrets (name text, decrypted_secret text);
   `)
   await db.exec(readFileSync(path.join(process.cwd(), 'supabase', '15-citas.sql'), 'utf8'))
   await db.exec(readFileSync(path.join(process.cwd(), 'supabase', '70-citas-v2.sql'), 'utf8'))
+  await db.exec(readFileSync(path.join(process.cwd(), 'supabase', '72-citas-tareas-firma.sql'), 'utf8'))
 }, 90_000)
 
 afterAll(async () => { await db?.close() })
@@ -366,6 +373,105 @@ describe('D-4 · recordatorios 24 h y 1 h antes, sin duplicados', () => {
     await db.query('select * from citas_recordatorios_reclamar(10)')
     const pendientes = await db.query<{ n: number }>(`select count(*)::int as n from citas_recordatorios where cita_id = $1 and estado in ('pendiente', 'enviando')`, [c.id])
     expect(pendientes.rows[0].n).toBe(0)
+  })
+})
+
+describe('D-4 · la firma de la tarea la valida la base (migraciones 71 y 72)', () => {
+  const SECRETO = 'a1'.repeat(32)
+  const ahoraS = () => Math.floor(Date.now() / 1000)
+  const firmar = (t: number, secreto = SECRETO) => createHmac('sha256', secreto).update(String(t)).digest('hex')
+  const valida = async (t: number | null, f: string | null) => (await db.query<{ ok: boolean }>('select citas_tarea_firma_valida($1, $2) as ok', [t, f])).rows[0].ok
+  const poner = async (secreto: string) => { await db.exec(`delete from vault.decrypted_secrets`); await db.query(`insert into vault.decrypted_secrets values ('citas_tareas_token', $1)`, [secreto]) }
+
+  it('la 72 es independiente de la 71: un entorno nuevo NO tiene ningún validador de token reutilizable', async () => {
+    const r = await db.query<{ n: number }>(`select count(*)::int as n from pg_proc where proname = 'citas_tarea_token_valido'`)
+    expect(r.rows[0].n).toBe(0)
+  })
+
+  it('sin secreto configurado nada es válido', async () => {
+    await db.exec(`delete from vault.decrypted_secrets`)
+    const t = ahoraS()
+    expect(await valida(t, firmar(t))).toBe(false)
+  })
+
+  it('la firma correcta del instante actual es válida UNA sola vez; repetirla es una repetición y se rechaza', async () => {
+    await poner(SECRETO)
+    const t = ahoraS()
+    expect(await valida(t, firmar(t))).toBe(true)
+    expect(await valida(t, firmar(t))).toBe(false)   // la misma petición reenviada
+    expect(await valida(t + 1, firmar(t + 1))).toBe(true)   // otro instante, otra firma
+  })
+
+  it('una firma de otro secreto, de otro instante, mal formada o vacía no sirve', async () => {
+    await poner(SECRETO)
+    const t = ahoraS() + 5
+    expect(await valida(t, firmar(t, 'b2'.repeat(32)))).toBe(false)         // otro secreto
+    expect(await valida(t, firmar(t - 1))).toBe(false)                     // firma de otro instante
+    expect(await valida(t, firmar(t).toUpperCase())).toBe(false)           // mayúsculas: no es el formato
+    expect(await valida(t, firmar(t).slice(1))).toBe(false)
+    expect(await valida(t, firmar(t) + '0')).toBe(false)
+    expect(await valida(t, 'zz'.repeat(32))).toBe(false)
+    expect(await valida(t, '')).toBe(false)
+    expect(await valida(null, firmar(t))).toBe(false)
+    expect(await valida(t, null)).toBe(false)
+    // Y ninguno de los intentos fallidos «gastó» el instante: la firma buena de ese instante sigue sirviendo.
+    expect(await valida(t, firmar(t))).toBe(true)
+  })
+
+  it('la ventana es de 120 segundos: una firma vieja o del futuro lejano caduca aunque esté bien firmada', async () => {
+    await poner(SECRETO)
+    const t = ahoraS()
+    expect(await valida(t - 300, firmar(t - 300))).toBe(false)
+    expect(await valida(t - 121, firmar(t - 121))).toBe(false)
+    expect(await valida(t + 300, firmar(t + 300))).toBe(false)
+    expect(await valida(t - 100, firmar(t - 100))).toBe(true)
+  })
+
+  it('un secreto demasiado corto en Vault (mal configurado) no valida nada', async () => {
+    await poner('corto')
+    const t = ahoraS() + 11
+    expect(await valida(t, firmar(t, 'corto'))).toBe(false)
+  })
+
+  it('los instantes ya usados se purgan al cabo de un día, sin tocar los recientes', async () => {
+    await poner(SECRETO)
+    await db.exec(`insert into citas_tarea_firmas (tiempo) values (1000), (${ahoraS() - 90000})`)
+    const t = ahoraS() + 21
+    expect(await valida(t, firmar(t))).toBe(true)
+    const r = await db.query<{ t: number }>(`select tiempo::float8 as t from citas_tarea_firmas where tiempo < ${ahoraS() - 86400}`)
+    expect(r.rows).toHaveLength(0)
+  })
+
+  it('solo la clave de servicio pregunta si una firma es válida; invocar la tarea no es de nadie de la app', async () => {
+    await poner(SECRETO)
+    const t = ahoraS() + 31
+    for (const rol of ['anon', 'authenticated']) {
+      await db.exec(`set role ${rol}`)
+      expect(await motivoDe(db.query('select citas_tarea_firma_valida($1, $2)', [t, firmar(t)])), rol).toMatch(/permission denied/)
+      expect(await motivoDe(db.query('select count(*) from citas_tarea_firmas')), rol).toMatch(/permission denied/)
+      await db.exec('reset role')
+    }
+    await db.exec('set role service_role')
+    expect((await db.query<{ ok: boolean }>('select citas_tarea_firma_valida($1, $2) as ok', [t, firmar(t)])).rows[0].ok).toBe(true)
+    expect(await motivoDe(db.query('select citas_tarea_invocar()'))).toMatch(/permission denied/)
+    await db.exec('reset role')
+    for (const rol of ['anon', 'authenticated']) {
+      await db.exec(`set role ${rol}`)
+      expect(await motivoDe(db.query('select citas_tarea_invocar()')), rol).toMatch(/permission denied/)
+      await db.exec('reset role')
+    }
+  })
+
+  it('la tarea no llama a nadie si falta la URL, el secreto o si la URL no es https', async () => {
+    // `net` no existe en PGlite: si la función intentara llamar, fallaría con "schema net does not exist".
+    await db.exec(`delete from vault.decrypted_secrets`)
+    expect((await db.query<{ r: unknown }>('select citas_tarea_invocar() as r')).rows[0].r).toBeNull()
+    await db.query(`insert into vault.decrypted_secrets values ('citas_tareas_token', $1), ('citas_tareas_url', 'http://inseguro.example/api')`, [SECRETO])
+    expect((await db.query<{ r: unknown }>('select citas_tarea_invocar() as r')).rows[0].r).toBeNull()
+    await db.exec(`delete from vault.decrypted_secrets`)
+    await db.query(`insert into vault.decrypted_secrets values ('citas_tareas_url', 'https://ejemplo.invalid/api/citas/tareas')`)
+    expect((await db.query<{ r: unknown }>('select citas_tarea_invocar() as r')).rows[0].r).toBeNull()   // sin secreto
+    await db.exec(`delete from vault.decrypted_secrets`)
   })
 })
 
