@@ -374,14 +374,21 @@ describe('protección de datos del interesado en las vistas', () => {
     expect(c.notasCliente).toBeNull()
   }
 
-  it('recibir citas NO implica ver al interesado: el ASOCIADO recibe fecha, hora y estado, sin nombre, teléfono, correo ni notas', async () => {
+  it('el ASOCIADO que ATIENDE ve lo necesario para coordinar (nombre, teléfono y las notas de la visita) y NUNCA el correo, las notas internas ni Google', async () => {
+    // Tabla del dueño (6-nov-2026): «Ve solo los datos necesarios para atender y coordinar esas visitas».
     const B = perfilDe('B', ASOCIADO)
     const lista = await listAppointments({ perfil: B, vista: 'asesor', ...RANGO })
     expect(lista).toHaveLength(2)
-    for (const c of lista) sinDatos(c)
-    // y no hay rastro de los datos en TODA la respuesta, ni en los campos que no se pintan
+    for (const c of lista) {
+      expect(c.cliente.nombre, 'nombre').not.toBe('Interesado')
+      expect(c.cliente.telefono, 'teléfono').toBeTruthy()
+      expect(c.cliente.email, 'el correo no se manda sin el permiso').toBeUndefined()
+    }
+    expect(lista[0].cliente).toMatchObject({ nombre: 'Rosa Interesada', telefono: '4771234567' })
+    expect(lista[0].notasCliente).toBe('Prefiero por la tarde')
+    // y ni rastro del correo ni de lo interno en TODA la respuesta
     const json = JSON.stringify(lista)
-    for (const secreto of ['Rosa', '4771234567', 'rosa@ejemplo.test', 'Prefiero por la tarde', 'NOTA INTERNA']) expect(json).not.toContain(secreto)
+    for (const secreto of ['rosa@ejemplo.test', 'NOTA INTERNA']) expect(json).not.toContain(secreto)
     expect(lista[0].notasInternas).toBeUndefined()
     expect(lista[0].google).toBeUndefined()
   })
@@ -415,8 +422,12 @@ describe('protección de datos del interesado en las vistas', () => {
       datos: { inicio: FUTURO, cliente_telefono: '4771234567', cliente_nombre: 'Rosa Interesada', notas: 'secreto' }, creado_en: '2029-12-01T00:00:00Z' })
     const r = await leerCita(R(`/api/citas/${ID(2)}`), ctx(ID(2)))
     expect(r.status).toBe(200)
-    const texto = JSON.stringify(await r.json())
-    for (const secreto of ['Rosa', '4771234567', 'rosa@ejemplo.test', 'secreto', 'NOTA INTERNA']) expect(texto).not.toContain(secreto)
+    const cuerpo = await r.json() as { cita: { cliente: { nombre: string; telefono?: string; email?: string } } }
+    const texto = JSON.stringify(cuerpo)
+    // La cita trae lo necesario para coordinar (nombre y teléfono) pero el HISTORIAL solo horarios (nada de lo que llevaba el evento), y jamás el correo ni lo interno.
+    expect(cuerpo.cita.cliente).toMatchObject({ nombre: 'Rosa Interesada', telefono: '4771234567' })
+    expect(cuerpo.cita.cliente.email).toBeUndefined()
+    for (const secreto of ['rosa@ejemplo.test', 'secreto', 'NOTA INTERNA']) expect(texto).not.toContain(secreto)
     expect(texto).toContain(FUTURO)
   })
 
@@ -443,16 +454,17 @@ describe('correos y enlaces: no filtran datos personales ni ofrecen lo que no se
   const alAsesor = (correo: string) => mundo.correos.filter((c) => c.to.includes(correo))
   const SECRETOS = ['Rosa', '4771234567', 'rosa@ejemplo.test', 'Prefiero por la tarde']
 
-  it('ASOCIADO sin `ver_datos_interesado`: su correo no trae nombre, teléfono, correo ni notas del interesado', async () => {
+  it('ASOCIADO que atiende: su correo trae nombre, teléfono y notas de la visita (para coordinar), nunca el correo del interesado', async () => {
     await avisarCambio(ID(2), 'CREATED', 'X')
     const [c] = alAsesor('b@ejemplo.test')
     expect(c).toBeDefined()
-    for (const s of SECRETOS) {
+    expect(c.html).toContain('Rosa Interesada')
+    expect(c.text).toContain('4771234567')
+    for (const s of ['rosa@ejemplo.test']) {
       expect(c.html, `html: ${s}`).not.toContain(s)
       expect(c.text, `texto: ${s}`).not.toContain(s)
       expect(c.subject, `asunto: ${s}`).not.toContain(s)
     }
-    expect(c.html).toContain('El cliente</b> quiere visitar')
   })
 
   it('con `ver_datos_interesado` el correo sí los lleva', async () => {

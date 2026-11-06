@@ -52,7 +52,7 @@ export async function GET(req: Request) {
   if (!propiedadId) return NextResponse.json({ error: 'Falta la propiedad.' }, { status: 400 })
 
   try {
-    const r = await checkAvailability({ propiedadId, desde, dias, clienteUid, excluirCitaId: excluir, ahora: new Date() })
+    const r = await checkAvailability({ propiedadId, desde, dias, clienteUid, excluirCitaId: excluir, esDelEquipo: puede(perfil, 'panel.admin'), ahora: new Date() })
     if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status })
     return NextResponse.json(r.valor)
   } catch (e) {

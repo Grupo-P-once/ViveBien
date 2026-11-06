@@ -211,12 +211,18 @@ export async function checkAvailability(opts: {
   dias: number
   clienteUid: string | null
   excluirCitaId?: string
+  /** Quien pregunta es del equipo (puede ir a ver cualquier propiedad). */
+  esDelEquipo?: boolean
   ahora: Date
 }): Promise<Resultado<Disponibilidad>> {
   const db = supabaseAdmin()
   const prop = await propiedadAgendable(db, opts.propiedadId, true)
   if (!prop.ok) return prop
   const asesorUid = prop.valor.responsable_uid
+  // El dueño que NO atiende sus propias citas no se agenda sobre su propiedad: se le dice AHORA, no después de elegir horario (mismo criterio que `createAppointment`).
+  if (!opts.excluirCitaId && opts.clienteUid && motivoParaNoAgendarse({ clienteUid: opts.clienteUid, propietarioUid: prop.valor.owner_id, asesorUid, esDelEquipo: opts.esDelEquipo ?? false }) === 'propiedad_propia') {
+    return falla(400, 'Esta propiedad es tuya: no puedes agendar una visita a ella.')
+  }
 
   const inicioRango = instanteLocal(opts.desde, '00:00')
   const finRango = instanteLocal(sumarDias(opts.desde, opts.dias), '00:00')

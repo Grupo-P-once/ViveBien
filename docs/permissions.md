@@ -6,7 +6,9 @@
 
 > **Quién administra estos permisos:** un admin o super admin, desde `/admin/usuarios/[uid]` (ADR-0013, D-48): implementado, **no desplegado**; `citasEnLinea` sigue apagado.
 >
-> **Detalle de la enmienda del 2-oct-2026:** un publicador-asesor ve la cita **sin** nombre, teléfono, correo ni notas del interesado salvo que tenga `ver_datos_interesado`, no ve notas internas ni el estado de Google, y cada acción (aceptar, rechazar, reprogramar, cancelar) exige su propio permiso. La tabla «Quién es quién» de arriba dice «Al crearla se copia de `propiedades.owner_id`»: sigue siendo cierto, y por eso un publicador sin `recibir_citas` no recibe ninguna. La fila «Admin = `ADMIN_EMAILS`» de la tabla de arriba está obsoleta desde V-1.1.81: el rol vive sólo en la base. Detalle en `adr/ADR-0013-…`.
+> **ENMIENDA del 6-nov-2026 (tabla de roles del dueño, ADR-0014):** el **asociado que ATIENDE** una cita ve lo necesario para coordinarla —**nombre, teléfono y las notas que la persona escribió para la visita**—, nunca su **correo** (salvo `ver_datos_interesado`), ni las notas internas ni el estado de Google. El **publicador** (que no atiende: la coordina VIVE BIEN) ve las visitas a sus propiedades en solo lectura y **sin ningún dato personal**. Lo que sigue describe la regla del 2-oct-2026, que esta enmienda sustituye en lo del nombre, teléfono y notas del asociado.
+>
+> **Detalle de la enmienda del 2-oct-2026 (SUSTITUIDA en parte, ver arriba):** un publicador-asesor ve la cita **sin** nombre, teléfono, correo ni notas del interesado salvo que tenga `ver_datos_interesado`, no ve notas internas ni el estado de Google, y cada acción (aceptar, rechazar, reprogramar, cancelar) exige su propio permiso. La tabla «Quién es quién» de arriba dice «Al crearla se copia de `propiedades.owner_id`»: sigue siendo cierto, y por eso un publicador sin `recibir_citas` no recibe ninguna. La fila «Admin = `ADMIN_EMAILS`» de la tabla de arriba está obsoleta desde V-1.1.81: el rol vive sólo en la base. Detalle en `adr/ADR-0013-…`.
 
 ## Quién es quién
 
@@ -25,9 +27,9 @@ La sesión es de Firebase; el servidor la verifica con `verifyIdToken`. Toda lec
 |---|---|---|---|
 | Fecha, hora, estado, propiedad, lugar | ✔ | ✔ | ✔ |
 | Nombre del asesor | ✔ (si es un publicador, sólo con `mostrar_perfil` y `mostrar_nombre`; si no, «Vive Bien») | ✔ | ✔ |
-| Teléfono / correo del cliente | Los suyos | ✔ el equipo (aceptó compartirlos al agendar) · **publicador-asesor: ✘, salvo `ver_datos_interesado`** (ve «Interesado») | ✔ |
+| Teléfono / correo del cliente | Los suyos | ✔ el equipo (aceptó compartirlos al agendar) · **asociado que atiende: teléfono ✔, correo ✘ salvo `ver_datos_interesado`** (desde el 6-nov-2026) · publicador que no atiende: ✘ (ve «Interesado») | ✔ |
 | Teléfono / correo del asesor | ✘ (ve el contacto de Vive Bien) | ✔ | ✔ |
-| Notas del cliente | ✔ | ✔ el equipo · **publicador-asesor: ✘, salvo `ver_datos_interesado`** | ✔ |
+| Notas del cliente | ✔ | ✔ el equipo · **asociado que atiende: ✔ (notas de la visita)** · publicador que no atiende: ✘ salvo `ver_datos_interesado` | ✔ |
 | Notas internas | ✘ | ✔ el equipo · **publicador-asesor: ✘** | ✔ |
 | Historial completo | Sólo cambios de fecha y estado | ✔ el equipo · **publicador-asesor: sólo horarios y motivo** | ✔ |
 | Estado de Google / correos | ✘ | Sus citas (el equipo) · **publicador-asesor: ✘** | ✔ |

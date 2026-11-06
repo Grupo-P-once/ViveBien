@@ -213,7 +213,9 @@ function PanelPropiedades() {
             : 'Una propiedad nueva empieza como borrador. Cuando esté completa la envías a revisión, y un administrador la aprueba.'}
         acciones={
           <>
-            {recibeCitas && <Button asChild variant="outline" className="h-10 px-4"><Link href="/publicador/citas">Citas recibidas</Link></Button>}
+            {recibeCitas
+              ? <Button asChild variant="outline" className="h-10 px-4"><Link href="/publicador/citas">Citas recibidas</Link></Button>
+              : <Button asChild variant="outline" className="h-10 px-4"><Link href="/publicador/citas?vista=propiedades">Citas de mis propiedades</Link></Button>}
             <Button className="h-10 px-4" onClick={() => (conMarco ? abrirNuevaPropiedad() : setAbrirManual(!abrirNueva))}>
               <Plus aria-hidden /> Nueva propiedad
             </Button>

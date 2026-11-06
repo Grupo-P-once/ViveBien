@@ -53,12 +53,14 @@ export function rutaDeEditorDe(id: string, rol?: RolDePropiedades): string {
 /**
  * La interfaz ANTIGUA `/publicador…` ya no es un espacio de trabajo: lo que quede de enlaces viejos (correos, favoritos,
  * el historial) se lleva a la ruta canónica del rol, sin añadir una entrada al historial (`replace`).
- * `busqueda` conserva `?nueva=1` y `?estado=`. `/publicador/citas` no es de propiedades: se queda donde está.
+ * `busqueda` conserva `?nueva=1` y `?estado=`. `/publicador/citas` no es de propiedades: para el publicador se queda donde está; para ADMINISTRACIÓN (cuyas citas personales y las del equipo viven en un solo calendario) se lleva a su calendario del equipo, conservando `?cita=`.
  */
 export function destinoCanonico(ruta: string, esAdmin: boolean, busqueda = '', puedePublicar = true): string | null {
   const q = busqueda && busqueda !== '?' ? (busqueda.startsWith('?') ? busqueda : `?${busqueda}`) : ''
   // Quien no publica (cliente) NO se convierte en publicador: un enlace viejo lo deja en su portal.
   if (!puedePublicar && !esAdmin && (ruta === '/publicador' || /^\/publicador\/propiedades\/[^/]+\/editar$/.test(ruta))) return '/portal'
+  // Administración ve sus citas personales y las del equipo en UN solo lugar: el calendario del equipo (conserva `?cita=`).
+  if (esAdmin && ruta === '/publicador/citas') return `/admin/citas${new URLSearchParams(q).get('cita') ? `?cita=${encodeURIComponent(new URLSearchParams(q).get('cita') as string)}` : ''}`
   if (ruta === '/publicador') return (esAdmin ? RUTA_LISTA_ADMIN : RUTA_LISTA_PUBLICADOR) + (esAdmin ? q.replace(/estado=[^&]*&?/, '') : q)
   const m = /^\/publicador\/propiedades\/([^/]+)\/editar$/.exec(ruta)
   if (!m) return null

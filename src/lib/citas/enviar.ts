@@ -162,7 +162,9 @@ async function uno(db: Db, f: Filas, m: CorreoPlaneado, ahora: Date, opciones: {
   // cuenta borrada), el correo va sin datos del interesado.
   const sinCuenta = m.para === 'asesor' && !f.asesorCuenta
   const publicador = m.para === 'asesor' && f.asesorCuenta?.rol === 'publicador' ? f.asesorCuenta : null
-  const verInteresado = !sinCuenta && (!publicador || veDatosDelInteresado(publicador))
+  // El responsable que atiende (también un asociado) recibe nombre, teléfono y notas de la visita (necesarios para coordinar; el correo del interesado nunca va en estos avisos).
+  // Falla CERRADO: si no se pudo leer su cuenta, el correo va sin datos.
+  const verInteresado = !sinCuenta
   const inicio = new Date(cita.inicio)
 
   const titulo = cita.propiedad_titulo ?? 'la propiedad'

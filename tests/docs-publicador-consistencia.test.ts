@@ -73,7 +73,9 @@ describe('la regla «un publicador nunca puede ser asesor» ya no existe en ning
 describe('las tablas de permisos y el plan dicen lo mismo que la regla enmendada (hallazgos P2 de Codex)', () => {
   it('permissions.md: las tablas distinguen al equipo del publicador-asesor y nombran `ver_datos_interesado`', () => {
     const t = leer('docs/permissions.md')
-    expect(t).toMatch(/publicador-asesor: ✘, salvo `ver_datos_interesado`/)
+    // 6-nov-2026 (ADR-0014): el asociado que ATIENDE ve nombre, teléfono y notas; el correo solo con el permiso; el publicador que no atiende, nada.
+    expect(t).toMatch(/asociado que atiende: teléfono ✔, correo ✘ salvo `ver_datos_interesado`/)
+    expect(t).toMatch(/publicador que no atiende: ✘/)
     expect(t).toMatch(/publicador-asesor: sólo horarios y motivo/)
     expect(t).toMatch(/un publicador-asesor no registra por otras personas/)
     for (const cap of ['aceptar_citas', 'rechazar_citas', 'reprogramar_citas', 'cancelar_citas']) expect(t, cap).toContain(`\`${cap}\``)
@@ -112,7 +114,7 @@ describe('lo que los documentos afirman del código es cierto', () => {
 
   it('la pantalla de citas del publicador dice lo que el servidor hace (D-1): VIVE BIEN administra las de un publicador y él solo las consulta', () => {
     const t = leer('src/app/publicador/citas/page.tsx')
-    expect(t).toMatch(/VIVE BIEN administra las solicitudes y aquí las consultas/)   // pestaña «Mis propiedades» (solo lectura)
+    expect(t).toMatch(/VIVE BIEN las coordina y aquí las consultas/)   // pestaña de solo lectura del publicador (no atiende citas)
     expect(t).not.toMatch(/las atiende VIVE BIEN/)
     expect(t).not.toMatch(/Aceptar visita|Mantener el horario/)   // acciones del diseño anterior: ahora las ofrece el servidor en cita.acciones
   })

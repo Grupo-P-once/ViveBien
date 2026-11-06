@@ -139,6 +139,10 @@ export function recortar(fila: CitaFila, papel: PapelVista, extras: Extras, ahor
   const pub = papel === 'asesor' ? extras.publicador : undefined
   const prop = papel === 'propietario' ? (extras.propietario ?? { verInteresado: false }) : undefined
   const verInteresado = prop ? prop.verInteresado : !pub || pub.verInteresado
+  // ASOCIADO que ATIENDE la cita (tabla del dueño, 6-nov-2026): ve lo NECESARIO para coordinar la visita: nombre, teléfono y las notas que la persona escribió para ella (lo que aceptó compartir
+  // con la casilla de la tarjeta). El CORREO y todo lo demás siguen con el permiso `ver_datos_interesado`; nunca ve las notas internas del equipo ni el estado de Google. El PROPIETARIO que no atiende
+  // (publicador: lo coordina VIVE BIEN) no ve ningún dato personal salvo ese mismo permiso.
+  const contactoBasico = papel === 'asesor' && !!pub
   // El propietario no tiene ninguna acción: las solicitudes de sus propiedades las administra VIVE BIEN.
   const acciones = papel === 'propietario' ? [] : accionesDisponibles(fila, papel, ahora)
   return {
@@ -162,12 +166,12 @@ export function recortar(fila: CitaFila, papel: PapelVista, extras: Extras, ahor
     // El cliente ve sus propios datos; el equipo, los que el cliente aceptó compartir.
     cliente: verInteresado
       ? { nombre: fila.cliente_nombre, telefono: fila.cliente_telefono, email: fila.cliente_email }
-      : { nombre: 'Interesado' },
+      : contactoBasico ? { nombre: fila.cliente_nombre, telefono: fila.cliente_telefono } : { nombre: 'Interesado' },
     // El cliente sólo ve el nombre del asesor; el contacto es el de Vive Bien.
     asesor: equipo
       ? { nombre: extras.asesorNombre, telefono: extras.asesorTelefono }
       : { nombre: extras.asesorNombre },
-    notasCliente: verInteresado ? fila.notas_cliente : null,
+    notasCliente: verInteresado || contactoBasico ? fila.notas_cliente : null,
     ...(equipo && !pub ? { notasInternas: fila.notas_internas } : {}),
     motivoCancelacion: fila.motivo_cancelacion,
     ...(equipo && !pub ? { google: { estado: fila.google_sync, error: fila.google_error } } : {}),
