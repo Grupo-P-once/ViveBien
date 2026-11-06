@@ -27,7 +27,7 @@ import { cn } from '@/lib/utils'
  *   Inicio                       (suelto, siempre arriba)
  *   MI CARTERA                   Mis propiedades · Nueva propiedad · En revisión · Mis métricas       (solo quien publica; abierta)
  *   EXPLORAR                     Buscar propiedades · Valuador · (Vender / Rentar mi propiedad, cuando exista)
- *   MI ACTIVIDAD                 Guardadas · Mis búsquedas · Mis alertas · Mis visitas · Mis consultas
+ *   MI ACTIVIDAD                 Guardadas · Mis búsquedas · Mis alertas · Citas · Mis consultas
  *                                (para quien publica empieza plegada: lo suyo va primero)
  *   MI CUENTA                    Mi perfil · Configuración · Cerrar sesión
  *   ADMINISTRACIÓN               Panel de administración   (solo quien puede)
@@ -56,7 +56,7 @@ const MENU: Record<'buscar' | 'actividad' | 'cuenta', Entrada[]> = {
     { titulo: 'Guardadas', icono: Heart, enlace: '/portal/propiedades?vista=guardadas' },
     { titulo: 'Mis búsquedas', icono: Bookmark, enlace: '/portal/busquedas' },   // «Mi búsqueda» es la sección «Lo que busco» dentro de esta
     { titulo: 'Mis alertas', icono: Bell, enlace: '/portal/alertas', contador: 'alertas' },
-    { titulo: 'Mis visitas', icono: CalendarDays, enlace: RUTAS_DE_VISITAS.cliente },
+    { titulo: 'Citas', icono: CalendarDays, enlace: RUTAS_DE_VISITAS.cliente },
     { titulo: 'Mis consultas', icono: MessageSquare, enlace: '/portal/consultas' },
   ],
   cuenta: [

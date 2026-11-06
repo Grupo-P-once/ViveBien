@@ -37,7 +37,7 @@ describe('D-4 · POST /api/citas/tareas', () => {
 
   it('sin tiempo o sin firma, o con algo que no tiene su forma: 401, sin ir siquiera a la base', async () => {
     const { POST } = await import('../src/app/api/citas/tareas/route')
-    const malas = [
+    const malas: Array<Record<string, string>> = [
       {}, { 'x-citas-tiempo': T }, { 'x-citas-firma': F },
       { 'x-citas-tiempo': '', 'x-citas-firma': F }, { 'x-citas-tiempo': T, 'x-citas-firma': '' },
       { 'x-citas-tiempo': '123', 'x-citas-firma': F }, { 'x-citas-tiempo': '17939124000', 'x-citas-firma': F }, { 'x-citas-tiempo': '1793912x00', 'x-citas-firma': F },

@@ -192,7 +192,7 @@ export default function BarraSuperiorPortal() {
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild><Link href="/portal/perfil"><UserRound aria-hidden /> Mi perfil</Link></DropdownMenuItem>
-          <DropdownMenuItem asChild><Link href={RUTAS_DE_VISITAS.cliente}><CalendarClock aria-hidden /> Mis visitas</Link></DropdownMenuItem>
+          <DropdownMenuItem asChild><Link href={RUTAS_DE_VISITAS.cliente}><CalendarClock aria-hidden /> Mis citas</Link></DropdownMenuItem>
           <DropdownMenuItem asChild><a href="/" target="_blank" rel="noopener noreferrer"><ExternalLink aria-hidden /> Ver sitio web</a></DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onSelect={() => signOut(auth)} className="text-[var(--estado-mal)] focus:text-[var(--estado-mal)]">

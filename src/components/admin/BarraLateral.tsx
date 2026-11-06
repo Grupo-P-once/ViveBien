@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { BarChart3, ChevronRight, History, House, LayoutDashboard, Mail, Megaphone, SearchCheck, ToggleLeft, Users, type LucideIcon, Receipt } from 'lucide-react'
+import { BarChart3, CalendarDays, ChevronRight, History, House, LayoutDashboard, Mail, Megaphone, SearchCheck, ToggleLeft, Users, type LucideIcon, Receipt } from 'lucide-react'
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
   SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem, useSidebar,
@@ -36,6 +36,7 @@ const MENU: Entrada[] = [
       { titulo: 'Revisar', enlace: '/admin/propiedades/pendientes' },
     ],
   },
+  { titulo: 'Citas', icono: CalendarDays, enlace: '/admin/citas' },
   { titulo: 'Formularios', icono: Mail, hijos: [{ titulo: 'Registros y solicitudes', enlace: '/admin/registros' }] },
   { titulo: 'Métricas', icono: BarChart3, enlace: '/admin/metricas' },
   { titulo: 'Usuarios', icono: Users, hijos: [{ titulo: 'Todos los usuarios', enlace: '/admin/usuarios' }] },
