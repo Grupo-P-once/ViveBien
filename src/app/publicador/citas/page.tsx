@@ -19,9 +19,9 @@ import type { VistaCalendario } from '@/lib/citas/servicio'
  *   · Mis citas       → las visitas que él mismo pidió como cliente.
  */
 const PESTANAS: Array<{ id: VistaCalendario; texto: string; vacio: string }> = [
-  { id: 'asesor', texto: 'Citas recibidas', vacio: 'Aún no tienes citas recibidas. Aparecerán cuando alguien agende una visita a una propiedad que tú atiendes.' },
-  { id: 'propietario', texto: 'Mis propiedades', vacio: 'Aún no hay citas en tus propiedades. VIVE BIEN administra las solicitudes y aquí las consultas.' },
-  { id: 'cliente', texto: 'Mis citas', vacio: 'Aún no has agendado visitas a otras propiedades.' },
+  { id: 'asesor', texto: 'Citas recibidas', vacio: 'Todavía no tienes citas recibidas. Aparecerán cuando alguien agende una visita a una propiedad que tú atiendes.' },
+  { id: 'propietario', texto: 'Mis propiedades', vacio: 'Todavía no hay citas en tus propiedades. VIVE BIEN administra las solicitudes y aquí las consultas.' },
+  { id: 'cliente', texto: 'Mis citas', vacio: 'Todavía no has agendado visitas a otras propiedades.' },
 ]
 /** Cuarta pestaña: su disponibilidad (solo si atiende citas; si no, el servidor lo explica con un 403). */
 type PestanaId = VistaCalendario | 'disponibilidad'
