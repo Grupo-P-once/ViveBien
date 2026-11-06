@@ -58,11 +58,17 @@ describe('Aviso de Privacidad · citas', () => {
     expect(await pagina('privacidad')).toContain('no su nombre, teléfono ni correo')
     expect(leer('src/lib/citas/ics.ts')).toContain('Sin datos personales')
   })
-  it('quién ve los datos del interesado: equipo siempre; asociado y propietario solo con permiso específico', async () => {
+  it('quién ve los datos del interesado (regla del dueño, 6-nov-2026): equipo siempre; asociado nombre, teléfono y notas (sin correo); publicador y propietario nada', async () => {
     const t = await pagina('privacidad')
     expect(t).toContain('Quien atiende una cita.')
-    expect(t).toContain('ese permiso específico')
+    expect(t).toContain('por omisión recibe, para atender y coordinar la visita, su nombre, su teléfono y las notas')
+    expect(t).toContain('no recibe su correo electrónico, ni las notas internas')
+    expect(t).toContain('no su nombre, teléfono, correo ni notas')
+    expect(t).toContain('ese mismo permiso específico')
     expect(t).toContain('no viene marcada de antemano')
+    // Ya NO se dice que el asociado, por omisión, solo ve propiedad, día, hora y estado.
+    expect(t).not.toContain('por omisión recibe solo la propiedad')
+    expect(t).not.toMatch(/asociada[^.]*por omisión recibe solo/)
     expect(leer('src/lib/acceso/capacidades.ts')).toContain("'ver_datos_interesado'")
     expect(leer('src/lib/citas/vista.ts')).toContain("{ nombre: 'Interesado' }")   // sin permiso el servidor ni manda el nombre
   })
@@ -124,7 +130,8 @@ describe('Términos y Condiciones · citas', () => {
 
 describe('la casilla de la tarjeta «Agenda una cita» dice lo mismo que el Aviso', () => {
   it('autoriza usar y compartir nombre y teléfono con quien atiende y mandar avisos/recordatorios; no promete entregar al anunciante', () => {
-    expect(TEXTO_CONSENTIMIENTO_CITAS).toMatch(/nombre y teléfono/)
+    expect(TEXTO_CONSENTIMIENTO_CITAS).toMatch(/nombre, mi teléfono y las notas/)
+    expect(TEXTO_CONSENTIMIENTO_CITAS).not.toMatch(/correo electrónico|mi correo/)   // la casilla NO autoriza compartir el correo con quien atiende
     expect(TEXTO_CONSENTIMIENTO_CITAS).toMatch(/persona que la atiende/)
     expect(TEXTO_CONSENTIMIENTO_CITAS).toMatch(/avisos y recordatorios/)
     expect(TEXTO_CONSENTIMIENTO_CITAS).not.toMatch(/anunciante/)

@@ -54,6 +54,6 @@ const GOLDEN = {
   // Misma publicación (solo cambia la fecha visible). Era 21933 / 9009395b0c62ef9654742f74.
   // 4-nov-2026: sección 7 dice qué borra de verdad el proceso diario y qué no (cuentas, consultas, formularios y datos de propietarios: sin borrado automático). Era 21934 / 28525a2361cd327138d46f64.
   // 6-nov-2026: se añadió el sistema de citas (datos, finalidades, quién atiende una cita, proveedores, conservación y aviso simplificado) y la fecha visible; borrador sujeto a aprobación del abogado. Era 22186 / f22aedd3ee971b3e11f4564c.
-  privacidad: { largo: 25344, huella: 'ba1b23a852d7ce5b2a291457' },
+  privacidad: { largo: 25688, huella: '79e49f98d2e998dfe1a495fd' },
   vista: { vacia: [1542, '3e9aec9a7dd433947f70cf9c'], completa: [1671, 'bb0ae8ee6f77aa2dba096a35'] },
 } as { terminos: { largo: number; huella: string }; privacidad: { largo: number; huella: string }; vista: { vacia: [number, string]; completa: [number, string] } }

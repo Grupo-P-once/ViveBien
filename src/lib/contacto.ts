@@ -39,7 +39,7 @@ export const TEXTO_CONSENTIMIENTO =
  * Texto PENDIENTE de validación del abogado junto con la versión 2026-11-06 del Aviso.
  */
 export const TEXTO_CONSENTIMIENTO_CITAS =
-  'Autorizo que VIVE BIEN use mi nombre y teléfono para atender esta cita y los comparta con la persona que la atiende, ' +
+  'Autorizo que VIVE BIEN use mi nombre, mi teléfono y las notas que escriba para esta cita para atenderla y los comparta con la persona que la atiende, ' +
   'y que me envíe avisos y recordatorios de la cita por correo y en la plataforma.'
 
 /** Ventana en la que dos solicitudes iguales se consideran la misma. */
