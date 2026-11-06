@@ -53,6 +53,10 @@ export default function DetalleCita({
   const [elegido, setElegido] = useState<string | null>(null)
   const refMotivo = useRef<HTMLTextAreaElement>(null)
   const id = cita.id
+  // Radix solo devuelve el foco a un <Trigger>; aquí no hay (se monta al elegir una cita de la lista). El elemento que tenía el foco al abrir se
+  // captura al NACER (antes de que el diálogo mueva el foco) y se restaura al cerrar: Escape/Cerrar vuelven a la tarjeta que se abrió.
+  const [origen] = useState<Element | null>(() => (typeof document === 'undefined' ? null : document.activeElement))
+  useEffect(() => () => { const el = origen as HTMLElement | null; setTimeout(() => { if (el?.isConnected) el.focus() }, 0) }, [origen])
   // «Buscando horarios» se DERIVA: se está buscando mientras se quiere proponer y todavía no llegó nada (ni falló).
   const cargandoHuecos = accion === 'proponer' && huecos === null && !huecosFallo
 
@@ -140,10 +144,10 @@ export default function DetalleCita({
         )}
 
         <dl className="grid gap-3 text-sm sm:grid-cols-2">
-          <div className="flex gap-2"><Clock className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden /><div><dt className="text-xs text-muted-foreground">Cuándo</dt><dd className="font-medium first-letter:uppercase">{cuando(c)}</dd></div></div>
-          {c.lugar && <div className="flex gap-2"><MapPin className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden /><div><dt className="text-xs text-muted-foreground">Lugar</dt><dd className="font-medium">{c.lugar}</dd></div></div>}
-          <div className="flex gap-2"><User className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden /><div><dt className="text-xs text-muted-foreground">{c.papel === 'cliente' ? 'Responsable' : 'Quién va'}</dt><dd className="font-medium">{c.papel === 'cliente' ? (c.asesor.nombre ?? 'VIVE BIEN') : quienVa(c)}</dd></div></div>
-          {equipo && c.cliente.telefono && <div className="flex gap-2"><Phone className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden /><div><dt className="text-xs text-muted-foreground">Teléfono</dt><dd className="font-medium">{c.cliente.telefono}</dd></div></div>}
+          <div><dt className="flex items-center gap-2 text-xs text-muted-foreground"><Clock className="size-4 shrink-0" aria-hidden />Cuándo</dt><dd className="pl-6 font-medium first-letter:uppercase">{cuando(c)}</dd></div>
+          {c.lugar && <div><dt className="flex items-center gap-2 text-xs text-muted-foreground"><MapPin className="size-4 shrink-0" aria-hidden />Lugar</dt><dd className="pl-6 font-medium">{c.lugar}</dd></div>}
+          <div><dt className="flex items-center gap-2 text-xs text-muted-foreground"><User className="size-4 shrink-0" aria-hidden />{c.papel === 'cliente' ? 'Responsable' : 'Quién va'}</dt><dd className="pl-6 font-medium">{c.papel === 'cliente' ? (c.asesor.nombre ?? 'VIVE BIEN') : quienVa(c)}</dd></div>
+          {equipo && c.cliente.telefono && <div><dt className="flex items-center gap-2 text-xs text-muted-foreground"><Phone className="size-4 shrink-0" aria-hidden />Teléfono</dt><dd className="pl-6 font-medium">{c.cliente.telefono}</dd></div>}
         </dl>
 
         {c.propuesta && (

@@ -1,0 +1,13 @@
+/*
+ * Colores del calendario con contraste AA sobre fondo blanco (axe: color-contrast). El tema trae grises claros (#9ca3af ≈ 2,5:1) para los
+ * días de otros meses y azul #3788d8 (≈ 3,6:1) para los eventos con texto blanco; aquí se oscurecen SOLO dentro de nuestro contenedor.
+ * El color del tipo de cita (propia / solicitada) lo lleva el borde izquierdo de cada evento, no el fondo.
+ */
+.citas-cal {
+  --fc-classic-faint-foreground: #566070;
+  --fc-classic-muted-foreground: #4b5563;
+  --fc-classic-primary: #8b1a1a;
+  --fc-classic-primary-foreground: #ffffff;
+  --fc-classic-today: #fff3c4;
+  --fc-classic-border: #cbd5e1;
+}
