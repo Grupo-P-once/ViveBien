@@ -1,4 +1,4 @@
-import { accionesDisponibles, ETIQUETA_ESTADO, type AccionCita, type EstadoCita, type PapelVista } from './estados'
+import { accionesDisponibles, esFirme, ETIQUETA_ESTADO, type AccionCita, type EstadoCita, type PapelVista } from './estados'
 import { puede } from '../acceso/permisos'
 import { atiendeCitas, type MapaCapacidades } from '../acceso/capacidades'
 
@@ -68,6 +68,8 @@ export type CitaVista = {
   etiqueta: string
   papel: PapelVista
   tipo: CitaFila['tipo']
+  /** La cita está acordada y aparta horario (confirmada, o con un cambio pedido sobre una confirmada). Solo entonces es un evento de calendario. */
+  firme: boolean
   /**
    * Una solicitud PENDIENTE cuyo horario ya ocupa otra cita confirmada del mismo responsable (D-2/D-12): ya no se puede
    * confirmar; se ofrecen alternativas o se rechaza. Solo lo calcula el servicio para quien atiende; nunca para el cliente.
@@ -146,6 +148,7 @@ export function recortar(fila: CitaFila, papel: PapelVista, extras: Extras, ahor
     etiqueta: ETIQUETA_ESTADO[fila.estado],
     papel,
     tipo: fila.tipo,
+    firme: esFirme(fila),
     inicio: fila.inicio,
     fin: fila.fin,
     zona: fila.zona_horaria,

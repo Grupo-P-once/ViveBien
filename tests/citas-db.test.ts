@@ -73,10 +73,12 @@ beforeAll(async () => {
     -- Un Vault de mentira: solo la vista que las funciones del token leen.
     create schema vault;
     create table vault.decrypted_secrets (name text, decrypted_secret text);
+    create table public.audit_logs (id bigint generated always as identity primary key, actor_uid text not null, actor_email text, actor_rol text, accion text not null, entidad text not null, entidad_id text, antes jsonb, despues jsonb, creado_en timestamptz not null default now());
   `)
   await db.exec(readFileSync(path.join(process.cwd(), 'supabase', '15-citas.sql'), 'utf8'))
   await db.exec(readFileSync(path.join(process.cwd(), 'supabase', '70-citas-v2.sql'), 'utf8'))
   await db.exec(readFileSync(path.join(process.cwd(), 'supabase', '72-citas-tareas-firma.sql'), 'utf8'))
+  await db.exec(readFileSync(path.join(process.cwd(), 'supabase', '73-citas-guardar-agenda.sql'), 'utf8'))
 }, 90_000)
 
 afterAll(async () => { await db?.close() })
@@ -472,6 +474,77 @@ describe('D-4 · la firma de la tarea la valida la base (migraciones 71 y 72)', 
     await db.query(`insert into vault.decrypted_secrets values ('citas_tareas_url', 'https://ejemplo.invalid/api/citas/tareas')`)
     expect((await db.query<{ r: unknown }>('select citas_tarea_invocar() as r')).rows[0].r).toBeNull()   // sin secreto
     await db.exec(`delete from vault.decrypted_secrets`)
+  })
+})
+
+describe('guardar la agenda: atómico y auditado (migración 73)', () => {
+  const H = JSON.stringify([{ dia: 1, desde: '09:00', hasta: '18:00' }, { dia: 6, desde: '10:00', hasta: '14:00' }])
+  const A = JSON.stringify({ duracion_min: 60, margen_min: 15, anticipacion_horas: 2, ventana_dias: 30, confirmacion: 'manual' })
+  const futuro = (dias: number) => new Date(Date.now() + dias * 86_400_000).toISOString()
+  const guardar = (uid: string, h = H, a = A, b = '[]', actor = 'admin-x') => db.query(
+    'select citas_guardar_agenda($1, $2, $3, $4, $5::jsonb, $6::jsonb, $7::jsonb)', [actor, 'a@ejemplo.invalid', 'admin', uid, h, a, b])
+  const filas = async (t: string, uid: string) => (await db.query<{ n: number }>(`select count(*)::int as n from ${t} where asesor_uid = $1`, [uid])).rows[0].n
+
+  it('guarda horario, ajustes y bloqueos, y deja UNA fila de auditoría con el antes y el después', async () => {
+    const b = JSON.stringify([{ desde: futuro(10), hasta: futuro(15), motivo: 'Vacaciones' }])
+    await guardar('ase', H, A, b)
+    expect(await filas('disponibilidad_asesores', 'ase')).toBe(2)
+    const aj = await db.query<{ duracion_min: number; confirmacion: string }>(`select duracion_min, confirmacion from ajustes_citas where asesor_uid = 'ase'`)
+    expect(aj.rows[0]).toMatchObject({ duracion_min: 60, confirmacion: 'manual' })
+    const bl = await db.query<{ motivo: string }>(`select motivo from bloqueos_asesores where asesor_uid = 'ase'`)
+    expect(bl.rows.map((x) => x.motivo)).toEqual(['Vacaciones'])
+    const au = await db.query<{ accion: string; entidad_id: string; actor_uid: string; antes: { horario: unknown[] }; despues: { horario: unknown[] } }>(
+      `select accion, entidad_id, actor_uid, antes, despues from audit_logs where entidad = 'agenda_citas' order by id desc limit 1`)
+    expect(au.rows[0]).toMatchObject({ accion: 'citas.agenda_guardada', entidad_id: 'ase', actor_uid: 'admin-x' })
+    expect(au.rows[0].antes.horario).toEqual([])      // primera vez: no había nada
+    expect(au.rows[0].despues.horario).toHaveLength(2)
+  })
+
+  it('al guardar de nuevo REEMPLAZA (no acumula) y la auditoría recuerda lo anterior', async () => {
+    await guardar('ase', JSON.stringify([{ dia: 2, desde: '08:00', hasta: '12:00' }]), A, '[]')
+    expect(await filas('disponibilidad_asesores', 'ase')).toBe(1)
+    expect(await filas('bloqueos_asesores', 'ase')).toBe(0)         // los bloqueos vigentes se reemplazan por los nuevos (ninguno)
+    const au = await db.query<{ antes: { horario: unknown[]; bloqueos: unknown[] } }>(`select antes from audit_logs where entidad = 'agenda_citas' order by id desc limit 1`)
+    expect(au.rows[0].antes.horario).toHaveLength(2)
+    expect(au.rows[0].antes.bloqueos).toHaveLength(1)
+  })
+
+  it('los bloqueos que ya pasaron se conservan (historia); los vigentes y futuros se reemplazan', async () => {
+    await db.query(`insert into bloqueos_asesores (asesor_uid, desde, hasta, motivo) values ('ase', now() - interval '20 days', now() - interval '10 days', 'Pasado')`)
+    await guardar('ase', H, A, JSON.stringify([{ desde: futuro(3), hasta: futuro(4), motivo: 'Nuevo' }]))
+    const bl = await db.query<{ motivo: string }>(`select motivo from bloqueos_asesores where asesor_uid = 'ase' order by desde`)
+    expect(bl.rows.map((x) => x.motivo)).toEqual(['Pasado', 'Nuevo'])
+  })
+
+  it('si algo falla, NO cambia nada y NO queda auditoría (todo o nada)', async () => {
+    const antes = { h: await filas('disponibilidad_asesores', 'ase'), a: (await db.query<{ n: number }>(`select count(*)::int as n from audit_logs`)).rows[0].n }
+    // Duración fuera del límite de la tabla: la violación llega DESPUÉS de borrar el horario viejo, y todo se revierte.
+    await expect(guardar('ase', H, JSON.stringify({ duracion_min: 5, margen_min: 15, anticipacion_horas: 2, ventana_dias: 30, confirmacion: 'manual' }))).rejects.toThrow()
+    // Dos horarios que empiezan a la misma hora el mismo día: choca con la restricción única.
+    await expect(guardar('ase', JSON.stringify([{ dia: 1, desde: '09:00', hasta: '10:00' }, { dia: 1, desde: '09:00', hasta: '11:00' }]))).rejects.toThrow()
+    expect(await filas('disponibilidad_asesores', 'ase')).toBe(antes.h)
+    expect((await db.query<{ n: number }>(`select count(*)::int as n from audit_logs`)).rows[0].n).toBe(antes.a)
+  })
+
+  it('una cuenta que no existe, o datos con otra forma, se rechazan', async () => {
+    expect(await motivoDe(guardar('no-existe'))).toBe('no_encontrado')
+    expect(await motivoDe(guardar('ase', '{}'))).toBe('datos_invalidos')
+    expect(await motivoDe(guardar('ase', H, '[]'))).toBe('datos_invalidos')
+    expect(await motivoDe(guardar('ase', H, A, '{}'))).toBe('datos_invalidos')
+  })
+
+  it('solo la clave de servicio puede guardar agendas', async () => {
+    for (const rol of ['anon', 'authenticated']) {
+      await db.exec(`set role ${rol}`)
+      expect(await motivoDe(guardar('ase')), rol).toMatch(/permission denied/)
+      await db.exec('reset role')
+    }
+    // En Supabase real service_role tiene privilegios sobre las tablas de public (y se salta RLS); el rol de mentira de este banco no, así que se los damos.
+    await db.exec('grant all on all tables in schema public to service_role')
+    await db.exec('alter role service_role bypassrls')
+    await db.exec('set role service_role')
+    expect(await motivoDe(guardar('ase'))).toBe('ok')
+    await db.exec('reset role')
   })
 })
 

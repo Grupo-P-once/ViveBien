@@ -3,6 +3,7 @@ import { supabaseAdmin, exigir } from '@/lib/auth-server'
 import { checkAvailability } from '@/lib/citas/servicio'
 import { diaLocal, esDia } from '@/lib/citas/zona'
 import { puede } from '@/lib/acceso/permisos'
+import { flagEncendido } from '@/lib/config/flags-servidor'
 
 /**
  * GET /api/citas/disponibilidad?propiedad=…&desde=AAAA-MM-DD&dias=14[&cita=…]
@@ -10,6 +11,9 @@ import { puede } from '@/lib/acceso/permisos'
  * Horarios libres para visitar una propiedad, en hora de León. Con `cita`
  * (al proponer otro horario) no cuenta el horario que esa misma cita ya ocupa.
  * Sólo con sesión: sólo agenda quien tiene cuenta.
+ *
+ * Con `citasEnLinea` apagado NO se ofrecen horarios para una solicitud NUEVA (igual que `POST /api/citas`): no se promete
+ * lo que no se puede reservar. Cambiar el horario de una cita que ya existe (`cita=`) sigue funcionando.
  */
 
 export const dynamic = 'force-dynamic'
@@ -22,6 +26,9 @@ export async function GET(req: Request) {
   const { perfil } = auth
 
   const url = new URL(req.url)
+  if (!url.searchParams.get('cita') && !(await flagEncendido('citasEnLinea'))) {
+    return NextResponse.json({ error: 'Todavía no se pueden agendar citas en línea.', citasEnLinea: false }, { status: 409 })
+  }
   let propiedadId = url.searchParams.get('propiedad')?.slice(0, 120) ?? ''
   const desdePedido = url.searchParams.get('desde')
   const desde = esDia(desdePedido) ? desdePedido : diaLocal(new Date())
