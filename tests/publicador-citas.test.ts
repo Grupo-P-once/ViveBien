@@ -511,11 +511,18 @@ describe('correos y enlaces: no filtran datos personales ni ofrecen lo que no se
     for (const c of alCliente) expect(c.html + c.text).not.toContain('4779999999')
   })
 
-  it('VIVE BIEN recibe un aviso interno de la visita en la propiedad de un publicador, sin datos del interesado', async () => {
+  it('Telegram: VIVE BIEN recibe un aviso cuando se agenda una visita (también en la propiedad de un publicador), sin datos del interesado', async () => {
     await avisarCambio(ID(2), 'CREATED', 'X')
-    const a = mundo.alertas.find((x) => String(x.titulo).includes('publicador'))
-    expect(a).toBeDefined()
-    expect(JSON.stringify(a)).not.toMatch(/Rosa|4771234567|rosa@/)
+    const avisos = mundo.alertas.filter((x) => String(x.clave).startsWith('cita-agendada:'))
+    expect(avisos).toHaveLength(1)
+    expect(String(avisos[0].titulo)).toMatch(/visita/i)
+    expect(JSON.stringify(avisos[0].datos)).toContain('publicador')
+    expect(JSON.stringify(avisos[0])).not.toMatch(/Rosa|4771234567|rosa@|Prefiero por la tarde/)
+  })
+
+  it('Telegram: solo avisa al AGENDAR (CREATED); un cambio posterior no repite el aviso', async () => {
+    await avisarCambio(ID(2), 'CONFIRMED', 'X')
+    expect(mundo.alertas.filter((x) => String(x.clave).startsWith('cita-agendada:'))).toHaveLength(0)
   })
 
   it('el enlace del correo muestra al asesor-publicador la cita SIN el nombre del interesado', async () => {

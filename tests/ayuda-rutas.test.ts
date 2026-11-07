@@ -134,8 +134,9 @@ describe('el cuerpo del artículo NO se pinta como HTML crudo', () => {
   })
 
   it('un enlace del cuerpo sólo puede ser interno', () => {
-    // `[texto](/ruta)` sí; `[texto](javascript:…)` se pinta como texto.
-    expect(leer(ARTICULO)).toMatch(/enlace\[2\]\.startsWith\('\/'\)/)
+    // `[texto](/ruta)` sí; `[texto](javascript:…)` y `[texto](//otro-sitio)` se pintan como texto (auditoría 7-nov-2026, H-11: `startsWith('/')` dejaba pasar `//host`).
+    expect(leer(ARTICULO)).toMatch(/esRutaInterna\(enlace\[2\]\)/)
+    expect(leer(ARTICULO)).not.toMatch(/enlace\[2\]\.startsWith\('\/'\)/)
   })
 })
 

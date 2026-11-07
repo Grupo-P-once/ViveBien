@@ -312,14 +312,21 @@ export async function avisarCambio(citaId: string, evento: EventoCorreo, actorUi
     const db = supabaseAdmin()
     const f = await leer(db, citaId)
     if (!f) return
-    // VIVE BIEN se entera de toda visita en una propiedad de un publicador (los
-    // leads son del flujo comercial de VIVE BIEN, ADR-0006). Sin datos personales.
-    if (evento === 'CREATED' && f.asesorCuenta?.rol === 'publicador') {
+    // Telegram: el equipo se entera de TODA visita que se agenda (pedido del dueño, 7-nov-2026). El aviso nunca lleva nombre,
+    // teléfono ni correo de quien agenda (ADR-0006): solo la propiedad, el horario, quién atiende y el estado.
+    if (evento === 'CREATED') {
+      const propia = f.asesorCuenta?.rol === 'publicador'
       void avisar({
         nivel: 'aviso',
-        titulo: 'Nueva visita en la propiedad de un publicador',
-        datos: { Propiedad: f.cita.propiedad_titulo, Atiende: f.asesor?.nombre ?? null, Estado: f.cita.estado },
-        clave: `cita-publicador:${f.cita.id}`,
+        titulo: f.cita.estado === 'CONFIRMED' ? 'Visita agendada y confirmada' : 'Nueva solicitud de visita por responder',
+        datos: {
+          Propiedad: f.cita.propiedad_titulo,
+          Cuándo: fechaDeAviso(f.cita.inicio, ahora),
+          Atiende: f.asesor?.nombre ?? null,
+          Estado: f.cita.estado,
+          ...(propia ? { Nota: 'Propiedad de un publicador' } : {}),
+        },
+        clave: `cita-agendada:${f.cita.id}`,
       })
     }
     for (const m of planDeCorreos(evento, f.cita, actorUid)) {

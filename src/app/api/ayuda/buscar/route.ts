@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { frenarAsync, origenDe, TOPES } from '@/lib/limites'
 import { buscar } from '@/lib/ayuda/consultas'
 import { consultaBuscable, normalizarConsulta } from '@/lib/ayuda/modelo'
 
@@ -14,6 +15,9 @@ import { consultaBuscable, normalizarConsulta } from '@/lib/ayuda/modelo'
 export const dynamic = 'force-dynamic'
 
 export async function GET(req: Request) {
+  // Sin sesión y cada consulta distinta llega a la base: tope por origen (auditoría 7-nov-2026, H-8).
+  const frenado = await frenarAsync(`ayuda-buscar:${origenDe(req)}`, TOPES.ayudaBuscar)
+  if (frenado) return frenado
   const q = normalizarConsulta(new URL(req.url).searchParams.get('q') ?? '')
   if (!consultaBuscable(q)) {
     return NextResponse.json({ consulta: q, resultados: [], desactualizado: false })

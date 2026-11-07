@@ -25,7 +25,7 @@
  *  · 🔴 La base no responde → el catálogo se queda sin propiedades.
  *  · 🟢 Una propiedad publicada → confirma que el asistente o el bot funcionó.
  *
- * No se avisa de: visitas, búsquedas, favoritos ni errores de validación. Eso
+ * No se avisa de: búsquedas, favoritos ni errores de validación (las visitas agendadas SÍ avisan desde el 7-nov-2026, a petición del dueño). Eso
  * es ruido, y vive en el panel.
  * ─────────────────────────────────────────────────────────────
  *

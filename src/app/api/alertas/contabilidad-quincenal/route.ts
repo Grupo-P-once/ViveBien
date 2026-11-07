@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { autorizadoPorCron } from '@/lib/cron-secreto'
 import { supabaseAdmin } from '@/lib/auth-server'
 import { enviarQuincenal, hoyEnMexico } from '@/lib/contabilidad-reporte-servidor'
 
@@ -13,8 +14,7 @@ import { enviarQuincenal, hoyEnMexico } from '@/lib/contabilidad-reporte-servido
 export const dynamic = 'force-dynamic'
 
 export async function GET(req: Request) {
-  const secreto = process.env.CRON_SECRET?.trim()
-  if (!secreto || req.headers.get('authorization') !== `Bearer ${secreto}`) return NextResponse.json({ error: 'No autorizado.' }, { status: 401 })
+  if (!autorizadoPorCron(req)) return NextResponse.json({ error: 'No autorizado.' }, { status: 401 })
   const r = await enviarQuincenal(supabaseAdmin(), hoyEnMexico(), 'cron')
   const quincena = r.reporte?.quincena
   if (r.estado === 'enviado' || r.estado === 'ya_enviado') return NextResponse.json({ ok: true, estado: r.estado, quincena })

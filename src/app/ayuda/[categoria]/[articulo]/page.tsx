@@ -6,6 +6,7 @@ import { rutaDelArticulo, slugValido } from '@/lib/ayuda/modelo'
 import { descripcionDeArticulo } from '@/lib/ayuda/descripcion'
 import { AvisoDelProducto, AvisoDesactualizado, Migas, NoEncontraste, TarjetaDeArticulo } from '@/components/ayuda/Piezas'
 import BarraLateralAyuda from '@/components/ayuda/BarraLateral'
+import { esRutaInterna } from '@/lib/ayuda/enlace'
 
 /**
  * `/ayuda/[categoria]/[articulo]` — el artículo.
@@ -67,7 +68,8 @@ function Parrafo({ texto }: { texto: string }) {
           return <strong key={i} className="font-semibold text-[#15181C]">{t.slice(2, -2)}</strong>
         }
         const enlace = /^\[([^\]]+)\]\(([^)]+)\)$/.exec(t)
-        if (enlace && enlace[2].startsWith('/')) {
+        // Solo rutas del propio sitio: `//host` y barra+contrabarra son enlaces a OTRO sitio (protocolo relativo) y no pasan.
+        if (enlace && esRutaInterna(enlace[2])) {
           return <a key={i} href={enlace[2]} className="underline" style={{ color: 'var(--rojo-marca)' }}>{enlace[1]}</a>
         }
         return <span key={i}>{enlace ? enlace[1] : t}</span>

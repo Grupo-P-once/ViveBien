@@ -109,6 +109,8 @@ export const TOPES = {
   feedbackArticulo: { maximo: 3, ventanaMs: 10 * 60 * 1000 },
   /** Valuador: lectura de comparables, sin escritura ni datos personales; un gesto de persona (varias pruebas seguidas), no un bucle. */
   valuador: { maximo: 40, ventanaMs: 10 * 60 * 1000 },
+  /** Búsqueda pública del Centro de Ayuda (sin sesión). */
+  ayudaBuscar: { maximo: 60, ventanaMs: 10 * 60 * 1000 },
   /**
    * Cerrar la cuenta (D-38). Es un acto único: cinco por hora dejan sitio de
    * sobra a los reintentos legítimos tras un fallo de Firebase, y cortan un

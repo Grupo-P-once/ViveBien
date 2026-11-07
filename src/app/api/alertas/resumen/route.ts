@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { autorizadoPorCron } from '@/lib/cron-secreto'
 import { clienteServidor } from '@/lib/supabase-servidor'
 import { avisar } from '@/lib/alertas'
 import { avisosDeClientes, type ResumenDeAvisos } from '@/lib/avisos-cliente-servidor'
@@ -64,11 +65,8 @@ async function contar(tabla: string, columnaFecha: string, desde: string): Promi
 }
 
 export async function GET(req: Request) {
-  const secreto = process.env.CRON_SECRET?.trim()
-  const cabecera = req.headers.get('authorization')
-
-  // Vercel manda `Authorization: Bearer <CRON_SECRET>` en sus tareas.
-  if (!secreto || cabecera !== `Bearer ${secreto}`) {
+  // Vercel manda `Authorization: Bearer <CRON_SECRET>` en sus tareas (comparación en tiempo constante).
+  if (!autorizadoPorCron(req)) {
     return NextResponse.json({ error: 'No autorizado.' }, { status: 401 })
   }
 
