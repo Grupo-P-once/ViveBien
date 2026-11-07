@@ -196,10 +196,14 @@ describe('los textos: formato del visor, rutas, vocabulario y coherencia con el 
     for (const r of rutas) expect(existsSync(path.join(__dirname, '..', 'src', 'app', r.replace(/^\//, ''), 'page.tsx')), `la ruta ${r} no existe`).toBe(true)
   })
 
-  it('vocabulario vigente: los ocho estados con su etiqueta del código; «Mis visitas» ya no es el nombre de nada', () => {
+  it('vocabulario vigente: los ocho estados con su etiqueta del código; «Mis visitas» solo es el filtro del equipo (D-6: ya no es la pantalla del cliente)', () => {
     const estados = cuerpos().find((c) => c.includes('**Pendiente.**'))!
     for (const etiqueta of Object.values(ETIQUETA_ESTADO)) expect(estados.toLowerCase(), etiqueta).toContain(`**${etiqueta.toLowerCase()}.**`)
-    expect(todo()).not.toMatch(/Mis visitas/)
+    // «Mis visitas» existe en la interfaz SOLO como el filtro de quien ve también las citas de otros (FiltrosCitas): en ningún otro sitio de la ayuda.
+    const conMisVisitas = cuerpos().filter((c) => /Mis visitas/.test(c))
+    expect(conMisVisitas).toHaveLength(1)
+    expect(conMisVisitas[0]).toContain('el filtro **«Mis visitas»**')
+    expect(leer('src/components/citas/FiltrosCitas.tsx')).toContain('Mis visitas')   // el rótulo de la ayuda existe de verdad en la pantalla
     expect(todo()).toContain('[Citas](/portal/citas)')
   })
 
@@ -229,11 +233,11 @@ describe('los textos: formato del visor, rutas, vocabulario y coherencia con el 
     expect(ficha).toContain('Agenda una cita')
     expect(ficha).toContain('Solicitud enviada')
     expect(ficha).toContain('Enviar solicitud')
-    const panel = leer('src/components/citas/PanelCitas.tsx') + leer('src/components/citas/DetalleCita.tsx') + leer('src/components/citas/ListaCitas.tsx')
-    for (const s of ['Calendario', 'Agenda', 'Historial', 'Actualizar', 'Horario ocupado', 'Por responder']) expect(panel, s).toContain(s)
+    const panel = ['PanelCitas', 'DetalleCita', 'ListaCitas', 'IndicadoresCitas'].map((n) => leer('src/components/citas/' + n + '.tsx')).join(' ')
+    for (const s of ['Calendario', 'Agenda', 'Historial', 'Actualizar', 'Horario ocupado', 'Cambios por responder']) expect(panel, s).toContain(s)
     expect(leer('src/lib/citas/estados.ts')).toContain("cancelar: 'Cancelar cita'")
     expect(leer('src/app/publicador/citas/page.tsx')).toContain('Mi disponibilidad')
-    expect(leer('src/app/admin/citas/page.tsx')).toContain('Disponibilidad')
+    expect(leer('src/app/admin/citas/page.tsx')).toContain('rutaDisponibilidad')   // «Mi disponibilidad» vive en «Acciones rápidas»
     const t = todo()
     for (const s of ['Agenda una cita', 'Solicitud enviada', 'Enviar solicitud', 'Cancelar cita', 'Horario ocupado', 'Mi disponibilidad']) expect(t, s).toContain(s)
   })
@@ -249,10 +253,53 @@ describe('los textos: formato del visor, rutas, vocabulario y coherencia con el 
   })
 
   it('privacidad: dice con quién se comparten los datos y remite al Aviso y a los Términos', () => {
-    const datos = cuerpos().find((c) => c.includes('**El dueño de una propiedad que es publicador**'))!
+    const datos = cuerpos().find((c) => c.includes('**Un publicador dueño de la propiedad**'))!
     expect(datos).toContain('sin tu nombre, teléfono, correo ni notas')
     expect(datos).toContain('[Aviso de Privacidad](/privacidad)')
     expect(datos).toContain('[Términos y condiciones](/terminos)')
+  })
+
+  it('regla de datos por rol (dueño, 6-nov-2026): el ASOCIADO ve nombre, teléfono y notas del interesado, nunca su correo; el PUBLICADOR dueño no ve nada', () => {
+    const datos = cuerpos().find((c) => c.includes('**Un publicador dueño de la propiedad**'))!
+    const asociadoEnDatos = datos.slice(datos.indexOf('**Un asociado que atiende'), datos.indexOf('**Un publicador dueño'))
+    expect(asociadoEnDatos).toMatch(/tu nombre, tu teléfono y las notas/)
+    expect(asociadoEnDatos).toMatch(/No ve tu correo/)
+    // Lo que NO se puede volver a decir: que el asociado que atiende no ve el nombre o el teléfono por omisión.
+    for (const c of cuerpos()) {
+      expect(c, 'el asociado/responsable SÍ ve nombre y teléfono').not.toMatch(/no da derecho a ver los datos del interesado/i)
+      expect(c).not.toMatch(/Atender una cita no da derecho a ver/i)
+      expect(c).not.toMatch(/asociado[^.]*(no|sin)[^.]*(ve|recibe)[^.]*(nombre|tel[eé]fono)/i)
+    }
+    const recibidas = cuerpos().find((c) => c.includes('**Coordinadas por VIVE BIEN.**'))!
+    expect(recibidas).toMatch(/su nombre, su teléfono y las notas que escribió/)
+    expect(recibidas).toMatch(/no ves su correo/)
+    expect(recibidas).toMatch(/ni las notas internas del equipo, ni el estado de Google/)
+    expect(recibidas).toMatch(/no ves nombre, teléfono, correo ni otros datos del cliente/)   // «Visitas a mis propiedades» del publicador (solo lectura)
+    expect(recibidas).toMatch(/Si eres publicador/)
+    expect(recibidas).toMatch(/Si eres asociado/)
+    for (const rotulo of ['Visitas a mis propiedades', 'Coordinadas por VIVE BIEN', 'Mis citas', 'Mi disponibilidad']) expect(leer('src/app/publicador/citas/page.tsx'), rotulo).toContain(rotulo)
+    // Equipo: datos completos; el correo del interesado es el único permiso aparte.
+    const permisos = cuerpos().find((c) => c.includes('**Datos de la persona interesada.**'))!
+    expect(permisos).toMatch(/el \*\*correo\*\* de la persona es un permiso aparte/)
+  })
+
+  it('el nuevo diseño de Citas está explicado y sin promesas falsas: indicadores que filtran, Próximas citas, .ics, CSV, «Mis visitas»; sin recordatorios manuales ni Google', () => {
+    const cal = cuerpos().find((c) => c.includes('**Próximas citas**') && c.includes('**Historial.**'))!
+    expect(cal).toContain('también filtran')
+    expect(cal).toContain('Descargar mi calendario')
+    expect(cal).toContain('Exportar a CSV')
+    expect(cal).toContain('próximos 100 días')
+    expect(cal).toContain('no se distingue entre tipos')
+    expect(cal).toContain('**Nueva cita**')
+    expect(cal).toContain('según su **estado**')
+    for (const rotulo of ['Citas programadas', 'Pendientes por confirmar', 'Cambios por responder', 'Agendar una visita', 'Descargar mi calendario', 'Exportar a CSV', 'Nueva cita', 'Próximas citas']) expect(leer('src/components/citas/IndicadoresCitas.tsx') + leer('src/components/citas/AccionesRapidas.tsx') + leer('src/components/citas/PanelCitas.tsx') + leer('src/components/citas/ProximasCitas.tsx'), rotulo).toMatch(new RegExp(rotulo, 'i'))
+    const equipo = cuerpos().find((c) => c.includes('el filtro **«Mis visitas»**') && c.includes('**Próximas citas**'))!
+    expect(equipo).toContain('Mi disponibilidad')
+    expect(equipo).toContain('Descargar mi calendario')
+    for (const c of cuerpos()) {
+      expect(c).not.toMatch(/enviar recordatorios/i)
+      expect(c).not.toMatch(/(?<!no hay )sincronizaci[oó]n autom[aá]tica con Google/i)
+    }
   })
 
   it('la reversa y la 74b solo mencionan artículos de la 74 y no borran categorías ni tablas', () => {

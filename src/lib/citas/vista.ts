@@ -75,6 +75,8 @@ export type CitaVista = {
    * confirmar; se ofrecen alternativas o se rechaza. Solo lo calcula el servicio para quien atiende; nunca para el cliente.
    */
   conflicto?: boolean
+  /** La cita es MÍA: yo soy quien va a la visita (filtro «Mis visitas» de quien ve las de otros). Sin datos de nadie más. */
+  mia?: boolean
   inicio: string
   fin: string
   zona: string

@@ -296,13 +296,15 @@ function aVista(fila: FilaConExtras, papel: PapelVista, ahora: Date, ctx: Contex
   // El PROPIETARIO (D-1) solo lee: sin el permiso `ver_datos_interesado` no recibe nombre, teléfono, correo ni notas.
   const propietario = papel === 'propietario' ? { verInteresado: veDatosDelInteresado(mira) } : undefined
 
-  return recortar(cita, papel, {
+  const vista = recortar(cita, papel, {
     propiedad: propiedadDeCita(propiedad),
     asesorNombre: nombreVisible ? asesor?.nombre ?? null : 'Vive Bien',
     asesorTelefono: asesor?.telefono ?? null,
     ...(publicador ? { publicador } : {}),
     ...(propietario ? { propietario } : {}),
   }, ahora)
+  // «Mi visita»: la cita es de quien mira (él es quien va a la visita). Sirve para el filtro «Mis visitas» de quien ve más (equipo, asociado). Sin datos de nadie más.
+  return { ...vista, mia: fila.cliente_uid === mira.uid }
 }
 
 async function leerFila(db: Db, id: string): Promise<FilaConExtras | null> {

@@ -34,9 +34,11 @@ const PIDEN_MOTIVO: AccionCita[] = ['rechazar', 'cancelar', 'rechazar_cambio']
  * hace falta ningún efecto que "reinicie" el estado (y no hay estado de una cita pegándose a la siguiente).
  */
 export default function DetalleCita({
-  cita, onCerrar, onCambio,
+  cita, onCerrar, onCambio, conTipos = true,
 }: {
   cita: CitaVista
+  /** Mostrar «Solicitud de cliente / Visita propia». El cliente no lo ve. */
+  conTipos?: boolean
   onCerrar: () => void
   /** Avisa que la cita cambió (o que otra persona la cambió antes) para que la pantalla recargue. */
   onCambio: () => void
@@ -132,7 +134,7 @@ export default function DetalleCita({
           <DialogTitle className="pr-6">{c.propiedad?.titulo ?? 'Cita'}</DialogTitle>
           <DialogDescription className="flex flex-wrap items-center gap-2">
             <AppointmentStatus estado={c.estado} />
-            <span>{TEXTO_DE_TIPO[c.tipo]}</span>
+            {conTipos && <span>{TEXTO_DE_TIPO[c.tipo]}</span>}
           </DialogDescription>
         </DialogHeader>
 

@@ -9,7 +9,7 @@ import { rutaDeVisitas } from './enlaces'
 import { cuentasDeCitas } from './asesores'
 import { checkAvailability } from './servicio'
 import { diaLocal, fechaLarga, horaCorta } from './zona'
-import { veDatosDelInteresado, type CuentaDeCitas } from '../acceso/capacidades'
+import { type CuentaDeCitas } from '../acceso/capacidades'
 import { avisar } from '../alertas'
 
 /**

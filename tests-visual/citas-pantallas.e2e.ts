@@ -38,7 +38,7 @@ function cita(o: Record<string, unknown>) {
 
 type Control = { posts: Array<{ ruta: string; cuerpo: Record<string, unknown>; clave: string | null }> }
 
-async function simular(page: Page, rol: Rol, o: { citas: Array<Record<string, unknown>>; flag?: boolean }): Promise<Control> {
+async function simular(page: Page, rol: Rol, o: { citas: Array<Record<string, unknown>>; flag?: boolean; atiende?: boolean }): Promise<Control> {
   const yo = CUENTAS[rol]
   const control: Control = { posts: [] }
   await page.route((u) => /(^|\.)(cloudinary\.com)$/.test(u.hostname), (r) => r.fulfill({ status: 200, contentType: 'image/png', body: UN_PIXEL }))
@@ -69,9 +69,10 @@ async function simular(page: Page, rol: Rol, o: { citas: Array<Record<string, un
       return r.fulfill(json({
         uid: yo.uid, email: yo.email, nombre: yo.nombre, estado: 'activo', portal: true, superAdmin: rol === 'admin',
         rol: rol === 'admin' ? 'admin' : rol === 'publicador' ? 'publicador' : 'cliente',
-        ...(rol === 'publicador' ? { tipoPublicador: 'asociado', capacidades: { recibir_citas: true } } : {}),
+        ...(rol === 'publicador' ? { tipoPublicador: o.atiende === false ? 'publicador' : 'asociado', capacidades: { recibir_citas: o.atiende !== false } } : {}),
       }))
     }
+    if (ruta === '/api/citas/ics') return r.fulfill({ status: 200, contentType: 'text/calendar; charset=utf-8', headers: { 'content-disposition': 'attachment; filename="mis-citas-vive-bien.ics"' }, body: 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nEND:VCALENDAR\r\n' })
     if (ruta === '/api/citas/estado') return r.fulfill(json({ citasEnLinea: o.flag !== false }))
     if (ruta === '/api/citas/disponibilidad') {
       return r.fulfill(json({ zona: 'America/Mexico_City', duracionMin: 60, dias: [
@@ -129,6 +130,12 @@ test.describe('cliente · /portal/citas', () => {
     await expect(page.locator('[data-lista-citas] [data-cita-id]')).toHaveCount(2, { timeout: 30_000 })
     await expect(page.locator('[data-indicador="Pendientes"]')).toContainText('1')
     await expect(page.locator('[data-indicador="Confirmadas"]')).toContainText('1')
+    // Tabla del dueño: el cliente solo tiene sus propias solicitudes; sin «Tipo», sin «Mis visitas», sin conflictos de horario.
+    await expect(page.getByText('Solicitud de cliente')).toHaveCount(0)
+    await expect(page.getByText('Visita propia')).toHaveCount(0)
+    await expect(page.locator('[data-filtros-citas] option[value="propia"]')).toHaveCount(0)
+    await expect(page.getByRole('checkbox', { name: 'Mis visitas' })).toHaveCount(0)
+    await expect(page.locator('[data-aviso-conflictos]')).toHaveCount(0)
     await sinDesborde(page)
     await axeSerio(page, 'agenda del cliente')
 
@@ -166,7 +173,7 @@ test.describe('cliente · /portal/citas', () => {
     await simular(page, 'cliente', { citas: [cita({})] })
     await entrar(page, 'cliente')
     await page.goto('/portal/citas')
-    await page.getByRole('button', { name: 'Calendario' }).click()
+    await page.getByRole('button', { name: 'Calendario', exact: true }).click()
     // En pantalla angosta arranca en «Agenda» (la cuadrícula mensual encogida no se lee); en ancha, en «Mes».
     const angosta = (page.viewportSize()?.width ?? 1440) < 768
     await expect(page.getByRole('button', { name: angosta ? 'Vista de agenda' : 'Vista de mes' })).toHaveAttribute('aria-pressed', 'true', { timeout: 30_000 })
@@ -207,7 +214,9 @@ test.describe('equipo · /admin/citas', () => {
     await entrar(page, 'admin')
     await page.goto('/admin/citas')
     await expect(page.getByRole('heading', { name: 'Calendario de citas' })).toBeVisible({ timeout: 30_000 })
-    await expect(page.locator('[data-indicador="Con horario ocupado"]')).toContainText('1')
+    await expect(page.locator('[data-aviso-conflictos]')).toContainText('1 solicitud pendiente cuyo horario ya ocupa otra cita confirmada')
+    await expect(page.locator('[data-filtros-citas] option[value="propia"]')).toHaveCount(1)
+    await expect(page.getByRole('checkbox', { name: 'Mis visitas' })).toBeVisible()
     await sinDesborde(page)
     await axeSerio(page, 'agenda del equipo')
     await page.locator(`[data-cita-id="${ID_B}"]`).click()
@@ -229,7 +238,8 @@ test.describe('publicador · /publicador/citas', () => {
     await simular(page, 'publicador', { citas: [cita({ papel: 'propietario', acciones: [] })] })
     await entrar(page, 'publicador')
     await page.goto('/publicador/citas?vista=propiedades')
-    await expect(page.getByRole('button', { name: 'Mis propiedades' })).toHaveAttribute('aria-pressed', 'true', { timeout: 30_000 })
+    await expect(page.getByRole('button', { name: 'Visitas a mis propiedades' })).toHaveAttribute('aria-pressed', 'true', { timeout: 30_000 })
+    await page.getByRole('button', { name: 'Coordinadas por VIVE BIEN' }).click()
     await page.locator(`[data-cita-id="${ID_A}"]`).click()
     const detalle = page.locator('[data-detalle-cita]')
     await expect(detalle.getByText('La administra VIVE BIEN')).toBeVisible()
@@ -239,6 +249,63 @@ test.describe('publicador · /publicador/citas', () => {
     await axeSerio(page, 'citas del publicador')
     await page.getByRole('button', { name: 'Mi disponibilidad' }).click()
     await expect(page.getByRole('button', { name: 'Mi disponibilidad' })).toHaveAttribute('aria-pressed', 'true')
+  })
+})
+
+test.describe('publicador SIN recibir_citas · /publicador/citas', () => {
+  test('solo ve «Visitas a mis propiedades» (lectura) y «Mis citas»; sin disponibilidad ni datos del cliente', async ({ page }) => {
+    await simular(page, 'publicador', { citas: [cita({ papel: 'propietario', acciones: [], cliente: { nombre: 'Interesado' } })], atiende: false })
+    await entrar(page, 'publicador')
+    await page.goto('/publicador/citas')
+    await expect(page.getByRole('button', { name: 'Visitas a mis propiedades' })).toHaveAttribute('aria-pressed', 'true', { timeout: 30_000 })
+    await expect(page.getByRole('button', { name: 'Mis citas' })).toBeVisible()
+    for (const n of ['Mi disponibilidad', 'Coordinadas por VIVE BIEN']) await expect(page.getByRole('button', { name: n })).toHaveCount(0)
+    await page.locator(`[data-cita-id="${ID_A}"]`).click()
+    const detalle = page.locator('[data-detalle-cita]')
+    await expect(detalle.locator('[data-acciones-cita]')).toHaveCount(0)
+    await expect(detalle.getByText('4771234567')).toHaveCount(0)
+    await sinDesborde(page)
+  })
+})
+
+test.describe('panel rediseñado', () => {
+  test('los indicadores filtran (aria-pressed) y pulsarlos de nuevo quita el filtro', async ({ page }) => {
+    await simular(page, 'cliente', { citas: [cita({}), PENDIENTE()] })
+    await entrar(page, 'cliente')
+    await page.goto('/portal/citas')
+    const pendientes = page.locator('[data-indicador="Pendientes"]')
+    await expect(page.locator('[data-lista-citas] [data-cita-id]')).toHaveCount(2, { timeout: 30_000 })
+    await pendientes.click()
+    await expect(pendientes).toHaveAttribute('aria-pressed', 'true')
+    await expect(page.locator('[data-lista-citas] [data-cita-id]')).toHaveCount(1)
+    await pendientes.click()
+    await expect(pendientes).toHaveAttribute('aria-pressed', 'false')
+    await expect(page.locator('[data-lista-citas] [data-cita-id]')).toHaveCount(2)
+  })
+
+  test('«Próximas citas» y «Acciones rápidas»: solo lo que existe; CSV y calendario se descargan', async ({ page }) => {
+    await simular(page, 'cliente', { citas: [cita({}), PENDIENTE()] })
+    await entrar(page, 'cliente')
+    await page.goto('/portal/citas')
+    await expect(page.locator('[data-proximas-citas]')).toBeVisible({ timeout: 30_000 })
+    await expect(page.locator('[data-proximas-citas] [data-proxima-id]')).toHaveCount(2)
+    const acciones = page.locator('[data-acciones-rapidas]')
+    await expect(acciones.getByRole('link', { name: 'Agendar una visita' })).toHaveAttribute('href', '/propiedades')
+    await expect(acciones.getByText(/Enviar recordatorios|Google Calendar|Sincronizar/)).toHaveCount(0)
+    await expect(acciones.getByText('Mi disponibilidad')).toHaveCount(0)
+    const [csv] = await Promise.all([page.waitForEvent('download'), acciones.getByRole('button', { name: 'Exportar a CSV' }).click()])
+    expect(csv.suggestedFilename()).toMatch(/^citas-vive-bien-\d{4}-\d{2}-\d{2}\.csv$/)
+    const [ics] = await Promise.all([page.waitForEvent('download'), acciones.getByRole('button', { name: 'Descargar mi calendario' }).click()])
+    expect(ics.suggestedFilename()).toBe('mis-citas-vive-bien.ics')
+    await sinDesborde(page)
+    await axeSerio(page, 'próximas citas y acciones rápidas')
+  })
+
+  test('el equipo ve «Mi disponibilidad» en las acciones rápidas', async ({ page }) => {
+    await simular(page, 'admin', { citas: [cita({ papel: 'admin', acciones: ['cancelar'] })] })
+    await entrar(page, 'admin')
+    await page.goto('/admin/citas')
+    await expect(page.locator('[data-acciones-rapidas]').getByRole('link', { name: 'Mi disponibilidad' })).toHaveAttribute('href', '/admin/citas/disponibilidad', { timeout: 30_000 })
   })
 })
 

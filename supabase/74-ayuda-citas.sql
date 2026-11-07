@@ -144,48 +144,66 @@ Son **correos de servicio**: los necesitas para seguir tu cita. No son promocion
  'Qué ve cada persona de tu solicitud.',
  $c$Para agendar usamos el nombre y el teléfono de tu cuenta (si te falta el teléfono, te lo pedimos al agendar), tu correo, las notas que escribas y el horario que elijas. Al enviar la solicitud marcas una casilla que nos autoriza a **compartir tu nombre y tu teléfono con quien atiende la visita**.
 
-**Quién atiende la visita** puede ser el equipo de VIVE BIEN o, en propiedades de un asociado, el propio asociado. Esa persona ve los datos para poder contactarte y recibirte.
+**Quién atiende la visita** puede ser el equipo de VIVE BIEN o, en propiedades de un asociado, el propio asociado.
 
-**El dueño de una propiedad que es publicador** puede ver que hay una cita y su estado, **sin tu nombre, teléfono, correo ni notas**, salvo que VIVE BIEN le haya dado ese permiso aparte.
+**El equipo de VIVE BIEN** ve tus datos completos para atenderte.
+
+**Un asociado que atiende la visita a su propiedad** ve lo necesario para coordinarla: **tu nombre, tu teléfono y las notas que escribiste para la visita**. **No ve tu correo**, salvo que VIVE BIEN le haya dado ese permiso aparte, ni las notas internas del equipo.
+
+**Un publicador dueño de la propiedad** (cuando la visita la coordina VIVE BIEN) solo ve que hay una cita y su estado, **sin tu nombre, teléfono, correo ni notas**.
+
+**Tú** ves siempre tus propios datos y solo tus solicitudes.
 
 Tus datos se tratan como explica el [Aviso de Privacidad](/privacidad), y el uso del sitio se rige por los [Términos y condiciones](/terminos). Para ejercer tus derechos sobre tus datos (acceso, rectificación, cancelación u oposición) usa los datos de contacto que ahí aparecen.$c$,
  'publica','PUBLICADO','parcial','Agendar citas en línea todavía no está activo para todos.',2),
 
 ('consultas-y-visitas','calendario-y-agenda-de-mis-citas','Cómo ver mis citas: calendario, agenda e historial',
  'Las tres vistas de la pantalla Citas.',
- $c$En [Citas](/portal/citas) arriba ves cuántas tienes **pendientes**, **confirmadas** y **por responder**. Debajo eliges cómo verlas:
+ $c$En [Citas](/portal/citas) arriba ves cuatro indicadores con su ícono: **citas programadas**, **confirmadas**, **pendientes por confirmar** y **cambios por responder**. Esos cuadros **también filtran**: tócalos y la lista muestra solo esas citas; tócalos otra vez para quitar el filtro. Debajo eliges cómo verlas:
 
 **Agenda.** Lo que viene, por día. Es la vista más cómoda en el teléfono.
 
-**Calendario.** Por mes, semana o día, en hora de León. Cada cita muestra la hora, la propiedad y su estado escrito.
+**Calendario.** Por mes, semana o día, en hora de León, con el día de hoy marcado. Cada cita es un recuadro de color según su **estado**: verde si está confirmada, ámbar si está pendiente o tiene un cambio por responder; el estado siempre se escribe también con texto.
 
 **Historial.** Lo que ya pasó o se cerró.
 
-Puedes filtrar por estado, tipo y propiedad. La pantalla se actualiza sola cada 45 segundos aproximadamente y cuando vuelves a ella, y también con el botón **Actualizar**. Tocar una cita abre su detalle, con el historial de cambios y las acciones que puedes hacer.$c$,
+El botón **Nueva cita** te lleva al catálogo de propiedades: la cita se pide desde la ficha de la propiedad, con la tarjeta **«Agenda una cita»**.
+
+A un lado (o debajo, en el teléfono) ves **Próximas citas**, con la foto de la propiedad, y **Acciones rápidas**: **Agendar una visita**, **Descargar mi calendario** (un archivo .ics con tus citas confirmadas de los próximos 100 días, para Google Calendar, Outlook o Apple Calendar) y **Exportar a CSV** lo que estás viendo.
+
+Puedes filtrar por estado y propiedad. Si eres cliente, todas las citas son **tus** visitas: no se distingue entre tipos ni aparece «horario ocupado». La pantalla se actualiza sola cada 45 segundos aproximadamente y cuando vuelves a ella, y también con el botón **Actualizar**. Tocar una cita abre su detalle, con el historial de cambios y las acciones que puedes hacer.$c$,
  'publica','PUBLICADO','parcial','Agendar citas en línea todavía no está activo para todos.',3),
 
 -- ══ PUBLICADOR / ASOCIADO / PROPIETARIO · categoría «publicadores» (ámbito publicador) ═══
 
 ('publicadores','citas-recibidas','Citas de tus propiedades',
  'Qué ves y qué puedes hacer según tu cuenta.',
- $c$En [Citas](/publicador/citas) tienes una pestaña por papel:
+ $c$En [Citas](/publicador/citas) las pestañas dependen de tu cuenta.
 
-**Citas recibidas.** Las que **tú atiendes**: si tu cuenta tiene el permiso **recibir citas** (el asociado lo tiene por defecto) puedes confirmarlas, rechazarlas con motivo, proponer otro horario y cancelarlas, según los permisos de cada acción. Si tu cuenta no recibe citas, esta pestaña te lo dice.
+**Si eres publicador:**
 
-**Mis propiedades.** Las citas que piden a tus propiedades y **atiende otra persona** (por ejemplo VIVE BIEN). Aquí **solo las consultas**: ves propiedad, fecha, hora y estado, pero no puedes confirmar, rechazar ni cancelar, y no ves nombre, teléfono, correo ni notas del interesado salvo que tengas ese permiso aparte.
+**Visitas a mis propiedades.** Las visitas a tus propiedades que **coordina VIVE BIEN**. Aquí **solo las consultas**: ves propiedad, fecha, hora y estado, pero no puedes confirmar, rechazar ni cancelar, y **no ves nombre, teléfono, correo ni otros datos del cliente**.
 
-**Mis citas.** Las visitas que **tú** agendas para ir a ver una propiedad; esas sí las administras tú.
+**Mis citas.** Las visitas que **tú** solicitas para ir a ver otras propiedades; esas sí las administras tú: puedes pedir otro horario o cancelarlas.
+
+**Si eres asociado** (tu cuenta atiende citas):
+
+**Visitas a mis propiedades.** Las que **tú atiendes**: puedes confirmarlas, rechazarlas con motivo, proponer otro horario y cancelarlas, según los permisos de cada acción. De la persona interesada ves **su nombre, su teléfono y las notas que escribió para la visita**, que es lo necesario para atenderla; **no ves su correo** (salvo el permiso «ver datos del interesado»), ni las notas internas del equipo, ni el estado de Google.
+
+**Coordinadas por VIVE BIEN.** Las visitas a tus propiedades que coordina el equipo: solo lectura y **sin datos del cliente**.
+
+**Mis citas.** Las que tú solicitaste para visitar otras propiedades.
 
 **Mi disponibilidad.** Tu horario para recibir citas (mira «Mi disponibilidad para citas»).
 
-Solo ves lo tuyo: nunca las citas de las propiedades de otro publicador. Los correos y avisos de cada cita te llegan sin datos personales del interesado salvo que tengas ese permiso.$c$,
+Solo ves lo tuyo: nunca las citas de las propiedades de otro publicador. Los correos y avisos de cada cita te llegan con el nombre y el teléfono de la persona interesada solo si tu cuenta atiende esa cita (asociado o equipo); si eres solo el dueño, sin datos personales.$c$,
  'publicador','PUBLICADO','parcial','Agendar citas en línea todavía no está activo: por ahora no entran citas nuevas.',2),
 
 ('publicadores','mis-visitas-como-publicador','Mis citas: las que tú pides como cliente',
  'Tu agenda como cliente, separada de las citas de tus propiedades.',
  $c$Un publicador conserva todo lo de un cliente. Si tú agendas para ir a ver una propiedad de otra persona, esa cita aparece en la pestaña **Mis citas** de [Citas](/publicador/citas) y también en [Citas](/portal/citas) de tu portal, igual que para cualquier cliente.
 
-**No se mezcla** con las citas de tus propiedades: «Mis citas» son las que **tú** pediste y las administras tú; «Citas recibidas» y «Mis propiedades» son las que piden **a tus propiedades**.
+**No se mezcla** con las citas de tus propiedades: «Mis citas» son las que **tú** pediste y las administras tú; «Visitas a mis propiedades» (y, si eres asociado, «Coordinadas por VIVE BIEN») son las que piden **a tus propiedades**.
 
 Si eres el **responsable** de la propiedad y te agendas a ti mismo en un horario disponible, la cita queda **confirmada** sin pedir permiso a nadie. Si la propiedad la atiende otra persona, queda **pendiente** hasta que ella responda.$c$,
  'publicador','PUBLICADO','parcial','Agendar citas en línea todavía no está activo, así que por ahora «Mis citas» puede estar vacío.',3),
@@ -196,9 +214,9 @@ Si eres el **responsable** de la propiedad y te agendas a ti mismo en un horario
 
 Si nadie puede atender una propiedad, **no se puede agendar en línea**: el sistema no se la asigna a otra persona al azar.
 
-**Si eres publicador,** tus propiedades las atiende VIVE BIEN y tú las **consultas** en la pestaña «Mis propiedades» de [Citas](/publicador/citas), sin acciones. **Si eres asociado,** administras las de tus propiedades.
+**Si eres publicador,** tus propiedades las atiende VIVE BIEN y tú las **consultas** en la pestaña «Visitas a mis propiedades» de [Citas](/publicador/citas), sin acciones. **Si eres asociado,** administras las de tus propiedades.
 
-Ser responsable de una cita **no da derecho a ver los datos del interesado**: nombre, teléfono, correo y notas son un permiso aparte («ver datos del interesado»), apagado por defecto para el publicador.$c$,
+**Qué datos ves de la persona interesada.** Si **atiendes** la cita (eres asociado responsable), ves lo necesario para coordinarla: **nombre, teléfono y las notas que ella escribió**; **no ves su correo** (salvo el permiso «ver datos del interesado») ni las notas internas del equipo ni el estado de Google. Si eres **publicador** y la visita la coordina VIVE BIEN, no ves ningún dato del cliente.$c$,
  'publicador','PUBLICADO','parcial','Agendar citas en línea todavía no está activo: por ahora no entran citas nuevas.',2),
 
 ('publicadores','mi-disponibilidad-para-citas','Mi disponibilidad para citas',
@@ -230,12 +248,12 @@ Los horarios que ven los clientes salen de aquí, menos tus citas confirmadas y 
 
 **Quién atiende las citas de un publicador.** Las de un **publicador** las atiende VIVE BIEN (el responsable del equipo configurado); él las consulta sin acciones. Solo cambia si un administrador **asigna** la propiedad a otra persona que pueda atender citas. Si no hay responsable del equipo configurado, esas propiedades no se pueden agendar.
 
-Atender una cita no da derecho a ver los datos del interesado: eso es un permiso aparte, apagado por defecto.$c$,
+**Datos de la persona interesada.** Quien atiende una cita (equipo o asociado) ve nombre, teléfono y las notas que ella escribió; el **correo** de la persona es un permiso aparte («ver datos del interesado»), apagado por defecto. Las notas internas y el estado de Google son solo del equipo. Un publicador cuyas propiedades coordina VIVE BIEN no ve ningún dato del cliente.$c$,
  'administrativa','PUBLICADO','parcial','La función global de citas en línea está desactivada; mientras lo esté, estos permisos no producen citas.',2),
 
 ('administracion','gestionar-las-citas-del-equipo','Gestionar las citas desde el panel',
  'Confirmar, rechazar, proponer horario, disponibilidad y resultados.',
- $c$En **Citas** del panel de administración ves las citas de todos los responsables: arriba cuántas hay pendientes, confirmadas, por responder y con horario ocupado; debajo las pestañas **Calendario**, **Agenda** e **Historial**, con filtros por estado, tipo, propiedad y responsable.
+ $c$En **Citas** del panel de administración ves las citas de todos los responsables: arriba cuatro indicadores (**citas programadas**, **confirmadas**, **pendientes por confirmar** y **cambios por responder**; los cuadros **filtran** al tocarlos) y un aviso cuando hay solicitudes con **horario ocupado**; debajo las pestañas **Calendario**, **Agenda** e **Historial**, con filtros por estado, tipo, propiedad y responsable, y el filtro **«Mis visitas»**, que deja solo las citas que tú mismo agendaste (admin y super admin tienen sus citas personales además de las de todas las propiedades). En el calendario cada cita lleva el color de su **estado**. A un lado están **Próximas citas** (con foto) y **Acciones rápidas**: **Agendar una visita** (lleva al catálogo: la cita se pide desde la ficha), **Descargar mi calendario** (.ics de los próximos 100 días), **Exportar a CSV** lo que estás viendo y **Mi disponibilidad**.
 
 **Confirmar.** La cita queda confirmada y aparta el horario. Si otra cita confirmada ya lo ocupa, la solicitud muestra **«Horario ocupado»** y ya no se puede confirmar: propón otro horario o recházala. Quien pierde esa carrera recibe un correo con alternativas.
 
@@ -330,6 +348,7 @@ join (values
   ('consultas-y-visitas','datos-que-se-comparten-en-una-cita','legal','/terminos'),
   ('consultas-y-visitas','calendario-y-agenda-de-mis-citas','component','PanelCitas'),
   ('consultas-y-visitas','calendario-y-agenda-de-mis-citas','route','/portal/citas'),
+  ('consultas-y-visitas','calendario-y-agenda-de-mis-citas','api','/api/citas/ics'),
   ('publicadores','citas-recibidas','route','/publicador/citas'),
   ('publicadores','citas-recibidas','api','/api/citas'),
   ('publicadores','citas-recibidas','api','/api/citas/[id]/transicion'),
@@ -345,6 +364,7 @@ join (values
   ('administracion','permisos-de-citas-y-citas-en-linea','product','citas.servicio.responsableDeCitas'),
   ('administracion','gestionar-las-citas-del-equipo','route','/admin/citas'),
   ('administracion','gestionar-las-citas-del-equipo','route','/admin/citas/disponibilidad'),
+  ('administracion','gestionar-las-citas-del-equipo','api','/api/citas/ics'),
   ('administracion','gestionar-las-citas-del-equipo','api','/api/citas/tareas'),
   ('administracion','gestionar-las-citas-del-equipo','migration','72-citas-tareas-firma')
 ) as f(cat, art, tipo, clave) on f.art = a.slug and f.cat = c.slug

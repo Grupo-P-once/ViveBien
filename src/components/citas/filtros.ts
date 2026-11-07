@@ -16,9 +16,11 @@ export type Filtros = {
   responsable: string
   /** Texto libre sobre propiedad, lugar y —solo si la persona los ve— el nombre del interesado. */
   texto: string
+  /** Solo las citas MÍAS (yo soy quien va a la visita). Para quien ve también las de otros (equipo, asociado). */
+  mias: boolean
 }
 
-export const SIN_FILTROS: Filtros = { estado: 'todas', tipo: 'todos', propiedad: '', responsable: '', texto: '' }
+export const SIN_FILTROS: Filtros = { estado: 'todas', tipo: 'todos', propiedad: '', responsable: '', texto: '', mias: false }
 
 export const ETIQUETA_GRUPO: Record<GrupoEstado, string> = {
   todas: 'Todos los estados',
@@ -47,6 +49,7 @@ export function aplicarFiltros(citas: CitaVista[], f: Filtros): CitaVista[] {
   return citas.filter((c) => {
     if (!coincideEstado(c, f.estado)) return false
     if (f.tipo !== 'todos' && c.tipo !== f.tipo) return false
+    if (f.mias && c.mia !== true) return false
     if (f.propiedad && (c.propiedad?.titulo ?? '') !== f.propiedad) return false
     if (f.responsable && (c.asesor.nombre ?? '') !== f.responsable) return false
     if (q) {

@@ -31,3 +31,20 @@ export default function AppointmentStatus({ estado, className }: { estado: Estad
     </span>
   )
 }
+
+/**
+ * Los mismos tonos de arriba como valores de color para el CALENDARIO (FullCalendar los pide como cadenas, no como clases de Tailwind): fondo suave, texto oscuro y un borde
+ * del tono fuerte. Todos los pares de texto/fondo pasan 4,5:1. El estado NO va solo en el color: cada evento lleva su ícono y su texto («Confirmada»…).
+ */
+export const COLOR_EVENTO: Record<EstadoCita, { fondo: string; texto: string; borde: string }> = {
+  REQUESTED: { fondo: '#fdf1e3', texto: '#8f3a05', borde: '#eda100' },
+  PENDING_CONFIRMATION: { fondo: '#fdf1e3', texto: '#8f3a05', borde: '#eda100' },
+  CONFIRMED: { fondo: '#e8f5ee', texto: '#05603b', borde: '#1baf7a' },
+  RESCHEDULE_REQUESTED: { fondo: '#fdf1e3', texto: '#8f3a05', borde: '#eda100' },
+  RESCHEDULED: { fondo: '#e8f5ee', texto: '#05603b', borde: '#1baf7a' },
+  CANCELLED: { fondo: '#f1efec', texto: '#4f4e4a', borde: '#a8a59e' },
+  REJECTED: { fondo: '#fdeceb', texto: '#912018', borde: '#b42318' },
+  EXPIRED: { fondo: '#f1efec', texto: '#4f4e4a', borde: '#a8a59e' },
+  COMPLETED: { fondo: '#eceae6', texto: '#3f3e3b', borde: '#8a8882' },
+  NO_SHOW: { fondo: '#fdeceb', texto: '#912018', borde: '#b42318' },
+}

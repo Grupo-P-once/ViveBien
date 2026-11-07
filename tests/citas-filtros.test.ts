@@ -50,7 +50,8 @@ describe('filtros de citas (puros, sobre lo que el servidor ya recortó)', () =>
 
 describe('ayudantes de la pantalla', () => {
   it('indicadores: pendientes, confirmadas, por responder y conflictos salen de las citas visibles', () => {
-    expect(indicadores(citas)).toEqual({ pendientes: 1, confirmadas: 1, porResponder: 1, conflictos: 1 })
+    // `ahora` fijo: «programadas» cuenta lo que todavía no pasa y la prueba no debe depender del día en que se corra.
+    expect(indicadores(citas, new Date('2026-11-01T00:00:00Z'))).toEqual({ programadas: 3, pendientes: 1, confirmadas: 1, porResponder: 1, conflictos: 1 })
   })
   it('requiereRespuesta solo si el servidor ofrece confirmar o responder un cambio', () => {
     expect(requiereRespuesta(citas[1])).toBe(true)

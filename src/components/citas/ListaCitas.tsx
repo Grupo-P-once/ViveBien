@@ -12,7 +12,7 @@ import { COLOR_DE_TIPO, TEXTO_DE_TIPO, agruparPorDia, quienVa, requiereRespuesta
  * historial. Cada cita es UN botón: se abre con teclado (Enter/Espacio) y el lector de pantalla oye propiedad, día, hora y estado.
  */
 export default function ListaCitas({
-  citas, onSeleccionar, vacio, orden = 'asc', resaltarId,
+  citas, onSeleccionar, vacio, orden = 'asc', resaltarId, conTipos = true,
 }: {
   citas: CitaVista[]
   onSeleccionar: (c: CitaVista) => void
@@ -20,6 +20,8 @@ export default function ListaCitas({
   orden?: 'asc' | 'desc'
   /** La cita que se abrió desde un enlace (correo o aviso): se resalta. */
   resaltarId?: string | null
+  /** Mostrar la etiqueta «Solicitud de cliente / Visita propia». El cliente no la ve: todas sus visitas son suyas. */
+  conTipos?: boolean
 }) {
   if (!citas.length) return <div className="rounded-xl border bg-card px-4 py-8 text-center text-sm text-muted-foreground" data-lista-vacia>{vacio}</div>
   const grupos = agruparPorDia(citas, orden)
@@ -40,7 +42,7 @@ export default function ListaCitas({
                     aria-label={`${c.propiedad?.titulo ?? 'Cita'}, ${tituloDeDia(g.dia)}, ${horaCorta(inicio)}, ${c.etiqueta}${requiereRespuesta(c) ? ', requiere tu respuesta' : ''}`}
                     className={cn('flex w-full items-start gap-3 rounded-xl border bg-card p-3 text-left transition-colors hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-[#8B1A1A] focus-visible:outline-none',
                       resaltarId === c.id && 'ring-2 ring-[#8B1A1A]')}
-                    style={{ borderLeft: `5px solid ${COLOR_DE_TIPO[c.tipo]}` }}>
+                    style={{ borderLeft: `5px solid ${COLOR_DE_TIPO[conTipos ? c.tipo : 'solicitada']}` }}>
                     <span className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-muted">
                       {c.propiedad?.foto
                         // eslint-disable-next-line @next/next/no-img-element
@@ -59,7 +61,7 @@ export default function ListaCitas({
                         {c.papel !== 'cliente' && <span className="flex items-center gap-1.5"><User className="size-3.5" aria-hidden />{quienVa(c)}</span>}
                       </span>
                       <span className="mt-1 flex flex-wrap items-center gap-x-3 text-xs">
-                        <span className="font-semibold" style={{ color: COLOR_DE_TIPO[c.tipo] }}>{TEXTO_DE_TIPO[c.tipo]}</span>
+                        {conTipos && <span className="font-semibold" style={{ color: COLOR_DE_TIPO[c.tipo] }}>{TEXTO_DE_TIPO[c.tipo]}</span>}
                         {requiereRespuesta(c) && <span className="font-semibold text-[#b54708]">Requiere tu respuesta</span>}
                       </span>
                     </span>
