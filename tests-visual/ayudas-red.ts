@@ -43,7 +43,20 @@ export async function responderTercero(route: Route, o: OpcionesTerceros = {}): 
   }
 }
 
-/** Acota a todos los terceros de la página. Se registra PRIMERO: las rutas registradas después (open-meteo, eventos…) tienen prioridad. */
+/**
+ * Todo lo que NO es local (el propio sitio, la réplica en localhost). Cubre lo que `TERCEROS` no enumera: fotos de Cloudinary, Google Maps, el iframe de
+ * Firebase Auth, YouTube, teselas… Corridas 6, 7 y la del 8-nov-2026 sobre a0bb9fe: con la red lenta esas peticiones tardaban 9–20 s o no contestaban, el
+ * navegador se saturaba y `page.evaluate`/`goto` agotaban los 30 s (trazas: 12 y 65 peticiones sin respuesta). Con la red sana el resultado es idéntico.
+ */
+const LOCAL = /^(localhost|127\.0\.0\.1|\[::1\]|::1)$/
+/** Más holgado que el de los terceros conocidos (una foto grande tarda más que una hoja de estilos), pero muy por debajo de los 30 s de una prueba. */
+export const LIMITE_EXTERNO_MS = 10_000
+
+/**
+ * Acota a todos los terceros de la página. Se registra PRIMERO: las rutas registradas después (open-meteo, eventos, Firebase simulado…) tienen prioridad,
+ * porque en Playwright gana la ruta registrada más tarde. Dos capas: (1) todo lo externo, con `LIMITE_EXTERNO_MS`; (2) los terceros conocidos, con el límite corto.
+ */
 export async function acotarTerceros(page: Page, o: OpcionesTerceros = {}): Promise<void> {
+  await page.route((u) => !LOCAL.test(u.hostname), (route) => responderTercero(route, { ...o, limiteMs: o.limiteMs ?? LIMITE_EXTERNO_MS }))
   await page.route((u) => TERCEROS.test(u.hostname), (route) => responderTercero(route, o))
 }

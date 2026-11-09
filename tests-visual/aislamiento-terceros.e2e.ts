@@ -45,6 +45,22 @@ test.describe('un tercero que no contesta', () => {
   })
 })
 
+test.describe('el resto del tráfico externo también está acotado (corrida del 8-nov-2026 sobre a0bb9fe)', () => {
+  test('4) con Cloudinary, Google Maps y el iframe de Firebase atascados, el catálogo llega a red quieta (antes quedaba colgado)', async ({ page }) => {
+    // SIN el stub de Cloudinary de `basePublica`: aquí las fotos SON la dependencia. Los «terceros» se atascan POR DEBAJO de `acotarTerceros` (se registran
+    // antes, así que tienen menor prioridad): sin la ruta general de `acotarTerceros` esas peticiones no terminarían nunca.
+    await page.route('**/api/eventos', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true}' }))
+    await page.route('**/api.open-meteo.com/**', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: '{"current_weather":{"temperature":24,"weathercode":1}}' }))
+    await page.route('**/www.googletagmanager.com/**', (r) => r.abort())
+    for (const h of ['res.cloudinary.com', 'www.google.com', 'maps.googleapis.com', 'maps.gstatic.com', 'vivebien-84685.firebaseapp.com']) await page.route(...atascar(h))
+    await acotarTerceros(page, { limiteMs: 1_500, traer: () => new Promise(() => { /* atascado */ }) })
+    await page.goto('/propiedades', { waitUntil: 'domcontentloaded', timeout: 15_000 })
+    await page.waitForLoadState('networkidle', { timeout: 20_000 })
+    // Con la página quieta, el catálogo sigue siendo usable aunque las fotos no hayan llegado.
+    await expect(page.locator('article.tc').first()).toBeVisible({ timeout: 10_000 })
+  })
+})
+
 test.describe('un tercero de IMÁGENES que falla (Etapa 7)', () => {
   test('3) con Unsplash inaccesible, el catálogo llega a red quieta y la imagen de reserva se prueba UNA vez (sin bucle de errores)', async ({ page }) => {
     await basePublica(page)
