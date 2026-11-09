@@ -104,7 +104,8 @@ describe('POST /api/citas · agendar', () => {
     expect(estado.crearLlamadas).toHaveLength(0)
   })
   it('sin clave de idempotencia, o con una mal formada: 400 y no se crea nada', async () => {
-    for (const h of [{}, { 'idempotency-key': 'corta' }, { 'idempotency-key': 'con espacios y simbolos !!!' }]) {
+    const cabeceras: Array<Record<string, string>> = [{}, { 'idempotency-key': 'corta' }, { 'idempotency-key': 'con espacios y simbolos !!!' }]
+    for (const h of cabeceras) {
       expect((await agendar({ propiedadId: 'prop-1', inicio: '2026-11-12T16:00:00Z' }, h)).status).toBe(400)
     }
     expect(estado.crearLlamadas).toHaveLength(0)
