@@ -34,6 +34,11 @@ async function ampliarCatalogo(page: Page) {
     await ruta.fulfill({ response: r, json: { ...j, propiedades: todas } })
   })
 }
+// El catálogo se vuelve a pedir en segundo plano (al volver atrás, al enfocar): si el test termina con un pedido a medias, el manejador de arriba lanza «Test ended» /
+// «Response has been disposed» y Playwright lo cuenta como fallo aunque las aserciones hayan pasado (gate del 7-nov-2026: 2 fallos, y 3 de 48 repitiendo sin reintentos).
+// Es la solución que indica Playwright; no toca ninguna aserción.
+test.afterEach(async ({ page }) => { await page.unrouteAll({ behavior: 'ignoreErrors' }) })
+
 const abrirCatalogo = async (page: Page) => {
   await acotarTerceros(page)
   await page.route('**/api.open-meteo.com/**', (r) => r.abort())

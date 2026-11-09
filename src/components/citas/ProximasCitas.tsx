@@ -10,7 +10,7 @@ import { diaRelativo, requiereRespuesta } from './uiCitas'
  * «Próximas citas»: las siguientes abiertas (acordadas o que esperan respuesta), con la foto de la propiedad, cuándo es y su estado EN TEXTO.
  * Cada fila es un botón que abre el detalle. La foto es la de la propiedad real (un hecho, no una ilustración); sin foto, un ícono neutro.
  */
-export default function ProximasCitas({ citas, onAbrir, onVerTodas }: { citas: CitaVista[]; onAbrir: (c: CitaVista) => void; onVerTodas: () => void }) {
+export default function ProximasCitas({ citas, onAbrir, onVerTodas, cargando = false, fallo = false }: { citas: CitaVista[]; onAbrir: (c: CitaVista) => void; onVerTodas: () => void; cargando?: boolean; fallo?: boolean }) {
   return (
     <section aria-labelledby="proximas-t" className="rounded-xl border bg-card p-4" data-proximas-citas>
       <div className="mb-3 flex items-center justify-between gap-2">
@@ -19,7 +19,11 @@ export default function ProximasCitas({ citas, onAbrir, onVerTodas }: { citas: C
           Ver todas<ChevronRight className="size-3.5" aria-hidden />
         </button>
       </div>
-      {citas.length === 0 ? (
+      {cargando && citas.length === 0 ? (
+        <div className="h-14 animate-pulse rounded-lg bg-muted" role="status" aria-label="Cargando próximas citas" />
+      ) : citas.length === 0 && fallo ? (
+        <p className="rounded-lg bg-muted/60 p-3 text-sm text-muted-foreground">No pudimos consultar tus próximas citas. Usa «Reintentar».</p>
+      ) : citas.length === 0 ? (
         <p className="rounded-lg bg-muted/60 p-3 text-sm text-muted-foreground">No tienes citas por venir. Cuando haya una, aparecerá aquí.</p>
       ) : (
         <ul className="space-y-2">

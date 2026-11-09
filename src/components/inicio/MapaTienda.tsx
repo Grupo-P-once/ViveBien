@@ -37,5 +37,6 @@ export default function MapaTienda({ lat, lng, nombre, direccion }: { lat: numbe
     return () => { cancelado = true; mapa?.remove() }
   }, [lat, lng, nombre])
 
-  return <div ref={ref} className="ini-mapa-lienzo" role="img" aria-label={`Mapa con la ubicación de ${nombre}: ${direccion}`} data-mapa-tienda />
+  // `role="group"` y no `img`: Leaflet inserta dentro controles enfocables (zoom, atribución) y axe marca `nested-interactive` si el contenedor es una imagen.
+  return <div ref={ref} className="ini-mapa-lienzo" role="group" aria-label={`Mapa con la ubicación de ${nombre}: ${direccion}`} data-mapa-tienda />
 }

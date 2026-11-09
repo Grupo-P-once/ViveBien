@@ -55,7 +55,8 @@ async function simular(page: Page, errores: string[]) {
   await page.route('**/api/portal/consultas', (r) => r.fulfill(json({ consultas: [] })))
   await page.route('**/api/portal/contactos', (r) => r.fulfill(json({ contactos: [] })))
   await page.route('**/api/portal/visitas', (r) => r.fulfill(json({ proximas: [], pasadas: [], citasEnLinea: false })))
-  await page.route('**/api/portal/notificaciones', (r) => r.fulfill(json({ notificaciones: [], sinLeer: 0 })))
+  await page.route('**/api/citas?**', (r) => r.fulfill(json({ citas: [] }))) // «Mis citas» (/portal/visitas) lee /api/citas
+  await page.route('**/api/portal/notificaciones',(r) => r.fulfill(json({ notificaciones: [], sinLeer: 0 })))
   await page.route('**/api/portal/preferencias', (r) => r.fulfill(json({ correoAlertas: false, correoLegal: true, consentimientoEn: null })))
   await page.route('**/api/portal/me-interesan', (r) => r.fulfill(json({ interesan: [] })))
   await page.route('**/api/favoritos', (r) => r.fulfill(json([])))

@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import type { Page } from '@playwright/test'
 import { ACTIVIDAD, AHORA, BUSQUEDA, INVITACIONES, NOTIFICACIONES, PERFIL, PROPIEDADES, REGISTROS, RESUMEN, USUARIOS } from './datos-panel'
+import { acotarTerceros } from './ayudas-red'
 
 /**
  * Capturar el panel de administración sin sesión real y sin tocar producción.
@@ -73,6 +74,10 @@ export async function prepararPanel(page: Page) {
       window.localStorage.setItem(`firebase:authUser:${clave}:[DEFAULT]`, JSON.stringify(usuario))
     } catch { /* sin almacenamiento */ }
   }, [apiKey, Date.now() + 86_400_000] as [string, number])
+
+  // 1b · Terceros del sitio (Font Awesome en cdnjs, fuentes…): con la red sana responden igual que siempre (las capturas no cambian), pero uno que no
+  // contesta se corta a los 4 s y deja de poder colgar `goto` hasta «load» (corrida 7 del gate, 8-nov-2026: `seo-admin` agotó los 30 s por cdnjs).
+  await acotarTerceros(page)
 
   // 2 · Google no tiene que confirmar nada: la sesión es de mentira.
   await page.route('**/identitytoolkit.googleapis.com/**', (r) =>

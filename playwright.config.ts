@@ -41,7 +41,9 @@ export default defineConfig({
   webServer: {
     command: 'npx next start -p 3130',
     url: 'http://localhost:3130',
-    reuseExistingServer: false,
+    // `npm run qa:gate` levanta su propio servidor aislado (réplica de Supabase) en este mismo puerto y pone QA_SERVIDOR_EXTERNO=1 para reutilizarlo.
+    // Sin esto el paso 9 del gate fallaba al instante con «http://localhost:3130 is already used» (corrida 8, 8-nov-2026).
+    reuseExistingServer: Boolean(process.env.QA_SERVIDOR_EXTERNO),
     timeout: 120_000,
   },
   projects: [

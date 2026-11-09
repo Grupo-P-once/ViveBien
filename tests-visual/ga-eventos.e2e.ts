@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { acotarTerceros } from './ayudas-red'
 
 /**
  * Google Analytics (24-oct-2026), navegador REAL contra el build local, sin salir a internet (se bloquea el script de Google; se lee `window.dataLayer`,
@@ -6,6 +7,7 @@ import { expect, test } from '@playwright/test'
  * la ubicación, y NUNCA viaja el número ni el correo.
  */
 test.beforeEach(async ({ page }) => {
+  await acotarTerceros(page) // un tercero (cdnjs, fuentes) que no contesta no puede colgar `goto` hasta «load» (corridas 6 y 7 del gate)
   // Desde la alineación legal (2-nov-2026, commit 2a6984c) GA4 solo carga cuando la persona lo aceptó (`vb_analitica` = 'si'). Estas pruebas miden los
   // eventos de quien SÍ aceptó; la conducta contraria (sin aceptar, nada carga) la comprueba la prueba «sin aceptar» de ga-eventos.e2e.ts.
   await page.addInitScript(() => { try { localStorage.setItem('vb_analitica', 'si') } catch { /* sin almacenamiento */ } })
@@ -96,6 +98,7 @@ test('un visitante SIN sesión que pulsa WhatsApp o llamar, en la tarjeta, deja 
 test('sin aceptar la analítica, GA4 NO carga: ni dataLayer, ni gtag, ni petición a Google', async ({ browser, baseURL }) => {
   const ctx = await browser.newContext({ baseURL, locale: 'es-MX', storageState: { cookies: [], origins: [] } })   // contexto limpio: sin la elección guardada por el beforeEach
   const page = await ctx.newPage()
+  await acotarTerceros(page)
   const pedidos: string[] = []
   page.on('request', (r) => { if (/googletagmanager.com|google-analytics.com/.test(r.url())) pedidos.push(r.url()) })
   await page.goto('/contacto')

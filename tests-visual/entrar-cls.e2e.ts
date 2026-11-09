@@ -1,4 +1,5 @@
 import { devices, expect, test } from '@playwright/test'
+import { acotarTerceros } from './ayudas-red'
 
 /**
  * R-08 / QA-008 (D-62): /entrar no debe saltar al hidratar. ANTES: CLS 0,31 (teléfono) y 0,48 (tableta vertical), porque el servidor pintaba SIEMPRE
@@ -6,6 +7,7 @@ import { devices, expect, test } from '@playwright/test'
  * cliente incluidos), porque la corrección depende de lo que el navegador anuncia en la petición.
  */
 async function cls(page: import('@playwright/test').Page, ruta: string): Promise<{ total: number; saltos: number }> {
+  await acotarTerceros(page) // con la red sana las fuentes reales cargan igual; un tercero atascado se corta y no cuelga `networkidle`
   await page.addInitScript(() => {
     ;(window as unknown as { __cls: number[] }).__cls = []
     new PerformanceObserver((l) => {

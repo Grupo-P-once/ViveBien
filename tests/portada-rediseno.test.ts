@@ -303,7 +303,9 @@ describe('«Contáctanos»: mapita de la tienda', () => {
     expect(mapa).toContain('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
     expect(mapa).toContain('OpenStreetMap')   // atribución obligatoria
     expect(leer('src/lib/csp.ts')).toContain('https://*.tile.openstreetmap.org')
-    expect(mapa).toContain('role="img"')
+    // Un contenedor `role="img"` con controles enfocables dentro viola `nested-interactive` (axe, gate del 7-nov-2026): es un grupo con nombre.
+    expect(mapa).toContain('role="group"')
+    expect(mapa).not.toContain('role="img"')
   })
 
   it('se carga aparte (solo en el navegador) y solo cuando la sección está por entrar en pantalla; hay dirección en texto y «Cómo llegar»', () => {

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { acotarTerceros } from './ayudas-red'
 
 /**
  * Regresión del cambio de cuenta (P1): CLIENTE → cerrar sesión → ADMIN, y ADMIN → cerrar sesión → CLIENTE.
@@ -21,6 +22,7 @@ const porToken = (t: string) => Object.entries(PERFILES).find(([c]) => `tok-${c}
 async function simular(page: Page) {
   const me: Array<{ uid: string; email: string; rol: string; superAdmin: boolean; portal: boolean }> = []
   const noGet: string[] = []
+  await acotarTerceros(page) // un tercero (cdnjs, fuentes, apis.google.com) que no contesta se corta a los 4 s y no cuelga la carga
   await page.route('**/www.googletagmanager.com/**', (r) => r.abort())
   await page.route('**/www.google-analytics.com/**', (r) => r.abort())
   await page.route('**/securetoken.googleapis.com/**', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ access_token: 'x', id_token: 'x', refresh_token: 'x', expires_in: '3600', user_id: 'x' }) }))

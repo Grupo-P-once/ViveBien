@@ -44,6 +44,13 @@ async function simular(page: Page, modo: () => Modo, errores: string[]) {
   await page.route('**/api/portal/acceso', (r) => r.fulfill(json({ ok: true })))
   await page.route('**/api/favoritos', (r) => r.fulfill(json([])))
   await page.route('**/api/eventos', (r) => r.fulfill(json({ ok: true })))
+  // «Mis citas» (/portal/visitas) lee `/api/citas`, no `/api/portal/*`: sin este mock llegaba al servidor con un token falso y recibía un 401 real.
+  await page.route('**/api/citas?**', async (r) => {
+    const m = modo()
+    if (m === 'error') return r.fulfill(json({ error: 'fallo simulado' }, 500))
+    if (m === 'lento') await new Promise((x) => setTimeout(x, 2500))
+    return r.fulfill(json({ citas: [] }))
+  })
   await page.route('**/api/portal/**', async (r) => {
     const clave = new URL(r.request().url()).pathname.replace('/api/portal/', '')
     if (clave === 'acceso') return r.fulfill(json({ ok: true }))

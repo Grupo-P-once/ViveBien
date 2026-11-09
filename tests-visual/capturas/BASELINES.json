@@ -6,77 +6,77 @@
    "nombre": "catalogo",
    "viewport": "1440x900",
    "ruta": "/propiedades",
-   "fecha": "2026-10-07",
-   "version": "E-34-candidato",
+   "fecha": "2026-11-09",
+   "version": "citas-v2-staging-8nov-2026",
    "estado": "vigente",
-   "fixtura": "tests-visual/fixtura/publico.json",
-   "sha256": "aeb36868a403582750931d7ff5bf36b01baeda7f93f1e75d1b41d75497255c7c"
+   "fixtura": "tests-visual/fixtura/publico-e48-v2.json",
+   "sha256": "9bf03d0f9f8f30c9251c3505dda457ae0a904365dab5e9c2b800b4ecd15995fa"
   },
   {
    "proyecto": "escritorio-1440",
    "nombre": "contacto",
    "viewport": "1440x900",
    "ruta": "/contacto",
-   "fecha": "2026-10-07",
-   "version": "E-34-candidato",
+   "fecha": "2026-11-09",
+   "version": "citas-v2-staging-8nov-2026",
    "estado": "vigente",
-   "fixtura": "tests-visual/fixtura/publico.json",
-   "sha256": "a000c0715ff64fab4a38a84998634206a9f70c3d0375b9ac214c2fd507c9c1a3"
+   "fixtura": "tests-visual/fixtura/publico-e48-v2.json",
+   "sha256": "4dac0d5cbf0da2e4ad22925c46e9f767724462f2fec257ad37d445e16dd1ab1a"
   },
   {
    "proyecto": "escritorio-1440",
    "nombre": "ficha",
    "viewport": "1440x900",
    "ruta": "/propiedades/casa-en-venta-canada-del-regugio-norte-540-m2-leon-n8tl",
-   "fecha": "2026-10-08",
-   "version": "E-37",
+   "fecha": "2026-11-09",
+   "version": "citas-v2-staging-8nov-2026",
    "estado": "vigente",
-   "fixtura": "tests-visual/fixtura/publico.json",
-   "sha256": "a7c1fe7b90ef9525e6bc744ccef5c2abaf15f687139f77ff52a2f03b358467f5"
+   "fixtura": "tests-visual/fixtura/publico-e48-v2.json",
+   "sha256": "0b47673484ab9da83837fc45b0df82aa110f45e441bac053b9b453b5295d5d33"
   },
   {
    "proyecto": "escritorio-1440",
    "nombre": "ficha-pausada",
    "viewport": "1440x900",
-   "ruta": "?",
-   "fecha": "2026-10-07",
-   "version": "E-34-candidato",
+   "ruta": "/propiedades/sanjuan",
+   "fecha": "2026-11-09",
+   "version": "citas-v2-staging-8nov-2026",
    "estado": "vigente",
-   "fixtura": "tests-visual/fixtura/publico.json",
-   "sha256": "48b5e5927b529752b955959c24eca073cc609e5615955e974e2395975d12e9ab"
+   "fixtura": "tests-visual/fixtura/publico-e48-v2.json",
+   "sha256": "c3c1a9eebdeea019af7d7f3ccd423db58f37bd02a52906a892a3a4f627db44eb"
   },
   {
    "proyecto": "escritorio-1440",
    "nombre": "nosotros",
    "viewport": "1440x900",
    "ruta": "/nosotros",
-   "fecha": "2026-10-07",
-   "version": "E-34-candidato",
+   "fecha": "2026-11-09",
+   "version": "citas-v2-staging-8nov-2026",
    "estado": "vigente",
-   "fixtura": "tests-visual/fixtura/publico.json",
-   "sha256": "32d41f3406f8d199fb41ff13b979134caa1cde34f89d4f39db08603f72e5b1c5"
+   "fixtura": "tests-visual/fixtura/publico-e48-v2.json",
+   "sha256": "c790fcd11fccf67590c1b4ebc93e582c569bf4a88ef23fbbea3672328b153963"
   },
   {
    "proyecto": "escritorio-1440",
    "nombre": "panel-actividad",
    "viewport": "1440x900",
    "ruta": "/admin (panel)",
-   "fecha": "2026-10-07",
-   "version": "E-34-candidato",
+   "fecha": "2026-11-09",
+   "version": "citas-v2-staging-8nov-2026",
    "estado": "vigente",
-   "sha256": "45e0ec8c61004ece2a2c97947ff0bfb0a849db6a7078dcb0f2b6f65226cf8037",
-   "fixtura": "tests-visual/datos-panel.ts"
+   "fixtura": "tests-visual/fixtura/publico-e48-v2.json",
+   "sha256": "5721af3e800713a5024896d2eff27d61f544a8753782ac7abe1244244077a25b"
   },
   {
    "proyecto": "escritorio-1440",
    "nombre": "panel-alta-manual",
    "viewport": "1440x900",
    "ruta": "/admin (panel)",
-   "fecha": "2026-10-07",
-   "version": "E-34-candidato",
+   "fecha": "2026-11-09",
+   "version": "citas-v2-staging-8nov-2026",
    "estado": "vigente",
-   "sha256": "f5e75adaee13b1dc74c47f75c421f912e65fdf0b802e0c19e2c70078ab96daf7",
-   "fixtura": "tests-visual/datos-panel.ts"
+   "fixtura": "tests-visual/fixtura/publico-e48-v2.json",
+   "sha256": "aba83736d614d05a6f2fcbf95079cc95527306193dba8ec8251968853d774222"
   },
   {
    "proyecto": "escritorio-1440",
@@ -105,11 +105,11 @@
    "nombre": "panel-invitar",
    "viewport": "1440x900",
    "ruta": "/admin (panel)",
-   "fecha": "2026-10-07",
-   "version": "E-34-candidato",
+   "fecha": "2026-11-09",
+   "version": "citas-v2-staging-8nov-2026",
    "estado": "vigente",
-   "sha256": "c4b5301c1dd395b5d07ace8498bf747b4d9e209b7d8c040d2f62318626e0db9a",
-   "fixtura": "tests-visual/datos-panel.ts"
+   "fixtura": "tests-visual/fixtura/publico-e48-v2.json",
+   "sha256": "70c9d9d22f0d7e92d426f18af34b2b0ba8b005c6d1b6ad953f8d6a4dd6fd28d5"
   },
   {
    "proyecto": "escritorio-1440",
@@ -127,11 +127,11 @@
    "nombre": "panel-propiedades",
    "viewport": "1440x900",
    "ruta": "/admin (panel)",
-   "fecha": "2026-10-07",
-   "version": "E-34-candidato",
+   "fecha": "2026-11-09",
+   "version": "citas-v2-staging-8nov-2026",
    "estado": "vigente",
-   "sha256": "ef8574c0d2b54b95fefe1547f1951a9b2265fb951385730988b1bcd5847c376b",
-   "fixtura": "tests-visual/datos-panel.ts"
+   "fixtura": "tests-visual/fixtura/publico-e48-v2.json",
+   "sha256": "39545ee187cdb7fc6f16527f15087777ba94d823671a339108b38ea47368c593"
   },
   {
    "proyecto": "escritorio-1440",
@@ -149,88 +149,88 @@
    "nombre": "panel-usuarios",
    "viewport": "1440x900",
    "ruta": "/admin (panel)",
-   "fecha": "2026-10-07",
-   "version": "E-34-candidato",
+   "fecha": "2026-11-09",
+   "version": "citas-v2-staging-8nov-2026",
    "estado": "vigente",
-   "sha256": "75ab7b1cb41a0df6655a8582ede32835e7334cfc7caf11c4829ce8e58caa5d53",
-   "fixtura": "tests-visual/datos-panel.ts"
+   "fixtura": "tests-visual/fixtura/publico-e48-v2.json",
+   "sha256": "186b74356a207aea051528d95d5eb7796ef21cfe66f043ad037e608a9c4eb7ee"
   },
   {
    "proyecto": "escritorio-1440",
    "nombre": "portada",
    "viewport": "1440x900",
    "ruta": "/",
-   "fecha": "2026-10-07",
-   "version": "E-34-candidato",
+   "fecha": "2026-11-09",
+   "version": "citas-v2-staging-8nov-2026",
    "estado": "vigente",
-   "fixtura": "tests-visual/fixtura/publico.json",
-   "sha256": "ad8e7edf4ac3afd1445bff08ca03aad82e7ae5abd713877ac96a00f634f571cd"
+   "fixtura": "tests-visual/fixtura/publico-e48-v2.json",
+   "sha256": "de8a11f02b570b72a09fc97a727d0571bb49a2ac33afe9f3dba8b2324e96b8ba"
   },
   {
    "proyecto": "escritorio-1440",
    "nombre": "valuador",
    "viewport": "1440x900",
    "ruta": "/valuador",
-   "fecha": "2026-10-07",
-   "version": "E-34-candidato",
+   "fecha": "2026-11-09",
+   "version": "citas-v2-staging-8nov-2026",
    "estado": "vigente",
-   "fixtura": "tests-visual/fixtura/publico.json",
-   "sha256": "bee1cee9b30eba84915056cb714e797b1b68293f39738be05ab402276e3e9807"
+   "fixtura": "tests-visual/fixtura/publico-e48-v2.json",
+   "sha256": "749dfda6420264787a19579a25f801ec6447e540ad4556db800303818246c042"
   },
   {
    "proyecto": "movil-390",
    "nombre": "catalogo",
    "viewport": "390x844",
    "ruta": "/propiedades",
-   "fecha": "2026-10-07",
-   "version": "E-34-candidato",
+   "fecha": "2026-11-09",
+   "version": "citas-v2-staging-8nov-2026",
    "estado": "vigente",
-   "fixtura": "tests-visual/fixtura/publico.json",
-   "sha256": "78764dff43e8f90e98104ab10ef674f2457d8df39378c4065e4787f0a8d3a2b0"
+   "fixtura": "tests-visual/fixtura/publico-e48-v2.json",
+   "sha256": "943e885b316606fdd62079e1a85493fe982b6c921e5cc756d2f91d38faee8acf"
   },
   {
    "proyecto": "movil-390",
    "nombre": "contacto",
    "viewport": "390x844",
    "ruta": "/contacto",
-   "fecha": "2026-10-07",
-   "version": "E-34-candidato",
+   "fecha": "2026-11-09",
+   "version": "citas-v2-staging-8nov-2026",
    "estado": "vigente",
-   "fixtura": "tests-visual/fixtura/publico.json",
-   "sha256": "9aa8cef02081aa996dac5a822098b603c92547ffb7f4e31317c97ff5c7f1dccf"
+   "fixtura": "tests-visual/fixtura/publico-e48-v2.json",
+   "sha256": "1b83b0deb2ed754fafa23242f30b0a40d6ae9c9c84ce3a4b1b0d071dd9adb190"
   },
   {
    "proyecto": "movil-390",
    "nombre": "ficha",
    "viewport": "390x844",
    "ruta": "/propiedades/casa-en-venta-canada-del-regugio-norte-540-m2-leon-n8tl",
-   "fecha": "2026-10-08",
-   "version": "E-37",
+   "fecha": "2026-11-09",
+   "version": "citas-v2-staging-8nov-2026",
    "estado": "vigente",
-   "fixtura": "tests-visual/fixtura/publico.json",
-   "sha256": "21d0baff076fcfc94239747a05f82d6af12b2ed27e6b92bb9b567490b8ff837f"
+   "fixtura": "tests-visual/fixtura/publico-e48-v2.json",
+   "sha256": "0ffa45921b14d9f519bed30ff416b9764c70c622a724f4d1d50362f18a4ef16b"
   },
   {
    "proyecto": "movil-390",
    "nombre": "ficha-pausada",
    "viewport": "390x844",
-   "ruta": "?",
-   "fecha": "2026-10-07",
-   "version": "E-34-candidato",
+   "ruta": "/propiedades/sanjuan",
+   "fecha": "2026-11-09",
+   "version": "citas-v2-staging-8nov-2026",
    "estado": "vigente",
-   "fixtura": "tests-visual/fixtura/publico.json",
-   "sha256": "692a2c57ceb6851986900798807eb1248a8b0da81c80e65f9c13bcf0a56d2af5"
+   "fixtura": "tests-visual/fixtura/publico-e48-v2.json",
+   "sha256": "52a8a67e886dc4c189c5398f66318c2fe69fa5d2679b8e1613b2ea0fa8a99baa"
   },
   {
    "proyecto": "movil-390",
    "nombre": "nosotros",
    "viewport": "390x844",
    "ruta": "/nosotros",
-   "fecha": "2026-10-07",
-   "version": "E-34-candidato",
+   "fecha": "2026-11-09",
+   "version": "citas-v2-staging-8nov-2026",
    "estado": "vigente",
-   "fixtura": "tests-visual/fixtura/publico.json",
-   "sha256": "36fda8dba0808c72ef05a568cf75deddc96821fe493cbffe80cc22930487e8fa"
+   "fixtura": "tests-visual/fixtura/publico-e48-v2.json",
+   "sha256": "4cf3cca4ba137ef15bdfdc5f5f783b9a33280ab76048beff5bf1cc639c011309"
   },
   {
    "proyecto": "movil-390",
@@ -248,11 +248,11 @@
    "nombre": "panel-alta-manual",
    "viewport": "390x844",
    "ruta": "/admin (panel)",
-   "fecha": "2026-10-07",
-   "version": "E-34-candidato",
+   "fecha": "2026-11-09",
+   "version": "citas-v2-staging-8nov-2026",
    "estado": "vigente",
-   "sha256": "0d97f157870d35e96c11a99b7e6b6be30981f150bcf2713ac2ed5d4c7579f9bb",
-   "fixtura": "tests-visual/datos-panel.ts"
+   "fixtura": "tests-visual/fixtura/publico-e48-v2.json",
+   "sha256": "727e777b2bf38a07d1f86f23700f148f48ce111c5bfb2ff3a87dcb8c62a8612f"
   },
   {
    "proyecto": "movil-390",
@@ -303,11 +303,11 @@
    "nombre": "panel-propiedades",
    "viewport": "390x844",
    "ruta": "/admin (panel)",
-   "fecha": "2026-10-07",
-   "version": "E-34-candidato",
+   "fecha": "2026-11-09",
+   "version": "citas-v2-staging-8nov-2026",
    "estado": "vigente",
-   "sha256": "6975ec513a9476dc4aab6433e6983757e7be55eeaee28338cc1b0b89776cbc00",
-   "fixtura": "tests-visual/datos-panel.ts"
+   "fixtura": "tests-visual/fixtura/publico-e48-v2.json",
+   "sha256": "00a178cb04f42055817e2112c44bdd1c338be5d7d4df3b96a50504b97537aca8"
   },
   {
    "proyecto": "movil-390",
@@ -336,77 +336,77 @@
    "nombre": "portada",
    "viewport": "390x844",
    "ruta": "/",
-   "fecha": "2026-10-07",
-   "version": "E-34-candidato",
+   "fecha": "2026-11-09",
+   "version": "citas-v2-staging-8nov-2026",
    "estado": "vigente",
-   "fixtura": "tests-visual/fixtura/publico.json",
-   "sha256": "bd6d27b5c689aad2abf3ff2f75aae00d9ad3677eeab035cdeffcadb2c12fc2bf"
+   "fixtura": "tests-visual/fixtura/publico-e48-v2.json",
+   "sha256": "f61fa109b4ae7e76986425d84cc77fbd2a6be2d4b4a743f09d91aaf245da9f85"
   },
   {
    "proyecto": "movil-390",
    "nombre": "valuador",
    "viewport": "390x844",
    "ruta": "/valuador",
-   "fecha": "2026-10-07",
-   "version": "E-34-candidato",
+   "fecha": "2026-11-09",
+   "version": "citas-v2-staging-8nov-2026",
    "estado": "vigente",
-   "fixtura": "tests-visual/fixtura/publico.json",
-   "sha256": "4427f7a5aa6079e7b79d4dd97d995ff6b29ea8e3c2656b365750e64e639df812"
+   "fixtura": "tests-visual/fixtura/publico-e48-v2.json",
+   "sha256": "bb903f201a95088fe672667339fc50a3d124f3be42f4e7d644092565b047b71a"
   },
   {
    "proyecto": "tableta-768",
    "nombre": "catalogo",
    "viewport": "768x1024",
    "ruta": "/propiedades",
-   "fecha": "2026-10-07",
-   "version": "E-34-candidato",
+   "fecha": "2026-11-09",
+   "version": "citas-v2-staging-8nov-2026",
    "estado": "vigente",
-   "fixtura": "tests-visual/fixtura/publico.json",
-   "sha256": "cac7bd4eeb3a447788e96c8093dfb97975e4c8312e2ddf8383270f3e646a1dd7"
+   "fixtura": "tests-visual/fixtura/publico-e48-v2.json",
+   "sha256": "9185e06938203cbb1ad4197cbb1f3ccda00fa2ede811abd6cc232a80edfa892f"
   },
   {
    "proyecto": "tableta-768",
    "nombre": "contacto",
    "viewport": "768x1024",
    "ruta": "/contacto",
-   "fecha": "2026-10-07",
-   "version": "E-34-candidato",
+   "fecha": "2026-11-09",
+   "version": "citas-v2-staging-8nov-2026",
    "estado": "vigente",
-   "fixtura": "tests-visual/fixtura/publico.json",
-   "sha256": "99a81df799605db2c85918bfeb71d6ee73d22ff7353a90652634a591c299278a"
+   "fixtura": "tests-visual/fixtura/publico-e48-v2.json",
+   "sha256": "54137ff96f7c8309c52760e1c6b01428a5cc9cb3e4d26c1b005713f5dd4fcdea"
   },
   {
    "proyecto": "tableta-768",
    "nombre": "ficha",
    "viewport": "768x1024",
    "ruta": "/propiedades/casa-en-venta-canada-del-regugio-norte-540-m2-leon-n8tl",
-   "fecha": "2026-10-08",
-   "version": "E-37",
+   "fecha": "2026-11-09",
+   "version": "citas-v2-staging-8nov-2026",
    "estado": "vigente",
-   "fixtura": "tests-visual/fixtura/publico.json",
-   "sha256": "72b2b84bd77ae7eebd4514b90097c32268f55c935f4fd398f671701b879845f5"
+   "fixtura": "tests-visual/fixtura/publico-e48-v2.json",
+   "sha256": "368bd4ed00ed911c66f1ec72c44e935ca829f3667fb7125aad7e92189eb0e035"
   },
   {
    "proyecto": "tableta-768",
    "nombre": "ficha-pausada",
    "viewport": "768x1024",
-   "ruta": "?",
-   "fecha": "2026-10-07",
-   "version": "E-34-candidato",
+   "ruta": "/propiedades/sanjuan",
+   "fecha": "2026-11-09",
+   "version": "citas-v2-staging-8nov-2026",
    "estado": "vigente",
-   "fixtura": "tests-visual/fixtura/publico.json",
-   "sha256": "2c661eef28314785ca2c42f66fdf609d962ccdb8a897423ca86656dad17e4048"
+   "fixtura": "tests-visual/fixtura/publico-e48-v2.json",
+   "sha256": "fc4dc0ab2514d0f2cf1532393b441e7bdb565f3f12f4d7524ec91a31b87fbadd"
   },
   {
    "proyecto": "tableta-768",
    "nombre": "nosotros",
    "viewport": "768x1024",
    "ruta": "/nosotros",
-   "fecha": "2026-10-07",
-   "version": "E-34-candidato",
+   "fecha": "2026-11-09",
+   "version": "citas-v2-staging-8nov-2026",
    "estado": "vigente",
-   "fixtura": "tests-visual/fixtura/publico.json",
-   "sha256": "5fe801538716d5d15ff3d5bbd51f15c79b96d13828a50c11f302ceb1930cd19b"
+   "fixtura": "tests-visual/fixtura/publico-e48-v2.json",
+   "sha256": "33ed87cbbedd9db0502145741bb35d813459edff9ca4d6d60a4191a78297d27f"
   },
   {
    "proyecto": "tableta-768",
@@ -424,11 +424,11 @@
    "nombre": "panel-alta-manual",
    "viewport": "768x1024",
    "ruta": "/admin (panel)",
-   "fecha": "2026-10-07",
-   "version": "E-34-candidato",
+   "fecha": "2026-11-09",
+   "version": "citas-v2-staging-8nov-2026",
    "estado": "vigente",
-   "sha256": "fb1083c7305dd46929dd522d4980cf3eed0cbdb06f9b4e4815c47eaa562b71e7",
-   "fixtura": "tests-visual/datos-panel.ts"
+   "fixtura": "tests-visual/fixtura/publico-e48-v2.json",
+   "sha256": "a8c508ce05d9ef587c35189a4c7f9152e3443731c99c619fd116724eb04f9f9e"
   },
   {
    "proyecto": "tableta-768",
@@ -512,22 +512,22 @@
    "nombre": "portada",
    "viewport": "768x1024",
    "ruta": "/",
-   "fecha": "2026-10-07",
-   "version": "E-34-candidato",
+   "fecha": "2026-11-09",
+   "version": "citas-v2-staging-8nov-2026",
    "estado": "vigente",
-   "fixtura": "tests-visual/fixtura/publico.json",
-   "sha256": "bd76a8443f2e0eaf46b7af351d4a8faf271feb1cdb74bfe5812adf1677db5e2e"
+   "fixtura": "tests-visual/fixtura/publico-e48-v2.json",
+   "sha256": "c574e3582bace370feaf3928994acebf7500b36d57a88c540f6a847275915145"
   },
   {
    "proyecto": "tableta-768",
    "nombre": "valuador",
    "viewport": "768x1024",
    "ruta": "/valuador",
-   "fecha": "2026-10-07",
-   "version": "E-34-candidato",
+   "fecha": "2026-11-09",
+   "version": "citas-v2-staging-8nov-2026",
    "estado": "vigente",
-   "fixtura": "tests-visual/fixtura/publico.json",
-   "sha256": "d269c54ea88d9c2b67541927cba50a55adc17ae348e769239843157c92fd7174"
+   "fixtura": "tests-visual/fixtura/publico-e48-v2.json",
+   "sha256": "74db6b0d5acc14c9d90b0d0d83c825dcf2bc8ce86e4865d6ca16e6c38f1877d9"
   }
  ]
 }

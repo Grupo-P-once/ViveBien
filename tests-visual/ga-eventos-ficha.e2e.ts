@@ -1,7 +1,9 @@
 import { expect, test } from '@playwright/test'
+import { acotarTerceros } from './ayudas-red'
 
 /** Contacto desde la FICHA (sin sesión): los botones no son enlaces; cada uno registra su canal antes de pedir el registro. Usa la ficha de la fixtura sintética (sin FIXTURA_DEFECTO). */
 test.beforeEach(async ({ page }) => {
+  await acotarTerceros(page) // un tercero que no contesta se corta a los 4 s y no cuelga `goto` (corridas 6 y 7 del gate)
   // Desde la alineación legal (2-nov-2026, commit 2a6984c) GA4 solo carga cuando la persona lo aceptó (`vb_analitica` = 'si'). Estas pruebas miden los
   // eventos de quien SÍ aceptó; la conducta contraria (sin aceptar, nada carga) la comprueba la prueba «sin aceptar» de ga-eventos.e2e.ts.
   await page.addInitScript(() => { try { localStorage.setItem('vb_analitica', 'si') } catch { /* sin almacenamiento */ } })

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { acotarTerceros } from './ayudas-red'
 
 /**
  * Revisión de propiedades (cola de moderación) en 390/768/1024/1440, con Google y TODA la API simulados en el navegador
@@ -18,6 +19,7 @@ async function simular(page: Page, opts: { respuestaEstado: () => { status: numb
   const posts: Array<{ ruta: string; cuerpo: Record<string, unknown> }> = []
   let lecturasDeCola = 0
   const noGet: string[] = []
+  await acotarTerceros(page) // un tercero (cdnjs, fuentes, apis.google.com) que no contesta se corta a los 4 s y no cuelga la carga
   await page.route('**/www.googletagmanager.com/**', (r) => r.abort())
   await page.route('**/www.google-analytics.com/**', (r) => r.abort())
   await page.route('**/securetoken.googleapis.com/**', (r) => r.fulfill(json({ access_token: 'x', id_token: 'x', refresh_token: 'x', expires_in: '3600', user_id: 'x' })))

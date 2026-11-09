@@ -207,10 +207,13 @@ export default function PanelCitas({
           )}
         </div>
         <aside className="min-w-0 space-y-5" aria-label="Próximas citas y acciones rápidas">
-          <ProximasCitas citas={lasProximas} onAbrir={abrir} onVerTodas={() => { setPestana('agenda'); setFiltros(SIN_FILTROS) }} />
+          <ProximasCitas cargando={listoPara === null} fallo={!!error}citas={lasProximas}onAbrir={abrir} onVerTodas={() => { setPestana('agenda'); setFiltros(SIN_FILTROS) }} />
           <AccionesRapidas vista={vista} visibles={visibles} conTipos={conTipos} rutaDisponibilidad={rutaDisponibilidad} />
         </aside>
       </div>
+
+      {/* Entre 768 y 1279 px el botón flotante de WhatsApp (88 px) tapaba «Acciones rápidas» al final; la reserva global del portal solo cubre hasta 768. */}
+      <div className="hidden h-24 md:block xl:hidden" aria-hidden />
 
       {abierta && <DetalleCita key={abierta.id} cita={abierta} conTipos={conTipos} onCerrar={cerrar} onCambio={() => { void cargar(); void pedirProximas().then(aplicarProximas) }} />}
     </div>

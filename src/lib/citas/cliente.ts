@@ -11,11 +11,22 @@ export type RespuestaApi<T> =
   | { ok: true; status: number; data: T }
   | { ok: false; status: number; error: string; data?: Record<string, unknown> }
 
+/**
+ * Token de la sesión. Al abrir la pantalla Firebase aún puede estar restaurando la sesión (`currentUser` es null unos instantes): sin esperar,
+ * la primera petición fallaba con «Inicia sesión» aunque la persona sí la tenía. Se espera a que Firebase decida (máx. 5 s).
+ */
+async function tokenActual(): Promise<string | null> {
+  if (!auth.currentUser) {
+    await Promise.race([Promise.resolve(auth.authStateReady?.()).catch(() => {}), new Promise<void>((r) => setTimeout(r, 5000))])
+  }
+  return (await auth.currentUser?.getIdToken().catch(() => null)) ?? null
+}
+
 export async function llamarApi<T = unknown>(
   ruta: string,
   opciones: { method?: 'GET' | 'POST' | 'PUT'; cuerpo?: unknown; clave?: string } = {},
 ): Promise<RespuestaApi<T>> {
-  const token = await auth.currentUser?.getIdToken().catch(() => null)
+  const token = await tokenActual()
   if (!token) return { ok: false, status: 401, error: 'Inicia sesión para continuar.' }
   const { method = 'GET', cuerpo, clave } = opciones
   const res = await fetch(ruta, {
@@ -36,7 +47,7 @@ export async function llamarApi<T = unknown>(
 
 /** Descarga un archivo autenticado (el `.ics`): no se puede con un enlace común porque pide el token en la cabecera. */
 export async function descargarArchivo(ruta: string, nombre: string): Promise<{ ok: true } | { ok: false; error: string }> {
-  const token = await auth.currentUser?.getIdToken().catch(() => null)
+  const token = await tokenActual()
   if (!token) return { ok: false, error: 'Inicia sesión para continuar.' }
   const res = await fetch(ruta, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' }).catch(() => null)
   if (!res) return { ok: false, error: 'Se perdió la conexión. Inténtalo otra vez.' }

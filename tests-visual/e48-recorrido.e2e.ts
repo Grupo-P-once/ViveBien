@@ -246,7 +246,7 @@ test.describe('«Citas recibidas» en el menú sólo con la capacidad', () => {
     await captura(page, 'menu-con-citas')
     await enlace.click()
     await expect(page).toHaveURL(/\/publicador\/citas$/, { timeout: 30_000 })
-    await expect(page.getByText(/Todavía no tienes citas/)).toBeVisible({ timeout: 30_000 })
+    await expect(page.getByText(/Todavía no hay visitas a tus propiedades/)).toBeVisible({ timeout: 30_000 })
     await marcoPresente(page)
     await sinDesborde(page)
   })

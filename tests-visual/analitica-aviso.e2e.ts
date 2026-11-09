@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
+import { acotarTerceros } from './ayudas-red'
 
 /**
  * El aviso de analítica (alineación legal, 2-nov-2026): sin elección guardada aparece con DOS botones del mismo peso, GA no carga ni se descarga
@@ -8,6 +9,7 @@ import { expect, test } from '@playwright/test'
 test('sin elección guardada: aparece el aviso, GA no carga; al rechazar desaparece, se recuerda y sigue sin cargar', async ({ browser, baseURL }) => {
   const ctx = await browser.newContext({ baseURL, locale: 'es-MX', storageState: { cookies: [], origins: [] } })
   const page = await ctx.newPage()
+  await acotarTerceros(page)
   const pedidos: string[] = []
   page.on('request', (r) => { if (/googletagmanager\.com|google-analytics\.com/.test(r.url())) pedidos.push(r.url()) })
 
@@ -34,6 +36,7 @@ test('sin elección guardada: aparece el aviso, GA no carga; al rechazar desapar
 test('al aceptar: se guarda la elección y GA se carga solo entonces', async ({ browser, baseURL }) => {
   const ctx = await browser.newContext({ baseURL, locale: 'es-MX', storageState: { cookies: [], origins: [] } })
   const page = await ctx.newPage()
+  await acotarTerceros(page)
   await page.route('**/googletagmanager.com/**', (r) => r.abort())
   await page.route('**/google-analytics.com/**', (r) => r.abort())
   await page.goto('/contacto')
