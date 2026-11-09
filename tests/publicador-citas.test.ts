@@ -264,6 +264,28 @@ describe('IDOR: lo ajeno no se lee ni se toca', () => {
     })
   }
 
+  it('un CLIENTE no lee la cita de OTRO cliente (404, no se revela que existe), no la toca (404 y cero llamadas a la base) y no la ve en su lista', async () => {
+    // La cita 1 es de otra persona; este cliente no es ni su cliente, ni su asesor, ni dueño de la propiedad.
+    const OTRO = perfilDe('CLIENTE-AJENO-1', { rol: 'cliente' })
+    expect(await getAppointment(ID(1), OTRO)).toBeNull()
+    comoSesion('CLIENTE-AJENO-1', { rol: 'cliente' })
+    expect((await leerCita(R(`/api/citas/${ID(1)}`), ctx(ID(1)))).status).toBe(404)
+    for (const accion of ['cancelar', 'proponer', 'confirmar', 'aceptar_cambio'] as const) {
+      const r = await transicionar({ id: ID(1), version: 1, accion, perfil: OTRO, datos: { motivo: 'x', inicio: '2030-01-16T17:00:00Z' } })
+      expect(r.ok, accion).toBe(false)
+      if (!r.ok) expect(r.status, accion).toBe(404)
+    }
+    expect(mundo.rpcs).toHaveLength(0)
+    expect(await listAppointments({ perfil: OTRO, vista: 'cliente', ...RANGO })).toEqual([])
+  })
+
+  it('cambiar la vista pedida no abre nada: un cliente ajeno recibe lista vacía en «asesor» y «propietario» y 403 por HTTP en «admin»', async () => {
+    const OTRO = perfilDe('CLIENTE-AJENO-2', { rol: 'cliente' })
+    for (const vista of ['asesor', 'propietario'] as const) expect(await listAppointments({ perfil: OTRO, vista, ...RANGO }), vista).toEqual([])
+    comoSesion('CLIENTE-AJENO-2', { rol: 'cliente' })
+    expect((await listarCitas(R(`/api/citas?vista=admin&desde=${RANGO.desde.toISOString()}&hasta=${new Date('2029-03-01').toISOString()}`))).status).toBe(403)
+  })
+
   it('agendar en la propiedad de un publicador SIN `recibir_citas` no se puede (409): no hay a quién atender', async () => {
     const r = await checkAvailability({ propiedadId: 'p-A', desde: '2030-01-14', dias: 3, clienteUid: 'X', ahora: new Date('2029-12-01') })
     expect(r.ok).toBe(false)

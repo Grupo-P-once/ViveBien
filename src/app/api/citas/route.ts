@@ -55,7 +55,9 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: 'Tu cuenta no tiene propiedades con citas.' }, { status: 403 })
   }
 
-  const limite = Number(url.searchParams.get('limite') ?? '') || undefined
+  // Solo un entero positivo acota la lista; `-5` o `2.5` llegarían a `.limit()` y la base los rechaza (un 500 por un parámetro mal escrito). El tope de 500 lo pone el servicio.
+  const limitePedido = Number(url.searchParams.get('limite') ?? '')
+  const limite = Number.isInteger(limitePedido) && limitePedido > 0 ? limitePedido : undefined
 
   // Filtros (todos opcionales y validados; la vista ya limita QUÉ citas puede ver cada rol, esto solo las acota).
   const estados = (url.searchParams.get('estados') ?? '').split(',').map((s) => s.trim()).filter((s) => ESTADOS_VALIDOS.includes(s)).slice(0, 10)

@@ -15,7 +15,7 @@
 | Papel | Cómo se sabe |
 |---|---|
 | **Cliente** de una cita | `citas.cliente_uid = uid` de la sesión. **Sólo cuentas creadas** (fila en `usuarios`): quien sólo llenó el formulario de registro no puede agendar. |
-| **Asesor** de una cita | `citas.asesor_uid = uid`. Al crearla se copia de `propiedades.owner_id`, y sólo si ese dueño **puede atender citas**: el equipo de VIVE BIEN, o un **publicador con `recibir_citas`** (ADR-0013; a quien llamamos «publicador-asesor» abajo). Hoy los dueños con cuenta son del equipo, así que el asesor de todas las visitas es el admin. |
+| **Asesor** de una cita | `citas.asesor_uid = uid`. Al crearla lo decide `responsableDeCitas` (`src/lib/citas/servicio.ts`, ADR-0014 §3), en este orden: el **responsable asignado** a la propiedad (`propiedades.responsable_citas_uid`) → el **dueño** (`propiedades.owner_id`) **si puede atender citas** (el equipo de VIVE BIEN, o un **publicador con `recibir_citas`**, ADR-0013; «publicador-asesor» abajo) → el **responsable del equipo** (`configuracion.citas.responsable_equipo_uid`). Si ninguno aplica, **409 «sin asesor»** (falla cerrado). *Corregido el 8-nov-2026: antes decía «se copia de `owner_id`».* **Nota operativa:** hoy ninguna pantalla ni ruta escribe `responsable_citas_uid` ni `responsable_equipo_uid`; se asignan por SQL (pendiente de decisión del dueño: construir esa pantalla). |
 | **Admin** | `usuarios.rol` = `admin` o `super_admin` en la base (la lista `ADMIN_EMAILS` ya no se lee desde V-1.1.81). Ve y actúa sobre todas. |
 | **Sistema** | Tareas programadas (vencidas, recordatorios). |
 

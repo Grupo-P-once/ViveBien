@@ -31,3 +31,32 @@ El sistema de citas anterior pedía confirmar con botones dentro del correo, apa
 ## Pruebas que la sostienen
 
 `citas`, `citas-db` (PGlite, 15+70+72+73), `citas-v2`, `citas-estado-inicial`, `citas-tareas`, `citas-agenda`, `citas-correos`, `citas-correos-cobertura`, `citas-correo-abandonado`, `citas-historial-propietario`, `publicador-citas`, `citas-enlaces`, `citas-legal`, `migracion-74-ayuda-citas`, y en navegador `citas-pantallas` (4 anchos, axe, teclado), `analitica-aviso`.
+
+## Revisión de cierre (8-nov-2026)
+
+Revisión de solo lectura del código, las pruebas y la documentación contra las reglas vigentes del propietario, más la verificación de permisos en la base de **staging** (solo consultas de catálogo). Producción no se consultó.
+
+**Verificado**
+- Autorización en el servidor en todas las rutas de citas (`exigir` + `papelEn`); `p_actor_rol`, `asesor_uid`, `propietario_uid` y el estado inicial salen del servidor, nunca del cuerpo. Un id ajeno da el mismo 404 que uno inexistente.
+- Concurrencia e idempotencia garantizadas en la base: `unique (creada_por, clave_idempotencia)`, restricciones GiST `citas_asesor_sin_empalme` y `citas_cliente_sin_empalme` (con `check (fin > inicio)` para que un rango vacío no se cuele), `cita_transicionar` con `for update` y comparación de versión.
+- Permisos reales en staging: las 8 funciones de citas y `configuracion_cambiar_flag` solo las ejecuta `service_role` (`citas_tarea_invocar` ni siquiera él); las 11 tablas de citas tienen RLS activo, **0 políticas** y ningún privilegio para `anon`/`authenticated`. Lo mismo se prueba en `tests/citas-permisos-sql.test.ts` (PGlite con los permisos por omisión de Supabase; 33 pruebas, comprobadas por mutación).
+- Sin correo ni Telegram reales en el Preview: sus variables de entorno no existen allí y el código falla cerrado sin ellas.
+
+**Corregido**
+- `GET /api/citas?limite=-5` (o `2.5`) llegaba a `.limit()` y devolvía 500; ahora solo un entero positivo acota la lista. Prueba de regresión en `tests/citas-ruta-lista-y-agendar.test.ts`.
+- `docs/permissions.md`: la fila del asesor decía «se copia de `owner_id`»; hoy lo decide `responsableDeCitas`.
+- Pruebas nuevas: contrato HTTP de `POST/GET /api/citas` y de `/transicion`, IDOR de cliente contra cliente con el servicio real, y permisos SQL.
+
+**Decisiones abiertas del propietario (NO resueltas aquí; el comportamiento actual es el más restrictivo)**
+1. *Asociado dueño de una propiedad cuya visita atiende otra persona (VIVE BIEN u otro responsable).* Hoy ve la cita en solo lectura como «Interesado», sin nombre, teléfono ni notas. Este ADR solo concreta el caso «el asociado que atiende». Decidir si, para sus propiedades coordinadas por otros, debe ver nombre, teléfono y notas (correo solo con `ver_datos_interesado`).
+2. *Un admin que agenda una visita con otro responsable puede confirmarla él mismo y queda fuera de la regla de 2 h* (`papelEn` evalúa `citas.ver_todas` antes que cliente). Encaja con «gestiona el alcance global», pero contrasta con D-8. Decidir si se limita.
+3. *Quién asigna al responsable.* Ninguna pantalla escribe `propiedades.responsable_citas_uid` ni `configuracion.citas.responsable_equipo_uid`; sin asignar por SQL, las propiedades de publicadores dan 409 «sin asesor». Decidir si se construye la pantalla de asignación.
+4. *Cancelación hecha por el cliente.* `planDeCorreos` no manda al propio actor el correo de cancelación (solo «solicitud recibida», «confirmada» y «reprogramada» van siempre), así que su calendario conserva el evento. El asesor nunca recibe `.ics`. Decidir si el cliente debe recibir el `.ics` de cancelación.
+5. *Endpoints heredados de token (`/api/citas/accion` y `/accion/ver`).* Siguen activos; el ADR §6 los llama inalcanzables porque ya nada genera tokens. Decidir si se retiran antes de Producción.
+6. *Auditoría legible.* `GET /api/citas/[id]` devuelve solo el rol del actor (`por`); el uid vive en `citas_eventos.actor_uid` y las denegaciones en `audit_logs`. Decidir si el admin debe ver quién hizo cada cambio en pantalla.
+
+**Aclaraciones de documentación**
+- El `.ics` va en UTC (`...Z`), válido e inequívoco; no lleva `TZID`/`VTIMEZONE` (la zona America/Mexico_City solo aparece en el enlace «Añadir a Google»). Las cancelaciones usan `METHOD:PUBLISH` con `STATUS:CANCELLED`; algunos clientes de calendario ignoran cancelaciones por PUBLISH (cuáles: no verificado).
+- Una cita `PENDING_CONFIRMATION` aparta horario pero no programa recordatorios: los recordatorios son de la cita **confirmada** (§7).
+- El aviso de Telegram incluye el nombre del responsable («Atiende: …») y nada del cliente.
+- Tope de ritmo: `frenarAsync` es compartido entre instancias solo si hay Upstash configurado; si no, es por instancia. `GET /api/citas`, `/disponibilidad` y `ajustes` GET no tienen tope propio.
