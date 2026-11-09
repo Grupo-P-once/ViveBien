@@ -12,6 +12,9 @@ import { acotarTerceros } from './ayudas-red'
  */
 const UN_PIXEL = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64')
 async function basePublica(page: import('@playwright/test').Page) {
+  // Todo lo externo acotado a 4 s: el test 3 espera «red quieta» y, sin esto, dependía de que cdnjs, Google y Firebase contestaran (falló a 390 px en el gate
+  // sobre 1f73615 con `waitForLoadState: Timeout 15000ms`). Va primero: lo que se registra después (los stubs de abajo, los atascos de cada test) tiene prioridad.
+  await acotarTerceros(page, { limiteMs: 4_000 })
   // Hermético: la fixtura v2 trae fotos sintéticas de res.cloudinary.com; sin esto la prueba dependía de la red real (en frío, 15 s no bastaban para llegar a «red quieta»).
   await page.route((u) => /(^|\.)cloudinary\.com$/.test(u.hostname), (r) => r.fulfill({ status: 200, contentType: 'image/png', body: UN_PIXEL }))
   await page.route('**/api/eventos', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true}' }))

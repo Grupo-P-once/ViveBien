@@ -144,17 +144,19 @@ for (const [ruta, boton, ok] of [
   })
 }
 
-test('accesibilidad: sin violaciones graves ni críticas en las tres páginas', async ({ page }) => {
-  await simular(page)
-  for (const ruta of ['/recomendaciones', '/correo/confirmar#t=a.0.b', '/correo/baja#t=a.0.b']) {
+// Un test por página. Antes eran las tres en un solo bucle (cada una con carga + «red quieta» + axe): a 390 px tardaba 19–21 s de los 30 s y agotó el tope en dos
+// corridas del gate (30,6 s; 128 peticiones, ninguna sin respuesta ni lenta: no era la red ni el producto, el bucle sumaba tres esperas). Las aserciones no cambian.
+for (const ruta of ['/recomendaciones', '/correo/confirmar#t=a.0.b', '/correo/baja#t=a.0.b']) {
+  test(`accesibilidad: sin violaciones graves ni críticas en ${ruta.split('#')[0]}`, async ({ page }) => {
+    await simular(page)
     await page.goto(ruta, { waitUntil: 'domcontentloaded' })
     await expect(page.locator('main')).toBeVisible({ timeout: 45_000 })
     await page.waitForLoadState('networkidle').catch(() => undefined)
     const r = await new AxeBuilder({ page }).include('main').analyze() // el contenido propio de la página; el pie y la cabecera tienen su propia línea base
     const graves = r.violations.filter((v) => v.impact === 'critical' || v.impact === 'serious').map((v) => `${v.id}: ${v.nodes.length}`)
     expect(graves, ruta).toEqual([])
-  }
-})
+  })
+}
 
 test('las páginas de enlace no se indexan', async ({ page }) => {
   await simular(page)
