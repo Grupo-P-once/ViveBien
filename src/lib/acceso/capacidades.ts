@@ -263,6 +263,14 @@ export function veDatosDelInteresado(c: CuentaDeCitas): boolean {
 }
 
 /**
+ * ¿Ve nombre, teléfono y notas de la visita del interesado en las citas de SUS propiedades que atiende otra persona (solo lectura)? Decisión del dueño, 9-nov-2026: sí, quien
+ * tiene `recibir_citas` (el asociado, por defecto). Se autoriza con la capacidad, nunca con el nombre de la modalidad (ADR-0013). El correo sigue exigiendo `ver_datos_interesado`.
+ */
+export function veContactoBasicoDelInteresado(c: CuentaDeCitas): boolean {
+  return tieneCapacidad(c, 'recibir_citas')
+}
+
+/**
  * ¿Aparece el nombre del asesor ante el cliente? Por defecto el contacto es
  * VIVE BIEN: un publicador sólo se nombra si un admin le dio perfil y nombre
  * públicos. El equipo se muestra como siempre.

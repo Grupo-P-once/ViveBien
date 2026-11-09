@@ -111,9 +111,11 @@ export type Extras = {
   publicador?: { verInteresado: boolean; puedeAccion: (a: AccionCita) => boolean }
   /**
    * Presente sólo cuando quien mira es el PROPIETARIO de la propiedad y no la atiende (D-1): solo lectura.
-   * Sin `verInteresado` (permiso `ver_datos_interesado`, apagado por defecto) no se manda nombre, teléfono, correo ni notas.
+   * Sin `verInteresado` (permiso `ver_datos_interesado`, apagado por defecto) no se manda el CORREO ni nada más allá del contacto básico.
+   * `contactoBasico` (9-nov-2026, decisión del dueño): el ASOCIADO dueño de la propiedad ve nombre, teléfono y las notas de la visita aunque la coordine VIVE BIEN u otro
+   * responsable (solo lectura). El PUBLICADOR que no es asociado sigue sin ver ningún dato personal.
    */
-  propietario?: { verInteresado: boolean }
+  propietario?: { verInteresado: boolean; contactoBasico?: boolean }
 }
 
 /**
@@ -126,7 +128,9 @@ export function papelEn(
   cita: Pick<CitaFila, 'cliente_uid' | 'asesor_uid'> & { propietario_uid?: string | null },
   perfil: { uid: string; rol: 'cliente' | 'publicador' | 'admin'; capacidades?: Partial<MapaCapacidades> },
 ): PapelVista | null {
-  if (puede(perfil, 'citas.ver_todas')) return 'admin'
+  // Decisión del dueño (9-nov-2026): un admin que es el CLIENTE de una cita y no su asesor actúa como cliente en ESA cita: no se la confirma él mismo ni se salta la regla de 2 h;
+  // la decide el responsable u otro admin. Si es además el asesor (se agendó a sí mismo, D-8) sigue siendo admin.
+  if (puede(perfil, 'citas.ver_todas')) return perfil.uid === cita.cliente_uid && perfil.uid !== cita.asesor_uid ? 'cliente' : 'admin'
   // Asesor: el equipo, o un publicador CON `recibir_citas`. Quien dejó de poder
   // atender citas (rol cambiado, permiso apagado) no las ve como asesor.
   if (perfil.uid === cita.asesor_uid && atiendeCitas(perfil)) return 'asesor'
@@ -144,7 +148,7 @@ export function recortar(fila: CitaFila, papel: PapelVista, extras: Extras, ahor
   // ASOCIADO que ATIENDE la cita (tabla del dueño, 6-nov-2026): ve lo NECESARIO para coordinar la visita: nombre, teléfono y las notas que la persona escribió para ella (lo que aceptó compartir
   // con la casilla de la tarjeta). El CORREO y todo lo demás siguen con el permiso `ver_datos_interesado`; nunca ve las notas internas del equipo ni el estado de Google. El PROPIETARIO que no atiende
   // (publicador: lo coordina VIVE BIEN) no ve ningún dato personal salvo ese mismo permiso.
-  const contactoBasico = papel === 'asesor' && !!pub
+  const contactoBasico = (papel === 'asesor' && !!pub) || (papel === 'propietario' && !!prop?.contactoBasico)
   // El propietario no tiene ninguna acción: las solicitudes de sus propiedades las administra VIVE BIEN.
   const acciones = papel === 'propietario' ? [] : accionesDisponibles(fila, papel, ahora)
   return {

@@ -10,6 +10,9 @@
 >
 > **Detalle de la enmienda del 2-oct-2026 (SUSTITUIDA en parte, ver arriba):** un publicador-asesor ve la cita **sin** nombre, teléfono, correo ni notas del interesado salvo que tenga `ver_datos_interesado`, no ve notas internas ni el estado de Google, y cada acción (aceptar, rechazar, reprogramar, cancelar) exige su propio permiso. La tabla «Quién es quién» de arriba dice «Al crearla se copia de `propiedades.owner_id`»: sigue siendo cierto, y por eso un publicador sin `recibir_citas` no recibe ninguna. La fila «Admin = `ADMIN_EMAILS`» de la tabla de arriba está obsoleta desde V-1.1.81: el rol vive sólo en la base. Detalle en `adr/ADR-0013-…`.
 
+> **DECISIONES del 9-nov-2026 (ADR-0014):** (1) el **asociado dueño** de una propiedad que atiende otra persona ve nombre, teléfono y notas en solo lectura (correo solo con `ver_datos_interesado`); el publicador no asociado, nada. (2) Un **admin que es el cliente** de una cita actúa como cliente en ella (no se confirma sola; regla de 2 h intacta). (6) El admin ve en el historial **quién** hizo cada cambio (nombre, nunca uid). Quién atiende cada propiedad se asigna en `/admin/citas/responsables`.
+
+
 ## Quién es quién
 
 | Papel | Cómo se sabe |

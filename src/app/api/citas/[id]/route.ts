@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin, exigir } from '@/lib/auth-server'
 import { getAppointment } from '@/lib/citas/servicio'
+import { puede } from '@/lib/acceso/permisos'
 
 /**
  * GET /api/citas/[id] — una cita y su historial, recortados a lo que puede
@@ -21,16 +22,28 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     const cita = await getAppointment(id, auth.perfil)
     if (!cita) return NextResponse.json({ error: 'No encontramos esa visita.' }, { status: 404 })
 
-    const { data } = await supabaseAdmin().from('citas_eventos')
-      .select('tipo, estado_antes, estado_despues, actor_rol, via, datos, creado_en')
+    const db = supabaseAdmin()
+    const { data } = await db.from('citas_eventos')
+      .select('tipo, estado_antes, estado_despues, actor_rol, actor_uid, via, datos, creado_en')
       .eq('cita_id', id).order('id', { ascending: true }).limit(100)
+
+    // Auditoría visible (decisión del dueño, 9-nov-2026): SOLO el equipo con alcance global (admin / super admin) ve QUIÉN hizo cada cambio, por su nombre.
+    // Nunca el uid, y nunca nadie más: el resto sigue viendo solo el papel. Ausente = sin permiso: si falla la consulta de nombres, no se manda ninguno.
+    const nombres = new Map<string, string>()
+    if (puede(auth.perfil, 'citas.ver_todas')) {
+      const uids = [...new Set((data ?? []).map((e) => e.actor_uid).filter((u): u is string => typeof u === 'string' && u.length > 0))]
+      if (uids.length) {
+        const { data: us } = await db.from('usuarios').select('uid, nombre').in('uid', uids)
+        for (const u of us ?? []) if (typeof u.nombre === 'string' && u.nombre.trim()) nombres.set(u.uid, u.nombre.trim())
+      }
+    }
 
     // Un publicador atendiendo la cita ve, como el cliente, sólo horarios y
     // motivos: el historial del equipo puede traer notas y datos del interesado.
     // El PROPIETARIO (dueño que no atiende la cita, D-1) tampoco ve notas ni datos del equipo: solo horarios y motivos (revisión de Codex, 6-nov-2026).
     const acotado = cita.papel === 'cliente' || cita.papel === 'propietario' || (cita.papel === 'asesor' && auth.perfil.rol === 'publicador')
 
-    // Quién hizo cada cambio se dice por su papel, nunca por su uid.
+    // Quién hizo cada cambio se dice por su papel, nunca por su uid; el admin además ve el NOMBRE (`actor`).
     const historial = (data ?? [])
       .filter((e) => !acotado || e.tipo !== 'NOTE_UPDATED')
       .map((e) => ({
@@ -38,6 +51,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
         estadoAntes: e.estado_antes,
         estadoDespues: e.estado_despues,
         por: e.actor_rol,
+        ...(e.actor_uid && nombres.has(e.actor_uid) ? { actor: nombres.get(e.actor_uid) } : {}),
         via: e.via,
         datos: acotado ? soloHorarios(e.datos) : e.datos,
         en: e.creado_en,

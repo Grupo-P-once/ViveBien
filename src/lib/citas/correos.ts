@@ -73,8 +73,11 @@ export type CitaParaPlan = {
 const c = (tipo: TipoCorreo, para: Para, ics: CorreoPlaneado['ics'] = null): CorreoPlaneado =>
   ({ tipo, para, acciones: [], ics })
 
-/** Los que el cliente recibe aunque él mismo haya hecho el cambio. */
-const SIEMPRE: TipoCorreo[] = ['solicitud_recibida', 'confirmada', 'reprogramada']
+/**
+ * Los que el cliente recibe aunque él mismo haya hecho el cambio. `cancelada` se añadió el 9-nov-2026 (decisión del dueño): el cliente que cancela recibe el correo y el `.ics` de
+ * cancelación, para que su calendario no conserve el evento.
+ */
+const SIEMPRE: TipoCorreo[] = ['solicitud_recibida', 'confirmada', 'reprogramada', 'cancelada']
 
 export function planDeCorreos(evento: EventoCorreo, cita: CitaParaPlan, actorUid: string | null): CorreoPlaneado[] {
   let lista: CorreoPlaneado[] = []

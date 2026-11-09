@@ -40,6 +40,10 @@
 
 ## 2 · Enlaces de acción seguros
 
+> **RETIRADO el 9-nov-2026 (ADR-0014, decisión 5):** los endpoints `POST /api/citas/accion` y `/accion/ver` y la página `/citas/accion` ya no existen; los correos no llevan botones de acción (el enlace lleva al panel con sesión). Lo que sigue describe el diseño original y se conserva solo como historial; las tablas/funciones SQL de tokens quedan sin uso.
+> **Cancelación (9-nov-2026):** el cliente que cancela recibe el correo de cancelación con `.ics` (`STATUS:CANCELLED`).
+
+
 Nunca `/confirmar?id=123`. Cada enlace:
 
 1. Es `https://vivebienn.com/citas/accion#<token>`: el token va **después del `#`**, así no llega al servidor, a los registros de Vercel ni al encabezado `Referer`.

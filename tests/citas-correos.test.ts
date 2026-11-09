@@ -98,9 +98,24 @@ describe('qué correo sale, a quién', () => {
     expect(resumen(planDeCorreos('RESCHEDULE_PROPOSED', cita({ propuesta_por: 'admin' }), 'admin-x'))).toEqual(['cambio_propuesto>cliente'])
   })
 
-  it('cancelada: a la otra parte; el cliente recibe el .ics de cancelación', () => {
-    expect(resumen(planDeCorreos('CANCELLED', cita(), 'cli'))).toEqual(['cancelada>asesor'])
+  it('cancelada: el cliente SIEMPRE recibe el correo y el .ics de cancelación (también si él mismo cancela, decisión del 9-nov-2026); el asesor, solo si no fue quien canceló', () => {
+    // Antes (hasta el 8-nov-2026) si cancelaba el cliente solo se avisaba al asesor y su calendario conservaba el evento.
+    expect(resumen(planDeCorreos('CANCELLED', cita(), 'cli'))).toEqual(['cancelada>cliente+cancelar', 'cancelada>asesor'])
     expect(resumen(planDeCorreos('CANCELLED', cita(), 'ase'))).toEqual(['cancelada>cliente+cancelar'])
+    expect(resumen(planDeCorreos('CANCELLED', cita(), 'admin-x'))).toEqual(['cancelada>cliente+cancelar', 'cancelada>asesor'])
+    expect(resumen(planDeCorreos('CANCELLED', cita(), null))).toEqual(['cancelada>cliente+cancelar', 'cancelada>asesor'])
+  })
+  it('el .ics de cancelación del cliente es un STATUS:CANCELLED con la misma UID y una SEQUENCE no menor que la de la cita confirmada', () => {
+    const base = { id: 'c-1', inicio: new Date('2030-01-15T16:00:00Z'), fin: new Date('2030-01-15T17:00:00Z'), titulo: 'Visita', lugar: 'León', enlace: 'https://vivebienn.com/portal/citas', ahora: new Date('2030-01-10T00:00:00Z') }
+    const confirmada = generarIcs({ ...base, version: 3, cancelada: false })
+    const cancelada = generarIcs({ ...base, version: 4, cancelada: true })
+    expect(cancelada).toContain('STATUS:CANCELLED')
+    expect(confirmada).not.toContain('STATUS:CANCELLED')
+    const uid = (t: string) => /UID:(\S+)/.exec(t)?.[1]
+    expect(uid(cancelada)).toBeTruthy()
+    expect(uid(cancelada)).toBe(uid(confirmada))
+    const seq = (t: string) => Number(/SEQUENCE:(\d+)/.exec(t)?.[1])
+    expect(seq(cancelada)).toBeGreaterThanOrEqual(seq(confirmada))
   })
 
   it('expirada: a las dos partes', () => {

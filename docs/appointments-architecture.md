@@ -136,7 +136,8 @@ Los efectos de salida (correo, Google, aviso en vivo) se lanzan **después** de 
 | `GET /api/citas/[id]` | Detalle. |
 | `POST /api/citas/[id]/transicion` `{ accion, version, … }` | Confirmar, cancelar, proponer, aceptar, realizada, no asistió. |
 | `GET /api/citas/disponibilidad?propiedad&dia` | Horarios libres. |
-| `POST /api/citas/accion` `{ token }` / `POST /api/citas/accion/ver` `{ token }` | Enlaces de correo (ver `email-flow.md`). |
+| ~~`POST /api/citas/accion` / `/accion/ver`~~ | **Retirados el 9-nov-2026** (ADR-0014, decisión 5). |
+| `GET/PUT /api/admin/citas/responsables` | Quién atiende cada propiedad y el responsable del equipo (admin; migración 76, auditado). |
 | `POST /api/citas/tareas` (secreto) | Recordatorios, vencimientos, reintentos, renovación de canales de Google. |
 | `/api/google/*` | Conectar, callback, desconectar, notificaciones (ver `google-calendar-integration.md`). |
 

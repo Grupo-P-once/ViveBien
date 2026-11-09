@@ -9,7 +9,7 @@ import { papelEn, recortar, type CitaFila, type CitaVista, type PropiedadDeCita 
 import { instanteLocal, sumarDias } from './zona'
 import { hashDe, pareceToken } from './tokens'
 import { puede } from '../acceso/permisos'
-import { atiendeCitas, nombreDelAsesorVisible, puedeActuarEnCita, veDatosDelInteresado, type CuentaDeCitas } from '../acceso/capacidades'
+import { atiendeCitas, nombreDelAsesorVisible, puedeActuarEnCita, veContactoBasicoDelInteresado, veDatosDelInteresado, type CuentaDeCitas } from '../acceso/capacidades'
 import { cuentasDeCitas, perfilDeCuenta } from './asesores'
 import { rutaDeVisitas } from './enlaces'
 
@@ -293,8 +293,11 @@ function aVista(fila: FilaConExtras, papel: PapelVista, ahora: Date, ctx: Contex
     ? { verInteresado: veDatosDelInteresado(mira), puedeAccion: (a: AccionCita) => puedeActuarEnCita(mira, a, fila.estado) }
     : undefined
 
-  // El PROPIETARIO (D-1) solo lee: sin el permiso `ver_datos_interesado` no recibe nombre, teléfono, correo ni notas.
-  const propietario = papel === 'propietario' ? { verInteresado: veDatosDelInteresado(mira) } : undefined
+  // El PROPIETARIO (D-1) solo lee. Sin el permiso `ver_datos_interesado` no recibe el CORREO; quien tiene `recibir_citas` (el asociado) recibe además nombre, teléfono y notas de la visita aunque la atienda otra
+  // persona (decisión del dueño, 9-nov-2026); quien no tiene ese permiso, ningún dato personal.
+  const propietario = papel === 'propietario'
+    ? { verInteresado: veDatosDelInteresado(mira), contactoBasico: veContactoBasicoDelInteresado(mira) }
+    : undefined
 
   const vista = recortar(cita, papel, {
     propiedad: propiedadDeCita(propiedad),

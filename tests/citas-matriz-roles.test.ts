@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { accionesDisponibles, type AccionCita, type EstadoCita } from '../src/lib/citas/estados'
 import { papelEn, recortar, type CitaFila, type CitaVista } from '../src/lib/citas/vista'
-import { atiendeCitas, capacidadesEfectivas, puedeActuarEnCita, veDatosDelInteresado, type MapaCapacidades } from '../src/lib/acceso/capacidades'
+import { atiendeCitas, capacidadesEfectivas, puedeActuarEnCita, veContactoBasicoDelInteresado, veDatosDelInteresado, type MapaCapacidades } from '../src/lib/acceso/capacidades'
 import { puede } from '../src/lib/acceso/permisos'
 import { destinoCanonico } from '../src/lib/publicador/espacio'
 
@@ -26,10 +26,10 @@ import { destinoCanonico } from '../src/lib/publicador/espacio'
  */
 
 type Rol = 'cliente' | 'publicador_sin' | 'asociado' | 'propietario' | 'admin' | 'super_admin'
-type Perfil = { uid: string; rol: 'cliente' | 'publicador' | 'admin'; superAdmin: boolean; capacidades: MapaCapacidades }
+type Perfil = { uid: string; rol: 'cliente' | 'publicador' | 'admin'; superAdmin: boolean; capacidades: MapaCapacidades; tipoPublicador?: 'publicador' | 'asociado' }
 
 const perfil = (uid: string, rol: Perfil['rol'], tipo?: 'publicador' | 'asociado', overrides?: Partial<MapaCapacidades>, superAdmin = false): Perfil =>
-  ({ uid, rol, superAdmin, capacidades: capacidadesEfectivas({ rol, tipo, overrides }) })
+  ({ uid, rol, superAdmin, capacidades: capacidadesEfectivas({ rol, tipo, overrides }), tipoPublicador: tipo })
 
 const PERFILES: Record<Rol, Perfil> = {
   cliente: perfil('u-cliente', 'cliente'),
@@ -63,7 +63,7 @@ function mirar(f: CitaFila, p: Perfil): CitaVista | null {
   if (!papel) return null
   const publicador = papel === 'asesor' && p.rol === 'publicador'
     ? { verInteresado: veDatosDelInteresado(p), puedeAccion: (a: AccionCita) => puedeActuarEnCita(p, a, f.estado) } : undefined
-  const propietario = papel === 'propietario' ? { verInteresado: veDatosDelInteresado(p) } : undefined
+  const propietario = papel === 'propietario' ? { verInteresado: veDatosDelInteresado(p), contactoBasico: veContactoBasicoDelInteresado(p) } : undefined
   return recortar(f, papel, { propiedad: null, asesorNombre: 'Vive Bien', asesorTelefono: null, ...(publicador ? { publicador } : {}), ...(propietario ? { propietario } : {}) }, AHORA)
 }
 
@@ -268,7 +268,8 @@ describe('matriz · pantallas y menús por rol', () => {
     const s = leer('src/lib/citas/servicio.ts')
     expect(s).toMatch(/const publicador = papel === 'asesor' && mira\.rol === 'publicador'/)
     expect(s).toMatch(/verInteresado: veDatosDelInteresado\(mira\), puedeAccion: \(a: AccionCita\) => puedeActuarEnCita\(mira, a, fila\.estado\)/)
-    expect(s).toMatch(/const propietario = papel === 'propietario' \? \{ verInteresado: veDatosDelInteresado\(mira\) \} : undefined/)
+    // Decisión del dueño (9-nov-2026): el ASOCIADO dueño ve el contacto básico aunque la atienda otra persona; la réplica `mirar` de arriba lo refleja igual.
+    expect(s).toMatch(/const propietario = papel === 'propietario'\s*\? \{ verInteresado: veDatosDelInteresado\(mira\), contactoBasico: veContactoBasicoDelInteresado\(mira\) \}\s*: undefined/)
   })
   it('el propietario no puede ejecutar acciones: el servicio lo corta con 403 antes de tocar la base', () => {
     expect(leer('src/lib/citas/servicio.ts')).toMatch(/papelVista === 'propietario'[\s\S]{0,260}falla\(403/)
@@ -315,4 +316,63 @@ describe('matriz · pantallas y menús por rol', () => {
   //       Hay que decidir: ocultar la tarjeta a admin/super admin y al dueño no responsable, o mantenerla. Sin decisión no se fija una celda.
   // I-4 · DECIDIDO (tabla del dueño, 6-nov-2026): Admin y Super Admin SÍ tienen citas personales y pueden agendar (la tarjeta se les ofrece; su cita aparece en /admin/citas, filtro «Mis visitas»).
   //       El dueño que no atiende su propia propiedad recibe el aviso ANTES de elegir horario (disponibilidad responde 400 «propiedad propia»): ver tests/citas-disponibilidad-propia.test.ts.
+})
+
+describe('decisiones del dueño del 9-nov-2026: asociado dueño con responsable distinto y admin como cliente de una cita', () => {
+  const asociadoDueno = perfil('u-dueno-aso', 'publicador', 'asociado')
+  const coordinada = (o: Partial<CitaFila> = {}) => fila({ estado: 'CONFIRMED', inicioEnHoras: 48, asesor_uid: 'u-admin', propietario_uid: 'u-dueno-aso', ...o })
+
+  it('1 · el ASOCIADO dueño ve nombre, teléfono y notas de la visita a su propiedad aunque la coordine otra persona; solo lectura, sin correo ni notas internas', () => {
+    const v = mirar(coordinada(), asociadoDueno)!
+    expect(v.papel).toBe('propietario')
+    expect(v.cliente).toEqual({ nombre: 'Ana Pérez', telefono: '4771234567' })
+    expect(v.notasCliente).toBe('Prefiero por la tarde')
+    const texto = JSON.stringify(v)
+    expect(texto).not.toContain('ana@ejemplo.invalid')
+    expect(texto).not.toContain('NOTA-INTERNA')
+    expect(v.acciones).toEqual([])
+    expect(v).not.toHaveProperty('google')
+  })
+  it('1 · con `ver_datos_interesado` el asociado dueño ve además el correo', () => {
+    const conPermiso = perfil('u-dueno-aso', 'publicador', 'asociado', { ver_datos_interesado: true })
+    expect(mirar(coordinada(), conPermiso)!.cliente).toEqual({ nombre: 'Ana Pérez', telefono: '4771234567', email: 'ana@ejemplo.invalid' })
+  })
+  it('1 · el PUBLICADOR que NO es asociado, dueño de la propiedad, sigue sin ver ningún dato personal', () => {
+    const v = mirar(coordinada({ propietario_uid: 'u-dueno' }), PERFILES.propietario)!
+    expect(v.papel).toBe('propietario')
+    expect(v.cliente).toEqual({ nombre: 'Interesado' })
+    expect(v.notasCliente).toBeNull()
+  })
+  it('1 · se decide por la CAPACIDAD `recibir_citas`, no por el nombre de la modalidad (ADR-0013): un asociado al que un admin se la apagó pierde el contacto; un publicador al que se la encendieron lo gana', () => {
+    const sinRecibir = perfil('u-dueno-aso', 'publicador', 'asociado', { recibir_citas: false })
+    expect(mirar(coordinada(), sinRecibir)!.cliente).toEqual({ nombre: 'Interesado' })
+    const conRecibir = perfil('u-dueno', 'publicador', 'publicador', { recibir_citas: true })
+    expect(mirar(coordinada({ propietario_uid: 'u-dueno' }), conRecibir)!.cliente).toEqual({ nombre: 'Ana Pérez', telefono: '4771234567' })
+  })
+  it('1 · un asociado que NO es dueño de la propiedad ni atiende la cita no la ve', () => {
+    expect(mirar(coordinada({ propietario_uid: 'otro-dueno' }), asociadoDueno)).toBeNull()
+  })
+
+  it('2 · un admin que es el CLIENTE de una cita ajena actúa como cliente: no se la confirma ni la rechaza él mismo', () => {
+    const f = fila({ estado: 'REQUESTED', inicioEnHoras: 48, cliente_uid: 'u-admin', asesor_uid: 'u-aso' })
+    expect(papelEn(f, PERFILES.admin)).toBe('cliente')
+    const acciones = mirar(f, PERFILES.admin)!.acciones
+    expect(acciones).not.toContain('confirmar')
+    expect(acciones).not.toContain('rechazar')
+  })
+  it('2 · lo mismo para el super admin', () => {
+    expect(papelEn(fila({ estado: 'REQUESTED', inicioEnHoras: 48, cliente_uid: 'u-super', asesor_uid: 'u-aso' }), PERFILES.super_admin)).toBe('cliente')
+  })
+  it('2 · si el admin es además el asesor (se agendó a sí mismo, D-8) sigue siendo admin', () => {
+    expect(papelEn(fila({ estado: 'CONFIRMED', inicioEnHoras: 48, cliente_uid: 'u-admin', asesor_uid: 'u-admin' }), PERFILES.admin)).toBe('admin')
+  })
+  it('2 · un admin sin relación con la cita sigue viendo todo como admin y puede confirmarla', () => {
+    const f = fila({ estado: 'REQUESTED', inicioEnHoras: 48, cliente_uid: 'u-cliente', asesor_uid: 'u-aso' })
+    expect(papelEn(f, PERFILES.admin)).toBe('admin')
+    expect(mirar(f, PERFILES.admin)!.acciones).toContain('confirmar')
+  })
+  it('2 · como cliente de su propia cita confirmada, el admin queda sujeto a la regla de 2 h (no puede cancelarla a última hora)', () => {
+    const f = fila({ estado: 'CONFIRMED', inicioEnHoras: 1, cliente_uid: 'u-admin', asesor_uid: 'u-aso' })
+    expect(mirar(f, PERFILES.admin)!.acciones).not.toContain('cancelar')
+  })
 })

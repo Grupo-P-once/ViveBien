@@ -17,7 +17,8 @@ import { TEXTO_DE_TIPO, cuando, quienVa } from './uiCitas'
  * (`cita.acciones`). El servidor vuelve a decidir al recibir la acción (versión, rol, regla de 2 h): aquí nunca se asume un permiso.
  */
 
-type Evento = { tipo: string; estadoAntes: string | null; estadoDespues: string | null; por: string; en: string; datos?: Record<string, unknown> }
+/** `actor`: el nombre de quien hizo el cambio; el servidor SOLO lo manda al equipo con alcance global (auditoría visible). */
+type Evento = { tipo: string; estadoAntes: string | null; estadoDespues: string | null; por: string; actor?: string; en: string; datos?: Record<string, unknown> }
 
 const POR: Record<string, string> = { cliente: 'La persona interesada', asesor: 'El responsable', admin: 'VIVE BIEN', sistema: 'El sistema' }
 const TEXTO_EVENTO: Record<string, string> = {
@@ -236,7 +237,7 @@ export default function DetalleCita({
                 {historial.map((e, i) => (
                   <li key={i}>
                     <span className="font-medium">{TEXTO_EVENTO[e.tipo] ?? e.tipo}</span>
-                    <span className="text-muted-foreground"> · {POR[e.por] ?? e.por} · {fechaLarga(new Date(e.en))}, {horaCorta(new Date(e.en))}</span>
+                    <span className="text-muted-foreground"> · {e.actor ? `${e.actor} (${(POR[e.por] ?? e.por).toLowerCase()})` : POR[e.por] ?? e.por} · {fechaLarga(new Date(e.en))}, {horaCorta(new Date(e.en))}</span>
                   </li>
                 ))}
               </ol>

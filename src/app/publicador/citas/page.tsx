@@ -18,7 +18,7 @@ import type { VistaCalendario } from '@/lib/citas/servicio'
  *
  *   PUBLICADOR (no atiende citas)            ASOCIADO (atiende citas)
  *   · Visitas a mis propiedades (solo        · Visitas a mis propiedades (las ADMINISTRA: confirma, rechaza, cancela, propone horario)
- *     lectura: las coordina VIVE BIEN y sin  · Coordinadas por VIVE BIEN (solo lectura, sin datos del interesado)
+ *     lectura: las coordina VIVE BIEN y sin  · Coordinadas por VIVE BIEN (solo lectura; nombre, teléfono y notas de la visita desde el 9-nov-2026; el correo, solo con `ver_datos_interesado`)
  *     datos del cliente)                     · Mis citas (las que él pidió para visitar otras propiedades)
  *   · Mis citas (las que él pidió; las       · Mi disponibilidad
  *     puede cambiar o cancelar)
@@ -34,7 +34,7 @@ const PUBLICADOR: Pestana[] = [
 ]
 const ASOCIADO: Pestana[] = [
   { id: 'asesor', texto: 'Visitas a mis propiedades', vacio: 'Todavía no hay visitas a tus propiedades. Aparecerán cuando alguien agende una visita a una propiedad que tú atiendes.' },
-  { id: 'propietario', texto: 'Coordinadas por VIVE BIEN', vacio: 'Todavía no hay visitas a tus propiedades coordinadas por VIVE BIEN. Aquí las consultas, sin datos del cliente.' },
+  { id: 'propietario', texto: 'Coordinadas por VIVE BIEN', vacio: 'Todavía no hay visitas a tus propiedades coordinadas por VIVE BIEN. Aquí las consultas en solo lectura, con el nombre y el teléfono de la persona interesada.' },
   { id: 'cliente', texto: 'Mis citas', vacio: 'Todavía no has agendado visitas a otras propiedades. Entra a la ficha de una propiedad y usa «Agenda una cita».' },
   { id: 'disponibilidad', texto: 'Mi disponibilidad', vacio: '' },
 ]

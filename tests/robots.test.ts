@@ -35,7 +35,7 @@ describe('robots.txt', () => {
   })
 
   it('cada área privada con página propia lleva además noindex', () => {
-    const conNoindex = ['portal/layout.tsx', 'dashboard/layout.tsx', 'mi-cuenta/layout.tsx', 'admin/layout.tsx', 'publicador/layout.tsx', 'citas/accion/page.tsx']
+    const conNoindex = ['portal/layout.tsx', 'dashboard/layout.tsx', 'mi-cuenta/layout.tsx', 'admin/layout.tsx', 'publicador/layout.tsx']
     for (const f of conNoindex) {
       const p = join(APP, f)
       expect(existsSync(p), f).toBe(true)
