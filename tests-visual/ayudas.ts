@@ -5,10 +5,10 @@ import { acotarTerceros } from './ayudas-red'
  * Preparar una página pública para capturarla sin ensuciar producción y sin
  * que cambie de una ejecución a otra.
  */
-export async function prepararPaginaPublica(page: Page) {
+export async function prepararPaginaPublica(page: Page, o: { capturaBase?: boolean } = {}) {
   // Un tercero (fuentes, CDN, Firebase Auth…) que no contesta no puede bloquear la página: se acota a 4 s (ayudas-red.ts, bloqueo A).
-  // Se registra PRIMERO: las rutas de abajo tienen prioridad.
-  await acotarTerceros(page)
+  // Se registra PRIMERO: las rutas de abajo tienen prioridad. Una CAPTURA DE LÍNEA BASE (`capturaBase`) solo acota los terceros conocidos: sus fotos reales deben cargar completas.
+  await acotarTerceros(page, { soloConocidos: o.capturaBase })
   // El servidor local escribe en la base de PRODUCCIÓN. Sin esto, cada captura
   // registraría una visita o una búsqueda falsa en la analítica real (y sumaría
   // vistas al contador de la propiedad). Se corta en la red: la petición nunca

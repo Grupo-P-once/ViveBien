@@ -9,7 +9,7 @@ import { esperarPanel, prepararPanel } from './ayudas-panel'
  */
 
 test.beforeEach(async ({ page }) => {
-  await prepararPanel(page)
+  await prepararPanel(page, { capturaBase: true })
 })
 
 test('panel · dashboard', async ({ page }) => {

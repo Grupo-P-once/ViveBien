@@ -21,6 +21,12 @@ export type OpcionesTerceros = {
   limiteMs?: number
   /** Cómo se pide el recurso al tercero. Por defecto, la red real; las pruebas lo cambian para SIMULAR un tercero atascado. */
   traer?: (route: Route, limiteMs: number) => Promise<Awaited<ReturnType<Route['fetch']>>>
+  /**
+   * NO acota el resto del tráfico externo (fotos, mapas, iframes): solo los terceros conocidos. Para las CAPTURAS DE LÍNEA BASE, que comparan píxeles y necesitan
+   * las fotos reales COMPLETAS: con la ruta general, `catalogo` y `ficha` salieron con imágenes rotas (gate sobre 488d763: 6 capturas fallidas en el paso 9)
+   * porque las fotos de Cloudinary pasan por Node y alguna pasó del límite. Una captura lenta pero completa es correcta; una cortada no.
+   */
+  soloConocidos?: boolean
 }
 
 /** Responde con lo que dé el tercero SI contesta a tiempo; si no, corta la petición. Nunca deja una petición colgada. */
@@ -57,6 +63,6 @@ export const LIMITE_EXTERNO_MS = 10_000
  * porque en Playwright gana la ruta registrada más tarde. Dos capas: (1) todo lo externo, con `LIMITE_EXTERNO_MS`; (2) los terceros conocidos, con el límite corto.
  */
 export async function acotarTerceros(page: Page, o: OpcionesTerceros = {}): Promise<void> {
-  await page.route((u) => !LOCAL.test(u.hostname), (route) => responderTercero(route, { ...o, limiteMs: o.limiteMs ?? LIMITE_EXTERNO_MS }))
+  if (!o.soloConocidos) await page.route((u) => !LOCAL.test(u.hostname), (route) => responderTercero(route, { ...o, limiteMs: o.limiteMs ?? LIMITE_EXTERNO_MS }))
   await page.route((u) => TERCEROS.test(u.hostname), (route) => responderTercero(route, o))
 }

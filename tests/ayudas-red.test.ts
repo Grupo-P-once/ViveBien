@@ -73,6 +73,14 @@ describe('acotarTerceros: además de los terceros conocidos, TODO lo externo tie
     expect(conocidos(new URL('https://cdnjs.cloudflare.com/x'))).toBe(true)
     expect(conocidos(new URL('https://res.cloudinary.com/x'))).toBe(false)
   })
+  it('con `soloConocidos` (capturas de línea base) NO se registra la ruta general: las fotos reales cargan completas', async () => {
+    const rutas: Predicado[] = []
+    const page = { route: vi.fn(async (pred: Predicado) => { rutas.push(pred) }) }
+    await acotarTerceros(page as never, { soloConocidos: true })
+    expect(rutas).toHaveLength(1)
+    expect(rutas[0](new URL('https://res.cloudinary.com/x')), 'Cloudinary no se intercepta').toBe(false)
+    expect(rutas[0](new URL('https://cdnjs.cloudflare.com/x')), 'los terceros conocidos siguen acotados').toBe(true)
+  })
   it('el límite general es más holgado que el de los terceros conocidos pero sigue muy por debajo de los 30 s de una prueba', () => {
     expect(LIMITE_EXTERNO_MS).toBeGreaterThan(LIMITE_TERCERO_MS)
     expect(LIMITE_EXTERNO_MS).toBeLessThanOrEqual(15_000)
@@ -81,10 +89,16 @@ describe('acotarTerceros: además de los terceros conocidos, TODO lo externo tie
 
 describe('el límite está puesto donde se vio el problema', () => {
   const leer = (r: string) => readFileSync(new URL(`../${r}`, import.meta.url), 'utf8').replace(/\r\n/g, '\n')
+  it('las capturas de línea base (sitio público y panel) NO aplican el tope general: sus fotos reales tienen que cargar completas', () => {
+    // Gate sobre 488d763: con la ruta general, `catalogo` y `ficha` salieron con fotos rotas e iconos ausentes (6 capturas fallidas en el paso 9).
+    expect(leer('tests-visual/sitio-publico.visual.ts')).toMatch(/prepararPaginaPublica\(page, \{ capturaBase: true \}\)/)
+    expect(leer('tests-visual/panel.visual.ts')).toMatch(/prepararPanel\(page, \{ capturaBase: true \}\)/)
+  })
   it('prepararPaginaPublica (axe-cierre) y guardados acotan los terceros ANTES de registrar el resto de rutas', () => {
     const ayudas = leer('tests-visual/ayudas.ts')
-    expect(ayudas).toMatch(/await acotarTerceros\(page\)/)
-    expect(ayudas.indexOf('acotarTerceros(page)')).toBeLessThan(ayudas.indexOf("page.route('**/api/eventos'"))
+    // La llamada puede llevar opciones (`{ soloConocidos: … }` en las capturas de línea base): lo que se fija es que existe y va ANTES del resto de rutas.
+    expect(ayudas).toMatch(/await acotarTerceros\(page(, \{[^}]*\})?\)/)
+    expect(ayudas.indexOf('await acotarTerceros(page')).toBeLessThan(ayudas.indexOf("page.route('**/api/eventos'"))
     const guardados = leer('tests-visual/guardados.e2e.ts')
     expect(guardados).toMatch(/await acotarTerceros\(page\)/)
     expect(guardados.indexOf('acotarTerceros(page)')).toBeLessThan(guardados.indexOf("page.route('**/securetoken.googleapis.com/**'"))

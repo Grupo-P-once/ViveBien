@@ -23,7 +23,7 @@ const PAGINAS = [
 
 for (const p of PAGINAS) {
   test(`sitio público · ${p.nombre}`, async ({ page }) => {
-    await prepararPaginaPublica(page)
+    await prepararPaginaPublica(page, { capturaBase: true })
     await page.goto(p.ruta)
     await esperarQuieta(page)
     await expect(page).toHaveScreenshot(`${p.nombre}.png`)

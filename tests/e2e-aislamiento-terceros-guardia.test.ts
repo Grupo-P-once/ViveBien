@@ -34,7 +34,7 @@ describe('pruebas de navegador: terceros acotados', () => {
   it('el ayudante del panel acota los terceros (lo usan seo-admin, comisiones, contabilidad y las capturas)', () => {
     const t = readFileSync(path.join(DIR, 'ayudas-panel.ts'), 'utf8')
     expect(t).toMatch(/import \{ acotarTerceros \} from '\.\/ayudas-red'/)
-    expect(t).toMatch(/await acotarTerceros\(page\)/)
+    expect(t).toMatch(/await acotarTerceros\(page(, \{[^}]*\})?\)/) // con o sin opciones (`soloConocidos` para las capturas de línea base)
   })
 
   it('las pruebas de Analytics (nuevo contexto limpio) también acotan sus terceros', () => {

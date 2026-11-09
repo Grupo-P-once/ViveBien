@@ -42,7 +42,7 @@ const TESELA = Buffer.from(
   'base64',
 )
 
-export async function prepararPanel(page: Page) {
+export async function prepararPanel(page: Page, o: { capturaBase?: boolean } = {}) {
   const apiKey = claveApiFirebase()
 
   // 0 · Hora congelada. El panel saluda segun la hora y escribe «hace 2 h»:
@@ -77,7 +77,7 @@ export async function prepararPanel(page: Page) {
 
   // 1b · Terceros del sitio (Font Awesome en cdnjs, fuentes…): con la red sana responden igual que siempre (las capturas no cambian), pero uno que no
   // contesta se corta a los 4 s y deja de poder colgar `goto` hasta «load» (corrida 7 del gate, 8-nov-2026: `seo-admin` agotó los 30 s por cdnjs).
-  await acotarTerceros(page)
+  await acotarTerceros(page, { soloConocidos: o.capturaBase }) // capturaBase: sin tope general; las miniaturas reales deben cargar completas
 
   // 2 · Google no tiene que confirmar nada: la sesión es de mentira.
   await page.route('**/identitytoolkit.googleapis.com/**', (r) =>
