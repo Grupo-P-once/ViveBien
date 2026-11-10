@@ -19,15 +19,23 @@ import { cambiosDePrecio, type PropiedadConPrecio, type SuscripcionDePrecio } fr
  * La tarea de avisos a clientes (28-oct-2026): corre una vez al día (cuelga del parte diario de `/api/alertas/resumen`: el plan de Vercel limita las tareas programadas)
  * y hace tres cosas, todas IDEMPOTENTES (repetirla no duplica nada: cada aviso tiene clave única por persona):
  *   1. Por cada búsqueda guardada con alertas encendidas a la que le toca: guarda un aviso por cada propiedad nueva y anota hasta cuándo se avisó.
- *   2. Cambio de Términos / Aviso de Privacidad: avisa a quien había aceptado una versión anterior.
+ *   2. Cambio de Términos / Aviso de Privacidad: avisa a TODA persona con cuenta (cliente o publicador/asociado, activa; no al equipo), una vez por versión, y no a quien abrió su cuenta
+ *      después del primer aviso. La campana a todas de inmediato; el correo con tope diario (`TOPE_CORREOS_LEGALES_POR_CORRIDA`) para no gastar el cupo de Resend que comparten las citas.
  *   3. Correo: UN resumen por persona (alertas, solo con su consentimiento) y/o un correo legal (servicio; se puede apagar), con baja en un clic. Cada correo se marca al
  *      salir bien; si falla, queda pendiente para el día siguiente (sin reenviar lo ya enviado).
  * Tope por corrida para no gastar el plan ni disparar una avalancha por un error.
  */
 const TOPE_CORREOS = 400
+/**
+ * Cuántos correos de AVISO LEGAL salen por corrida (una al día). Resend gratuito tiene 100/día y 3 000/mes y los correos de citas (confirmaciones, recordatorios) comparten ese cupo:
+ * un aviso a toda la base no puede gastarlo. Lo que no sale hoy queda pendiente y sale en las corridas siguientes; la notificación de la campana llega a todos de inmediato.
+ */
+export const TOPE_CORREOS_LEGALES_POR_CORRIDA = 25
+/** Cuentas a las que se avisa de un cambio legal: personas (no el equipo), activas. */
+const ROLES_CON_AVISO_LEGAL = ['cliente', 'publicador']
 const TOPE_BUSQUEDAS = 3000
 
-export type ResumenDeAvisos = { bajasDePrecio?: number; busquedasRevisadas: number; notificacionesNuevas: number; legalesNuevas: number; correosEnviados: number; correosFallidos: number; omitido?: string }
+export type ResumenDeAvisos = { bajasDePrecio?: number; busquedasRevisadas: number; notificacionesNuevas: number; legalesNuevas: number; correosLegales?: number; correosEnviados: number; correosFallidos: number; omitido?: string }
 
 /** Resultado de un intento de envío. `parar`: no hay cupo (o no se pudo confirmar): no tiene caso seguir intentando con los demás en esta corrida. */
 type Salida = { ok: boolean; parar: boolean }
@@ -136,10 +144,19 @@ export async function avisosDeClientes(ahora = Date.now()): Promise<ResumenDeAvi
   // Se anota hasta cuándo se avisó DESPUÉS de guardar (si la corrida falla antes, mañana se vuelve a intentar sin duplicar).
   if (revisadas.length) await db.from('busquedas_guardadas').update({ avisada_en: new Date(ahora).toISOString() }).in('id', revisadas)
 
-  // 2 · Cambio de Términos / Privacidad
+  // 2 · Cambio de Términos / Privacidad: a TODA persona con cuenta (decisión del dueño, 10-nov-2026), una vez por versión.
   const ac = await db.from('legal_aceptaciones').select('uid, documento, version').limit(20000)
-  if (!ac.error) {
-    const legales = notificacionesLegales(VERSIONES, (ac.data ?? []) as Array<{ uid: string; documento: string; version: string }>)
+  const cu = await db.from('usuarios').select('uid, rol, estado, creado_en').eq('estado', 'activo').in('rol', ROLES_CON_AVISO_LEGAL).limit(20000)
+  if (!ac.error && !cu.error) {
+    // CORTE: el momento en que se avisó por primera vez de esta versión. Quien abre su cuenta DESPUÉS ya vio el texto nuevo al registrarse: no se le avisa de un «cambio».
+    const clavesLegales = Object.entries(VERSIONES).map(([d, v]) => `legal:${d}:${v}`)
+    const previas = await db.from('notificaciones').select('creada_en').in('clave', clavesLegales).limit(50000)
+    const tiempos = ((previas.data ?? []) as Array<{ creada_en: string | null }>).map((x) => Date.parse(x.creada_en ?? '')).filter((t) => Number.isFinite(t))
+    const corte = previas.error ? 0 : tiempos.length ? Math.min(...tiempos) : ahora
+    const cuentas = ((cu.data ?? []) as Array<{ uid: string; creado_en: string | null }>)
+      .filter((c) => !c.creado_en || Date.parse(c.creado_en) <= corte)
+      .map((c) => c.uid)
+    const legales = previas.error ? [] : notificacionesLegales(VERSIONES, (ac.data ?? []) as Array<{ uid: string; documento: string; version: string }>, cuentas)
     if (legales.length) {
       const ya = await db.from('notificaciones').select('uid, clave').in('clave', [...new Set(legales.map((n) => n.clave))])
       const existentes = new Set(((ya.data ?? []) as Array<{ uid: string; clave: string }>).map((x) => `${x.uid}|${x.clave}`))
@@ -153,10 +170,20 @@ export async function avisosDeClientes(ahora = Date.now()): Promise<ResumenDeAvi
 
   // 3 · Correos. COMPUERTA COMÚN (MKT-60): con `CORREO_ENVIO` apagada los avisos quedan en la bandeja del portal y no se toca ninguna otra cosa.
   if (!envioHabilitado()) { r.omitido = 'envio_apagado'; return r }
-  const pendientes = await db.from('notificaciones').select('id, uid, tipo, titulo, cuerpo, enlace, busqueda_id, propiedad_id, clave').is('correo_enviado_en', null).in('tipo', ['busqueda_nueva', 'baja_de_precio', 'legal']).order('creada_en', { ascending: true }).limit(3000)
-  if (pendientes.error || !pendientes.data?.length) return r
-  const filas = pendientes.data as Array<NotificacionNueva & { id: number }>
-  const uids = [...new Set(filas.map((f) => f.uid))].slice(0, TOPE_CORREOS)
+  const COLUMNAS_PENDIENTES = 'id, uid, tipo, titulo, cuerpo, enlace, busqueda_id, propiedad_id, clave'
+  const [pendientes, pendientesLegales] = await Promise.all([
+    db.from('notificaciones').select(COLUMNAS_PENDIENTES).is('correo_enviado_en', null).in('tipo', ['busqueda_nueva', 'baja_de_precio']).order('creada_en', { ascending: true }).limit(3000),
+    // Los avisos legales se leen APARTE y con tope: con miles de cuentas no pueden ocupar el cupo ni la lista de las alertas.
+    db.from('notificaciones').select(COLUMNAS_PENDIENTES).is('correo_enviado_en', null).eq('tipo', 'legal').order('creada_en', { ascending: true }).limit(TOPE_CORREOS_LEGALES_POR_CORRIDA * 4),
+  ])
+  if (pendientes.error || pendientesLegales.error) return r
+  const filas = [...((pendientes.data ?? []) as Array<NotificacionNueva & { id: number }>), ...((pendientesLegales.data ?? []) as Array<NotificacionNueva & { id: number }>)]
+  if (!filas.length) return r
+  // Primero quienes tienen alertas; los que solo tienen aviso legal van después.
+  const conAlertas = new Set(filas.filter((f) => f.tipo !== 'legal').map((f) => f.uid))
+  const todos = [...new Set(filas.map((f) => f.uid))]
+  const uids = [...todos.filter((u) => conAlertas.has(u)), ...todos.filter((u) => !conAlertas.has(u))].slice(0, TOPE_CORREOS)
+  let legalesEnviadas = 0
   const [us, pf, bn] = await Promise.all([
     db.from('usuarios').select('uid, email, nombre, estado').in('uid', uids),
     leerPreferencias(db, uids),
@@ -210,13 +237,13 @@ export async function avisosDeClientes(ahora = Date.now()): Promise<ResumenDeAvi
       } else { r.correosFallidos++; if (s2.parar) { r.omitido = 'sin_cupo'; break } }      // NO se marca como enviado: queda pendiente y se reintenta en la siguiente corrida
     }
     // 3b · Aviso legal (servicio; se puede apagar)
-    const legales = p.correo_legal ? suyas.filter((f) => f.tipo === 'legal') : []
+    const legales = p.correo_legal && legalesEnviadas < TOPE_CORREOS_LEGALES_POR_CORRIDA ? suyas.filter((f) => f.tipo === 'legal') : []
     if (legales.length) {
       const c = correoLegal({ nombre: u.nombre, avisos: legales, sitio: SITIO, urlPreferencias })
       const s3 = await enviarCorreo(uid, 'legal', legales.map((f) => f.id), u.email, c.asunto, c.texto, c.html)
       if (s3.ok) {
         await db.from('notificaciones').update({ correo_enviado_en: new Date(ahora).toISOString() }).in('id', legales.map((f) => f.id))
-        r.correosEnviados++
+        r.correosEnviados++; legalesEnviadas++; r.correosLegales = legalesEnviadas
       } else { r.correosFallidos++; if (s3.parar) { r.omitido = 'sin_cupo'; break } }
     }
   }

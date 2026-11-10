@@ -91,10 +91,12 @@ const NOMBRE_LEGAL: Record<string, string> = { terminos: 'Términos y Condicione
 const RUTA_LEGAL: Record<string, string> = { terminos: '/terminos', privacidad: '/privacidad' }
 
 /**
- * A quien YA había aceptado una versión anterior de un documento se le avisa de la nueva (una vez por versión). Quien nunca lo aceptó no recibe nada: no hay cambio que
- * notificarle. `aceptadas` trae todas las aceptaciones; si el cliente ya aceptó la vigente, no se le avisa.
+ * Aviso del cambio de Términos / Aviso de Privacidad (una vez por versión y por persona; la clave lo garantiza).
+ *  · Con `cuentas` (decisión del dueño, 10-nov-2026): se avisa a TODA persona con cuenta creada, haya aceptado o no una versión anterior; solo se salta a quien YA aceptó la vigente.
+ *  · Sin `cuentas` (comportamiento anterior): solo a quien había aceptado una versión anterior de ese documento.
+ * `aceptadas` trae las aceptaciones registradas. Orden estable (por uid) para que las corridas sean reproducibles.
  */
-export function notificacionesLegales(vigentes: VersionesLegales, aceptadas: AceptacionAnterior[]): NotificacionNueva[] {
+export function notificacionesLegales(vigentes: VersionesLegales, aceptadas: AceptacionAnterior[], cuentas?: string[]): NotificacionNueva[] {
   const porPersona = new Map<string, Map<string, Set<string>>>()
   for (const a of aceptadas) {
     if (!(a.documento in vigentes)) continue
@@ -102,8 +104,19 @@ export function notificacionesLegales(vigentes: VersionesLegales, aceptadas: Ace
     const vers = docs.get(a.documento) ?? new Set<string>()
     vers.add(a.version); docs.set(a.documento, vers); porPersona.set(a.uid, docs)
   }
+  if (cuentas) {
+    // A todas las cuentas: cada documento vigente que la persona no haya aceptado ya en su versión vigente.
+    for (const uid of cuentas) {
+      const docs = porPersona.get(uid) ?? new Map<string, Set<string>>()
+      for (const documento of Object.keys(vigentes)) if (!docs.has(documento)) docs.set(documento, new Set<string>())
+      porPersona.set(uid, docs)
+    }
+  }
   const salida: NotificacionNueva[] = []
-  for (const [uid, docs] of porPersona) {
+  const permitidas = cuentas ? new Set(cuentas) : null
+  for (const uid of [...porPersona.keys()].sort()) {
+    if (permitidas && !permitidas.has(uid)) continue
+    const docs = porPersona.get(uid) as Map<string, Set<string>>
     for (const [documento, versiones] of docs) {
       const vigente = vigentes[documento]
       if (versiones.has(vigente)) continue // ya aceptó la nueva

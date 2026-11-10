@@ -101,6 +101,21 @@ describe('correos', () => {
     expect(c.html).not.toContain('<script>'); expect(c.html).not.toContain('<img src=x')
     expect(c.html).toContain('&lt;script&gt;')
   })
+  it('con la lista de CUENTAS (10-nov-2026): avisa a todas, también a quien nunca aceptó; salta a quien ya aceptó la vigente y a quien no está en la lista', () => {
+    const vigentes = { terminos: '2026-11-10', privacidad: '2026-11-10' }
+    const n = notificacionesLegales(vigentes, [
+      { uid: 'ya', documento: 'terminos', version: '2026-11-10' }, { uid: 'ya', documento: 'privacidad', version: '2026-11-10' },
+      { uid: 'afuera', documento: 'terminos', version: '2020-01-01' },
+    ], ['b', 'ya', 'a'])
+    expect(n.map((x) => [x.uid, x.clave])).toEqual([
+      ['a', 'legal:terminos:2026-11-10'], ['a', 'legal:privacidad:2026-11-10'],
+      ['b', 'legal:terminos:2026-11-10'], ['b', 'legal:privacidad:2026-11-10'],
+    ])                                                              // orden estable por uid; «ya» no; «afuera» no (no está en la lista)
+  })
+  it('con la lista de cuentas, quien aceptó SOLO uno de los dos documentos recibe aviso del otro', () => {
+    const n = notificacionesLegales({ terminos: '2026-11-10', privacidad: '2026-11-10' }, [{ uid: 'a', documento: 'terminos', version: '2026-11-10' }], ['a'])
+    expect(n.map((x) => x.clave)).toEqual(['legal:privacidad:2026-11-10'])
+  })
   it('correo legal: texto y HTML con el aviso y el enlace al documento', () => {
     const avisos = notificacionesLegales({ terminos: '2026-11-01' }, [{ uid: 'u', documento: 'terminos', version: '2026-10-22' }])
     const c = correoLegal({ nombre: 'Ana', avisos, sitio: 'https://vivebienn.com', urlPreferencias: base.urlPreferencias })

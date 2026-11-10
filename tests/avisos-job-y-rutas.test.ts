@@ -109,25 +109,76 @@ describe('tarea de avisos a clientes', () => {
     expect(estado.base.tablas.notificaciones).toHaveLength(2)
   })
 
-  it('cambio de Términos: avisa a quien aceptó una versión anterior (bandeja + correo de servicio) y no a quien ya la aceptó', async () => {
-    estado.base = base(); estado.base.tablas.busquedas_guardadas.length = 0
+  // Decisión del dueño (10-nov-2026): el aviso del cambio llega a TODA persona con cuenta creada (cliente, publicador/asociado), no solo a quien aceptó antes.
+  const conRol = (extra: Array<Record<string, unknown>> = []) => {
+    const b = base(); b.tablas.busquedas_guardadas.length = 0
+    b.tablas.usuarios = [
+      { uid: 'u-ana', email: 'ana@ejemplo.invalid', nombre: 'Ana', estado: 'activo', rol: 'cliente', creado_en: hace(100) },
+      { uid: 'u-luis', email: 'luis@ejemplo.invalid', nombre: 'Luis', estado: 'activo', rol: 'cliente', creado_en: hace(100) },
+      { uid: 'u-pub', email: 'pub@ejemplo.invalid', nombre: 'Pía', estado: 'activo', rol: 'publicador', creado_en: hace(100) },
+      { uid: 'u-adm', email: 'adm@ejemplo.invalid', nombre: 'Equipo', estado: 'activo', rol: 'admin', creado_en: hace(100) },
+      { uid: 'u-baja', email: null, nombre: null, estado: 'eliminada', rol: 'cliente', creado_en: hace(100) },
+      ...extra,
+    ]
+    return b
+  }
+
+  it('cambio de Términos y Aviso: avisa a TODA cuenta activa (cliente o publicador), también a quien nunca aceptó nada; no a quien ya aceptó la vigente, ni al equipo, ni a cuentas eliminadas', async () => {
+    estado.base = conRol()
     const { VERSIONES } = await import('../src/lib/aceptacion-legal')
-    estado.base.tablas.legal_aceptaciones.push({ uid: 'u-ana', documento: 'terminos', version: '2020-01-01' }, { uid: 'u-luis', documento: 'terminos', version: VERSIONES.terminos })
+    estado.base.tablas.legal_aceptaciones.push({ uid: 'u-luis', documento: 'terminos', version: VERSIONES.terminos }, { uid: 'u-luis', documento: 'privacidad', version: VERSIONES.privacidad })
     const { avisosDeClientes } = await import('../src/lib/avisos-cliente-servidor')
     const r = await avisosDeClientes()
-    expect(r.legalesNuevas).toBe(1)
-    expect(estado.base.tablas.notificaciones[0]).toMatchObject({ uid: 'u-ana', tipo: 'legal' })
-    expect(enviados).toHaveLength(1); expect(enviados[0].subject).toContain('Términos')
+    const tablas = estado.base.tablas
+    const por = (uid: string) => tablas.notificaciones.filter((n) => n.uid === uid && n.tipo === 'legal').map((n) => n.clave).sort()
+    expect(por('u-ana')).toEqual([`legal:privacidad:${VERSIONES.privacidad}`, `legal:terminos:${VERSIONES.terminos}`])
+    expect(por('u-pub')).toHaveLength(2)             // una publicadora que nunca había aceptado nada: también
+    expect(por('u-luis')).toEqual([])                // ya aceptó las dos versiones vigentes
+    expect(por('u-adm')).toEqual([])                 // el equipo no es destinatario
+    expect(por('u-baja')).toEqual([])                // cuenta eliminada
+    expect(r.legalesNuevas).toBe(4)
+    // Un correo de servicio por persona (agrupa los dos documentos), a quien tiene correo y no se dio de baja.
+    expect(enviados.map((e) => (e.to as string[])[0]).sort()).toEqual(['ana@ejemplo.invalid', 'pub@ejemplo.invalid'])
+    expect(enviados.every((e) => e.subject === 'Actualizamos nuestros documentos legales')).toBe(true)   // UN correo que agrupa los dos documentos
   })
 
-  it('el aviso legal por correo se puede apagar (sigue en la bandeja) y una cuenta eliminada no recibe nada', async () => {
-    estado.base = base(); estado.base.tablas.busquedas_guardadas.length = 0
+  it('el correo legal se puede apagar (la campana sigue avisando) y una cuenta eliminada no recibe nada', async () => {
+    estado.base = conRol()
     estado.base.tablas.preferencias_notificacion[0].correo_legal = false
-    estado.base.tablas.legal_aceptaciones.push({ uid: 'u-ana', documento: 'privacidad', version: '2020-01-01' }, { uid: 'u-baja', documento: 'privacidad', version: '2020-01-01' })
     const { avisosDeClientes } = await import('../src/lib/avisos-cliente-servidor')
     await avisosDeClientes()
-    expect(estado.base.tablas.notificaciones.map((n) => n.uid).sort()).toEqual(['u-ana', 'u-baja'])
-    expect(enviados).toEqual([])
+    expect([...new Set(estado.base.tablas.notificaciones.filter((n) => n.tipo === 'legal').map((n) => n.uid))].sort()).toEqual(['u-ana', 'u-luis', 'u-pub'])   // a Ana sí le llega la campana
+    expect(enviados.map((e) => (e.to as string[])[0]).sort()).toEqual(['luis@ejemplo.invalid', 'pub@ejemplo.invalid'])                                       // pero no el correo
+  })
+
+  it('TOPE: salen como máximo 25 correos legales por corrida (no se gasta el cupo de Resend que comparten las citas) y el resto sale en las siguientes; la campana llega a todos de inmediato', async () => {
+    const muchas = Array.from({ length: 30 }, (_, i) => ({ uid: `u-m${String(i).padStart(2, '0')}`, email: `m${i}@ejemplo.invalid`, nombre: `M${i}`, estado: 'activo', rol: 'cliente', creado_en: hace(100) }))
+    estado.base = conRol(muchas)
+    const { TOPE_CORREOS_LEGALES_POR_CORRIDA, avisosDeClientes } = await import('../src/lib/avisos-cliente-servidor')
+    const r1 = await avisosDeClientes()
+    expect(TOPE_CORREOS_LEGALES_POR_CORRIDA).toBe(25)
+    expect(r1.correosLegales).toBe(25)
+    expect(enviados).toHaveLength(25)
+    expect(new Set(estado.base.tablas.notificaciones.filter((n) => n.tipo === 'legal').map((n) => n.uid)).size).toBe(33)   // ana, luis, pub + 30: todos tienen campana
+    await libro.pg.exec("update public.correo_envios set creado_en = now() - interval '11 minutes'")
+    const r2 = await avisosDeClientes()
+    expect(r2.correosLegales).toBe(8)                    // 33 destinatarios con correo − 25 ya enviados
+    expect(enviados).toHaveLength(33)
+    const r3 = await avisosDeClientes()
+    expect(r3.correosLegales ?? 0).toBe(0)               // nadie recibe dos veces
+    expect(enviados).toHaveLength(33)
+  })
+
+  it('quien abrió su cuenta DESPUÉS del primer aviso no recibe un «cambio» de algo que ya vio al registrarse', async () => {
+    estado.base = conRol()
+    const { avisosDeClientes } = await import('../src/lib/avisos-cliente-servidor')
+    await avisosDeClientes()
+    const antes = estado.base.tablas.notificaciones.filter((n) => n.tipo === 'legal').length
+    estado.base.tablas.usuarios.push({ uid: 'u-nueva', email: 'nueva@ejemplo.invalid', nombre: 'Nueva', estado: 'activo', rol: 'cliente', creado_en: new Date(Date.now() + 60_000).toISOString() })
+    const r = await avisosDeClientes()
+    expect(r.legalesNuevas).toBe(0)
+    expect(estado.base.tablas.notificaciones.filter((n) => n.tipo === 'legal')).toHaveLength(antes)
+    expect(estado.base.tablas.notificaciones.some((n) => n.uid === 'u-nueva')).toBe(false)
   })
 
   it('sin llave de Resend no se envía nada y no se rompe', async () => {
