@@ -9,7 +9,7 @@ import { describe, expect, it } from 'vitest'
 const leer = (f: string) => readFileSync(f, 'utf8').replace(/\r\n/g, '\n')
 
 // Orden de aplicación en staging: 70 → 71 (superada por 72) → 71b → 71c (solo staging) → 72 → 72b (solo staging) → 73 → 74 → 74c → 75 → 76 → 74b → 77.
-const ARCHIVOS = ['70-citas-v2', '71b-citas-tareas-cron', '72-citas-tareas-firma', '73-citas-guardar-agenda', '74-ayuda-citas', '74c-ayuda-citas-interfaz-nueva', '75-ayuda-permisos-minimos', '76-citas-responsables', '74b-ayuda-citas-activar', '77-ayuda-citas-asociado-dueno', '78-ayuda-citas-titular-automatico']
+const ARCHIVOS = ['70-citas-v2', '71b-citas-tareas-cron', '72-citas-tareas-firma', '73-citas-guardar-agenda', '74-ayuda-citas', '74c-ayuda-citas-interfaz-nueva', '75-ayuda-permisos-minimos', '76-citas-responsables', '74b-ayuda-citas-activar', '77-ayuda-citas-asociado-dueno', '78-ayuda-citas-titular-automatico', '79-ayuda-citas-calendario-y-responsables']
 
 describe('migraciones de Citas v2: existen, con reversa, y la 74c es la de staging', () => {
   it('cada migración tiene su archivo y su reversa', () => {
@@ -43,5 +43,21 @@ describe('migración 78 (titular automático): reemplaza frases que existen tal 
     expect(s).toContain('administrador activo más antiguo')
     expect(s).toContain('En PRODUCCIÓN: NO aplicada')
     expect(s).toContain('DESPUÉS de 74, 74c, 74b y 77')
+  })
+})
+
+describe('migración 79 (ayuda: calendario completo, cancelación con .ics, responsables): reemplaza frases que existen tal cual', () => {
+  it('las frases que reemplaza están en 74/74c, no repite si ya está aplicada y trae su estado y reversa', () => {
+    const sql74 = leer('supabase/74-ayuda-citas.sql')
+    const sql74c = leer('supabase/74c-ayuda-citas-interfaz-nueva.sql')
+    const s = leer('supabase/79-ayuda-citas-calendario-y-responsables.sql')
+    // Las tres frases de ancla existen en las migraciones que las escriben (si alguien las edita, 79 dejaría de encontrarlas y no corregiría nada).
+    expect(sql74).toContain('**Solo se ofrecen horarios reales.** Los días y las horas salen de la agenda de quien atiende la propiedad y ya descuentan las citas confirmadas y los bloqueos.')
+    expect(sql74).toContain('**Ningún correo trae botones para confirmar, aceptar o cancelar.**')
+    expect(sql74c).toContain('lo que se registra para un cliente espera su confirmación.')
+    // Idempotente: cada UPDATE se salta si el texto nuevo ya está.
+    for (const marca of ['not like \'%Ver calendario completo%\'', 'not like \'%Si cancelas tú una cita%\'', 'not like \'%Responsables de citas%\'']) expect(s).toContain(marca)
+    expect(s).toContain('En PRODUCCIÓN: NO aplicada')
+    expect(s).toContain('DESPUÉS de 74, 74c, 74b, 77 y 78')
   })
 })
