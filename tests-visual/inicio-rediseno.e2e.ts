@@ -217,6 +217,21 @@ test.describe('portada · carrusel de clientes', () => {
     await expect(c).toContainText('Sofía Méndez')
   })
 
+  test('un cuadro atascado a mitad de un desplazamiento programado no pisa la diapositiva elegida (carrera del 9-nov-2026)', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'no-preference' })
+    await abrir(page)
+    const c = page.locator('[data-carrusel="clientes"]')
+    await c.scrollIntoViewIfNeeded()
+    const activa = async () => c.locator('[data-activa="true"]').first().getAttribute('aria-label')
+    const pista = c.getByRole('group', { name: /Diapositivas/ })
+    await pista.focus()
+    await page.keyboard.press('End')
+    // Lo que hace una máquina cargada: el desplazamiento se queda a medio camino más de 90 ms (el plazo del manejador de «scroll»).
+    await pista.evaluate((el) => { el.scrollTo({ left: (el.children[2] as HTMLElement).offsetLeft - (el as HTMLElement).offsetLeft, behavior: 'instant' as ScrollBehavior }) })
+    await page.waitForTimeout(400)
+    expect(await activa()).toBe('6 de 6')
+  })
+
   test('el avance automático se detiene con el foco y con movimiento reducido no existe', async ({ page }) => {
     await page.clock.install()
     await page.emulateMedia({ reducedMotion: 'no-preference' })

@@ -80,13 +80,15 @@ test.describe('portal del cliente — carga, vacío y error', () => {
     test(`${ruta}`, async ({ page }, info) => {
       let modo: Modo = 'vacio'
       const errores: string[] = []
+      const fallidas: string[] = [] // diagnóstico: si el h1 no aparece, el mensaje dice dónde quedó la página y qué peticiones fallaron
+      page.on('requestfailed', (q) => fallidas.push(`${q.method()} ${new URL(q.url()).pathname} ${q.failure()?.errorText ?? ''}`))
       await simular(page, () => modo, errores)
       await entrar(page)
 
       // 1 · VACÍO
       modo = 'vacio'
       await page.goto(ruta, { waitUntil: 'domcontentloaded' })
-      await expect(page.locator('h1').first()).toBeVisible({ timeout: 30_000 })
+      await expect(page.locator('h1').first(), `${ruta} VACÍO: sin h1 en ${page.url()}; peticiones fallidas: ${fallidas.join(' | ') || 'ninguna'}`).toBeVisible({ timeout: 30_000 })
       await page.waitForLoadState('networkidle', { timeout: 15_000 }).catch(() => {})
       expect(await page.locator('[role="alert"]').filter({ hasText: ERROR }).count(), `${ruta} VACÍO: no debe haber alerta de error`).toBe(0)
       expect(await textoVisible(page), `${ruta} VACÍO: no debe decir «No se pudo»`).not.toMatch(ERROR)

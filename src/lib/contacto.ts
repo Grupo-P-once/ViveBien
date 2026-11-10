@@ -15,7 +15,7 @@ import { NEGOCIO } from './config/negocio'
  * viejas conservan la versión que aceptaron en su momento, que es
  * justamente lo que permite demostrar qué se consintió.
  */
-export const VERSION_CONSENTIMIENTO = '2026-11-06'
+export const VERSION_CONSENTIMIENTO = '2026-11-10'
 
 /**
  * El texto exacto que se acepta, y que queda asociado a la versión.
@@ -36,10 +36,11 @@ export const TEXTO_CONSENTIMIENTO =
 /**
  * El texto de la casilla de la tarjeta «Agenda una cita» (6-nov-2026). Es una autorización APARTE, sin marcar de antemano y distinta de aceptar el Aviso (sección 4 del Aviso,
  * «Quien atiende una cita»): la persona que atiende la cita es el equipo de VIVE BIEN o, si VIVE BIEN le concede el permiso específico, la persona asociada responsable.
- * Texto PENDIENTE de validación del abogado junto con la versión 2026-11-06 del Aviso.
+ * Texto PENDIENTE de validación del abogado junto con la versión 2026-11-10 del Aviso (10-nov-2026: añade a la persona asociada propietaria).
  */
 export const TEXTO_CONSENTIMIENTO_CITAS =
-  'Autorizo que VIVE BIEN use mi nombre, mi teléfono y las notas que escriba para esta cita para atenderla y los comparta con la persona que la atiende, ' +
+  'Autorizo que VIVE BIEN use mi nombre, mi teléfono y las notas que escriba para esta cita para atenderla y los comparta con la persona que la atiende ' +
+  'y, si el inmueble pertenece a una persona asociada de VIVE BIEN, también con ella para que conozca la visita, ' +
   'y que me envíe avisos y recordatorios de la cita por correo y en la plataforma.'
 
 /** Ventana en la que dos solicitudes iguales se consideran la misma. */

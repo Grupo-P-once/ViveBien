@@ -29,7 +29,7 @@ export default function TerminosPage() {
         <h1 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: 'clamp(1.6rem,3vw,2.4rem)', marginBottom: '.6rem' }}>
           Términos y Condiciones
         </h1>
-        <p style={{ opacity: .75, fontSize: '.95rem' }}>Última actualización: 6 de noviembre de 2026</p>
+        <p style={{ opacity: .75, fontSize: '.95rem' }}>Última actualización: 10 de noviembre de 2026</p>
       </section>
 
       <main style={{ background: '#fff', padding: '3rem 2rem' }}>
@@ -78,7 +78,7 @@ export default function TerminosPage() {
             <p style={{ marginBottom: '1rem' }}>La disponibilidad la define la persona responsable de atender cada propiedad y puede cambiar. VIVE BIEN puede rechazar o cancelar una cita indicando el motivo, por ejemplo cuando la propiedad deje de estar disponible, el responsable tenga un imprevisto, los datos sean incorrectos o se haga un uso indebido de la función (sección 12).</p>
             <p style={{ marginBottom: '1rem' }}><strong>Cancelar y pedir otro horario.</strong> Usted puede cancelar una cita confirmada, o pedir otro horario, hasta 2 horas antes de la hora de la cita; con menos de 2 horas de anticipación debe contactar a VIVE BIEN. Una solicitud que todavía no se ha confirmado puede retirarse en cualquier momento. Al pedir otro horario, la cita vigente se conserva tal como está hasta que la otra parte acepte la propuesta; si no la acepta o la propuesta vence, sigue la cita original.</p>
             <p style={{ marginBottom: '1rem' }}><strong>Sin respuesta y no asistencia.</strong> Si nadie confirma una solicitud antes de la hora solicitada, expira automáticamente. Pasada la hora de una cita confirmada, la persona responsable la registra como realizada o como «No asistió».</p>
-            <p style={{ marginBottom: '1rem' }}><strong>Avisos.</strong> Los cambios de una cita se le informan en la plataforma y por correo, y una cita confirmada se le recuerda por correo 24 horas y 1 hora antes. Esos correos no traen botones que cambien la cita: para confirmarla, cambiarla o cancelarla debe iniciar sesión y hacerlo en su panel. Las horas son hora de León, Guanajuato. El archivo de calendario (.ics) y el enlace para añadirla a su calendario son una comodidad: si la cita cambia, lo que cuenta es el estado que muestra la plataforma.</p>
+            <p style={{ marginBottom: '1rem' }}><strong>Avisos.</strong> Los cambios de una cita se le informan en la plataforma y por correo (si usted la cancela, también recibe el correo de cancelación con un archivo de calendario .ics que puede retirarla de su agenda), y una cita confirmada se le recuerda por correo 24 horas y 1 hora antes. Esos correos no traen botones que cambien la cita: para confirmarla, cambiarla o cancelarla debe iniciar sesión y hacerlo en su panel. Las horas son hora de León, Guanajuato. El archivo de calendario (.ics) y el enlace para añadirla a su calendario son una comodidad: si la cita cambia, lo que cuenta es el estado que muestra la plataforma.</p>
             <p style={{ marginBottom: '1rem' }}>Una cita es solo una visita acordada: no obliga a contratar ni a comprar o rentar, no garantiza que el inmueble o su precio sigan disponibles y no crea por sí sola ningún contrato, comisión ni exclusividad (sección 8).</p>
           </Section>
 

@@ -47,13 +47,15 @@ describe('el HTML de las páginas legales y de la vista previa no cambia con la 
 const GOLDEN = {
   // 3-nov-2026: publicación de la versión aprobada por el abogado: la fecha visible pasó de «22 de octubre de 2026» a «3 de noviembre de 2026» (+1 carácter). Era 16239 / a6e70381e1d74809281184c1.
   // 6-nov-2026: se añadió el sistema de citas (borrador sujeto a aprobación del abogado, versión 2026-11-06): subsección «Citas para visitar una propiedad» en la sección 5 y fecha visible. Era 16240 / e25e55e74a2b69bb4453fc23.
-  terminos: { largo: 18970, huella: '138d33f104c1cf44e5022aed' },
+  // 10-nov-2026: la cancelación con .ics del cliente se menciona en «Avisos» y la fecha visible (versión 2026-11-10, borrador sujeto a aprobación del abogado). Era 18970 / 138d33f104c1cf44e5022aed.
+  terminos: { largo: 19101, huella: '298cfa199d68473bf5c05e19' },
   // Privacidad: 19865 / 5b4689d21f3284e3683862a8 era el texto de la limpieza de lint (323098c). El 3-nov-2026 se alineó DELIBERADAMENTE el Aviso con el producto real
   // (consulta sin anunciante, analítica con elección, proveedores, encabezado); desde entonces esta es la referencia: cualquier cambio posterior debe ser a propósito.
   // 3-nov-2026 (segunda alineación): se añadió el párrafo de datos de propietarios, representantes y agentes que aporta quien publica (pantalla de origen, en vivo).
   // Misma publicación (solo cambia la fecha visible). Era 21933 / 9009395b0c62ef9654742f74.
   // 4-nov-2026: sección 7 dice qué borra de verdad el proceso diario y qué no (cuentas, consultas, formularios y datos de propietarios: sin borrado automático). Era 21934 / 28525a2361cd327138d46f64.
   // 6-nov-2026: se añadió el sistema de citas (datos, finalidades, quién atiende una cita, proveedores, conservación y aviso simplificado) y la fecha visible; borrador sujeto a aprobación del abogado. Era 22186 / f22aedd3ee971b3e11f4564c.
-  privacidad: { largo: 25688, huella: '79e49f98d2e998dfe1a495fd' },
+  // 10-nov-2026: la persona asociada propietaria ve nombre/teléfono/notas, el equipo ve quién hizo cada cambio y la fecha visible (versión 2026-11-10, borrador sujeto a aprobación del abogado). Era 25688 / 79e49f98d2e998dfe1a495fd.
+  privacidad: { largo: 26187, huella: '82ef25f8ecbe87d5c7cd0ff5' },
   vista: { vacia: [1542, '3e9aec9a7dd433947f70cf9c'], completa: [1671, 'bb0ae8ee6f77aa2dba096a35'] },
 } as { terminos: { largo: number; huella: string }; privacidad: { largo: number; huella: string }; vista: { vacia: [number, string]; completa: [number, string] } }

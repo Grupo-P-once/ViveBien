@@ -148,3 +148,31 @@ describe('la casilla de la tarjeta «Agenda una cita» dice lo mismo que el Avis
     expect(leer('src/lib/citas/servicio.ts')).toContain('consentimiento_version: VERSION_CONSENTIMIENTO')
   })
 })
+
+describe('decisiones del dueño del 9-nov-2026 reflejadas en el texto legal (versión 2026-11-10)', () => {
+  it('el Aviso dice que la persona asociada propietaria ve nombre, teléfono y notas aunque otra persona atienda, sin correo; y que el publicador sin permiso no ve nada', async () => {
+    const t = await pagina('privacidad')
+    expect(t).toContain('Si es una persona asociada de VIVE BIEN con el permiso de recibir citas, ve además')
+    expect(t).toContain('aunque la cita la atienda otra persona')
+    expect(t).toContain('no recibe su correo electrónico')
+    expect(t).toContain('Si es una persona publicadora sin ese permiso, no ve su nombre, teléfono, correo ni notas')
+    expect(t).not.toContain('puede ver que existe una cita en su propiedad, con su día, hora y estado, pero no su nombre')   // la frase vieja ya no está viva
+  })
+  it('la casilla nombra a la persona asociada propietaria, sigue sin autorizar el correo y la versión es 2026-11-10 en los tres sitios', () => {
+    expect(TEXTO_CONSENTIMIENTO_CITAS).toMatch(/persona asociada de VIVE BIEN/)
+    expect(TEXTO_CONSENTIMIENTO_CITAS).not.toMatch(/correo electrónico|mi correo/)
+    expect(VERSION_CONSENTIMIENTO).toBe('2026-11-10')
+    expect(VERSIONES.privacidad).toBe('2026-11-10')
+    expect(VERSIONES.terminos).toBe('2026-11-10')
+  })
+  it('los Términos mencionan el correo de cancelación con archivo de calendario', async () => {
+    expect(await pagina('terminos')).toContain('recibe el correo de cancelación con un archivo de calendario .ics')
+  })
+  it('la migración de ayuda 77 corrige la frase vieja del artículo público, está sin aplicar y trae reversa', () => {
+    const sql = leer('supabase/77-ayuda-citas-asociado-dueno.sql')
+    expect(sql).toContain('NO aplicada en ningún entorno')
+    expect(sql).toContain('Un asociado dueño de la propiedad')
+    expect(leer('supabase/74-ayuda-citas.sql')).toContain('**Un publicador dueño de la propiedad** (cuando la visita la coordina VIVE BIEN) solo ve que hay una cita y su estado')   // la frase que 77 reemplaza existe tal cual
+    expect(leer('supabase/77-ayuda-citas-asociado-dueno.REVERTIR.sql')).toContain('begin;')
+  })
+})

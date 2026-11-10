@@ -32,6 +32,8 @@ export default function CarruselClientes() {
   const [interactuando, setInteractuando] = useState(false) // ratón encima, foco dentro o dedo puesto
   const [visible, setVisible] = useState(true)
   const [oculta, setOculta] = useState(false)
+  // Diapositiva a la que va un desplazamiento PROGRAMADO (botones, teclado, avance). Mientras dura, el manejador de `scroll` no la pisa con una intermedia.
+  const destino = useRef<{ n: number; hasta: number } | null>(null)
   const total = TESTIMONIOS.length
 
   useEffect(() => {
@@ -58,6 +60,7 @@ export default function CarruselClientes() {
     const n = ((i % total) + total) % total
     const hijo = p.children[n] as HTMLElement | undefined
     if (!hijo) return
+    destino.current = { n, hasta: Date.now() + 1500 }
     p.scrollTo({ left: hijo.offsetLeft - p.offsetLeft, behavior: reducido ? 'auto' : 'smooth' })
     setActiva(n)
   }, [reducido, total])
@@ -73,6 +76,14 @@ export default function CarruselClientes() {
         const base = p.scrollLeft + p.offsetLeft
         let mejor = 0, dist = Infinity
         Array.from(p.children).forEach((c, i) => { const d = Math.abs((c as HTMLElement).offsetLeft - base); if (d < dist) { dist = d; mejor = i } })
+        const d = destino.current
+        if (d) {
+          // Durante un desplazamiento programado se espera a llegar (o a que venza el plazo): un cuadro lento a mitad del trayecto no debe cambiar la diapositiva.
+          if (mejor !== d.n && Date.now() < d.hasta) return
+          destino.current = null
+          // En pantallas anchas el final del recorrido no alcanza a la última diapositiva: se respeta la elegida.
+          if (mejor !== d.n) return
+        }
         setActiva(mejor)
       }, 90)
     }
