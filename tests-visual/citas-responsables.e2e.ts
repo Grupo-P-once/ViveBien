@@ -10,10 +10,11 @@ import { PERFIL } from './datos-panel'
  */
 const json = (cuerpo: unknown, status = 200) => ({ status, contentType: 'application/json', body: JSON.stringify(cuerpo) })
 type Propiedad = { id: string; titulo: string; publicada: boolean; responsableUid: string | null; duenoUid: string | null; duenoNombre: string | null; efectivo: { uid: string; nombre: string; origen: string } | null }
-type Datos = { equipo: { uid: string; nombre: string; atiende: boolean } | null; candidatos: Array<{ uid: string; nombre: string; rol: string }>; propiedades: Propiedad[] }
+type Datos = { equipo: { uid: string; nombre: string; atiende: boolean } | null; titularAutomatico?: { uid: string; nombre: string } | null; candidatos: Array<{ uid: string; nombre: string; rol: string }>; propiedades: Propiedad[] }
 
 const base = (): Datos => ({
   equipo: { uid: 'adm', nombre: 'Ana Admin', atiende: true },
+  titularAutomatico: { uid: 'adm', nombre: 'Ana Admin' },
   candidatos: [{ uid: 'adm', nombre: 'Ana Admin', rol: 'admin' }, { uid: 'ase', nombre: 'Beto Asociado', rol: 'publicador' }],
   propiedades: [
     { id: 'p1', titulo: 'Nave A', publicada: true, responsableUid: null, duenoUid: 'pub', duenoNombre: 'Carla Publicadora', efectivo: { uid: 'adm', nombre: 'Ana Admin', origen: 'equipo' } },
@@ -80,6 +81,16 @@ test.describe('Responsables de citas', () => {
     await page.getByRole('dialog').getByLabel(/Motivo/).fill('Cambio de responsable por vacaciones')
     await page.getByRole('dialog').getByRole('button', { name: 'Guardar cambio' }).click()
     await expect(page.getByRole('alert').filter({ hasText: /Otra persona cambió/ })).toBeVisible()
+  })
+
+  test('sin responsable del equipo configurado atiende el TITULAR AUTOMÁTICO y la pantalla lo dice (ya no hay «sin asesor» por falta de configuración)', async ({ page }) => {
+    const datos = base()
+    datos.equipo = null
+    datos.propiedades[0].efectivo = { uid: 'adm', nombre: 'Ana Admin', origen: 'automatico' }
+    await entrar(page, { datos })
+    await expect(page.getByText('Atiende: Ana Admin (titular automático del equipo)')).toBeVisible()
+    await expect(page.getByText(/las atiende automáticamente Ana Admin/)).toBeVisible()
+    await expect(page.getByText(/Nadie atiende todavía/)).toHaveCount(0)
   })
 
   test('una propiedad sin nadie que atienda lo dice (no puede recibir citas)', async ({ page }) => {

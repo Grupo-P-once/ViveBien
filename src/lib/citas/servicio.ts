@@ -10,7 +10,7 @@ import { instanteLocal, sumarDias } from './zona'
 import { hashDe, pareceToken } from './tokens'
 import { puede } from '../acceso/permisos'
 import { atiendeCitas, nombreDelAsesorVisible, puedeActuarEnCita, veContactoBasicoDelInteresado, veDatosDelInteresado, type CuentaDeCitas } from '../acceso/capacidades'
-import { cuentasDeCitas, perfilDeCuenta } from './asesores'
+import { cuentasDeCitas, perfilDeCuenta, titularAutomaticoDelEquipo } from './asesores'
 import { rutaDeVisitas } from './enlaces'
 
 export { papelEn }
@@ -68,7 +68,8 @@ type PropiedadAgendable = FilaPropiedad & { responsable_uid: string }
  *   2. el dueño, si PUEDE atender citas: el equipo de VIVE BIEN, o un publicador con `recibir_citas` (un asociado);
  *   3. el responsable del equipo configurado (`configuracion.citas.responsable_equipo_uid`): así las solicitudes de las
  *      propiedades de un Publicador las administra VIVE BIEN, y el Publicador solo las ve.
- * Cada candidato se comprueba contra su cuenta real: alguien que ya no atiende citas se salta. Si nadie sirve, `null`
+ *   4. el titular automático del equipo (10-nov-2026): el admin activo más antiguo; el Super Admin solo si no hay ningún admin (ver `titularAutomaticoDelEquipo`).
+ * Cada candidato se comprueba contra su cuenta real: alguien que ya no atiende citas se salta. Si nadie sirve (ni siquiera hay un admin activo), `null`
  * (falla cerrado: «esta propiedad todavía no tiene asesor»), no se inventa un responsable.
  */
 export async function responsableDeCitas(db: Db, p: Pick<FilaPropiedad, 'owner_id' | 'responsable_citas_uid'>): Promise<string | null> {
@@ -76,17 +77,17 @@ export async function responsableDeCitas(db: Db, p: Pick<FilaPropiedad, 'owner_i
   const equipo = await responsableDelEquipo(db)
   candidatos.push(equipo)
   const uids = [...new Set(candidatos.filter((x): x is string => !!x))]
-  if (!uids.length) return null
+  if (!uids.length) return await titularAutomaticoDelEquipo(db)
   const cuentas = await cuentasDeCitas(db, uids)
   for (const uid of candidatos) {
     if (!uid) continue
     const c = cuentas.get(uid)
     if (c && atiendeCitas(c)) return uid
   }
-  return null
+  return await titularAutomaticoDelEquipo(db)
 }
 
-/** El responsable del equipo para las propiedades cuyo dueño no atiende citas. Lo configura un admin; sin él, falla cerrado. */
+/** El responsable del equipo para las propiedades cuyo dueño no atiende citas. Lo configura un admin; sin él, atiende el titular automático (`titularAutomaticoDelEquipo`). */
 async function responsableDelEquipo(db: Db): Promise<string | null> {
   const { data, error } = await db.from('configuracion').select('valor').eq('clave', 'citas').maybeSingle()
   if (error || !data) return null

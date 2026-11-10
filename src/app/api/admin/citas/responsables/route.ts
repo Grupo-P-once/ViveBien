@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { exigir, supabaseAdmin } from '@/lib/auth-server'
 import { frenarAsync, TOPES } from '@/lib/limites'
 import { atiendeCitas } from '@/lib/acceso/capacidades'
-import { cuentasDeCitas } from '@/lib/citas/asesores'
+import { cuentasDeCitas, titularAutomaticoDelEquipo } from '@/lib/citas/asesores'
 
 /**
  * Quién atiende las citas de cada propiedad (ADR-0014 §3; decisión del dueño, 9-nov-2026): el responsable asignado por un admin → el dueño si atiende citas → el responsable del equipo.
@@ -11,7 +11,7 @@ import { cuentasDeCitas } from '@/lib/citas/asesores'
  *   PUT — asigna o quita: `{ ambito: 'propiedad' | 'equipo', propiedadId?, antes, a, motivo }`. `antes` es lo que la pantalla vio: si otra persona lo cambió, 409.
  *
  * Solo admin / super admin (`citas.ver_todas`). Quién PUEDE ser responsable (que atienda citas) se comprueba aquí, en el servidor; el cambio y la bitácora van en UNA transacción
- * (migración 76: `citas_asignar_responsable_propiedad` / `_equipo`). Falla cerrado: sin la migración, 503 y no se cambia nada.
+ * (migración 76: `citas_asignar_responsable_propiedad` / `_equipo`). Sin responsable del equipo, atiende el titular automático (admin activo más antiguo; Super Admin solo si no hay admins; ADR-0014 decisión 7). Falla cerrado: sin la migración, 503 y no se cambia nada.
  */
 
 export const dynamic = 'force-dynamic'
@@ -21,7 +21,7 @@ const RE_PROPIEDAD = /^[A-Za-z0-9_-]{1,120}$/
 const MOTIVO_MIN = 10
 const MOTIVO_MAX = 500
 
-type Origen = 'asignado' | 'dueno' | 'equipo'
+type Origen = 'asignado' | 'dueno' | 'equipo' | 'automatico'
 
 export async function GET(req: Request) {
   const auth = await exigir(req, 'citas.ver_todas')
@@ -44,6 +44,7 @@ export async function GET(req: Request) {
     // Las cuentas con sus permisos ya calculados (lo que decide si atienden citas): las de la lista y las de todo uid que aparezca en una propiedad.
     const uids = [...new Set([...personas.map((p) => p.uid), ...filas.flatMap((f) => [f.owner_id, f.responsable_citas_uid]), equipoUid].filter((x): x is string => !!x))]
     const cuentas = await cuentasDeCitas(db, uids)
+    const titularAuto = await titularAutomaticoDelEquipo(db)   // el admin activo más antiguo (Super Admin solo si no hay admins)
     const nombre = new Map(personas.map((p) => [p.uid, p.nombre]))
     const atiende = (uid: string | null | undefined) => { const c = uid ? cuentas.get(uid) : undefined; return !!c && atiendeCitas(c) }
 
@@ -55,7 +56,7 @@ export async function GET(req: Request) {
     // El que de hecho atenderá: mismo orden que `responsableDeCitas` del servicio (asignado → dueño → equipo), cada uno comprobado contra su cuenta.
     const propiedades = filas.map((f) => {
       const orden: Array<[Origen, string | null]> = [['asignado', f.responsable_citas_uid], ['dueno', f.owner_id], ['equipo', equipoUid]]
-      const elegido = orden.find(([, uid]) => uid && atiende(uid))
+      const elegido = orden.find(([, uid]) => uid && atiende(uid)) ?? (titularAuto ? (['automatico', titularAuto] as [Origen, string]) : undefined)
       return {
         id: f.id,
         titulo: f.titulo,
@@ -69,6 +70,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({
       equipo: equipoUid ? { uid: equipoUid, nombre: nombre.get(equipoUid) ?? null, atiende: atiende(equipoUid) } : null,
+      titularAutomatico: titularAuto ? { uid: titularAuto, nombre: nombre.get(titularAuto) ?? null } : null,
       candidatos,
       propiedades,
     })

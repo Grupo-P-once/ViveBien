@@ -11,18 +11,18 @@ import { llamarApi } from '@/lib/citas/cliente'
 
 /**
  * «Responsables de citas» (Admin y Super Admin; decisión del dueño, 9-nov-2026, ADR-0014 §3): quién atiende las visitas de cada propiedad y quién es el responsable del equipo.
- * Orden de quien atiende: el responsable asignado aquí → el dueño, si atiende citas → el responsable del equipo. Si nadie sirve, la propiedad no puede recibir citas («sin asesor»).
+ * Orden de quien atiende: el responsable asignado aquí → el dueño, si atiende citas → el responsable del equipo → el titular automático (el admin activo más antiguo; el Super Admin solo si no hay admins). Solo si no existe ningún admin activo, la propiedad no puede recibir citas («sin asesor»).
  * Solo pueden ser responsables las cuentas que atienden citas (el equipo y los asociados con «recibir citas»); lo comprueba el servidor. Cada cambio pide un motivo y queda en la bitácora.
  */
 type Candidato = { uid: string; nombre: string | null; rol: string }
 type Propiedad = {
   id: string; titulo: string | null; publicada: boolean; responsableUid: string | null; duenoUid: string | null; duenoNombre: string | null
-  efectivo: { uid: string; nombre: string | null; origen: 'asignado' | 'dueno' | 'equipo' } | null
+  efectivo: { uid: string; nombre: string | null; origen: 'asignado' | 'dueno' | 'equipo' | 'automatico' } | null
 }
-type Datos = { equipo: { uid: string; nombre: string | null; atiende: boolean } | null; candidatos: Candidato[]; propiedades: Propiedad[] }
+type Datos = { equipo: { uid: string; nombre: string | null; atiende: boolean } | null; titularAutomatico?: { uid: string; nombre: string | null } | null; candidatos: Candidato[]; propiedades: Propiedad[] }
 type Pendiente = { ambito: 'propiedad' | 'equipo'; propiedadId?: string; etiqueta: string; antes: string | null; a: string | null; origen: HTMLElement | null }
 
-const ORIGEN: Record<string, string> = { asignado: 'responsable asignado', dueno: 'el dueño', equipo: 'responsable del equipo' }
+const ORIGEN: Record<string, string> = { asignado: 'responsable asignado', dueno: 'el dueño', equipo: 'responsable del equipo', automatico: 'titular automático del equipo' }
 const campo = 'h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring'
 const nombreDe = (n: string | null, uid: string) => n?.trim() || `Cuenta ${uid.slice(0, 6)}…`
 
@@ -93,7 +93,7 @@ export default function PaginaResponsablesDeCitas() {
         <>
           <section aria-labelledby="t-equipo" className="mt-6 rounded-xl border bg-card p-4 sm:p-5">
             <h2 id="t-equipo" className="font-heading text-base font-semibold">Responsable del equipo</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Atiende las propiedades cuyo dueño no atiende citas (por ejemplo, las de un publicador). Sin responsable del equipo, esas propiedades no pueden recibir citas.</p>
+            <p className="mt-1 text-sm text-muted-foreground">Atiende las propiedades cuyo dueño no atiende citas (por ejemplo, las de un publicador). Si no eliges a nadie, las atiende automáticamente {datos.titularAutomatico ? <strong>{nombreDe(datos.titularAutomatico.nombre, datos.titularAutomatico.uid)}</strong> : 'el administrador activo más antiguo'} (el titular automático); el Super Admin solo atiende si no hay ningún administrador activo.</p>
             {datos.equipo && !datos.equipo.atiende && <p className="mt-2 text-sm text-amber-800" role="note">El responsable configurado ya no atiende citas: se está saltando.</p>}
             <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end">
               <div className="min-w-0 flex-1">

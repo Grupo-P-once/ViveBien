@@ -76,3 +76,24 @@ export async function perfilDeCuenta(db: Db, uid: string): Promise<PerfilUsuario
     { rol: data.rol, estado: data.estado ?? 'activo', nombre: data.nombre, tipo_publicador: e?.tipo_publicador, permisos_override: e?.permisos_override },
   )
 }
+
+/**
+ * Titular automático del equipo (decisión del dueño, 10-nov-2026, ADR-0014 decisión 7). Cuando nadie más puede atender una propiedad (ni el responsable asignado, ni el dueño, ni el
+ * responsable del equipo configurado), la atiende el **admin activo más antiguo**: los admins comparten una sola vista del equipo, así que cuál de ellos figure como titular es solo el ancla
+ * de la agenda. El **Super Admin es independiente de los admins**: solo atiende si NO hay ningún admin activo, para que agendar nunca quede bloqueado. Orden estable (alta más antigua; empate por uid).
+ * Falla cerrado: si la lectura falla, `null` (se cae a «sin asesor»), nunca se inventa un titular.
+ */
+export async function titularAutomaticoDelEquipo(db: Db): Promise<string | null> {
+  try {
+    const { data, error } = await db.from('usuarios').select('uid, rol, estado, creado_en').in('rol', ['admin', 'super_admin']).eq('estado', 'activo').limit(200)
+    if (error || !data) return null
+    const filas = data as Array<{ uid: string; rol: string; creado_en?: string | null }>
+    const orden = (a: { uid: string; creado_en?: string | null }, b: { uid: string; creado_en?: string | null }) =>
+      String(a.creado_en ?? '').localeCompare(String(b.creado_en ?? '')) || a.uid.localeCompare(b.uid)
+    const admins = filas.filter((f) => f.rol === 'admin').sort(orden)
+    const supers = filas.filter((f) => f.rol === 'super_admin').sort(orden)
+    return (admins[0] ?? supers[0])?.uid ?? null
+  } catch {
+    return null
+  }
+}

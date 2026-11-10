@@ -16,6 +16,7 @@ const estado = vi.hoisted(() => ({
   rpc: [] as Array<{ fn: string; args: Record<string, unknown> }>,
   rpcRespuesta: { data: { resultado: 'ok' }, error: null } as { data: unknown; error: { code?: string; message?: string } | null },
   lecturas: 0,
+  titular: 'adm' as string | null,
 }))
 
 vi.mock('@/lib/auth-server', () => ({
@@ -32,6 +33,7 @@ vi.mock('@/lib/auth-server', () => ({
 }))
 vi.mock('@/lib/limites', () => ({ frenarAsync: async () => null, TOPES: { citas: {} } }))
 vi.mock('@/lib/citas/asesores', () => ({
+  titularAutomaticoDelEquipo: async () => estado.titular,
   cuentasDeCitas: async (_db: unknown, uids: string[]) => new Map(uids.filter((u) => estado.cuentas.has(u)).map((u) => [u, estado.cuentas.get(u) as Cuenta])),
 }))
 
@@ -65,6 +67,7 @@ beforeEach(() => {
   estado.rpc = []
   estado.rpcRespuesta = { data: { resultado: 'ok' }, error: null }
   estado.lecturas = 0
+  estado.titular = 'adm'
 })
 
 describe('GET · quién atiende cada propiedad', () => {
@@ -84,10 +87,18 @@ describe('GET · quién atiende cada propiedad', () => {
     expect(por.p2).toEqual({ uid: 'adm', nombre: 'Ana Admin', origen: 'dueno' })          // sin asignar; el dueño es del equipo
     expect(por.p1).toEqual({ uid: 'adm', nombre: 'Ana Admin', origen: 'equipo' })         // el dueño es un publicador que no atiende: cae al responsable del equipo
   })
-  it('sin responsable del equipo y con un dueño que no atiende: nadie atiende (null), no se inventa uno', async () => {
+  it('sin responsable del equipo y con un dueño que no atiende: atiende el TITULAR AUTOMÁTICO (origen «automatico»), y la respuesta lo dice', async () => {
     estado.cfg = null
     const { cuerpo } = await get()
     expect(cuerpo.equipo).toBeNull()
+    expect(cuerpo.titularAutomatico).toEqual({ uid: 'adm', nombre: 'Ana Admin' })
+    expect(cuerpo.propiedades.find((p: { id: string }) => p.id === 'p1').efectivo).toEqual({ uid: 'adm', nombre: 'Ana Admin', origen: 'automatico' })
+  })
+  it('sin responsable del equipo Y sin ningún admin activo: nadie atiende (null), no se inventa uno', async () => {
+    estado.cfg = null
+    estado.titular = null
+    const { cuerpo } = await get()
+    expect(cuerpo.titularAutomatico).toBeNull()
     expect(cuerpo.propiedades.find((p: { id: string }) => p.id === 'p1').efectivo).toBeNull()
   })
   it('un responsable asignado que dejó de atender citas se salta (falla cerrado hacia el siguiente)', async () => {

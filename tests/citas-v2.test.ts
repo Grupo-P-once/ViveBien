@@ -18,6 +18,7 @@ function dbFalso(tablas: Record<string, Array<Record<string, unknown>>>) {
     b.select = () => b
     b.in = (col: string, vals: unknown[]) => { filas = filas.filter((f) => vals.includes(f[col])); return b }
     b.eq = (col: string, val: unknown) => { filas = filas.filter((f) => f[col] === val); return b }
+    b.limit = () => b
     b.maybeSingle = async () => ({ data: filas[0] ?? null, error: null })
     b.then = (res: (v: { data: unknown[]; error: null }) => unknown) => Promise.resolve({ data: filas, error: null }).then(res)
     return b
@@ -27,12 +28,12 @@ function dbFalso(tablas: Record<string, Array<Record<string, unknown>>>) {
 
 describe('D-1 · a quién le toca atender las citas de una propiedad', () => {
   const usuarios = [
-    { uid: 'equipo1', rol: 'admin' },
-    { uid: 'equipo2', rol: 'super_admin' },
-    { uid: 'pub', rol: 'publicador', tipo_publicador: 'publicador', permisos_override: {} },
-    { uid: 'aso', rol: 'publicador', tipo_publicador: 'asociado', permisos_override: {} },
-    { uid: 'aso-sin-citas', rol: 'publicador', tipo_publicador: 'asociado', permisos_override: { recibir_citas: false } },
-    { uid: 'cli', rol: 'cliente' },
+    { uid: 'equipo1', rol: 'admin', estado: 'activo', creado_en: '2026-09-01T00:00:00Z' },
+    { uid: 'equipo2', rol: 'super_admin', estado: 'activo', creado_en: '2026-08-01T00:00:00Z' },
+    { uid: 'pub', rol: 'publicador', estado: 'activo', creado_en: '2026-10-01T00:00:00Z', tipo_publicador: 'publicador', permisos_override: {} },
+    { uid: 'aso', rol: 'publicador', estado: 'activo', creado_en: '2026-10-02T00:00:00Z', tipo_publicador: 'asociado', permisos_override: {} },
+    { uid: 'aso-sin-citas', rol: 'publicador', estado: 'activo', creado_en: '2026-10-03T00:00:00Z', tipo_publicador: 'asociado', permisos_override: { recibir_citas: false } },
+    { uid: 'cli', rol: 'cliente', estado: 'activo', creado_en: '2026-10-04T00:00:00Z' },
   ]
   const conEquipo = (uid: string | null) => dbFalso({ usuarios, configuracion: uid ? [{ clave: 'citas', valor: { responsable_equipo_uid: uid } }] : [] })
 
@@ -62,15 +63,45 @@ describe('D-1 · a quién le toca atender las citas de una propiedad', () => {
     expect(await responsableDeCitas(conEquipo('equipo2'), { owner_id: 'pub', responsable_citas_uid: 'pub' })).toBe('equipo2')
   })
 
-  it('falla CERRADO: sin responsable del equipo configurado, la propiedad de un publicador no tiene asesor', async () => {
-    expect(await responsableDeCitas(conEquipo(null), { owner_id: 'pub', responsable_citas_uid: null })).toBeNull()
-    expect(await responsableDeCitas(conEquipo(null), { owner_id: null, responsable_citas_uid: null })).toBeNull()
+  // Decisión 7 (10-nov-2026): sin responsable del equipo configurado, atiende el TITULAR AUTOMÁTICO (admin activo más antiguo; Super Admin solo si no hay admins).
+  it('sin responsable del equipo configurado, la propiedad de un publicador la atiende el ADMIN activo más antiguo (no el Super Admin, que es independiente)', async () => {
+    expect(await responsableDeCitas(conEquipo(null), { owner_id: 'pub', responsable_citas_uid: null })).toBe('equipo1')
+    expect(await responsableDeCitas(conEquipo(null), { owner_id: null, responsable_citas_uid: null })).toBe('equipo1')
   })
 
-  it('un responsable de equipo mal configurado (un cliente, un uid inexistente o un valor raro) no sirve', async () => {
-    expect(await responsableDeCitas(conEquipo('cli'), { owner_id: 'pub', responsable_citas_uid: null })).toBeNull()
-    expect(await responsableDeCitas(conEquipo('no-existe'), { owner_id: 'pub', responsable_citas_uid: null })).toBeNull()
-    expect(await responsableDeCitas(dbFalso({ usuarios, configuracion: [{ clave: 'citas', valor: { responsable_equipo_uid: 42 } }] }), { owner_id: 'pub', responsable_citas_uid: null })).toBeNull()
+  it('el titular automático es el admin ACTIVO más antiguo: uno suspendido no sirve y el empate se desempata por uid', async () => {
+    const con = (extra: Array<Record<string, unknown>>) => dbFalso({ usuarios: [...usuarios, ...extra], configuracion: [] })
+    // un admin más antiguo pero SUSPENDIDO no es titular
+    expect(await responsableDeCitas(con([{ uid: 'adm-viejo-suspendido', rol: 'admin', estado: 'suspendido', creado_en: '2026-01-01T00:00:00Z' }]), { owner_id: 'pub', responsable_citas_uid: null })).toBe('equipo1')
+    // un admin activo más antiguo SÍ gana
+    expect(await responsableDeCitas(con([{ uid: 'adm-viejo', rol: 'admin', estado: 'activo', creado_en: '2026-01-01T00:00:00Z' }]), { owner_id: 'pub', responsable_citas_uid: null })).toBe('adm-viejo')
+    // mismo instante: desempata el uid (orden estable)
+    expect(await responsableDeCitas(con([{ uid: 'adm-a', rol: 'admin', estado: 'activo', creado_en: '2026-09-01T00:00:00Z' }]), { owner_id: 'pub', responsable_citas_uid: null })).toBe('adm-a')
+  })
+
+  it('el Super Admin atiende SOLO si no hay ningún admin activo; y si no hay ni él, falla CERRADO (sin asesor)', async () => {
+    const sinAdmins = dbFalso({ usuarios: usuarios.filter((u) => u.uid !== 'equipo1'), configuracion: [] })
+    expect(await responsableDeCitas(sinAdmins, { owner_id: 'pub', responsable_citas_uid: null })).toBe('equipo2')
+    const nadie = dbFalso({ usuarios: usuarios.filter((u) => u.rol !== 'admin' && u.rol !== 'super_admin'), configuracion: [] })
+    expect(await responsableDeCitas(nadie, { owner_id: 'pub', responsable_citas_uid: null })).toBeNull()
+    expect(await responsableDeCitas(nadie, { owner_id: null, responsable_citas_uid: null })).toBeNull()
+  })
+
+  it('un responsable de equipo mal configurado (un cliente, un uid inexistente o un valor raro) no sirve: cae al titular automático', async () => {
+    expect(await responsableDeCitas(conEquipo('cli'), { owner_id: 'pub', responsable_citas_uid: null })).toBe('equipo1')
+    expect(await responsableDeCitas(conEquipo('no-existe'), { owner_id: 'pub', responsable_citas_uid: null })).toBe('equipo1')
+    expect(await responsableDeCitas(dbFalso({ usuarios, configuracion: [{ clave: 'citas', valor: { responsable_equipo_uid: 42 } }] }), { owner_id: 'pub', responsable_citas_uid: null })).toBe('equipo1')
+  })
+
+  it('el responsable del equipo CONFIGURADO manda sobre el titular automático, y el dueño que atiende manda sobre ambos', async () => {
+    expect(await responsableDeCitas(conEquipo('equipo2'), { owner_id: 'pub', responsable_citas_uid: null })).toBe('equipo2')
+    expect(await responsableDeCitas(conEquipo(null), { owner_id: 'aso', responsable_citas_uid: null })).toBe('aso')
+  })
+
+  it('si la lectura de usuarios falla, el titular automático falla cerrado (null), no inventa a nadie', async () => {
+    const config = dbFalso({ configuracion: [] }) as unknown as { from: (t: string) => unknown }
+    const roto = { from: (t: string) => (t === 'configuracion' ? config.from(t) : { select: () => ({ in: () => ({ eq: () => ({ limit: async () => ({ data: null, error: { message: 'x' } }) }) }) }) }) } as never
+    expect(await responsableDeCitas(roto, { owner_id: null, responsable_citas_uid: null })).toBeNull()
   })
 })
 
