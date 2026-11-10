@@ -31,6 +31,12 @@ const TOPE_CORREOS = 400
  * un aviso a toda la base no puede gastarlo. Lo que no sale hoy queda pendiente y sale en las corridas siguientes; la notificación de la campana llega a todos de inmediato.
  */
 export const TOPE_CORREOS_LEGALES_POR_CORRIDA = 25
+/**
+ * INTERRUPTOR del aviso del cambio legal a TODA persona con cuenta. Decisión del dueño (10-nov-2026): se enciende AL FINAL, cuando el abogado haya visto el texto del correo y se hayan
+ * contado las cuentas de Producción. Apagado (el valor por omisión) = el comportamiento anterior: solo se avisa a quien ya había aceptado una versión anterior. Se enciende con la variable
+ * de entorno `AVISO_LEGAL_A_TODOS=true` (publicar este código NO empieza el aviso a todos).
+ */
+export const avisoLegalATodos = (): boolean => process.env.AVISO_LEGAL_A_TODOS === 'true'
 /** Cuentas a las que se avisa de un cambio legal: personas (no el equipo), activas. */
 const ROLES_CON_AVISO_LEGAL = ['cliente', 'publicador']
 const TOPE_BUSQUEDAS = 3000
@@ -146,16 +152,17 @@ export async function avisosDeClientes(ahora = Date.now()): Promise<ResumenDeAvi
 
   // 2 · Cambio de Términos / Privacidad: a TODA persona con cuenta (decisión del dueño, 10-nov-2026), una vez por versión.
   const ac = await db.from('legal_aceptaciones').select('uid, documento, version').limit(20000)
-  const cu = await db.from('usuarios').select('uid, rol, estado, creado_en').eq('estado', 'activo').in('rol', ROLES_CON_AVISO_LEGAL).limit(20000)
-  if (!ac.error && !cu.error) {
+  // Con el interruptor apagado no se lee la lista de cuentas: se avisa solo a quien ya había aceptado (comportamiento anterior).
+  const cu = avisoLegalATodos() ? await db.from('usuarios').select('uid, rol, estado, creado_en').eq('estado', 'activo').in('rol', ROLES_CON_AVISO_LEGAL).limit(20000) : null
+  if (!ac.error && !cu?.error) {
     // CORTE: el momento en que se avisó por primera vez de esta versión. Quien abre su cuenta DESPUÉS ya vio el texto nuevo al registrarse: no se le avisa de un «cambio».
     const clavesLegales = Object.entries(VERSIONES).map(([d, v]) => `legal:${d}:${v}`)
     const previas = await db.from('notificaciones').select('creada_en').in('clave', clavesLegales).limit(50000)
     const tiempos = ((previas.data ?? []) as Array<{ creada_en: string | null }>).map((x) => Date.parse(x.creada_en ?? '')).filter((t) => Number.isFinite(t))
     const corte = previas.error ? 0 : tiempos.length ? Math.min(...tiempos) : ahora
-    const cuentas = ((cu.data ?? []) as Array<{ uid: string; creado_en: string | null }>)
+    const cuentas = cu ? ((cu.data ?? []) as Array<{ uid: string; creado_en: string | null }>)
       .filter((c) => !c.creado_en || Date.parse(c.creado_en) <= corte)
-      .map((c) => c.uid)
+      .map((c) => c.uid) : undefined
     const legales = previas.error ? [] : notificacionesLegales(VERSIONES, (ac.data ?? []) as Array<{ uid: string; documento: string; version: string }>, cuentas)
     if (legales.length) {
       const ya = await db.from('notificaciones').select('uid, clave').in('clave', [...new Set(legales.map((n) => n.clave))])

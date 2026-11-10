@@ -11,6 +11,7 @@ const MapaCatalogo = dynamic(() => import('@/components/catalogo/MapaCatalogo'),
 })
 import { useState, useEffect, Suspense, useCallback, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
+import { folioCompleto } from '@/lib/folio'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import SeccionCarrusel from '@/components/catalogo/SeccionCarrusel'
@@ -393,7 +394,7 @@ function PropiedadesContent() {
           <div style={{ position: 'relative', flex: '1 1 160px' }}>
             <i className="fa fa-location-dot" style={{ position: 'absolute', left: '.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--rojo)', fontSize: '.8rem', pointerEvents: 'none' }} />
             <input type="text" placeholder="Zona o colonia" value={filtros.zona}
-              onChange={e => updateFiltros({ zona: e.target.value })}
+              onChange={e => { const folio = folioCompleto(e.target.value); if (folio) { router.push(`/propiedades/${folio}`); return } updateFiltros({ zona: e.target.value }) }}
               style={{ width: '100%', padding: '.52rem .9rem .52rem 2.1rem', borderRadius: '8px', border: '1.5px solid var(--gris-calido)', background: '#fff', color: '#333', fontSize: '.83rem', fontFamily: 'inherit', boxSizing: 'border-box' }} />
           </div>
 

@@ -3,6 +3,7 @@ import '@/components/inicio/inicio.css'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { folioCompleto } from '@/lib/folio'
 import { MotionConfig } from 'framer-motion'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
@@ -43,6 +44,8 @@ export default function HomePage({ articulosBlog = [] }: { articulosBlog?: Artic
 
   function buscar(e: React.FormEvent) {
     e.preventDefault()
+    const folio = folioCompleto(form.zona)
+    if (folio) { router.push(`/propiedades/${folio}`); return }   // un folio completo lleva a su ficha (A12)
     const params = new URLSearchParams()
     if (form.op) params.set('op', form.op)
     if (form.tipo) params.set('tipo', form.tipo)

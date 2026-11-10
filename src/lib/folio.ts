@@ -20,3 +20,13 @@ export function normalizarFolio(texto: string): string {
 export function esFolio(texto: string): boolean {
   return RE_FOLIO.test(normalizarFolio(texto))
 }
+
+/**
+ * El folio COMPLETO tal como se escribe en un buscador (`VB-AAAA-NNNNN`, con o sin guiones, en cualquier caso): devuelve el folio normalizado, o `null`.
+ * Exige los 5 dígitos A PROPÓSITO: `normalizarFolio` rellena con ceros («VB-2026-1» → «VB-2026-00001»), y saltar a la ficha mientras la persona todavía escribe («VB-2026-1» de
+ * camino a «VB-2026-10») la sacaría del buscador a medias. Auditoría del rol cliente, 28-oct-2026 (A12): escribir un folio daba 0 resultados.
+ */
+export function folioCompleto(texto: string): string | null {
+  const m = (texto || '').trim().toUpperCase().match(/^VB-?(\d{4})-?(\d{5})$/)
+  return m ? `VB-${m[1]}-${m[2]}` : null
+}

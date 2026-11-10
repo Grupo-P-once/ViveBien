@@ -44,7 +44,7 @@ beforeEach(() => {
     throw new Error('red no permitida en la prueba')
   }))
 })
-afterEach(() => { vi.unstubAllGlobals() })
+afterEach(() => { vi.unstubAllGlobals(); delete process.env.AVISO_LEGAL_A_TODOS })
 
 describe('tarea de avisos a clientes', () => {
   const base = () => crearBase({
@@ -109,8 +109,25 @@ describe('tarea de avisos a clientes', () => {
     expect(estado.base.tablas.notificaciones).toHaveLength(2)
   })
 
+  it('INTERRUPTOR apagado (valor por omisión): publicar el código NO avisa a todos; solo a quien ya había aceptado una versión anterior (comportamiento de antes)', async () => {
+    delete process.env.AVISO_LEGAL_A_TODOS
+    const b = base(); b.tablas.busquedas_guardadas.length = 0
+    b.tablas.usuarios = [
+      { uid: 'u-ana', email: 'ana@ejemplo.invalid', nombre: 'Ana', estado: 'activo', rol: 'cliente', creado_en: hace(100) },
+      { uid: 'u-luis', email: 'luis@ejemplo.invalid', nombre: 'Luis', estado: 'activo', rol: 'cliente', creado_en: hace(100) },
+    ]
+    b.tablas.legal_aceptaciones.push({ uid: 'u-ana', documento: 'terminos', version: '2020-01-01' })
+    estado.base = b
+    const { avisoLegalATodos, avisosDeClientes } = await import('../src/lib/avisos-cliente-servidor')
+    expect(avisoLegalATodos()).toBe(false)
+    const r = await avisosDeClientes()
+    expect(r.legalesNuevas).toBe(1)                                    // solo Ana, que había aceptado antes
+    expect(b.tablas.notificaciones.map((n) => n.uid)).toEqual(['u-ana'])
+  })
+
   // Decisión del dueño (10-nov-2026): el aviso del cambio llega a TODA persona con cuenta creada (cliente, publicador/asociado), no solo a quien aceptó antes.
   const conRol = (extra: Array<Record<string, unknown>> = []) => {
+    process.env.AVISO_LEGAL_A_TODOS = 'true'   // el aviso a todas las cuentas es opt-in: estas pruebas lo encienden
     const b = base(); b.tablas.busquedas_guardadas.length = 0
     b.tablas.usuarios = [
       { uid: 'u-ana', email: 'ana@ejemplo.invalid', nombre: 'Ana', estado: 'activo', rol: 'cliente', creado_en: hace(100) },

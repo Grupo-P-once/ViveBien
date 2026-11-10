@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { esFolio, normalizarFolio } from '../src/lib/folio'
+import { esFolio, folioCompleto, normalizarFolio } from '../src/lib/folio'
 import { resolverCon } from '../src/lib/ficha-servidor'
 
 describe('folio — lo que se dicta por teléfono', () => {
@@ -59,5 +59,18 @@ describe('resolverCon — por folio', () => {
   it('una caída de la base al buscar por folio NO es «no existe»', async () => {
     const { cliente } = clienteFalso({ folio: { data: null, error: { code: 'PGRST000', message: 'caida' } } })
     expect((await resolverCon(cliente, 'VB-2026-00006')).estado).toBe('error')
+  })
+})
+
+describe('folioCompleto · saltar a la ficha solo con el folio entero (A12, 28-oct-2026)', () => {
+  it('acepta el folio completo escrito como sea y lo devuelve normalizado', () => {
+    for (const v of ['VB-2026-00004', 'vb-2026-00004', 'VB202600004', 'vb2026-00004', ' VB-2026-00004 ']) expect(folioCompleto(v), v).toBe('VB-2026-00004')
+  })
+  it('NO salta mientras todavía se está escribiendo (menos de 5 dígitos), aunque normalizarFolio lo rellenaría', () => {
+    for (const v of ['VB-2026-1', 'VB-2026-0000', 'VB-2026', 'VB-20', 'VB', '', '   ']) expect(folioCompleto(v), v).toBeNull()
+    expect(esFolio('VB-2026-1')).toBe(true)          // la razón: esFolio sí lo reconocería (rellena con ceros)
+  })
+  it('no confunde zonas ni texto con un folio', () => {
+    for (const v of ['San Juan Bosco', 'Buenaventura', 'VB-2026-00004 casa', 'x VB-2026-00004', 'VB-2026-000045']) expect(folioCompleto(v), v).toBeNull()
   })
 })
