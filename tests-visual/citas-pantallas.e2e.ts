@@ -19,6 +19,7 @@ const CUENTAS: Record<Rol, { uid: string; nombre: string; email: string; destino
 const json = (cuerpo: unknown, status = 200) => ({ status, contentType: 'application/json', body: JSON.stringify(cuerpo) })
 const UN_PIXEL = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64')
 
+const enDias = (n: number, h: number) => { const d = new Date(Date.now() + n * 86_400_000); d.setUTCHours(h, 0, 0, 0); return d }
 const manana = (h: number) => { const d = new Date(Date.now() + 2 * 86_400_000); d.setUTCHours(h, 0, 0, 0); return d }
 const mas = (d: Date, min: number) => new Date(d.getTime() + min * 60_000)
 const ID_A = '11111111-1111-4111-8111-111111111111'
@@ -38,7 +39,7 @@ function cita(o: Record<string, unknown>) {
 
 type Control = { posts: Array<{ ruta: string; cuerpo: Record<string, unknown>; clave: string | null }> }
 
-async function simular(page: Page, rol: Rol, o: { citas: Array<Record<string, unknown>>; flag?: boolean; atiende?: boolean }): Promise<Control> {
+async function simular(page: Page, rol: Rol, o: { citas: Array<Record<string, unknown>>; flag?: boolean; atiende?: boolean; huecosEn?: number[] }): Promise<Control> {
   const yo = CUENTAS[rol]
   const control: Control = { posts: [] }
   await page.route((u) => /(^|\.)(cloudinary\.com)$/.test(u.hostname), (r) => r.fulfill({ status: 200, contentType: 'image/png', body: UN_PIXEL }))
@@ -74,6 +75,12 @@ async function simular(page: Page, rol: Rol, o: { citas: Array<Record<string, un
     }
     if (ruta === '/api/citas/ics') return r.fulfill({ status: 200, contentType: 'text/calendar; charset=utf-8', headers: { 'content-disposition': 'attachment; filename="mis-citas-vive-bien.ics"' }, body: 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nEND:VCALENDAR\r\n' })
     if (ruta === '/api/citas/estado') return r.fulfill(json({ citasEnLinea: o.flag !== false }))
+    if (ruta === '/api/citas/disponibilidad' && o.huecosEn) {
+      // Días de horarios libres elegidos por la prueba (en días desde hoy); responde SOLO los que caen en el rango pedido, como la ruta real.
+      const u = new URL(q.url()); const desde = u.searchParams.get('desde'); const n = Number(u.searchParams.get('dias') || 14)
+      const dias = o.huecosEn.map((k) => enDias(k, 16)).map((d) => ({ dia: d.toISOString().slice(0, 10), d })).filter((x) => !desde || (x.dia >= desde && x.dia <= new Date(Date.parse(desde + 'T12:00:00Z') + n * 86_400_000).toISOString().slice(0, 10)))
+      return r.fulfill(json({ zona: 'America/Mexico_City', duracionMin: 60, dias: dias.map((x) => ({ dia: x.dia, horarios: [{ inicio: x.d.toISOString(), fin: mas(x.d, 60).toISOString() }, { inicio: mas(x.d, 120).toISOString(), fin: mas(x.d, 180).toISOString() }] })) }))
+    }
     if (ruta === '/api/citas/disponibilidad') {
       return r.fulfill(json({ zona: 'America/Mexico_City', duracionMin: 60, dias: [
         { dia, horarios: [{ inicio: manana(16).toISOString(), fin: manana(17).toISOString() }, { inicio: manana(18).toISOString(), fin: manana(19).toISOString() }] },
@@ -333,6 +340,73 @@ test.describe('ficha · «Agenda una cita»', () => {
     expect(control.posts).toHaveLength(1)
     expect(control.posts[0].cuerpo).toMatchObject({ propiedadId: expect.any(String), consentimiento: true })
     expect(control.posts[0].clave).toMatch(/^[A-Za-z0-9_-]{8,100}$/)
+  })
+
+  test('solo enseña UNA semana de días y el calendario completo abre el resto: se agenda una fecha de dentro de dos semanas', async ({ page }) => {
+    const control = await simular(page, 'cliente', { citas: [], huecosEn: [2, 15] })
+    await entrar(page, 'cliente')
+    await page.goto('/propiedades/casa-en-venta-canada-del-regugio-norte-540-m2-leon-n8tl')
+    const tarjeta = page.locator('[data-agendar-cita]')
+    await expect(tarjeta).toBeVisible({ timeout: 30_000 })
+    await tarjeta.getByRole('button', { name: 'Agenda una cita' }).click()
+    const dias = tarjeta.getByRole('group', { name: 'Día de la visita' })
+    await expect(dias).toBeVisible()
+    await expect(dias.getByRole('button')).toHaveCount(1)                       // el día de dentro de 15 días NO sale entre los de esta semana
+    const abrir = tarjeta.getByRole('button', { name: /Ver calendario completo/ })
+    await expect(abrir).toBeVisible()
+    await abrir.click()
+    const mes = tarjeta.getByRole('group', { name: 'Calendario de fechas disponibles' })
+    await expect(mes).toBeVisible()
+    const lejano = enDias(15, 16).toISOString().slice(0, 10)
+    if ((await mes.locator(`[data-dia="${lejano}"]`).count()) === 0) await mes.getByRole('button', { name: 'Mes siguiente' }).click()
+    const celda = mes.locator(`[data-dia="${lejano}"]`)
+    await expect(celda).toBeEnabled()
+    await expect(celda).toHaveAttribute('aria-label', /2 horarios libres/)
+    await sinDesborde(page)
+    await axeSerio(page, 'tarjeta Agenda una cita (calendario completo)', '[data-agendar-cita]')
+    await celda.click()
+    await expect(celda).toHaveAttribute('aria-pressed', 'true')
+    const horas = tarjeta.getByRole('group', { name: 'Hora de la visita' })
+    await expect(horas.getByRole('button')).toHaveCount(2)
+    await horas.getByRole('button').first().click()
+    await tarjeta.getByRole('checkbox').check()
+    await tarjeta.getByRole('button', { name: 'Enviar solicitud' }).click()
+    await expect(tarjeta.locator('[data-solicitud-enviada]')).toBeVisible()
+    expect(control.posts).toHaveLength(1)
+    expect(String(control.posts[0].cuerpo.inicio).slice(0, 10)).toBe(lejano)    // se pidió LA FECHA elegida en el calendario
+  })
+
+  test('sin horarios en 7 días lo dice, el calendario sigue ahí y los días sin horarios no se pueden elegir', async ({ page }) => {
+    await simular(page, 'cliente', { citas: [], huecosEn: [12] })
+    await entrar(page, 'cliente')
+    await page.goto('/propiedades/casa-en-venta-canada-del-regugio-norte-540-m2-leon-n8tl')
+    const tarjeta = page.locator('[data-agendar-cita]')
+    await expect(tarjeta).toBeVisible({ timeout: 30_000 })
+    await tarjeta.getByRole('button', { name: 'Agenda una cita' }).click()
+    await expect(tarjeta.getByText(/No hay horarios libres en los próximos 7 días/)).toBeVisible()
+    await tarjeta.getByRole('button', { name: /Ver calendario completo/ }).click()
+    const mes = tarjeta.getByRole('group', { name: 'Calendario de fechas disponibles' })
+    await expect(mes).toBeVisible()
+    const hoy = enDias(0, 16).toISOString().slice(0, 10)
+    const sin = mes.locator(`[data-dia="${hoy}"]`)
+    if (await sin.count()) { await expect(sin).toBeDisabled(); await expect(sin).toHaveAttribute('aria-label', /sin horarios/) }
+    await mes.getByRole('button', { name: 'Volver a esta semana' }).click()
+    await expect(tarjeta.getByRole('button', { name: /Ver calendario completo/ })).toBeVisible()
+  })
+
+  test('el calendario no deja ir a meses pasados ni a más de 3 meses adelante', async ({ page }) => {
+    await simular(page, 'cliente', { citas: [], huecosEn: [2] })
+    await entrar(page, 'cliente')
+    await page.goto('/propiedades/casa-en-venta-canada-del-regugio-norte-540-m2-leon-n8tl')
+    const tarjeta = page.locator('[data-agendar-cita]')
+    await expect(tarjeta).toBeVisible({ timeout: 30_000 })
+    await tarjeta.getByRole('button', { name: 'Agenda una cita' }).click()
+    await tarjeta.getByRole('button', { name: /Ver calendario completo/ }).click()
+    const mes = tarjeta.getByRole('group', { name: 'Calendario de fechas disponibles' })
+    await expect(mes.getByRole('button', { name: 'Mes anterior' })).toBeDisabled()
+    for (let i = 0; i < 3; i++) await mes.getByRole('button', { name: 'Mes siguiente' }).click()
+    await expect(mes.getByRole('button', { name: 'Mes siguiente' })).toBeDisabled()
+    await expect(mes.getByRole('button', { name: 'Mes anterior' })).toBeEnabled()
   })
 
   test('con citasEnLinea apagado la tarjeta no aparece', async ({ page }) => {
