@@ -31,8 +31,11 @@ describe('versiones: la fecha visible, VERSIONES y el consentimiento van juntos'
   it('la versión que se guarda con el consentimiento de cada cita es la del Aviso', () => {
     expect(VERSION_CONSENTIMIENTO).toBe(VERSIONES.privacidad)
   })
-  it('el borrador no se hace pasar por aprobado: el comentario de estado lo dice', () => {
-    expect(leer('src/app/privacidad/page.tsx')).toContain('BORRADOR sujeto a aprobación del abogado; NO publicar sin ella')
+  it('el estado es HONESTO: aprobada de palabra por el abogado (10-nov-2026), con la confirmación escrita pendiente; ya no dice borrador', () => {
+    const p = leer('src/app/privacidad/page.tsx')
+    expect(p).toContain('versión 2026-11-10 = APROBADA por el abogado de forma VERBAL')
+    expect(p).toContain('la confirmación ESCRITA sigue pendiente')
+    expect(p).not.toContain('BORRADOR sujeto a aprobación del abogado')
   })
 })
 
@@ -170,7 +173,7 @@ describe('decisiones del dueño del 9-nov-2026 reflejadas en el texto legal (ver
   })
   it('la migración de ayuda 77 corrige la frase vieja del artículo público, está sin aplicar y trae reversa', () => {
     const sql = leer('supabase/77-ayuda-citas-asociado-dueno.sql')
-    expect(sql).toContain('NO aplicada en ningún entorno')
+    expect(sql).toContain('En PRODUCCIÓN: NO aplicada')
     expect(sql).toContain('Un asociado dueño de la propiedad')
     expect(leer('supabase/74-ayuda-citas.sql')).toContain('**Un publicador dueño de la propiedad** (cuando la visita la coordina VIVE BIEN) solo ve que hay una cita y su estado')   // la frase que 77 reemplaza existe tal cual
     expect(leer('supabase/77-ayuda-citas-asociado-dueno.REVERTIR.sql')).toContain('begin;')

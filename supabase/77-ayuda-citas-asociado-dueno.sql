@@ -2,8 +2,8 @@
 -- Vive Bien · 77 — Ayuda pública de citas: qué ve el asociado dueño (10-nov-2026)
 -- Va DESPUÉS de 74 y del código de la decisión 1 del dueño (9-nov-2026). Idempotente. Reversa: 77-ayuda-citas-asociado-dueno.REVERTIR.sql
 --
--- ESTADO: PREPARADA. NO aplicada en ningún entorno. Va junto con la versión 2026-11-10 del Aviso de Privacidad, que es un BORRADOR sujeto a aprobación del abogado:
--- NO aplicar antes de esa aprobación ni antes de publicar el código.
+-- ESTADO: aplicada en STAGING el 10-nov-2026. En PRODUCCIÓN: NO aplicada. Va junto con la versión 2026-11-10 del Aviso de Privacidad, aprobada de palabra por el abogado el 10-nov-2026:
+-- aplicar solo DESPUÉS de publicar el código y en el orden del runbook.
 --
 -- QUÉ HACE: una sola frase del artículo público de «datos compartidos» (74) decía que el publicador dueño, cuando la visita la coordina VIVE BIEN, no ve nombre,
 -- teléfono, correo ni notas. Desde la decisión 1 eso solo vale para el publicador SIN el permiso de recibir citas; el asociado dueño sí ve nombre, teléfono y notas

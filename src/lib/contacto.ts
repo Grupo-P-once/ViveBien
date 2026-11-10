@@ -27,7 +27,7 @@ export const VERSION_CONSENTIMIENTO = '2026-11-10'
  *
  * 2026-11-03 — se quita la promesa «se compartirán con su anunciante»: la consulta es de VIVE BIEN y el anunciante no recibe ningún dato (ADR-0006; así lo
  * verifica el código de `/api/contacto`), y el Aviso de Privacidad (sección 4) exige una autorización APARTE, desmarcada y con el anunciante identificado para
- * cualquier entrega futura. Una sola casilla no puede aceptar el Aviso y autorizar una transferencia. Texto PENDIENTE de validación del abogado (MKT-36).
+ * cualquier entrega futura. Una sola casilla no puede aceptar el Aviso y autorizar una transferencia. Texto de la versión 2026-11-03, aprobado por el abogado (MKT-36).
  */
 export const TEXTO_CONSENTIMIENTO =
   'Acepto el aviso de privacidad. Mis datos se usarán para atender mi ' +
@@ -36,7 +36,7 @@ export const TEXTO_CONSENTIMIENTO =
 /**
  * El texto de la casilla de la tarjeta «Agenda una cita» (6-nov-2026). Es una autorización APARTE, sin marcar de antemano y distinta de aceptar el Aviso (sección 4 del Aviso,
  * «Quien atiende una cita»): la persona que atiende la cita es el equipo de VIVE BIEN o, si VIVE BIEN le concede el permiso específico, la persona asociada responsable.
- * Texto PENDIENTE de validación del abogado junto con la versión 2026-11-10 del Aviso (10-nov-2026: añade a la persona asociada propietaria).
+ * Texto aprobado de forma verbal por el abogado junto con la versión 2026-11-10 del Aviso (10-nov-2026: añade a la persona asociada propietaria); confirmación escrita pendiente. Cambiarlo exige nueva aprobación y nueva versión.
  */
 export const TEXTO_CONSENTIMIENTO_CITAS =
   'Autorizo que VIVE BIEN use mi nombre, mi teléfono y las notas que escriba para esta cita para atenderla y los comparta con la persona que la atiende ' +

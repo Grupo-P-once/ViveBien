@@ -12,7 +12,7 @@ export const metadata: Metadata = paginaSeo({
 })
 
 /*
- * Estado (10-nov-2026): versión 2026-11-10 = BORRADOR sujeto a aprobación del abogado; NO publicar sin ella. Añade el sistema de citas (datos, finalidades, quién atiende una cita, correos y recordatorios,
+ * Estado (10-nov-2026): versión 2026-11-10 = APROBADA por el abogado de forma VERBAL (comunicada por el dueño el 10-nov-2026): la confirmación ESCRITA sigue pendiente de guardarse en Obsidian con su huella; mientras tanto no se cambia ni una palabra de este texto. Añade el sistema de citas (datos, finalidades, quién atiende una cita, correos y recordatorios,
  * conservación) sobre la versión 2026-11-03, que SÍ fue APROBADA por el abogado (comunicado por el dueño el 3-nov-2026; el documento escrito del abogado debe guardarse en Obsidian con su hash).
  * Desde el 10-nov-2026 recoge las decisiones del dueño del 9-nov-2026: la persona asociada propietaria ve nombre, teléfono y notas aunque la cita la atienda otra persona (la casilla de la tarjeta lo dice),
  * el equipo ve en el historial quién hizo cada cambio y la cancelación llega al cliente con archivo de calendario. Preguntas para el abogado: «Citas — revisión del Aviso de Privacidad y los Términos tras las seis decisiones (9-nov-2026)» en Obsidian.
