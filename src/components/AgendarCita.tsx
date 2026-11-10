@@ -30,6 +30,9 @@ type Horarios = Array<{ inicio: string; fin: string }>
 /** Cuántos meses hacia adelante se puede mirar el calendario completo (la ventana real la fija el horario del asesor: lo que no tenga horarios sale apagado). */
 const MESES_ADELANTE = 3
 
+/** Solo la primera letra en mayúscula («noviembre de 2026» → «Noviembre de 2026»); `capitalize` de CSS pondría «De». */
+const cap = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s)
+
 const nuevaClave = () => (typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `k${Date.now()}${Math.random().toString(36).slice(2)}`)
 
 export default function AgendarCita({ propiedadId, isLoggedIn }: { propiedadId: string; isLoggedIn: boolean }) {
@@ -170,8 +173,8 @@ export default function AgendarCita({ propiedadId, isLoggedIn }: { propiedadId: 
                   <p style={{ margin: '0 0 .4rem', fontSize: '.72rem', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#5A6472' }}>Esta semana</p>
                   <div role="group" aria-label="Día de la visita" style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 6 }}>
                     {diasConHuecos.map((d) => (
-                      <button key={d.dia} type="button" aria-pressed={dia === d.dia} onClick={() => { setDia(d.dia); setInicio(null) }} style={{ ...chip(dia === d.dia), flex: 'none', textTransform: 'capitalize' }}>
-                        {titulo(d.dia).replace(/^(\p{L}+),?\s*/u, (_, w: string) => `${w.slice(0, 3)} `)}
+                      <button key={d.dia} type="button" aria-pressed={dia === d.dia} onClick={() => { setDia(d.dia); setInicio(null) }} style={{ ...chip(dia === d.dia), flex: 'none' }}>
+                        {cap(titulo(d.dia).replace(/^(\p{L}+),?\s*/u, (_, w: string) => `${w.slice(0, 3)} `))}
                       </button>
                     ))}
                   </div>
@@ -204,17 +207,17 @@ export default function AgendarCita({ propiedadId, isLoggedIn }: { propiedadId: 
                   style={{ width: 44, height: 44, borderRadius: 12, border: 'none', background: 'transparent', color: 'var(--azul)', cursor: 'pointer', opacity: mes <= mesDe(hoy) ? 0.35 : 1 }}>
                   <i className="fas fa-chevron-left" aria-hidden="true" />
                 </button>
-                <p aria-live="polite" style={{ margin: 0, fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '.95rem', color: 'var(--azul)', textTransform: 'capitalize' }}>{etiquetaDeMes(mes)}</p>
+                <p aria-live="polite" style={{ margin: 0, fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '.95rem', color: 'var(--azul)' }}>{cap(etiquetaDeMes(mes))}</p>
                 <button type="button" onClick={() => cambiarMes(1)} disabled={mes >= sumarMeses(mesDe(hoy), MESES_ADELANTE)} aria-label="Mes siguiente"
                   style={{ width: 44, height: 44, borderRadius: 12, border: 'none', background: 'transparent', color: 'var(--azul)', cursor: 'pointer', opacity: mes >= sumarMeses(mesDe(hoy), MESES_ADELANTE) ? 0.35 : 1 }}>
                   <i className="fas fa-chevron-right" aria-hidden="true" />
                 </button>
               </div>
-              <div aria-hidden="true" style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2, margin: '.2rem 0', textAlign: 'center', fontSize: '.7rem', fontWeight: 700, color: '#5A6472' }}>
+              <div aria-hidden="true" style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 2, margin: '.2rem 0', textAlign: 'center', fontSize: '.7rem', fontWeight: 700, color: '#5A6472' }}>
                 {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((l, i) => <span key={i}>{l}</span>)}
               </div>
               {cargandoMes && <p role="status" style={{ margin: '.2rem 0', fontSize: '.8rem', color: '#4b5563' }}>Buscando horarios disponibles…</p>}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 2 }}>
                 {semanasDelMes(mes).flat().map((c) => {
                   if (!c.delMes) return <span key={c.dia} aria-hidden="true" />
                   const n = porDia.get(c.dia)?.length ?? 0
@@ -227,7 +230,7 @@ export default function AgendarCita({ propiedadId, isLoggedIn }: { propiedadId: 
                       style={{ minHeight: 44, borderRadius: 12, cursor: libre ? 'pointer' : 'default', fontSize: '.88rem', fontWeight: c.dia === hoy ? 800 : 600, position: 'relative',
                         border: elegido ? '2px solid var(--azul)' : libre ? '1px solid #D5DEE9' : '1px solid transparent',
                         background: elegido ? 'var(--azul)' : libre ? '#fff' : 'transparent', color: elegido ? '#fff' : libre ? 'var(--azul)' : '#9AA3AF',
-                        boxShadow: c.dia === hoy && !elegido ? 'inset 0 -3px 0 rgba(139,26,26,.55)' : 'none' }}>
+                        boxShadow: c.dia === hoy && !elegido ? 'inset 0 0 0 1.5px rgba(139,26,26,.5)' : 'none' }}>
                       {Number(c.dia.slice(8))}
                       {libre && !elegido && <span aria-hidden="true" style={{ position: 'absolute', left: '50%', bottom: 5, width: 5, height: 5, marginLeft: -2.5, borderRadius: '50%', background: 'var(--rojo, #8B1A1A)' }} />}
                     </button>
@@ -237,7 +240,7 @@ export default function AgendarCita({ propiedadId, isLoggedIn }: { propiedadId: 
               <p style={{ margin: '.5rem .2rem .1rem', fontSize: '.74rem', color: '#5A6472' }}>Los días con punto tienen horarios libres. Elige uno para ver sus horas.</p>
               {dia && horas.length > 0 && (
                 <>
-                  <p style={{ margin: '.6rem 0 .4rem', fontSize: '.82rem', fontWeight: 700, color: '#1f2937', textTransform: 'capitalize' }}>{titulo(dia)}</p>
+                  <p style={{ margin: '.6rem 0 .4rem', fontSize: '.82rem', fontWeight: 700, color: '#1f2937' }}>{cap(titulo(dia))}</p>
                   <div role="group" aria-label="Hora de la visita" style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                     {horas.map((h) => (
                       <button key={h.inicio} type="button" aria-pressed={inicio === h.inicio} onClick={() => { setInicio(h.inicio); setError('') }} style={{ ...chip(inicio === h.inicio), minWidth: 76 }}>
