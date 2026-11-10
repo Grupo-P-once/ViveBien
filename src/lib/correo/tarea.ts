@@ -2,12 +2,12 @@ import { COLUMNAS_PROPIEDAD_PORTAL, type FilaPropiedadPortal } from '../portal/t
 import { CORREO, entornoCorreo, SECRETO_MINIMO, type EntornoCorreo, type EntornoDeCupo, type LimitesCorreo } from './config'
 import { enviarCorreo, type DbCorreo } from './enviar'
 import { plantillaRecomendaciones } from './plantillas'
-import { aTarjetaCorreo, elegirPropiedades, leerPreferencias, motivoDe } from './recomendaciones'
+import { aTarjetaCorreo, conParecidoA, elegirPropiedades, leerPreferencias, motivoDe, motivoParecido, type PropiedadVista } from './recomendaciones'
 import { urlBaja, urlBajaUnClic, urlPreferencias } from './suscripcion'
 
 /**
  * La tarea diaria de recomendaciones (D-80). Vercel Hobby sólo permite UNA ejecución al día (±59 min), así que la
- * frecuencia de «cada tres días» se logra con la fecha `proximo_envio_en` de cada persona, no con el reloj del cron.
+ * frecuencia de «cada siete días» se logra con la fecha `proximo_envio_en` de cada persona, no con el reloj del cron.
  *
  * Antes de cada envío, y por persona: se vuelve a leer su estado (una baja o un rebote de hace un minuto cuenta), se
  * consulta el catálogo VIGENTE, se descartan las propiedades de los últimos correos y se reserva el envío en la base (que
@@ -45,6 +45,21 @@ export function debePausarse(s: { enviados7?: number; rebotados7?: number; queja
   return null
 }
 
+/**
+ * La última propiedad que esta cuenta abrió (evento `property_view`). Se busca primero en el catálogo ya leído y, si ya no está
+ * publicada (vendida, pausada), en la tabla: su tipo sigue sirviendo. Cualquier fallo = sin referencia (se manda lo de siempre).
+ */
+export async function ultimaPropiedadVista(db: DbCorreo, uid: string, catalogo: Array<PropiedadVista & { id: string }>): Promise<PropiedadVista | null> {
+  const ev = await db.from('eventos').select('propiedad_id').eq('uid', uid).eq('nombre', 'property_view').order('creado_en', { ascending: false }).limit(5)
+  if (ev.error) return null
+  const id = ((ev.data ?? []) as Array<{ propiedad_id: string | null }>).map((x) => x.propiedad_id).find((x): x is string => !!x)
+  if (!id) return null
+  const enCatalogo = catalogo.find((c) => c.id === id)
+  if (enCatalogo) return { tipo: enCatalogo.tipo, operacion: enCatalogo.operacion }
+  const fila = await db.from('propiedades').select('tipo, operacion').eq('id', id).maybeSingle()
+  return fila.error || !fila.data ? null : { tipo: fila.data.tipo, operacion: fila.data.operacion }
+}
+
 export async function ejecutarTareaMarketing(
   db: DbCorreo,
   o: { entorno?: EntornoCorreo; entornoCupo?: EntornoDeCupo; fetch?: typeof fetch; ahora?: Date; limites?: Partial<LimitesCorreo> } = {},
@@ -62,13 +77,13 @@ export async function ejecutarTareaMarketing(
 
   const personas = await db
     .from('correo_suscriptores')
-    .select('id, email, nombre, preferencias')
+    .select('id, email, nombre, preferencias, uid')
     .eq('estado', 'activa')
     .lte('proximo_envio_en', ahora.toISOString())
     .order('proximo_envio_en', { ascending: true })
     .limit(lim.loteMarketing)
   if (personas.error) return vacio('error', 'leer_suscriptores')
-  const lista = (personas.data ?? []) as Array<{ id: string; email: string; nombre: string | null; preferencias: unknown }>
+  const lista = (personas.data ?? []) as Array<{ id: string; email: string; nombre: string | null; preferencias: unknown; uid: string | null }>
   const r = vacio('terminada')
   if (lista.length === 0) return r
 
@@ -92,7 +107,10 @@ export async function ejecutarTareaMarketing(
       .limit(lim.memoriaEnvios)
     const ya = new Set<string>(((previos.data ?? []) as Array<{ propiedades: string[] | null }>).flatMap((x) => x.propiedades ?? []))
 
-    const prefs = leerPreferencias(p.preferencias)
+    const declaradas = leerPreferencias(p.preferencias)
+    // «Parecidas a la última que vio»: sólo si la persona no eligió tipos a mano y tiene cuenta (el historial es por uid).
+    const vista = !declaradas.tipos?.length && p.uid ? await ultimaPropiedadVista(db, p.uid, catalogo) : null
+    const prefs = conParecidoA(declaradas, vista)
     const elegidas = elegirPropiedades(prefs, catalogo, ya, lim.propiedadesPorCorreo)
     if (elegidas.length === 0) {
       // Nada nuevo y relevante: no se escribe. Se vuelve a mirar dentro de un periodo normal.
@@ -104,7 +122,7 @@ export async function ejecutarTareaMarketing(
     const correo = plantillaRecomendaciones({
       nombre: p.nombre,
       propiedades: elegidas.map(aTarjetaCorreo),
-      motivo: motivoDe(prefs),
+      motivo: vista && prefs !== declaradas ? motivoParecido(prefs) : motivoDe(prefs),
       urlBaja: urlBaja(env.secreto, p.id),
       urlPreferencias: urlPreferencias(),
     })

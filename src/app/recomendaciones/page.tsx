@@ -10,7 +10,7 @@ import FormularioRecomendaciones from '@/components/correo/FormularioRecomendaci
 export const metadata: Metadata = paginaSeo({
   ruta: '/recomendaciones',
   titulo: 'Recibe propiedades por correo | Vive Bien',
-  descripcion: 'Cuéntanos qué buscas y te enviamos, como máximo cada tres días, propiedades publicadas en VIVE BIEN que se ajusten. Sin crear cuenta y con baja en un clic.',
+  descripcion: 'Cuéntanos qué buscas y te enviamos, como máximo cada siete días, propiedades publicadas en VIVE BIEN que se ajusten. Sin crear cuenta y con baja en un clic.',
 })
 export const dynamic = 'force-dynamic'
 

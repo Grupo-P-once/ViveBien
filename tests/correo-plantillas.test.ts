@@ -129,7 +129,7 @@ describe('contenido y consentimiento', () => {
       expect(t).toContain('https://vivebienn.com/correo/baja#t=def')
       expect(t).toMatch(/7 días/)
       expect(t).toMatch(/no te escribiremos más|no te escribiremos más/i)
-      expect(t).toMatch(/una vez cada tres días/)
+      expect(t).toMatch(/una vez cada siete días/)
     }
     // nada de lenguaje de verificación de cuenta ni de «alguien pidió»
     expect(c.asunto + c.html + c.texto).not.toMatch(/confirma tu (correo|cuenta|suscripci)|alguien (pidi|solicit)|verifica/i)

@@ -110,7 +110,7 @@ export function plantillaPrimerasPropiedades(d: {
   const asunto = n === 0 ? 'Tu alerta de propiedades de VIVE BIEN está lista' : n === 1 ? 'Tu primera propiedad en VIVE BIEN' : `Tus primeras ${n} propiedades en VIVE BIEN`
   const cierre = n === 0
     ? parrafo('Si quieres que te avisemos cuando aparezca algo, pulsa el botón:')
-    : parrafo('<strong>¿Te sirven?</strong> Pulsa el botón y te seguiremos mandando propiedades nuevas, como máximo una vez cada tres días.')
+    : parrafo('<strong>¿Te sirven?</strong> Pulsa el botón y te seguiremos mandando propiedades nuevas, como máximo una vez cada siete días.')
   const cuerpo =
     bloquePropiedades(d.propiedades, 'Y también estas') +
     `<div style="background:${COLORES.fondo};padding:20px 22px 8px;margin:0 0 6px">${cierre}${boton(n === 0 ? 'Sí, avísenme' : 'Sí, quiero seguir recibiéndolas', d.urlConfirmar)}${parrafo(`Si no pulsas el botón, <strong>no te escribiremos más</strong> (el enlace sirve ${d.diasValidez} días). Si no pediste esto, no tienes que hacer nada.`, { pequeno: true, gris: true })}</div>`
@@ -126,7 +126,7 @@ export function plantillaPrimerasPropiedades(d: {
     hola(d.nombre),
     `${pidioTexto} ${n === 0 ? 'Hoy no tenemos propiedades publicadas que se ajusten, pero las seguiremos buscando por ti.' : 'Estas son las primeras:'}`,
     lista,
-    `${n === 0 ? 'Si quieres que te avisemos cuando aparezca algo, entra aquí' : '¿Te sirven? Entra aquí y te seguiremos mandando propiedades nuevas, como máximo una vez cada tres días'}: ${d.urlConfirmar}`,
+    `${n === 0 ? 'Si quieres que te avisemos cuando aparezca algo, entra aquí' : '¿Te sirven? Entra aquí y te seguiremos mandando propiedades nuevas, como máximo una vez cada siete días'}: ${d.urlConfirmar}`,
     `Si no entras al enlace, no te escribiremos más (sirve ${d.diasValidez} días). Si no pediste esto, no tienes que hacer nada.`,
     `No quiero recibir correos de VIVE BIEN: ${d.urlBaja}`,
   ].filter(Boolean).join('\n\n') + pieTexto()
@@ -148,12 +148,12 @@ export function plantillaRecomendaciones(d: {
   const cuerpo =
     bloquePropiedades(d.propiedades) +
     `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center">${boton('Ver todas las propiedades', catalogo)}</td></tr></table>`
-  const pie = `Recibes este correo porque pediste recomendaciones de propiedades en vivebienn.com (como máximo una cada tres días).<br><a href="${escapar(urlSegura(d.urlPreferencias))}" style="color:#66709F;text-decoration:underline">Actualizar preferencias</a> · <a href="${escapar(urlSegura(d.urlBaja))}" style="color:#66709F;text-decoration:underline">Darme de baja</a>`
+  const pie = `Recibes este correo porque pediste recomendaciones de propiedades en vivebienn.com (como máximo una cada siete días).<br><a href="${escapar(urlSegura(d.urlPreferencias))}" style="color:#66709F;text-decoration:underline">Actualizar preferencias</a> · <a href="${escapar(urlSegura(d.urlBaja))}" style="color:#66709F;text-decoration:underline">Darme de baja</a>`
   const saludo = d.nombre && d.nombre.trim() ? `Hola, ${d.nombre.trim()}.` : 'Hola.'
   const lista = d.propiedades
     .map((p, i) => `${i + 1}. ${p.titulo}\n   ${[p.etiqueta, p.lugar].filter(Boolean).join(' · ')}${p.datos.length ? `\n   ${p.datos.join(' · ')}` : ''}${p.precio ? `\n   ${p.precio}` : ''}\n   ${p.url}`)
     .join('\n\n')
-  const texto = `${hola(d.nombre)}\n\n${d.motivo}\n\n${lista}\n\nVer todas las propiedades: ${catalogo}\n\nRecibes este correo porque pediste recomendaciones de propiedades en vivebienn.com (como máximo una cada tres días).\nCambiar mis preferencias: ${d.urlPreferencias}\nDarme de baja: ${d.urlBaja}${pieTexto()}`
+  const texto = `${hola(d.nombre)}\n\n${d.motivo}\n\n${lista}\n\nVer todas las propiedades: ${catalogo}\n\nRecibes este correo porque pediste recomendaciones de propiedades en vivebienn.com (como máximo una cada siete días).\nCambiar mis preferencias: ${d.urlPreferencias}\nDarme de baja: ${d.urlBaja}${pieTexto()}`
   return { asunto, html: layoutCampana({ preheader: `${d.motivo}`.slice(0, 110), kicker: 'Selección VIVE BIEN', saludo, intro: escapar(d.motivo), cuerpo, pie }), texto }
 }
 

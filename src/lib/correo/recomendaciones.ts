@@ -68,6 +68,24 @@ export const sinPreferencias = (p: Preferencias) => !p.operacion && !p.tipos?.le
 
 const fecha = (p: FilaPropiedadPortal) => Date.parse(p.publicada_en || p.created_at || '') || 0
 
+export type PropiedadVista = Pick<FilaPropiedadPortal, 'tipo' | 'operacion'>
+
+/**
+ * «Parecidas a la última que vio»: MISMO TIPO (casa → casas, oficina → oficinas) y misma operación (venta/renta).
+ * Lo que la persona eligió a mano manda: sus tipos declarados no se pisan. Sin tipo reconocible en la propiedad vista,
+ * las preferencias quedan como estaban (nunca se inventa un tipo).
+ */
+export function conParecidoA(prefs: Preferencias, vista: PropiedadVista | null | undefined): Preferencias {
+  if (!vista || prefs.tipos?.length) return prefs
+  const tipo = plano(vista.tipo ?? '').trim()
+  if (!tipo) return prefs
+  return {
+    ...prefs,
+    tipos: [tipo === 'depto' ? 'departamento' : tipo],
+    operacion: prefs.operacion ?? (vista.operacion === 'venta' || vista.operacion === 'renta' ? vista.operacion : null),
+  }
+}
+
 export function elegirPropiedades(
   prefs: Preferencias,
   catalogo: FilaPropiedadPortal[],
@@ -119,6 +137,13 @@ export function motivoDe(prefs: Preferencias): string {
   if (prefs.zonas?.length) partes.push(`en ${prefs.zonas.join(' o ')}`)
   if (prefs.presupuestoMax) partes.push(`hasta $${new Intl.NumberFormat('es-MX').format(prefs.presupuestoMax)}`)
   return `Elegimos estas propiedades publicadas según lo que pediste: ${partes.join(', ')}.`
+}
+
+/** Cuando las propiedades se eligieron por parecido a la última que vio la persona (sin decir cuál, ni datos de su actividad). */
+export function motivoParecido(prefs: Preferencias): string {
+  const tipo = prefs.tipos?.[0]
+  const op = prefs.operacion === 'renta' ? ' en renta' : prefs.operacion === 'venta' ? ' en venta' : ''
+  return tipo ? `Viste una propiedad de tipo ${tipo}${op} en VIVE BIEN; estas son propiedades nuevas parecidas.` : motivoDe(prefs)
 }
 
 export function resumenDe(prefs: Preferencias): string {

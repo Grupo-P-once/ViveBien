@@ -11,7 +11,7 @@ type Modo = 'confirmar' | 'baja'
 const TEXTO = {
   confirmar: {
     titulo: 'Seguir recibiendo propiedades',
-    intro: 'Pulsa el botón y te seguiremos mandando propiedades nuevas que se ajusten a lo que pediste, como máximo una cada tres días. Puedes dejar de recibirlas cuando quieras.',
+    intro: 'Pulsa el botón y te seguiremos mandando propiedades nuevas que se ajusten a lo que pediste, como máximo una cada siete días. Puedes dejar de recibirlas cuando quieras.',
     boton: 'Sí, quiero seguir recibiéndolas',
     ok: 'Listo: seguirás recibiendo propiedades. Te escribiremos sólo cuando haya propiedades que se ajusten a lo que pediste.',
     ruta: '/api/correo/confirmar',
