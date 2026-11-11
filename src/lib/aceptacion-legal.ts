@@ -14,7 +14,7 @@ export const DOCUMENTOS = ['terminos', 'privacidad'] as const
 export type Documento = (typeof DOCUMENTOS)[number]
 
 /** Versión vigente de cada documento = fecha de «Última actualización» de su página (AAAA-MM-DD). */
-export const VERSIONES: Readonly<Record<Documento, string>> = Object.freeze({ terminos: '2026-11-10', privacidad: '2026-11-10' })
+export const VERSIONES: Readonly<Record<Documento, string>> = Object.freeze({ terminos: '2026-11-10', privacidad: '2026-11-11' })
 
 export const RUTA_DOCUMENTO: Readonly<Record<Documento, string>> = Object.freeze({ terminos: '/terminos', privacidad: '/privacidad' })
 export const NOMBRE_DOCUMENTO: Readonly<Record<Documento, string>> = Object.freeze({ terminos: 'Términos y Condiciones', privacidad: 'Aviso de Privacidad' })

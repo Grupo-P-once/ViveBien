@@ -60,7 +60,7 @@ describe('interruptor MARKETING_A_TODOS', () => {
 describe('quién queda suscrito', () => {
   it('cuentas de cliente/publicador y correos de formularios; sin duplicar (misma persona en cuenta y formulario) ni el equipo ni suspendidos ni correos vacíos', async () => {
     const { db, llamadas } = crearDb(base())
-    const r = await suscribirAutomaticamente(db, { desde: '2026-12-01', ahora: AHORA })
+    const r = await suscribirAutomaticamente(db, { desde: '2026-12-01', desdeFormularios: '2026-12-01', ahora: AHORA })
     expect(r.activa).toBe(true)
     const correos = llamadas.map((l) => l.args.p_email).sort()
     expect(correos).toEqual(['ana@ejemplo.test', 'form@ejemplo.test', 'lead@ejemplo.test', 'pub@ejemplo.test'])
@@ -68,7 +68,7 @@ describe('quién queda suscrito', () => {
   })
   it('guarda versión y origen como prueba de qué se informó; la cuenta lleva su uid y el formulario no', async () => {
     const { db, llamadas } = crearDb(base())
-    await suscribirAutomaticamente(db, { desde: '2026-12-01', ahora: AHORA })
+    await suscribirAutomaticamente(db, { desde: '2026-12-01', desdeFormularios: '2026-12-01', ahora: AHORA })
     const ana = llamadas.find((l) => l.args.p_email === 'ana@ejemplo.test')!.args
     expect(ana).toMatchObject({ p_uid: 'u1', p_aceptar: true, p_version: `${VERSION_ALTA_AUTOMATICA}-cuenta` })
     const form = llamadas.find((l) => l.args.p_email === 'form@ejemplo.test')!.args
@@ -76,7 +76,7 @@ describe('quién queda suscrito', () => {
   })
   it('sólo se leen cuentas activas y roles cliente/publicador (nunca admin)', async () => {
     const { db, filtros } = crearDb(base())
-    await suscribirAutomaticamente(db, { desde: '2026-12-01', ahora: AHORA })
+    await suscribirAutomaticamente(db, { desde: '2026-12-01', desdeFormularios: '2026-12-01', ahora: AHORA })
     expect(filtros).toContainEqual({ tabla: 'usuarios', op: 'eq', args: ['estado', 'activo'] })
     expect(filtros).toContainEqual({ tabla: 'usuarios', op: 'in', args: ['rol', ['cliente', 'publicador']] })
   })
@@ -90,31 +90,51 @@ describe('lo que nunca se revierte', () => {
       { email_norm: 'form@ejemplo.test', estado: 'rebotada' }, { email_norm: 'lead@ejemplo.test', estado: 'activa' },
     ]
     const { db, llamadas } = crearDb(t)
-    const r = await suscribirAutomaticamente(db, { desde: '2026-12-01', ahora: AHORA })
+    const r = await suscribirAutomaticamente(db, { desde: '2026-12-01', desdeFormularios: '2026-12-01', ahora: AHORA })
     expect(llamadas).toEqual([])
     expect(r).toMatchObject({ altas: 0, yaEstaban: 4 })
   })
   it('si no se puede leer la lista de suscriptores existentes, no se suscribe a nadie', async () => {
     const { db, llamadas } = crearDb(base(), { falla: 'correo_suscriptores' })
-    const r = await suscribirAutomaticamente(db, { desde: '2026-12-01', ahora: AHORA })
+    const r = await suscribirAutomaticamente(db, { desde: '2026-12-01', desdeFormularios: '2026-12-01', ahora: AHORA })
     expect(llamadas).toEqual([])
     expect(r.altas).toBe(0)
     expect(r.fallidas).toBeGreaterThan(0)
   })
   it('una supresión o rebote que decide la base (bloqueada) se cuenta aparte y no cuenta como alta', async () => {
     const { db } = crearDb(base(), { respuesta: (a) => ({ estado: a.p_email === 'ana@ejemplo.test' ? 'bloqueada' : 'activa' }) })
-    const r = await suscribirAutomaticamente(db, { desde: '2026-12-01', ahora: AHORA })
+    const r = await suscribirAutomaticamente(db, { desde: '2026-12-01', desdeFormularios: '2026-12-01', ahora: AHORA })
     expect(r).toMatchObject({ altas: 3, bloqueadas: 1, fallidas: 0 })
   })
   it('un error de la base en un alta no detiene a los demás y se cuenta como fallida', async () => {
     const { db } = crearDb(base(), { respuesta: (a) => (a.p_email === 'pub@ejemplo.test' ? null : { estado: 'activa' }) })
-    const r = await suscribirAutomaticamente(db, { desde: '2026-12-01', ahora: AHORA })
+    const r = await suscribirAutomaticamente(db, { desde: '2026-12-01', desdeFormularios: '2026-12-01', ahora: AHORA })
     expect(r).toMatchObject({ altas: 3, fallidas: 1 })
   })
   it('el tope por corrida limita las altas', async () => {
     const { db, llamadas } = crearDb(base())
-    const r = await suscribirAutomaticamente(db, { desde: '2026-12-01', ahora: AHORA, tope: 2 })
+    const r = await suscribirAutomaticamente(db, { desde: '2026-12-01', desdeFormularios: '2026-12-01', ahora: AHORA, tope: 2 })
     expect(llamadas).toHaveLength(2)
     expect(r.altas).toBe(2)
+  })
+})
+
+describe('piloto escalonado: interruptor separado por origen', () => {
+  it('sólo cuentas: los correos de formularios y leads no se suscriben', async () => {
+    const { db, llamadas } = crearDb(base())
+    const r = await suscribirAutomaticamente(db, { desde: '2026-12-01', desdeFormularios: '2026-12-08', ahora: AHORA })
+    expect(r.activa).toBe(true)
+    expect(llamadas.map((l) => l.args.p_email).sort()).toEqual(['ana@ejemplo.test', 'pub@ejemplo.test'])
+  })
+  it('sólo formularios: las cuentas no se suscriben', async () => {
+    const { db, llamadas } = crearDb(base())
+    await suscribirAutomaticamente(db, { desde: '2026-12-08', desdeFormularios: '2026-12-01', ahora: AHORA })
+    expect(llamadas.map((l) => l.args.p_email).sort()).toEqual(['ana@ejemplo.test', 'form@ejemplo.test', 'lead@ejemplo.test'])
+  })
+  it('con las dos fechas futuras o inválidas no se lee ni se escribe nada', async () => {
+    const { db, llamadas } = crearDb(base())
+    const r = await suscribirAutomaticamente(db, { desde: '2026-12-08', desdeFormularios: 'ya', ahora: AHORA })
+    expect(r.activa).toBe(false)
+    expect(llamadas).toEqual([])
   })
 })

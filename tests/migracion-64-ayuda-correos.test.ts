@@ -102,15 +102,15 @@ describe('migración 64: artículo «¿Cómo activo o desactivo los avisos por c
 describe('borrador del Aviso de Privacidad (correos)', () => {
   const p = leer('src/app/privacidad/page.tsx')
   it('describe los correos de servicio, la baja con supresión, el registro de envíos y a Resend', () => {
-    for (const frag of ['Correos de servicio y seguridad', 'Hoy no enviamos correos promocionales', 'una huella derivada del correo', 'hasta por dos años desde el envío', 'No registramos si usted abre un correo', 'Resend:</strong> envío de los correos de VIVE BIEN']) expect(p, frag).toContain(frag)
+    for (const frag of ['Correos de servicio y seguridad', 'Propiedades por correo (finalidad secundaria)', 'una huella derivada del correo', 'hasta por dos años desde el envío', 'No registramos si usted abre un correo', 'Resend:</strong> envío de los correos de VIVE BIEN']) expect(p, frag).toContain(frag)
   })
   it('la fecha visible coincide con la versión legal (van juntas) y el estado del texto es honesto', () => {
     // 6-nov-2026: la versión 2026-11-06 añade las citas y es un BORRADOR sujeto a aprobación del abogado (la 2026-11-03 sí fue aprobada). Fecha visible y `VERSIONES` cambian juntas;
     // el comentario de estado debe decir que NO se publique sin aprobación: cuando el abogado apruebe, este bloque se actualiza a «APROBADA» con su fecha.
-    expect(p).toContain('Estado (10-nov-2026)')
-    expect(p).toContain('APROBADA por el abogado de forma VERBAL')   // 10-nov-2026: el abogado aprobó de palabra la 2026-11-10; la confirmación escrita sigue pendiente
+    expect(p).toContain('Estado (11-nov-2026)')
+    expect(p).toContain('APROBADA de palabra por el abogado')   // 10-nov-2026: el abogado aprobó de palabra la 2026-11-10; la confirmación escrita sigue pendiente
     expect(p).toContain('la versión 2026-11-03, que SÍ fue APROBADA por el abogado')
-    expect(p).toContain('Última actualización: 10 de noviembre de 2026')
-    expect(leer('src/lib/aceptacion-legal.ts')).toContain("privacidad: '2026-11-10'")
+    expect(p).toContain('Última actualización: 11 de noviembre de 2026')
+    expect(leer('src/lib/aceptacion-legal.ts')).toContain("privacidad: '2026-11-11'")
   })
 })

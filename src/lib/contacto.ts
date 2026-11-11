@@ -15,7 +15,7 @@ import { NEGOCIO } from './config/negocio'
  * viejas conservan la versión que aceptaron en su momento, que es
  * justamente lo que permite demostrar qué se consintió.
  */
-export const VERSION_CONSENTIMIENTO = '2026-11-10'
+export const VERSION_CONSENTIMIENTO = '2026-11-11'
 
 /**
  * El texto exacto que se acepta, y que queda asociado a la versión.

@@ -56,6 +56,7 @@ const GOLDEN = {
   // 4-nov-2026: sección 7 dice qué borra de verdad el proceso diario y qué no (cuentas, consultas, formularios y datos de propietarios: sin borrado automático). Era 21934 / 28525a2361cd327138d46f64.
   // 6-nov-2026: se añadió el sistema de citas (datos, finalidades, quién atiende una cita, proveedores, conservación y aviso simplificado) y la fecha visible; borrador sujeto a aprobación del abogado. Era 22186 / f22aedd3ee971b3e11f4564c.
   // 10-nov-2026: la persona asociada propietaria ve nombre/teléfono/notas, el equipo ve quién hizo cada cambio y la fecha visible (versión 2026-11-10, borrador sujeto a aprobación del abogado). Era 25688 / 79e49f98d2e998dfe1a495fd.
-  privacidad: { largo: 26187, huella: '82ef25f8ecbe87d5c7cd0ff5' },
+  // 11-nov-2026: finalidad secundaria «propiedades por correo» (consentimiento tácito con oposición desde el 1-dic-2026), aviso corto de formularios y fecha visible (versión 2026-11-11). Era 26187 / 82ef25f8ecbe87d5c7cd0ff5.
+  privacidad: { largo: 26573, huella: 'c2cef7ca65e2b01749215538' },
   vista: { vacia: [1542, '3e9aec9a7dd433947f70cf9c'], completa: [1671, 'bb0ae8ee6f77aa2dba096a35'] },
 } as { terminos: { largo: number; huella: string }; privacidad: { largo: number; huella: string }; vista: { vacia: [number, string]; completa: [number, string] } }

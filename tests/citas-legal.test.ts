@@ -33,7 +33,7 @@ describe('versiones: la fecha visible, VERSIONES y el consentimiento van juntos'
   })
   it('el estado es HONESTO: aprobada de palabra por el abogado (10-nov-2026), con la confirmación escrita pendiente; ya no dice borrador', () => {
     const p = leer('src/app/privacidad/page.tsx')
-    expect(p).toContain('versión 2026-11-10 = APROBADA por el abogado de forma VERBAL')
+    expect(p).toContain('Versión anterior 2026-11-10 = APROBADA por el abogado de forma VERBAL')
     expect(p).toContain('la confirmación ESCRITA sigue pendiente')
     expect(p).not.toContain('BORRADOR sujeto a aprobación del abogado')
   })
@@ -164,8 +164,8 @@ describe('decisiones del dueño del 9-nov-2026 reflejadas en el texto legal (ver
   it('la casilla nombra a la persona asociada propietaria, sigue sin autorizar el correo y la versión es 2026-11-10 en los tres sitios', () => {
     expect(TEXTO_CONSENTIMIENTO_CITAS).toMatch(/persona asociada de VIVE BIEN/)
     expect(TEXTO_CONSENTIMIENTO_CITAS).not.toMatch(/correo electrónico|mi correo/)
-    expect(VERSION_CONSENTIMIENTO).toBe('2026-11-10')
-    expect(VERSIONES.privacidad).toBe('2026-11-10')
+    expect(VERSION_CONSENTIMIENTO).toBe('2026-11-11') // sube junto con el Aviso (el texto de la casilla de Citas no cambió)
+    expect(VERSIONES.privacidad).toBe('2026-11-11') // 11-nov-2026: añade la finalidad secundaria «propiedades por correo»
     expect(VERSIONES.terminos).toBe('2026-11-10')
   })
   it('los Términos mencionan el correo de cancelación con archivo de calendario', async () => {

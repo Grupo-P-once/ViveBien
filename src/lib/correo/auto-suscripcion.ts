@@ -6,7 +6,8 @@ import { normalizarCorreo } from './seguridad'
  * en un formulario quedan suscritas, con baja en un clic en cada correo. Es consentimiento TÁCITO con oposición (no la casilla previa
  * del texto v3), así que depende de que el Aviso de Privacidad lo diga y de la confirmación del abogado.
  *
- * Interruptor: `MARKETING_A_TODOS` = fecha ISO (AAAA-MM-DD) a partir de la cual empiezan las altas. Vacía o inválida = APAGADO. La
+ * Interruptores POR ORIGEN (para un piloto escalonado): `MARKETING_A_TODOS` = fecha ISO (AAAA-MM-DD) desde la que se suscriben las CUENTAS;
+ * `MARKETING_A_TODOS_FORMULARIOS` = fecha desde la que se suscriben los correos dejados en formularios. Vacía o inválida = APAGADO. La
  * fecha es el plazo para que las personas conozcan el Aviso antes del primer correo. Por sí sola NO envía nada: el envío sigue
  * exigiendo `CORREO_MARKETING=1`, la constante `MARKETING_AUTORIZADO` y la tarea diaria.
  *
@@ -43,11 +44,13 @@ async function leer(db: DbCorreo, tabla: string, columnas: string, filtro: (q: a
 
 export async function suscribirAutomaticamente(
   db: DbCorreo,
-  o: { desde?: string | null; ahora?: Date; tope?: number } = {},
+  o: { desde?: string | null; desdeFormularios?: string | null; ahora?: Date; tope?: number } = {},
 ): Promise<ResultadoAltas> {
-  const desde = desdeAltaAutomatica(o.desde ?? process.env.MARKETING_A_TODOS)
   const ahora = o.ahora ?? new Date()
-  if (!desde || ahora.getTime() < desde.getTime()) return vacio(false)
+  const vigente = (v: string | null | undefined) => { const d = desdeAltaAutomatica(v); return !!d && ahora.getTime() >= d.getTime() }
+  const cuentasOk = vigente(o.desde ?? process.env.MARKETING_A_TODOS)
+  const formulariosOk = vigente(o.desdeFormularios ?? process.env.MARKETING_A_TODOS_FORMULARIOS)
+  if (!cuentasOk && !formulariosOk) return vacio(false)
   const tope = o.tope ?? TOPE_ALTAS_POR_CORRIDA
   const r = vacio(true)
 
@@ -58,10 +61,10 @@ export async function suscribirAutomaticamente(
     cand.set(correo, { correo, nombre: typeof nombre === 'string' && nombre.trim() ? nombre.trim().slice(0, 120) : null, uid: typeof uid === 'string' ? uid : null, origen })
   }
   // 1) cuentas activas de clientes y publicadores (nunca el equipo)
-  for (const u of await leer(db, 'usuarios', 'uid, email, nombre', (q) => q.eq('estado', 'activo').in('rol', ['cliente', 'publicador']), 'creado_en')) poner(u.email, u.nombre, u.uid, 'cuenta')
+  if (cuentasOk) for (const u of await leer(db, 'usuarios', 'uid, email, nombre', (q) => q.eq('estado', 'activo').in('rol', ['cliente', 'publicador']), 'creado_en')) poner(u.email, u.nombre, u.uid, 'cuenta')
   // 2) correos dejados en formularios (solicitudes de contacto y registro de leads)
-  for (const s of await leer(db, 'solicitudes_contacto', 'email, nombre', (q) => q, 'creado_en')) poner(s.email, s.nombre, null, 'formulario')
-  for (const l of await leer(db, 'leads', 'email, nombre', (q) => q.not('email', 'is', null), 'created_at')) poner(l.email, l.nombre, null, 'formulario')
+  if (formulariosOk) for (const s of await leer(db, 'solicitudes_contacto', 'email, nombre', (q) => q, 'creado_en')) poner(s.email, s.nombre, null, 'formulario')
+  if (formulariosOk) for (const l of await leer(db, 'leads', 'email, nombre', (q) => q.not('email', 'is', null), 'created_at')) poner(l.email, l.nombre, null, 'formulario')
   r.candidatos = cand.size
   if (cand.size === 0) return r
 
