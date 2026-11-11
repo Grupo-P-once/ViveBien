@@ -3,6 +3,7 @@ import { CORREO, entornoCorreo, SECRETO_MINIMO, type EntornoCorreo, type Entorno
 import { enviarCorreo, type DbCorreo } from './enviar'
 import { plantillaRecomendaciones } from './plantillas'
 import { aTarjetaCorreo, conParecidoA, elegirPropiedades, leerPreferencias, motivoDe, motivoParecido, type PropiedadVista } from './recomendaciones'
+import { suscribirAutomaticamente } from './auto-suscripcion'
 import { urlBaja, urlBajaUnClic, urlPreferencias } from './suscripcion'
 
 /**
@@ -27,6 +28,8 @@ export type ResumenTarea = {
   suprimidas: number
   fallidas: number
   presupuestoAgotado: boolean
+  /** Altas automáticas hechas en esta corrida (sólo si el interruptor MARKETING_A_TODOS está vigente). */
+  altasAutomaticas?: number
 }
 
 const vacio = (estado: ResumenTarea['estado'], motivo?: string): ResumenTarea => ({
@@ -75,6 +78,13 @@ export async function ejecutarTareaMarketing(
   const pausa = debePausarse(salud.error ? null : (salud.data as { enviados7?: number; rebotados7?: number; quejas7?: number }))
   if (pausa) return vacio('pausada', pausa)
 
+  // Alta automática (interruptor MARKETING_A_TODOS, apagado por omisión). Un fallo aquí nunca detiene los envíos a quien YA está suscrito.
+  let altas: number | undefined
+  try {
+    const a = await suscribirAutomaticamente(db, { ahora })
+    if (a.activa) altas = a.altas
+  } catch { altas = undefined }
+
   const personas = await db
     .from('correo_suscriptores')
     .select('id, email, nombre, preferencias, uid')
@@ -85,6 +95,7 @@ export async function ejecutarTareaMarketing(
   if (personas.error) return vacio('error', 'leer_suscriptores')
   const lista = (personas.data ?? []) as Array<{ id: string; email: string; nombre: string | null; preferencias: unknown; uid: string | null }>
   const r = vacio('terminada')
+  if (altas !== undefined) r.altasAutomaticas = altas
   if (lista.length === 0) return r
 
   const cat = await db.from('propiedades').select(COLUMNAS_PROPIEDAD_PORTAL).eq('estado_pub', 'publicada').limit(500)
