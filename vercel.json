@@ -11,6 +11,10 @@
     {
       "path": "/api/alertas/uso-resend",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/correo/tarea",
+      "schedule": "0 16 * * *"
     }
   ]
 }

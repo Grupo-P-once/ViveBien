@@ -18,10 +18,12 @@ beforeAll(async () => { libro = await crearLibro() }, 60_000)
 afterAll(async () => { await libro?.cerrar() })
 
 describe('lo promocional no se activa por omisión', () => {
-  it('barrera de código: aun con CORREO_MARKETING=1 y CORREO_TRANSACCIONAL=1 el correo promocional sigue apagado mientras MARKETING_AUTORIZADO sea false', () => {
-    expect(MARKETING_AUTORIZADO).toBe(false)
+  it('barrera de entorno: con el texto v3 aprobado (MARKETING_AUTORIZADO=true) el correo promocional sigue apagado hasta poner CORREO_MARKETING=1', () => {
+    expect(MARKETING_AUTORIZADO).toBe(true)
+    expect(entornoCorreo({ CORREO_TRANSACCIONAL: '1', RESEND_API_KEY: 're_x' }).marketing).toBe(false)
+    expect(entornoCorreo({ CORREO_MARKETING: '0', CORREO_TRANSACCIONAL: '1', RESEND_API_KEY: 're_x' }).marketing).toBe(false)
     const e = entornoCorreo({ CORREO_MARKETING: '1', CORREO_TRANSACCIONAL: '1', RESEND_API_KEY: 're_x' })
-    expect(e.marketing).toBe(false)
+    expect(e.marketing).toBe(true)
   })
 
   it('el emisor único NO acepta la categoría promocional (el tipo la excluye) y los avisos de cliente son solo de servicio', () => {

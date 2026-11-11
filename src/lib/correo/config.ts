@@ -54,8 +54,10 @@ export const envioPermitido = (entornoCupo: EntornoDeCupo, modoPruebas: boolean)
  * Texto de consentimiento promocional APROBADO por quien corresponda (abogado/dueño). Mientras sea `false`, ninguna variable de
  * entorno puede encender el correo promocional: es una barrera de código, no una bandera que alguien cambie por descuido.
  * Se cambia en una revisión de código, junto con el texto aprobado y su versión.
+ * 10-nov-2026: el abogado aprobó DE PALABRA el texto marketing-2026-11-v3 (siete días y actividad en el sitio); la confirmación ESCRITA está pendiente de subir.
+ * Aun en `true`, no sale nada sin `CORREO_MARKETING=1` en el entorno (decisión explícita del dueño) y sin suscriptores confirmados.
  */
-export const MARKETING_AUTORIZADO = false
+export const MARKETING_AUTORIZADO = true
 
 export type LimitesCorreo = {
   entreMarketingDias: number

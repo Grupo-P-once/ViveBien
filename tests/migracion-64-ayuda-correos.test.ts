@@ -40,8 +40,8 @@ describe('migración 64: artículo de correos', () => {
     for (const frag of ['**Correos de servicio.**', '**Correos promocionales.**', 'Hoy VIVE BIEN no envía correos promocionales', 'una huella derivada de tu correo', 'no afecta a los correos de servicio', 'hasta por dos años desde el envío', 'No registramos si abres un correo']) expect(cuerpo, frag).toContain(frag)
   })
 
-  it('coincide con el código: la constante de marketing apagada, los dos años y la supresión de baja', () => {
-    expect(leer('src/lib/correo/config.ts')).toMatch(/MARKETING_AUTORIZADO = false/)
+  it('coincide con el código: la constante de marketing autorizada (el envío depende de CORREO_MARKETING), los dos años y la supresión de baja', () => {
+    expect(leer('src/lib/correo/config.ts')).toMatch(/MARKETING_AUTORIZADO = true/)
     expect(leer('supabase/62-correo-suscripciones.sql')).toMatch(/730 days/)
     expect(leer('supabase/63-correo-baja-promocional.sql')).toMatch(/'baja_promocional'/)
   })

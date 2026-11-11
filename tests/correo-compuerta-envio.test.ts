@@ -159,10 +159,10 @@ describe('compuerta CORREO_ENVIO en el emisor de D-80 (`enviarCorreo`)', () => {
     expect(await libro.usados()).toBe(1)
   })
 
-  it('marketing: la compuerta encendida NO basta; sin la autorización legal (MARKETING_AUTORIZADO=false) nunca se enciende', async () => {
+  it('marketing: con la autorización legal (MARKETING_AUTORIZADO=true) aun así NO sale nada sin CORREO_MARKETING=1', async () => {
     vi.stubEnv('CORREO_ENVIO', '1')
-    const real = entornoCorreo({ CORREO_ENVIO: '1', CORREO_MARKETING: '1', CORREO_SECRETO: 's'.repeat(40), RESEND_API_KEY: 're_x' })
-    expect(real.marketing).toBe(false) // la constante de código lo impide aunque la variable esté puesta
+    const real = entornoCorreo({ CORREO_ENVIO: '1', CORREO_SECRETO: 's'.repeat(40), RESEND_API_KEY: 're_x' })
+    expect(real.marketing).toBe(false) // sin la variable CORREO_MARKETING=1 no se enciende, aunque la constante esté en true
     const r = await enviarCorreo(libro.db as never, base('marketing', 'recomendaciones'), { entorno: real, entornoCupo: 'produccion' })
     expect(r).toMatchObject({ estado: 'omitido', motivo: 'marketing_apagado' })
     expect(peticiones).toEqual([])

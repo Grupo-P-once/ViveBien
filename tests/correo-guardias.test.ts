@@ -86,10 +86,10 @@ describe('las rutas /api/correo', () => {
     expect(c).toMatch(/status: 401/)
   })
 
-  it('CRON: se queda el cron diario existente (el del parte), ninguno apunta a /api/correo/tarea y la única tarea del correo es la lectura diaria del consumo con GET /usage (D-83)', () => {
+  it('CRON: se queda el cron diario existente (el del parte), la tarea de recomendaciones corre una vez al día (16:00 UTC, tras el parte) y la otra tarea del correo es la lectura diaria del consumo con GET /usage (D-83)', () => {
     const v = JSON.parse(leer('vercel.json')) as { crons: Array<{ path: string; schedule: string }> }
     // Los dos que ya existían en producción + la lectura del consumo (D-83).
-    expect(v.crons.map((x) => x.path)).toEqual(['/api/alertas/resumen', '/api/alertas/contabilidad-quincenal', '/api/alertas/uso-resend'])
+    expect(v.crons.map((x) => x.path)).toEqual(['/api/alertas/resumen', '/api/alertas/contabilidad-quincenal', '/api/alertas/uso-resend', '/api/correo/tarea'])
     expect(JSON.stringify(v)).not.toContain('cuota-resend') // D-82: la sonda con petición vacía falló en Producción y se retiró (D-83: ahora GET /usage)
     expect(v.crons.find((x) => x.path === '/api/alertas/resumen')!.schedule).toBe('0 15 * * *') // una vez al día: lo que admite Vercel Hobby
   })
@@ -222,13 +222,13 @@ describe('MODO DE PRUEBAS y CUPO: todo emisor de correo del código pasa por un 
     expect(c).toContain("env.VERCEL_ENV === 'production' ? 'produccion' : 'pruebas'")
   })
 
-  it('MARKETING: sigue apagado por una constante de código mientras no exista texto legal aprobado (la variable de entorno sola no lo enciende)', () => {
+  it('MARKETING: la constante de código está en true por la aprobación del texto v3, pero sin CORREO_MARKETING=1 no sale nada', () => {
     const c = codigo(leer('src/lib/correo/config.ts'))
     // Para encender el correo promocional hay que cambiar esta línea en una revisión de código, con el texto y su versión aprobados.
-    expect(c).toMatch(/export const MARKETING_AUTORIZADO = false/)
+    expect(c).toMatch(/export const MARKETING_AUTORIZADO = true/)
     expect(c).toMatch(/marketing: env\.CORREO_MARKETING === '1' && MARKETING_AUTORIZADO/)
-    // Ningún cron programado llama a la tarea de recomendaciones.
-    expect(leer('vercel.json')).not.toMatch(/api\/correo\/tarea/)
+    // El cron existe; la ruta sigue exigiendo CRON_SECRET y no hace nada con el marketing apagado.
+    expect(leer('vercel.json')).toMatch(/api\/correo\/tarea/)
   })
 
   it('el punto central reconstruye el cuerpo y lo revisa ANTES de llamar al proveedor, con el destino como constante de código', () => {
@@ -263,7 +263,7 @@ describe('F1 · privacidad, retención y panel (guardias estáticas)', () => {
     expect(t).toMatch(/purgarCorreo\(/)
     expect(t.indexOf('purgarCorreo(')).toBeGreaterThan(t.indexOf('avisosDeClientes()'))
     const v = JSON.parse(leer('vercel.json')) as { crons: Array<{ path: string }> }
-    expect(v.crons.map((c) => c.path)).toEqual(['/api/alertas/resumen', '/api/alertas/contabilidad-quincenal', '/api/alertas/uso-resend'])
+    expect(v.crons.map((c) => c.path)).toEqual(['/api/alertas/resumen', '/api/alertas/contabilidad-quincenal', '/api/alertas/uso-resend', '/api/correo/tarea'])
   })
 
   it('el modo de pruebas DESCARTA el contenido real salvo que quien llama garantice que es sintético', () => {

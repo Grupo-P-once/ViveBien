@@ -137,7 +137,7 @@ describe('el resumen: agregados, sin datos personales, con las promociones apaga
     expect(j.audiencia.bajaDePrecio).toBe(7)
     expect(j.audiencia.avisosLegales).toBe(12)
     expect(j.audiencia.promocionesConConsentimiento).toBe(0)
-    expect(j.banderas.marketingAutorizado).toBe(false)
+    expect(j.banderas.marketingAutorizado).toBe(true) // texto v3 aprobado; marketingEncendido sigue en false sin CORREO_MARKETING
     expect(j.banderas.marketingEncendido).toBe(false)
     expect(j.cupo.migracionAplicada).toBe(true)
     expect(j.cupo.libroProduccion).toMatchObject({ hoy: 3, tope_dia: 80 })

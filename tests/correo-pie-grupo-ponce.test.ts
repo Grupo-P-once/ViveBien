@@ -70,8 +70,8 @@ describe('avisos por correo activados por omisión + engranaje', () => {
     expect(api).toContain('correoPrecio: f?.correo_precio ?? true')
     expect(api).not.toMatch(/correo_alertas \?\? false|correo_precio \?\? false/)
   })
-  it('lo PROMOCIONAL sigue apagado: el consentimiento comercial no se activa por omisión', () => {
-    expect(leer('src/lib/correo/config.ts')).toMatch(/MARKETING_AUTORIZADO = false/)
+  it('lo PROMOCIONAL: la constante está autorizada (texto v3) pero la variable CORREO_MARKETING no se activa por omisión', () => {
+    expect(leer('src/lib/correo/config.ts')).toMatch(/MARKETING_AUTORIZADO = true/)
   })
   it('el engranaje está en todas las pantallas del portal, con aria-expanded, Escape y panel que se monta al abrir', () => {
     expect(leer('src/components/portal/Pantalla.tsx')).toContain('<AjustesDeAvisos />')
